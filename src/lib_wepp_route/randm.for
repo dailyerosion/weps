@@ -1,0 +1,73 @@
+      SUBROUTINE RANDM(X, A, MRND, RNUMB)
+      
+      use wepp_interface_defs
+      
+      implicit none
+!
+!     + + + PURPOSE + + +
+!
+!     RANDM COMPUTES RANDOM NUMBERS BY A MULTIPLICATIVE CONGRUENTIAL
+!     METHOD:
+!
+!     X = A*X MOD M,  RNUMB=X/M
+!
+!     NOTE: BGNRND SHOULD BE USED TO INITIALIZE X (THE CHECKS MADE 
+!     THERE [A*M AND A CAN BE REPRESENTED EXACTLY IN X AND U] ENSURE 
+!     THAT SUCESSIVE VALUES OF X CAN BE CALCULATED EXACTLY)
+!
+!     THE NUMBER OF SIGNIFICANT DIGITS IN THE RESULT IS ROUGHLY THE 
+!     MINIMUM OF:
+!     1) THE NUMBER OF SIGNIFICANT DIGITS IN RND, AND
+!     2) THE NUMBER OF SIGNIFICANT DIGITS IN U LESS THE NUMBER OF
+!        DIGITS OF THE MULTIPLIER IN A
+!
+!     WHEN U IS DOUBLE PRECISION, ALL THE DIGITS IN RND ARE
+!     SIGNIFICANT
+!
+!     INITIALIZES PARAMETER VALUES FOR HYDROLOGY COMPONENT.
+!
+!     CALLED FROM PSIINV
+!     AUTHOR(S): D. FLANAGAN, J. ASCOUGH
+!     VERSION: THIS MODULE TAKEN FROM ASCOUGH STANDALONE IRS CODE
+!     DATE CODED:  3-24-2005
+!     CODED BY: D. FLANAGAN
+!
+!
+!     + + + ARGUMENT DECLARATIONS + + +
+
+      real, intent(in) :: MRND, A
+      real, intent(out) :: RNUMB
+      real, intent(inout) :: X
+     
+!     + + + ARGUMENT DEFINITIONS + + +
+!
+!     X       -
+!     A       -
+!     MRND    -
+!     RNUMB   - RANDOM NUMBER RETURNED FROM SUBROUTINE
+!     
+!     + + + LOCAL DECLARATIONS + + +
+      REAL V
+      DOUBLE PRECISION U
+
+!     + + + LOCAL DEFINITIONS + + +
+!     V       - HOLDS INTERMEDIATE RESULTS
+!     U       - HOLDS INTERMEDIATE RESULTS
+
+!     + + + END SPECIFICATIONS + + +
+
+      X = A * X
+      U = X / MRND
+      V = U
+      V = AINT(V)
+      X = X - V * MRND
+!
+      IF (X.LT.0.D0) THEN
+         V = V - 1.
+         X = X + MRND
+      END IF
+!
+      RNUMB = U - V
+!
+      RETURN
+      END

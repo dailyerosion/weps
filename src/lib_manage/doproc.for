@@ -1,0 +1,2311 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
+      subroutine   doproc (sr, bmrotation)
+
+!     + + + PURPOSE + + +
+!     Doproc is called when a processline is found in the management file
+!     Doproc reads in any coefficients associated with the
+!     process. Doproc then makes a call to a subroutine which, in turn,
+!     modifies the state variables to mimic the processes of doing the
+!     process.
+
+!     + + + KEYWORDS + + +
+!     tillage, process, management
+
+!     + + + PARAMETERS AND COMMON BLOCKS + + +
+
+      include 'command.inc'
+      include 'p1werm.inc'
+      include 'p1unconv.inc'
+      include 'm1flag.inc'
+      include 'm1sim.inc'
+      include 'm1dbug.inc'
+      include 's1layr.inc'
+      include 's1agg.inc'
+      include 's1sgeo.inc'
+      include 's1phys.inc'
+      include 's1surf.inc'
+      include 's1dbh.inc'
+      include 's1dbc.inc'
+      include 'b1glob.inc'
+      include 'c1gen.inc'
+      include 'c1db1.inc'
+      include 'c1db2.inc'
+      include 'c1db3.inc'
+      include 'c1glob.inc'
+      include 'c1info.inc'
+      include 'd1glob.inc'
+      include 'd1gen.inc'
+      include 'h1hydro.inc'
+      include 'h1db1.inc'
+      include 'decomp/decomp.inc'
+      include 'manage/oper.inc'
+      include 'manage/asd.inc'
+      include 'manage/man.inc'
+      include 'manage/mproc.inc'
+!     rdgflag  - flag indicating whether ridge modifications are needed
+!     imprs  - implement ridge spacing (can be used to set row spacing)
+      include 'manage/tcrop.inc'
+      include 'main/main.inc'
+      include 'crop/prevstate.inc'
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer sr, bmrotation
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     sr - the subregion being processed
+!     bmrotation - rotation count updated in manage.for
+
+!     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
+
+!     acdpop    - crop seeding density
+!     acrlai    - crop leaf area index
+!     aheaep    - soil air entery potential
+!     ahrwc     - soil water content (mass bases)
+!     ahrwca    - available soil water content
+!     ahrwcf    - 1/3 bar soil water content
+!     ahrwcs    - saturation soil water content
+!     ahrwcw    - 15 bar soil water content
+!     am0cgf    - flag to call crop growth between plant and harvest
+!     am0defoliatefl  - flag set by defoliate process
+!                 0 - no defoliation
+!                 1 - defoliation triggered
+!     am0kilfl  - flag set by kill process
+!                 0 - no kill being done
+!                 1 - annual killed,perennial crop NOT killed
+!                 2 - annual or perennial crop is killed
+!                 3 - defoliation triggered
+!     am0tdb    - flag for outputing debug information to a file
+!                 0 - no output
+!                 1 - output to file ../out/tdbug.out
+!     am0tfl    - flag for outputing management operations to a file
+!                 0 - no output
+!                 1 - output to file ../out/manage.out
+!     as0ags    - aggr. size geom. mean std. dev.
+!     as0ph     - soil Ph
+!     asargo    - ridge orientation (clockwise from true North) (degrees)
+!     ascmg     - magnesium ion concentration
+!     ascna     - sodium ion concentration
+!     asdadg    - aggregrate density
+!     asdblk    - soil layer bulk density
+!     aseags    - dry aggregrate stability
+!     asfcce    - fraction of calcium carbonate
+!     asfcec    - cation exchange capcity
+!     asfcla    - fraction of clay
+!     asfesp    - exchangable sodium percentage
+!     asfnoh    - organic N concentration of humus
+!     asfom     - fraction of organic matter
+!     asfpoh    - organic P concentration of humus
+!     asfpsp    - fraction of fertilizer P that is labile
+!     asfsan    - fraction of sand
+!     asfsil    - fraction of silt
+!     asfsmb    - sum of bases
+!     aslagm    - aggr. size geom. mean diameter (mm)
+!     aslagn    - min. aggr. size of each layer (mm)
+!     aslagx    - max aggr. size of each layer (mm)
+!     aslrr     - Allmaras random roughness parameter (mm)
+!     asxrgs    - ridge spacing (mm)
+!     asxrgw    - ridge width (mm)
+!     aszlyt    - soil layer thickness (mm)
+!     aszrgh    - ridge height (mm)
+!     prcode    - the process id number
+!     prname    - the process name
+
+!     + + + LOCAL VARIABLES + + +
+      integer cutflg
+      real    massf (msieve+1,mnsz)
+      real    alpha, beta, mu, rho
+      integer roughflg
+      real    rrimpl
+!     real    intens, rrimpl
+      real    kappa
+      real    thinval
+      real    tibcp
+      real    pyieldf, pstalkf, rstandf
+      integer harv_report_flg, harv_calib_flg, harv_unit_flg
+      integer mature_warn_flg
+      integer sel_position, sel_pool
+      real    stemf, leaff, storef, rootstoref, rootfiberf
+      real    rdght,rdgwt,dikeht,dikespac
+!      real    af,cf,mf  ! used with disabled routines
+      real    afvt(mnrbc), mfvt(mnrbc)
+      integer burydistflg
+      real    irrig
+      real    rdght1
+      character*1 prdumy
+      character*256  line
+      integer  idx, thinflg
+      real    dmassres, zmassres, dmassrot, zmassrot
+      real    mass_rem, mass_left
+      integer crop_present, temp_present
+      real    noparam1, noparam2, noparam3
+      real    rate_mult_vt(mnrbc), thresh_mult_vt(mnrbc)
+      real    dummy1(mnsz), dummy2(mnsz)
+      ! temporary crop parameter values for process 65 and 66
+      integer trbc, thyfg
+      real    tdkrate(5), txstm, tddsthrsh, tcovfact
+      real    tresevapa, tresevapb
+      real    t0sla, t0ck
+      ! temporary crop parameter values for process 66 only
+      real    manure_buried_fraction, manure_total_mass
+
+!     + + + LOCAL VARIABLE DEFINITIONS + + +
+
+!     alpha    - parameter reflecting the breakage of all soil
+!                aggregrates regardless of size
+!     beta     - parameter reflecting the uneveness of breakage among
+!                aggregrates in different size classes
+!     buryf    - fraction of mass to be buried
+!     kappa    - fraction of the crust destroyed during a tillage operation
+!     dikeht   - dike height (mm)
+!     dikespac - dike spacing (mm)
+!     fltcoef  - flattening coefficient of an implement
+!     pyieldf  - fraction of crop and residue above ground plant reproductive mass removed
+!     pstalkf  - fraction of crop stems, leaves and remaining reproductive mass removed
+!     rstandf  - fraction of residue stems, leaves and remaining reproductive mass removed
+!     harv_report_flg - place in harvest report flag
+!                0 - do not place in harvest report
+!                1 - place in harvest report
+!     harv_calib_flg - Use harvested biomass in calibration flag
+!                0 - do not use harvest in calibration
+!                1 - use harvest amount in calibration
+!     harv_unit_flg - overide units given in crop record
+!                0  - use units given in crop record
+!                1  - use lb/ac or kg/m^2
+!     mature_warn_flg - flag to indicate use of crop maturity warning
+!                0  - no crop maturity warning given for any crop
+!                1  - Warnings generated for any crop unless supressed by crop type
+!     sel_position - position to which percentages will be applied
+!                0 - don't apply to anything
+!                1 - apply to standing (and attached roots)
+!                2 - apply to flat
+!                3 - apply to standing (and attached roots) and flat
+!                4 - apply to buried
+!                5 - apply to standing (and attached roots) and buried
+!                6 - apply to flat and buried
+!                7 - apply to standing (and attached roots), flat and buried
+!                this corresponds to the bit pattern:
+!                msb(buried, flat, standing)lsb
+                
+!     sel_pool - pool to which percentages will be applied
+!            0 - don't apply to anything
+!            1 - apply to crop pool
+!            2 - apply to temporary pool
+!            3 - apply to crop and temporary pools
+!            4 - apply to residue
+!            5 - apply to crop and residue pools
+!            6 - apply to temporary and residue pools
+!            7 - apply to crop, temporary and residue pools
+!                this corresponds to the bit pattern:
+!                msb(residue, temporary, crop)lsb
+
+!     storef   - fraction of storage (reproductive components) removed (kg/kg)
+!     leaff    - fraction of plant leaves removed (kg/kg)
+!     stemf    - fraction of plant stems removed (kg/kg)
+!     rootstoref - fraction of plant storage root removed (kg/kg)
+!     rootfiberf - fraction of plant fibrous root removed (kg/kg)
+!     harvflag - flag indicating a harvest
+!     intens   - tillage intensity factor
+!     liftf    - fraction of mass to be lifted
+!     massf    - mass fractions of aggregrates within sieve cuts
+!                 (sum of all the mass fractions are expected to be 1.0)
+!     fracarea - fraction of the surface affected by the process
+!     rdght    - ridge height (mm)
+!     rdght1   - tmp variable - ridge height (mm)
+!     rdgwt    - ridge top width (mm)
+!     rrimpl   - assigned nominal RR value for the tillage operation (mm)
+!     tibcp    - tillage intensity factor used for below tillage compaction
+!     mu       - loosening coefficient (0 <= mu <= 1)
+!     rho      - mixing coefficient (0 <= rho <= 1)
+!     irrig    - irrigation quantity for a day (mm)
+!     dmassres - Buried crop residue mass(kg/m^2)
+!     zmassres - depth in soil of Buried crop residue mass (mm)
+!     dmassrot - Buried root residue mass(kg/m^2)
+!     zmassrot - depth in soil of Buried root residue mass (mm)
+!     mass_rem - mass removed by harvest process (cut,remove)
+!     mass_left - mass left behind in pool which mass was removed from by harvest process (cut,remove)
+!     crop_present - flag to show crop biomass pool status
+!                0 - no crop biomass present
+!                1 - crop biomass present
+!     temp_present - flag to show temporary crop biomass pool status
+!                0 - no temporary crop biomass present
+!                1 - temporary crop biomass present
+!     noparam1-6   - variaable to allow reading in six non-used crop parameters in single read statement
+!     rate_mult_vt - array of multipliers for modifying standing stem fall rate
+!     thresh_mult_vt - array of multipliers for modifying standing stem fall threshold
+!     dummy1(mnsz), dummy2(mnsz) - place holder variables (set to zero)
+!                                  for call to poolmass
+
+!     manure_total_mass - total mass of manure added to field (dry weight)
+!     manure_buried_fraction - fraction of total manure applied that is buried
+
+!     + + + SUBROUTINES CALLED + + +
+!
+!     asd2m     - aggregate size distribution to mass fraction converter
+!     burylift  - performs the biomass transfer either into the soil
+!                 or from the soil to the surface (deals with decomp
+!                 pools only
+!     crush     - the crushing process
+!     crust     - destroys a cursted surface depending on the operation that
+!                 is performed
+!     invert    - performs an inversion of the vertical soil layers
+!     loosn     - performs the loosen/compact process
+!     m2asd     - mass fraction to aggregate size distribution converter
+!     mix       - mixes components in specified layers
+!     orient    - calculates the oriented roughness
+!     remove    - performs the biomass removal during a harvest, burn, etc.
+!                 and updates the decomposition pools accordingly.
+!     rough     - calculated the post tillage random roughness
+!     tdbug     - subroutine which writes out variables for debugging purposes
+
+!     + + + FUNCTION DECLARATONS + + +
+      real poolmass, furrowcut
+
+!     + + + DATA INITIALIZATIONS + + +
+      noparam1 = 0.0
+      noparam2 = 0.0
+      do idx = 1,mnsz
+          dummy1 = 0.0
+          dummy2 = 0.0
+      end do
+
+!     + + + OUTPUT FORMATS + + +
+2015     format (' Process code ',i2,1x,'Process ',1x,a20 )
+
+!     + + + END SPECIFICATIONS + + +
+
+      ! set local flag to indicate whether a crop is growing or not
+      ! this is used to eliminate spurious harvest reports from residue removal
+      if( poolmass(                                                     &
+     &           acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr), &
+     &           acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),    &
+     &           noparam1, noparam2,                                    &
+     &           acmbgstemz(1,sr), dummy1, dummy2,                      &
+     &           acmrootstorez(1,sr), acmrootfiberz(1,sr) )             &
+     &    .gt. 0.0) then
+          crop_present = 1
+      else
+          crop_present = 0
+      end if
+
+      if( poolmass(                                                     &
+     &           atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
+     &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
+     &           atmflatrootstore(sr), atmflatrootfiber(sr),            &
+     &           atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
+     &           atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr) )         &
+     &    .gt. 0.0 ) then
+          temp_present = 1
+      else
+          temp_present = 0
+      end if
+
+      
+
+      line = mtbl(mcur(sr))
+
+      read(line, 1001, err=901) prdumy, prcode, prname
+ 1001 format(a1,1x,i2,1x,a)
+
+      if (am0tfl .eq. 1) write (15,2015) prcode,prname
+
+!     process calls follow
+      select case (prcode)
+
+      case (1)
+!-----START crust breakdown process (process code 01)
+
+!     pre-process stuff
+        kappa = 1.0 ! *** NOTE that kappa is NOT being read from file
+
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before crust breakdown process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        am0til = .true.  !set flag for surface modification
+!     do process
+        call crust(kappa,fracarea,asfcr(sr),asflos(sr),asmlos(sr))
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After crust breakdown process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END crust breakdown process (process code 01)
+
+      case (2)
+!-----START random roughness process (process code 02)
+
+!     pre-process stuff
+
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before random roughness process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+!     read the random roughness for the implement. tillage intensity
+!     factor, and the fraction of the surface tilled come in as group parameter
+!     get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) roughflg, rrimpl
+
+        am0til = .true.  !set flag for surface modification
+!     do process
+        ! the biomass in the soil affects this calculation. Since it is 
+        ! the integrated soil biomass, not fresh biomass that causes this,
+        ! the best estimate is the number from sumbio from the previous day.
+        call rough(roughflg,rrimpl,ti,fracarea,aslrr(sr),               &
+     &             tlayer, asfcla(1,sr), asfsil(1,sr),                  &
+     &             abmbgz(1,sr), abmrtz(1,sr),                          &
+     &             aszlyd(1,sr))
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After random roughness process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END random roughness process (process code 02)
+
+      case (3)
+!-----START oriented roughness ridge only process (process code 03)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before oriented roughness1 process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+!     read the oriented roughness (ridge) parameters for the implement
+!     get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    rdgflag, rdght, imprs, rdgwt
+
+        rdght1 = aszrgh(sr) !keep initial ridge height value
+        am0til = .true.  !set flag for surface modification
+!     do process
+        call orient1(aszrgh(sr),asxrgw(sr),asxrgs(sr),asargo(sr),       &
+     &               rdght,rdgwt,imprs,odir,tdepth,rdgflag)
+
+!     post-process stuff
+        !if the ridge height changed or is very small,
+        !then assume any dikes got destroyed
+        if (rdght1 .ne. aszrgh(sr) .or. (aszrgh(sr) .le. 0.1)) then
+          asxdkh(sr) = 0.0
+          asxdks(sr) = 0.0
+        end if
+
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After oriented roughness process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END oriented roughness process (process code 03)
+
+      case (4)
+!-----START oriented roughness process dike only (process code 04)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before oriented roughness2 process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+!     read the oriented roughness (dike) parameters for the implement
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    rdgflag, dikeht, dikespac
+! NOTE: we don't need rdgflag anymore - LEW
+
+        am0til = .true.  !set flag for surface modification
+!     do process
+        call orient2(asxdkh(sr),asxdks(sr),dikeht,dikespac)
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After oriented roughness process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END oriented roughness dike only process (process code 04)
+
+      case (5)
+!-----START oriented roughness process (process code 05)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before oriented roughness process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+!     read the oriented roughness parameters for the implement
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    rdgflag, rdght, imprs, rdgwt, dikeht, dikespac
+
+        am0til = .true.  !set flag for surface modification
+!     do process
+        call orient(aszrgh(sr),asxrgw(sr),asxrgs(sr),asargo(sr),        &
+     &              asxdkh(sr),asxdks(sr),                              &
+     &              rdght,rdgwt,imprs,odir,dikeht,dikespac,             &
+     &              tdepth,rdgflag)
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After oriented roughness process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END oriented roughness process (process code 05)
+
+      case (11)
+!-----START crushing process (process code 11)
+!    pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before crushing process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!        write (*,*) '//Before crushing process//'
+        if( aslagm(5,sr).gt.aslagx(5,sr) ) then
+            write (*,*) 'before crush:',aslagm(5,sr),aslagx(5,sr)
+        end if
+!        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
+!
+!       Convert ASD from modified log-normal to sieve classes
+        call asd2m(aslagn(1,sr), aslagx(1,sr), aslagm(1,sr),            &
+     &           as0ags(1,sr), nslay(sr), massf)
+!
+!
+!       read the crushing parameters for the implement
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) alpha, beta
+
+!       check for valid crushing parameters
+        if( alpha.lt.beta) then
+           write(0,*) 'Process 11:Crushing:Alpha=',alpha,               &
+     &                'must be greater than Beta=',beta
+           call exit (-1)
+        endif
+
+        ! adjust parameters based on soil aggregate stability
+        !aseags(1,sr)
+
+
+!       do process
+        call crush(alpha, beta, tlayer, massf)
+!
+!       post-process stuff
+!
+!       Convert ASD back from sieve classes to modified log-normal
+        call m2asd(massf, nslay(sr),                                    &
+     &    aslagn(1,sr), aslagx(1,sr), aslagm(1,sr), as0ags(1,sr))
+
+        if( aslagm(5,sr).gt.aslagx(5,sr) ) then
+            write (*,*) 'after crush:',aslagm(5,sr),aslagx(5,sr)
+        end if
+!        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
+!
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After crushing process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END crushing process (process code 11)
+
+      case (12)
+!-----START loosening process (process code 12)
+!       pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before loosening process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+        if( aslagm(5,sr).gt.aslagx(5,sr) ) then
+            write (*,*) 'before loose:',aslagm(5,sr),aslagx(5,sr)
+        end if
+
+
+!       read the loosening parameter for the implement
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) mu
+
+!       do process
+        call loosn(mu,fracarea,tlayer,                                  &
+     &    asdblk(1,sr),asdsblk(1,sr),aszlyt(1,sr))
+
+!       post-process stuff
+
+        ! recalculate  depth to bottom of soil layer
+        call depthini( nslay(sr), aszlyt(1,sr), aszlyd(1,sr) )
+
+        if( wc_type.eq.4 ) then
+          ! use texture based calculations from Rawls to set all soil
+          ! water properties.
+          call param_prop_bc(                                           &
+     &        nslay(sr), aszlyd(1,sr), asdblk(1,sr), asdpart(1,sr),     &
+     &        asfcla(1,sr), asfsan(1,sr), asfom(1,sr), asfcec(1,sr),    &
+     &        ahrwcs(1,sr), ahrwcf(1,sr), ahrwcw(1,sr),ahrwcr(1,sr),    &
+     &        ahrwca(1,sr), ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),     &
+     &        ahfredsat(1,sr) )
+
+        else
+          ! adjust soil hydraulic properties for change in density
+          call param_blkden_adj( tlayer, asdblk(1,sr), asdblk0(1,sr),   &
+     &       asdpart(1,sr), ahrwcf(1,sr), ahrwcw(1,sr), ahrwca(1,sr),   &
+     &       asfcla(1,sr), asfom(1,sr),                                 &
+     &       ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr) )
+        end if
+
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After loosening process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END loosening process (process code 12)
+
+      case (13)
+!-----START mixing process (process code 13)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before mixing process//'
+          write (29,*) 'Tillage layer depth is', tlayer
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!        write (*,*) '//Before mixing process//'
+        if( aslagm(5,sr).gt.aslagx(5,sr) ) then
+            write (*,*) 'before mix:',aslagm(5,sr),aslagx(5,sr)
+        end if
+!        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
+
+!       read the mixing coefficient from the data file
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) rho
+
+!       Convert ASD from modified log-normal to sieve classes
+        call asd2m(aslagn(1,sr), aslagx(1,sr), aslagm(1,sr),            &
+     &           as0ags(1,sr), nslay(sr), massf)
+
+!       do process
+        call mix(rho,fracarea,tlayer,asdblk(1,sr),aszlyt(1,sr),         &
+     &    asfsan(1,sr), asfsil(1,sr),asfcla(1,sr), asvroc(1,sr),        &
+     &    asfcs(1,sr), asfms(1,sr), asffs(1,sr), asfvfs(1,sr),          &
+     &    asdwblk(1,sr),                                                &
+     &    asfom(1,sr), as0ph(1,sr), asfcce(1,sr), asfcec(1,sr),         &
+     &    asfcle(1,sr),                                                 &
+     &    asdagd(1,sr),aseags(1,sr),                                    &
+     &    ahrwc(1,sr),                                                  &
+     &    ahrwcs(1,sr),ahrwcf(1,sr), ahrwcw(1,sr),                      &
+     &    ahrwca(1,sr),                                                 &
+     &    ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),                       &
+     &    admrtz(1,1,sr),admbgz(1,1,sr),                                &
+     &    massf)
+
+!     post-process stuff
+
+!       With the change in composition of the layers, it is necessary
+!       to update soil properties that are a function of texture
+        call proptext( tlayer, asfcla(1,sr), asfsan(1,sr),asfom(1,sr),  &
+     &                 asdsblk(1,sr), asdpart(1,sr) )
+
+        if( wc_type.eq.4 ) then
+          ! use texture based calculations from Rawls to set all soil
+          ! water properties.
+          call param_prop_bc(                                           &
+     &        tlayer, aszlyd(1,sr), asdblk(1,sr), asdpart(1,sr),        &
+     &        asfcla(1,sr), asfsan(1,sr), asfom(1,sr), asfcec(1,sr),    &
+     &        ahrwcs(1,sr), ahrwcf(1,sr), ahrwcw(1,sr),ahrwcr(1,sr),    &
+     &        ahrwca(1,sr), ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),     &
+     &        ahfredsat(1,sr) )
+
+        else
+          ! set matrix potential parameters to match 1/3 bar and 15 bar water contents
+          call param_pot_bc( tlayer, asdblk(1,sr), asdpart(1,sr),       &
+     &                     ahrwcf(1,sr), ahrwcw(1,sr),                  &
+     &                     asfcla(1,sr), asfom(1,sr),                   &
+     &                     ah0cb(1,sr), aheaep(1,sr) )
+        end if
+
+!       set previous day bulk density for the changed layers since
+!       this is a change in composition not in bulk density per se
+        call set_prevday_blk( tlayer, asdblk(1,sr), asdblk0(1,sr) )
+
+!       Convert ASD back from sieve classes to modified log-normal
+        call m2asd(massf, nslay(sr),                                    &
+     &    aslagn(1,sr), aslagx(1,sr), aslagm(1,sr), as0ags(1,sr))
+
+!        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
+
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After mixing process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+!-----END mixing process (process code 13)
+!
+      case (14)
+!-----START inversion process (process code 14)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before inversion process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!        write (*,*) '//Before inversion process//'
+!        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
+
+!     Convert ASD from modified log-normal to sieve classes
+        call asd2m(aslagn(1,sr), aslagx(1,sr), aslagm(1,sr),            &
+     &           as0ags(1,sr), nslay(sr), massf)
+
+!     do process
+        call invert(tlayer,asdblk(1,sr),aszlyt(1,sr),                   &
+     &    asfsan(1,sr), asfsil(1,sr),asfcla(1,sr), asvroc(1,sr),        &
+     &    asfcs(1,sr), asfms(1,sr), asffs(1,sr), asfvfs(1,sr),          &
+     &    asdwblk(1,sr),                                                &
+     &    asfom(1,sr), as0ph(1,sr), asfcce(1,sr), asfcec(1,sr),         &
+     &    asfcle(1,sr),                                                 &
+     &    asdagd(1,sr),aseags(1,sr),                                    &
+     &    ahrwc(1,sr),                                                  &
+     &    ahrwcs(1,sr),ahrwcf(1,sr), ahrwcw(1,sr),                      &
+     &    ahrwca(1,sr),                                                 &
+     &    ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),                       &
+     &    admrtz(1,1,sr),admbgz(1,1,sr),                                &
+     &    massf)
+
+
+!     post-process stuff
+
+!     Convert ASD back from sieve classes to modified log-normal
+        call m2asd(massf, nslay(sr),                                    &
+     &    aslagn(1,sr), aslagx(1,sr), aslagm(1,sr), as0ags(1,sr))
+
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After inversion process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END inversion process (process code 14)
+!
+      case (21)
+!-----START below layer compaction (process code 21)
+!     pre-process stuff
+!     do process
+!     post-process stuff
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) tibcp
+!-----END below layer compaction (process code 21)
+!
+      case (24)
+!-----START flatten process variable toughness (process code 24)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before flatten variable toughtness process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) bioflg, afvt(1),       &
+     &                      afvt(2), afvt(3), afvt(4), afvt(5)
+
+!     do process
+        call flatvt(afvt, fracarea, acrbc(sr), adrbc(1,sr),             &
+     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
+     &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
+     &       acdstm(sr),                                                &
+     &       admstandstem(1,sr),admstandleaf(1,sr), admstandstore(1,sr),&
+     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
+     &       addstm(1,sr), bioflg)
+
+!     post-process stuff
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = 1
+
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After flatten variable toughtness process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END flatten process variable toughness (process code 24)
+!
+      case (25)
+!-----START mass bury process variable toughness (process code 25)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before mass bury variable toughness process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) burydistflg,           &
+     &              mfvt(1), mfvt(2), mfvt(3), mfvt(4), mfvt(5)
+
+        ! accumulation of STIR values
+        call stir_cum(sr, ospeed, tdepth, burydistflg, fracarea)
+
+!     Default all bury processes to "all" biomass for now.
+      bioflg = 0
+
+!     adjust all burial coefficients for speed and depth
+      call buryadj(mfvt,mnrbc,                                          &
+     &             ospeed,ostdspeed,ominspeed,omaxspeed,                &
+     &             tdepth,tstddepth,tmindepth,tmaxdepth)
+
+!     do process
+        call mburyvt(mfvt,fracarea,acrbc(sr),adrbc(1,sr),burydistflg,   &
+     &             tlayer,aszlyt(1,sr),aszlyd(1,sr),                    &
+     &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
+     &       atmflatrootstore(sr), atmflatrootfiber(sr),                &
+     &       atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),     &
+     &       atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),              &
+     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
+     &       admflatrootstore(1,sr), admflatrootfiber(1,sr),            &
+     &       admbgstemz(1,1,sr), admbgleafz, admbgstorez(1,1,sr),       &
+     &       admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),          &
+     &       bioflg)
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After mass bury variable toughness process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END mass bury process variable toughness (process code 25)
+!
+      case (26)
+!-----START re-surface process variable toughness (process code 26)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before re-surface vari. toughness process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) mfvt(1), mfvt(2),      &
+     &                                mfvt(3), mfvt(4), mfvt(5)
+
+      ! Lift processes only sees the decomp biomass pools. This default gets them all.
+      bioflg = 0
+
+!     do process
+        call liftvt(mfvt, fracarea, adrbc(1,sr), tlayer,                &
+     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
+     &       admflatrootstore(1,sr), admflatrootfiber(1,sr),            &
+     &       admbgstemz(1,1,sr), admbgleafz, admbgstorez(1,1,sr),       &
+     &       admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),          &
+     &       resurf_roots, bioflg)
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After re-surface vari. toughness process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END re-surface process variable toughness (process code 26)
+
+      case (30)
+!-----START defoliate process (process code 30)
+
+!     Derived from process 31 (kill) - LEW
+!     Note that the "defoliate" process only drops leaves
+!     and moves the "crop" parameters to the "temporary"
+!     crop pool.  The "transfer" process does the final transfer
+!     of the "temporary" crop pool values over to the "decomp"
+!     pools where they can now begin to decay.
+
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before defoliate process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+!       Some operations will not kill certain types of crops,
+!       ie., a mowing operation usually will not kill a perennial
+!       crop like alfalfa but would kill many annual crops.
+
+!       this flag remains set until a biomass transfer process (40)
+!       occurs so any side effects can be triggered
+
+!       This flag may get expanded in the future as new situations
+!       arise.
+
+!      set am0defoliatefl
+!                 1 - defoliation triggered
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) am0defoliatefl
+
+        if( am0cgf .and. .not. am0cif ) then
+          ! crop growth flag on and not on initialization cycle
+          if( am0defoliatefl .eq. 1 ) then
+             ! defoliate by dropping all crop leaf mass into crop flat pool
+             acmflatleaf(sr) = acmflatleaf(sr) + acmstandleaf(sr)
+             acmstandleaf(sr) = 0.0
+          end if
+          ! crop pool state has been changed, force dependent variable update  
+          am0cropupfl = 1
+        else
+            ! if no crop growing "defoliation" is not necessary and no biomass is
+            ! present to transfer. Reset kill flag to zero, no report
+            am0defoliatefl = 0
+        end if
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After defoliate process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END defoliate process (process code 30)
+
+      case (31)
+!-----START killing process (process code 31)
+
+!     Note that the "kill" process only stops the crop growth
+!     submodel and moves the "crop" parameters to the "temporary"
+!     crop pool.  The "transfer" process does the final transfer
+!     of the "temporary" crop pool values over to the "decomp"
+!     pools where they can now begin to decay.
+
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before kill process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+!       Some operations will not kill certain types of crops,
+!       ie., a mowing operation usually will not kill a perennial
+!       crop like alfalfa but would kill many annual crops.
+
+!       this flag remains set until a biomass transfer process (40)
+!       occurs so any side effects can be triggered
+
+!       This flag may get expanded in the future as new situations
+!       arise.
+
+!      set am0kilfl
+!                 0 - no kill being done
+!                 1 - annual killed,perennial crop NOT killed
+!                 2 - annual or perennial crop is killed
+!                 3 - defoliation triggered
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) am0kilfl
+
+        if( am0cgf .and. .not. am0cif ) then
+          ! crop growth flag on and not on initialization cycle
+          if ((am0kilfl.eq.2).or.((am0kilfl.eq.1).and.((ac0idc(sr).eq.1)&
+     &       .or.(ac0idc(sr).eq.2).or.(ac0idc(sr).eq.4)                 &
+     &       .or.(ac0idc(sr).eq.5)))) then
+!            Stop the crop growth (ie. stop calling crop submodel) and
+!            transfer crop state to temporary crop pool
+             call kill_crop( am0cgf, nslay(sr),                         &
+     &           acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr), &
+     &           acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),    &
+     &           acmrootstorez(1,sr), acmrootfiberz(1,sr),              &
+     &           acmbgstemz(1,sr),                                      &
+     &           aczht(sr), acdstm(sr), acxstmrep(sr), aczrtd(sr),      &
+     &           acgrainf(sr),                                          &
+     &           atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
+     &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
+     &           atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),          &
+     &           atmbgstemz(1,sr),                                      &
+     &           atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr),      &
+     &           atgrainf(sr) )
+          else if( am0kilfl .eq. 3 ) then
+             ! defoliate by dropping all crop leaf mass into crop flat pool
+             acmflatleaf(sr) = acmflatleaf(sr) + acmstandleaf(sr)
+             acmstandleaf(sr) = 0.0
+          end if
+          ! crop pool state has been changed, force dependent variable update  
+          am0cropupfl = 1
+        else
+            ! if no crop growing kill is not necessary and no biomass is
+            ! present to transfer. Reset kill flag to zero, no report
+            am0kilfl = 0
+        end if
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After kill process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END killing process (process code 31)
+
+      case (32)
+!-----START cutting to height process (process code 32)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before cutting to height process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        ! set process parameters
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    cutflg, cutht, pyieldf, pstalkf, rstandf
+
+!     do process
+        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf,              &
+     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
+     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
+     &       aczht(sr), acgrainf(sr), achyfg(sr),                       &
+     &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
+     &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
+     &       atzht(sr), atgrainf(sr),                                   &
+     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
+     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
+     &       adzht(1,sr), adgrainf(1,sr), adhyfg(1,sr),                 &
+     &       mass_rem, mass_left)
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After cutting to height process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = 1
+        mature_warn_flg = 1
+!       no harvest report if nothing removed or no crop present
+        if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
+     &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+            call get_calib_crops(sr)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call report_harvest( sr, bmrotation, mass_rem, mass_left, 0)
+            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+            call report_hydrobal( sr, bmrotation )
+            call crop_endseason( ac0nam(sr), am0cfl,                    &
+     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
+     &        acthum(sr), acxstmrep(sr),                                &
+     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
+     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
+     &        prevbgstemz(1,sr),                                        &
+     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
+     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
+     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevdayspring(sr), mature_warn_flg )
+        endif
+!-----END cutting to height process (process code 32)
+
+      case (33)
+!-----START cutting by fraction process (process code 33)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before cutting by fraction process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    cutht, pyieldf, pstalkf, rstandf
+!     do process
+        cutflg = 2
+        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf,              &
+     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
+     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
+     &       aczht(sr), acgrainf(sr), achyfg(sr),                       &
+     &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
+     &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
+     &       atzht(sr), atgrainf(sr),                                   &
+     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
+     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
+     &       adzht(1,sr), adgrainf(1,sr), adhyfg(1,sr),                 &
+     &       mass_rem, mass_left)
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After cutting by fraction process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = 1
+        mature_warn_flg = 1
+!       no harvest report if nothing removed or no crop present
+        if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
+     &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+            call get_calib_crops(sr)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call report_harvest( sr, bmrotation, mass_rem, mass_left, 0)
+            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+            call report_hydrobal( sr, bmrotation )
+            call crop_endseason( ac0nam(sr), am0cfl,                    &
+     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
+     &        acthum(sr), acxstmrep(sr),                                &
+     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
+     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
+     &        prevbgstemz(1,sr),                                        &
+     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
+     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
+     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevdayspring(sr), mature_warn_flg )
+        end if
+!-----END cutting by fraction process (process code 33)
+
+      case (34)
+!-----START modify standing fall rate process variable toughness (process code 34)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before modify standing fall rate process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) sel_pool,              &
+     &      rate_mult_vt(1), rate_mult_vt(2), rate_mult_vt(3),          &
+     &      rate_mult_vt(4), rate_mult_vt(5)
+        ! get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &      thresh_mult_vt(1), thresh_mult_vt(2), thresh_mult_vt(3),    &
+     &      thresh_mult_vt(4), thresh_mult_vt(5)
+
+!     do process
+        call fall_mod_vt( rate_mult_vt, thresh_mult_vt,                 &
+     &                    sel_pool, fracarea,                           &
+     &                    acrbc(sr), acdkrate(1,sr), acddsthrsh(sr),    &
+     &                    adrbc(1,sr), dkrate(1,1,sr), ddsthrsh(1,sr) )
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After modify standing fall rate process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END modify standing fall rate process variable toughness (process code 34)
+
+      case (37)
+!-----START thinning to population process (process code 37)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before thinning to population process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    thinval, pyieldf, pstalkf, rstandf
+!     do process
+        thinflg = 1
+        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf,          &
+     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
+     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
+     &       acdstm(sr), acgrainf(sr), achyfg(sr),                      &
+     &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
+     &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
+     &       atdstm(sr), atgrainf(sr),                                  &
+     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
+     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
+     &       addstm(1,sr), adgrainf(1,sr), adhyfg(1,sr),                &
+     &       mass_rem, mass_left)
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After thinning to population process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = 1
+        mature_warn_flg = 1
+!       no harvest report if nothing removed or no crop present
+        if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
+     &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+            call get_calib_crops(sr)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call report_harvest( sr, bmrotation, mass_rem, mass_left, 0)
+            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+            call report_hydrobal( sr, bmrotation )
+            call crop_endseason( ac0nam(sr), am0cfl,                    &
+     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
+     &        acthum(sr), acxstmrep(sr),                                &
+     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
+     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
+     &        prevbgstemz(1,sr),                                        &
+     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
+     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
+     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevdayspring(sr), mature_warn_flg )
+        end if
+!-----END thinning to population process (process code 37)
+
+      case (38)
+!-----START thinning by fraction process (process code 38)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before thinning by fraction process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    thinval, pyieldf, pstalkf, rstandf
+!     do process
+        thinflg = 0
+        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf,          &
+     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
+     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
+     &       acdstm(sr), acgrainf(sr), achyfg(sr),                      &
+     &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
+     &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
+     &       atdstm(sr), atgrainf(sr),                                  &
+     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
+     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
+     &       addstm(1,sr), adgrainf(1,sr), adhyfg(1,sr),                &
+     &       mass_rem, mass_left)
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After thinning by fraction process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = 1
+        mature_warn_flg = 1
+!       no harvest report if nothing removed or no crop present
+        if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
+     &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+            call get_calib_crops(sr)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call report_harvest( sr, bmrotation, mass_rem, mass_left, 0)
+            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+            call report_hydrobal( sr, bmrotation )
+            call crop_endseason( ac0nam(sr), am0cfl,                    &
+     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
+     &        acthum(sr), acxstmrep(sr),                                &
+     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
+     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
+     &        prevbgstemz(1,sr),                                        &
+     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
+     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
+     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevdayspring(sr), mature_warn_flg )
+        end if
+!-----END thinning by fraction process (process code 38)
+
+      case (40)
+!-----START crop to biomass transfer process (process code 40)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before biomass transfer process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+!     do process
+
+      ! This checks if there is biomass in the temporary pool to be
+      ! transferred into the residue pool. This check is here so that
+      ! repeated calls to trans do not put all biomass in the 
+      ! "slow decay" pool.
+
+      if ( temp_present .gt. 0.0 ) then
+          call trans(                                                   &
+     &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),      &
+     &      atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),         &
+     &      atmflatrootstore(sr), atmflatrootfiber(sr),                 &
+     &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
+     &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
+     &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
+     &      admstandstem(1,sr), admstandleaf(1,sr), admstandstore(1,sr),&
+     &      admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),   &
+     &      admflatrootstore(1,sr), admflatrootfiber(1,sr),             &
+     &      admbgstemz(1,1,sr), admbgleafz(1,1,sr), admbgstorez(1,1,sr),&
+     &      admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),           &
+     &      adzht(1,sr), addstm(1,sr), adxstmrep(1,sr), adgrainf(1,sr), &
+     &      ac0nam(sr), acxstm(sr), acrbc(sr), ac0sla(sr), ac0ck(sr),   &
+     &      acdkrate(1,sr), accovfact(sr), acddsthrsh(sr), achyfg(sr),  &
+     &      acresevapa(sr), acresevapb(sr),                             &
+     &   ad0nam(1,sr),adxstm(1,sr),adrbc(1,sr),ad0sla(1,sr),ad0ck(1,sr),&
+     &      dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), adhyfg(1,sr),&
+     &      adresevapa(1,sr), adresevapb(1,sr),                         &
+     &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
+     &      nslay(sr) )
+      end if
+
+      ! turn off kill flag, since temporary pool being emptied
+      ! kill and transfer by necessity must be paired to properly handle
+      ! temporary pool
+      am0kilfl = 0
+
+!      do idx=1,mnbpls
+!          write(*,*) 'after trans',adzht(idx,sr),addstm(idx,sr),
+!     &                     adxstm(idx,sr)
+!      end do
+!
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After biomass transfer process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END crop to biomass transfer process (process code 40)
+
+      case (42)
+!-----START flagged cutting to height process (process code 42)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before flagged cutting to height process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        ! set process parameters
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
+     &      mature_warn_flg, cutflg, cutht, pyieldf, pstalkf, rstandf
+
+!     do process
+        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf,              &
+     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
+     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
+     &       aczht(sr), acgrainf(sr), achyfg(sr),                       &
+     &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
+     &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
+     &       atzht(sr), atgrainf(sr),                                   &
+     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
+     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
+     &       adzht(1,sr), adgrainf(1,sr), adhyfg(1,sr),                 &
+     &       mass_rem, mass_left)
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After flagged cutting to height process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = 1
+!       no harvest report if nothing removed or no crop present
+        if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
+     &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+          if( harv_calib_flg .gt. 0 ) then
+            call get_calib_crops(sr)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+          end if
+          if( harv_report_flg .gt. 0 ) then
+            call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
+     &                           harv_unit_flg )
+            call report_hydrobal( sr, bmrotation )
+            call crop_endseason( ac0nam(sr), am0cfl,                    &
+     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
+     &        acthum(sr), acxstmrep(sr),                                &
+     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
+     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
+     &        prevbgstemz(1,sr),                                        &
+     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
+     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
+     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevdayspring(sr), mature_warn_flg )
+          end if
+        endif
+!-----END flagged cutting to height process (process code 42)
+
+      case (43)
+!-----START flagged cutting by fraction process (process code 43)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before flagged cutting by fraction process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
+     &      mature_warn_flg, cutht, pyieldf, pstalkf, rstandf
+!     do process
+        cutflg = 2
+        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf,              &
+     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
+     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
+     &       aczht(sr), acgrainf(sr), achyfg(sr),                       &
+     &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
+     &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
+     &       atzht(sr), atgrainf(sr),                                   &
+     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
+     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
+     &       adzht(1,sr), adgrainf(1,sr), adhyfg(1,sr),                 &
+     &       mass_rem, mass_left)
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After flagged cutting by fraction process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = 1
+!       no harvest report if nothing removed or no crop present
+        if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
+     &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+          if( harv_calib_flg .gt. 0 ) then
+            call get_calib_crops(sr)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+          end if
+          if( harv_report_flg .gt. 0 ) then
+            call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
+     &                           harv_unit_flg )
+            call report_hydrobal( sr, bmrotation )
+            call crop_endseason( ac0nam(sr), am0cfl,                    &
+     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
+     &        acthum(sr), acxstmrep(sr),                                &
+     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
+     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
+     &        prevbgstemz(1,sr),                                        &
+     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
+     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
+     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevdayspring(sr), mature_warn_flg )
+          end if
+        end if
+!-----END flagged cutting by fraction process (process code 43)
+
+      case (47)
+!-----START flagged thinning to population process (process code 47)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write(29,*)'//flagged Before thinning to population process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
+     &      mature_warn_flg, thinval, pyieldf, pstalkf, rstandf
+!     do process
+        thinflg = 1
+        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf,          &
+     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
+     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
+     &       acdstm(sr), acgrainf(sr), achyfg(sr),                      &
+     &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
+     &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
+     &       atdstm(sr), atgrainf(sr),                                  &
+     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
+     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
+     &       addstm(1,sr), adgrainf(1,sr), adhyfg(1,sr),                &
+     &       mass_rem, mass_left)
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write(29,*) '//After flagged thinning to population process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = 1
+!       no harvest report if nothing removed or no crop present
+        if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
+     &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+          if( harv_calib_flg .gt. 0 ) then
+            call get_calib_crops(sr)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+          end if
+          if( harv_report_flg .gt. 0 ) then
+            call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
+     &                           harv_unit_flg )
+            call report_hydrobal( sr, bmrotation )
+            call crop_endseason( ac0nam(sr), am0cfl,                    &
+     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
+     &        acthum(sr), acxstmrep(sr),                                &
+     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
+     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
+     &        prevbgstemz(1,sr),                                        &
+     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
+     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
+     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevdayspring(sr), mature_warn_flg )
+          end if
+        end if
+!-----END flagged thinning to population process (process code 47)
+
+      case (48)
+!-----START flagged thinning by fraction process (process code 48)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before flagged thinning by fraction process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
+     &      mature_warn_flg, thinval, pyieldf, pstalkf, rstandf
+!     do process
+        thinflg = 0
+        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf,          &
+     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
+     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
+     &       acdstm(sr), acgrainf(sr), achyfg(sr),                      &
+     &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
+     &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
+     &       atdstm(sr), atgrainf(sr),                                  &
+     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
+     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
+     &       addstm(1,sr), adgrainf(1,sr), adhyfg(1,sr),                &
+     &       mass_rem, mass_left)
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After flagged thinning by fraction process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = 1
+!       no harvest report if nothing removed or no crop present
+        if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
+     &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+          if( harv_calib_flg .gt. 0 ) then
+            call get_calib_crops(sr)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+          end if
+          if( harv_report_flg .gt. 0 ) then
+            call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
+     &                           harv_unit_flg )
+            call report_hydrobal( sr, bmrotation )
+            call crop_endseason( ac0nam(sr), am0cfl,                    &
+     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
+     &        acthum(sr), acxstmrep(sr),                                &
+     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
+     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
+     &        prevbgstemz(1,sr),                                        &
+     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
+     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
+     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevdayspring(sr), mature_warn_flg )
+          end if
+        end if
+!-----END flagged thinning by fraction process (process code 48)
+
+      case (50)
+!-----START residue initialization process (process code 50)
+        !New residue is assigned to residue pool 1.
+        !Existing residue is set to 0.
+        ! pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before residue initialization process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        ! do process
+        ! Read surface residue counts and amount
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    addstm(1,sr), adzht(1,sr), admstandstem(1,sr),                &
+     &    admflatstem(1,sr), adrbc(1,sr)
+
+        ! get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        ! read buried residue amounts
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    dmassres, zmassres, dmassrot, zmassrot
+        ! place buried residue in pools by layer
+        call resinit(dmassrot, zmassrot, nslay(sr),                     &
+     &               admbgrootfiberz(1,1,sr), aszlyt(1,sr))
+        call resinit(dmassres,zmassres,nslay(sr),                       &
+     &               admbgstemz(1,1,sr), aszlyt(1,sr))
+        ! get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        ! read decomposition parameters for type of residue buried
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    dkrate(1,1,sr), dkrate(2,1,sr), dkrate(3,1,sr),               &
+     &    dkrate(4,1,sr), dkrate(5,1,sr),  adxstm(1,sr),                &
+     &    ddsthrsh(1,sr), covfact(1,sr)
+        ! get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        ! read decomposition parameters for type of residue buried
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    adresevapa(1,sr), adresevapb(1,sr)
+        ! give residue the proper name
+        ad0nam(1,sr) = cropname
+        ! post-process stuff
+        ! set cumulative degree days for residues to zero
+        cumdds(1,sr) = 0.0
+        cumddf(1,sr) = 0.0
+        do idx=1,nslay(sr)
+          cumddg(idx,1,sr) = 0.0
+        end do
+
+        ! zero out uninitialized mass pools
+        dmassres = 0.0
+        zmassres = 0.0
+        dmassrot = 0.0
+        zmassrot = 0.0
+        do idx = 2, mnbpls
+            admstandstem(idx,sr) = 0.0
+            admflatstem(idx,sr) = 0.0
+            call resinit(dmassrot, zmassrot, nslay(sr),                 &
+     &                   admbgrootfiberz(1,1,sr), aszlyt(1,sr))
+            call resinit(dmassres,zmassres,nslay(sr),                   &
+     &                   admbgstemz(1,1,sr), aszlyt(1,sr))
+        end do
+
+        do idx = 1, mnbpls
+            admstandleaf(idx,sr) = 0.0
+            admstandstore(idx,sr) = 0.0
+            admflatleaf(idx,sr) = 0.0
+            admflatstore(idx,sr) = 0.0
+            admflatrootstore(idx,sr) = 0.0
+            admflatrootfiber(idx,sr) = 0.0
+            call resinit(dmassres, zmassres, nslay(sr),                 &
+     &                   admbgleafz(1,idx,sr), aszlyt(1,sr))
+            call resinit(dmassres, zmassres, nslay(sr),                 &
+     &                   admbgstorez(1,idx,sr), aszlyt(1,sr))
+            call resinit(dmassrot, zmassrot, nslay(sr),                 &
+     &                   admbgrootstorez(1,idx,sr), aszlyt(1,sr))
+            ! set other state variables
+            adxstmrep(idx,sr) = adxstm(1,sr)
+            adgrainf(idx,sr) = 1.0
+            adhyfg(idx,sr) = 0
+        end do
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After residue initialization process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END residue initialization process (process code 50)
+!
+      case (51)
+!-----START planting process (process code 51)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before planting process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!     kill and transfer only if existing crop and new crop
+      if( am0cgf.and.(acdstm(sr).gt.0.0) ) then
+!         In a growth model growing only a single crop, any existing crop must
+!         be killed and transferred to residue or all the residue will be lost
+!         when the new crop is initialized
+!        (remove when multiple species capable)
+          call kill_crop( am0cgf, nslay(sr),                            &
+     &           acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr), &
+     &           acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),    &
+     &           acmrootstorez(1,sr), acmrootfiberz(1,sr),              &
+     &           acmbgstemz(1,sr),                                      &
+     &           aczht(sr), acdstm(sr), acxstmrep(sr), aczrtd(sr),      &
+     &           acgrainf(sr),                                          &
+     &           atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
+     &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
+     &           atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),          &
+     &           atmbgstemz(1,sr),                                      &
+     &           atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr),      &
+     &           atgrainf(sr) )
+          call trans(                                                   &
+     &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),      &
+     &      atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),         &
+     &      atmflatrootstore(sr), atmflatrootfiber(sr),                 &
+     &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
+     &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
+     &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
+     &      admstandstem(1,sr), admstandleaf(1,sr), admstandstore(1,sr),&
+     &      admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),   &
+     &      admflatrootstore(1,sr), admflatrootfiber(1,sr),             &
+     &      admbgstemz(1,1,sr), admbgleafz(1,1,sr), admbgstorez(1,1,sr),&
+     &      admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),           &
+     &      adzht(1,sr), addstm(1,sr), adxstmrep(1,sr), adgrainf(1,sr), &
+     &      ac0nam(sr), acxstm(sr), acrbc(sr), ac0sla(sr), ac0ck(sr),   &
+     &      acdkrate(1,sr), accovfact(sr), acddsthrsh(sr), achyfg(sr),  &
+     &      acresevapa(sr), acresevapb(sr),                             &
+     &   ad0nam(1,sr),adxstm(1,sr),adrbc(1,sr),ad0sla(1,sr),ad0ck(1,sr),&
+     &      dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), adhyfg(1,sr),&
+     &      adresevapa(1,sr), adresevapb(1,sr),                         &
+     &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
+     &      nslay(sr) )
+      endif
+      ! crop pool state has been changed, force dependent variable update  
+      am0cropupfl = 1
+
+!     read population, spacing and yield flags
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    acrsfg(sr), acxrow(sr), ac0rg(sr)
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    acdpop(sr), acdmaxshoot(sr), acbaflg(sr), acytgt(sr),         &
+     &    acbaf(sr), acyraf(sr), achyfg(sr)
+
+!     get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+!     read yield reporting name
+          acynmu(sr) = line(2:71)   !at present, line ends with < symbol at 72
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+!     read yield reporting values and growth characteristics
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    acywct(sr), acycon(sr), ac0idc(sr), acgrf(sr),                &
+     &    ac0ck(sr), acehu0(sr)
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+!     read crop growth parameters
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    aczmxc(sr), ac0growdepth(sr), aczmrt(sr), actmin(sr),         &
+     &    actopt(sr), acthudf(sr), actdtm(sr), acthum(sr)
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    ac0fd1(1,sr), ac0fd2(1,sr), ac0fd1(2,sr), ac0fd2(2,sr),       &
+     &    actverndel(sr), ac0bceff(sr)
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    ac0alf(sr), ac0blf(sr), ac0clf(sr), ac0dlf(sr),               &
+     &    ac0arp(sr), ac0brp(sr), ac0crp(sr), ac0drp(sr)
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    ac0aht(sr), ac0bht(sr), ac0ssa(sr), ac0ssb(sr),               &
+     &    ac0sla(sr), ac0hue(sr), ac0transf(sr), ac0diammax(sr)
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    ac0storeinit(sr), ac0shoot(sr), acfleafstem(sr), acfshoot(sr),&
+     &    acfleaf2stor(sr), acfstem2stor(sr), acfstor2stor(sr),acrbc(sr)
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    acdkrate(1,sr),acdkrate(2,sr),acdkrate(3,sr),acdkrate(4,sr),  &
+     &    acdkrate(5,sr), acxstm(sr), acddsthrsh(sr), accovfact(sr)
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    acresevapa(sr), acresevapb(sr),acyld_coef(sr),acresid_int(sr),&
+     &    aczloc_regrow(sr), noparam3, noparam2, noparam1
+
+        ! reading of process parameters complete
+
+        ! input is residue yield ratio. internal use is total biomass yield ratio
+        ! all input values are on a dry weight basis.
+!        acyld_coef(sr) = acyld_coef(sr) + 1.0
+
+        ! adjust yield coefficient to generate values on dry weight basis
+        ! from total above ground biomass increments
+        acyld_coef(sr) = (acyld_coef(sr) + 1.0 - acywct(sr)/100.0)      &
+     &                 / (1.0-acywct(sr)/100.0)
+
+        ! check crop type to see if yield coefficient and grain fraction are used
+        if( cook_yield .eq. 1 ) then
+            if(     (achyfg(sr) .eq. 0)                                 &
+     &         .or. (achyfg(sr) .eq. 1)                                 &
+     &         .or. (achyfg(sr) .eq. 5) ) then
+            ! grain fraction is used
+                if(       (acyld_coef(sr) .gt. 1.0 )                    &
+     &              .and. (acyld_coef(sr) * acgrf(sr) .lt. 1.0) ) then
+                    ! these values will physically require the transfer of
+                    ! biomass from stem or leaf pools to meet the incremental
+                    ! need for reproductive mass to meet the residue yield ratio.
+                    ! If acresid_int is not greateer than zero, this will
+                    ! not be possible
+                    write(*,*) 'Error: crop named (', trim(cropname),    &
+     &         ') has bad grain fraction and residue yield ratio values'
+                    write(*,*) 'Error: grf*(ryrat+1-mc)/mc must be > 1', &
+     &                         ', Value is: ',acyld_coef(sr)*acgrf(sr)
+                    stop
+                end if
+            end if
+        end if
+
+!       set planting date vars (day, month, rotation year)
+        aplant_day(sr) = lopday
+        aplant_month(sr) = lopmon
+        aplant_rotyr(sr) = lopyr
+
+        ! initialize transpiration depth parameters
+        ahzfurcut(sr) = 0.0
+        ahztransprtmin(sr) = 0.0
+        ahztransprtmax(sr) = 0.0
+!       set row spacing based on flag
+        select case( acrsfg(sr) )
+        case(0) ! Broadcast Planting
+            acxrow(sr) = 0.0
+        case(1) ! Use Implement Ridge Spacing
+            if(imprs.gt.0.001) then
+              acxrow(sr) = imprs * mmtom
+              ! check for implement seed placement and ridging
+              if( (ac0rg(sr) .eq. 0) .and. (rdgflag .eq. 1) ) then
+                ! seed placed in furrow bottom and ridge made unconditionally
+                ! set transpiration depth parameters (meters)
+                ahzfurcut(sr) = mmtom                                   &
+     &                     * furrowcut(aszrgh(sr),asxrgw(sr),asxrgs(sr))
+                ahztransprtmin(sr) = ahzfurcut(sr) + ac0growdepth(sr)
+                ahztransprtmax(sr) = aczmrt(sr)
+              end if
+           else  ! no ridges, so this is a broadcast crop
+              acxrow(sr) = 0.0
+           endif
+        case(2) ! Use Specified Row Spacing
+!           convert incoming mm to meters used in acxrow
+            acxrow(sr) = acxrow(sr)*mmtom
+        case default
+            write(*,*) 'Invalid row spacing flag value'
+        end select
+
+!       do process
+!       do not initialize crop if no crop is present
+        if( acdpop(sr) .gt. 0.0 ) then
+!         set flag for crop initialization - jt
+          am0cif = .true.
+!         set crop growth flag on - jt
+          am0cgf = .true.
+!         give crop the proper name
+          ac0nam(sr) = cropname
+          call stir_crop(sr, cropname, 1)
+        endif
+!       post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After planting process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+        call set_calib(sr)
+        call report_hydrobal( sr, bmrotation )
+!-----END planting process (process code 51)
+
+      case (61)
+!-----START biomass remove process (process code 61)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before biomass remove process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &           sel_position, sel_pool,                                &
+     &           storef, leaff, stemf, rootstoref, rootfiberf
+
+        ! Set bioflg to look at all pools
+        bioflg = 0
+
+        ! do process
+        call remove( sel_position, sel_pool, bioflg,                    &
+     &    stemf, leaff, storef, rootstoref, rootfiberf,                 &
+     &    acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),        &
+     &    acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),           &
+     &    acmrootstorez(1,sr), acmrootfiberz(1,sr),                     &
+     &    acmbgstemz(1,sr),                                             &
+     &    aczht(sr), acdstm(sr), acgrainf(sr), achyfg(sr),              &
+     &    atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),        &
+     &    atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),           &
+     &    atmflatrootstore(sr), atmflatrootfiber(sr),                   &
+     &    atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),        &
+     &    atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),                 &
+     &    atzht(sr), atdstm(sr), atgrainf(sr),                          &
+     &    admstandstem(1,sr), admstandleaf(1,sr), admstandstore(1,sr),  &
+     &    admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),     &
+     &    admflatrootstore(1,sr), admflatrootfiber(1,sr),               &
+     &    admbgstemz(1,1,sr), admbgleafz(1,1,sr), admbgstorez(1,1,sr),  &
+     &    admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),             &
+     &    adzht(1,sr), addstm(1,sr), adgrainf(1,sr), adhyfg(1,sr),      &
+     &    nslay(sr), mass_rem, mass_left)
+
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After biomass remove process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = 1
+        mature_warn_flg = 1
+!       no harvest report if nothing removed or no crop present
+        if( (storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0) &
+     &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+            call get_calib_crops(sr)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call report_harvest( sr, bmrotation, mass_rem, mass_left, 0)
+            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+            call report_hydrobal( sr, bmrotation )
+            call crop_endseason( ac0nam(sr), am0cfl,                    &
+     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
+     &        acthum(sr), acxstmrep(sr),                                &
+     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
+     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
+     &        prevbgstemz(1,sr),                                        &
+     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
+     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
+     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevdayspring(sr), mature_warn_flg )
+        end if
+!-----END biomass remove process (process code 61)
+
+      case (62)
+!-----START biomass remove pool process (process code 62)
+        ! pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before biomass remove pool process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
+     &      mature_warn_flg, sel_position, sel_pool, bioflg,            &
+     &      storef, leaff, stemf, rootstoref, rootfiberf
+
+        ! do process
+        call remove( sel_position, sel_pool, bioflg,                    &
+     &    stemf, leaff, storef, rootstoref, rootfiberf,                 &
+     &    acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),        &
+     &    acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),           &
+     &    acmrootstorez(1,sr), acmrootfiberz(1,sr),                     &
+     &    acmbgstemz(1,sr),                                             &
+     &    aczht(sr), acdstm(sr), acgrainf(sr), achyfg(sr),              &
+     &    atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),        &
+     &    atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),           &
+     &    atmflatrootstore(sr), atmflatrootfiber(sr),                   &
+     &    atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),        &
+     &    atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),                 &
+     &    atzht(sr), atdstm(sr), atgrainf(sr),                          &
+     &    admstandstem(1,sr), admstandleaf(1,sr), admstandstore(1,sr),  &
+     &    admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),     &
+     &    admflatrootstore(1,sr), admflatrootfiber(1,sr),               &
+     &    admbgstemz(1,1,sr), admbgleafz(1,1,sr), admbgstorez(1,1,sr),  &
+     &    admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),             &
+     &    adzht(1,sr), addstm(1,sr), adgrainf(1,sr), adhyfg(1,sr),      &
+     &    nslay(sr), mass_rem, mass_left)
+
+        ! post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After biomass remove pool process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = 1
+!       no harvest report if nothing removed
+        if( (storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0) &
+     &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+          ! removed mass is used in calibration
+          if( harv_calib_flg .gt. 0 ) then
+            call get_calib_crops(sr)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+          end if
+          ! removed mass appears in crop report
+          if( harv_report_flg .gt. 0 ) then
+            call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
+     &                           harv_unit_flg )
+            call report_hydrobal( sr, bmrotation )
+            call crop_endseason( ac0nam(sr), am0cfl,                    &
+     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
+     &        acthum(sr), acxstmrep(sr),                                &
+     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
+     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
+     &        prevbgstemz(1,sr),                                        &
+     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
+     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
+     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevdayspring(sr), mature_warn_flg )
+          end if
+        end if
+!-----END biomass remove pool process (process code 62)
+
+      case (65)
+!-----START add residue process (process code 65)
+        !New residue is assigned to residue pool 1.
+        !Existing residue is transfered to other pools.
+        !ADD RESIDUE was modeled after residue initialization (process 50)
+
+        ! this is modified to avoid polluting the parameters of an
+        ! existing crop, which could happen if residue is added while a
+        ! crop is growing.
+
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before add residue process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    atdstm(sr), atzht(sr), atmstandstem(sr),                      &
+     &    atmflatstem(sr), trbc
+        ! get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        ! read buried residue amounts
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    dmassres, zmassres, dmassrot, zmassrot
+        ! place buried residue in pools by layer
+        call resinit(dmassrot, zmassrot, nslay(sr),                     &
+     &               atmbgrootfiberz(1,sr), aszlyt(1,sr))
+        call resinit(dmassres,zmassres,nslay(sr),                       &
+     &               atmbgstemz(1,sr), aszlyt(1,sr))
+        ! get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        ! read decomposition parameters
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    tdkrate(1), tdkrate(2), tdkrate(3), tdkrate(4), tdkrate(5),   &
+     &    txstm, tddsthrsh, tcovfact
+        ! get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        ! read parameters for residue suppression of evaporation
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    tresevapa, tresevapb
+
+        !Set to 0
+        !above ground
+        atmstandleaf(sr) = 0.0
+        atmstandstore(sr) = 0.0
+        atmflatleaf(sr) = 0.0
+        atmflatstore(sr) = 0.0
+        atmflatrootstore(sr) = 0.0
+        atmflatrootfiber(sr) = 0.0
+        !below ground by layer
+        dmassres = 0.0
+        zmassres = 0.0
+        dmassrot = 0.0
+        zmassrot = 0.0
+        call resinit(dmassres, zmassres, nslay(sr),                     &
+     &               atmbgleafz(1,sr), aszlyt(1,sr))
+        call resinit(dmassres, zmassres, nslay(sr),                     &
+     &               atmbgstorez(1,sr), aszlyt(1,sr))
+        call resinit(dmassrot, zmassrot, nslay(sr),                     &
+     &               atmbgrootstorez(1,sr), aszlyt(1,sr))
+
+        atgrainf(sr) = 1.0
+        atxstmrep(sr) = txstm
+        thyfg = 0
+
+        !I don't think it matters what values we put here.
+        !We set leaf mass to 0 anyway.
+        t0sla = 0.0
+        t0ck = 0.0
+
+          call trans(                                                   &
+     &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),      &
+     &      atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),         &
+     &      atmflatrootstore(sr), atmflatrootfiber(sr),                 &
+     &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
+     &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
+     &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
+     &      admstandstem(1,sr), admstandleaf(1,sr), admstandstore(1,sr),&
+     &      admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),   &
+     &      admflatrootstore(1,sr), admflatrootfiber(1,sr),             &
+     &      admbgstemz(1,1,sr), admbgleafz(1,1,sr), admbgstorez(1,1,sr),&
+     &      admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),           &
+     &      adzht(1,sr), addstm(1,sr), adxstmrep(1,sr), adgrainf(1,sr), &
+     &      cropname, txstm, trbc, t0sla, t0ck,                         &
+     &      tdkrate(1), tcovfact, tddsthrsh, thyfg,                     &
+     &      tresevapa, tresevapb,                                       &
+     &   ad0nam(1,sr),adxstm(1,sr),adrbc(1,sr),ad0sla(1,sr),ad0ck(1,sr),&
+     &      dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), adhyfg(1,sr),&
+     &      adresevapa(1,sr), adresevapb(1,sr),                         &
+     &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
+     &      nslay(sr) )
+ 
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After add residue process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END add residue process (process code 65)
+
+      case (66)
+!-----START add manure process (process code 66)
+        !New residue (manure) is assigned to residue pool 1.
+        !Existing residue is transfered to other pools.
+        !ADD MANURE was modeled after ADD RESIDUE (process 65)
+        ! The only difference between process ADD MANURE and
+        ! ADD RESIDUE is that NRCS wanted to be able to specify
+        ! the "total" mass of manure applied and the fraction
+        ! that is buried of that total.  So, ADD MANURE is a
+        ! special case of ADD RESIDUE (just uses two additional
+        ! input parameters)
+
+        ! this is modified to avoid polluting the parameters of an
+        ! existing crop, which could happen if residue is added while a
+        ! crop is growing.
+
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before add manure process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        ! get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    atdstm(sr), atzht(sr), atmstandstem(sr),                      &
+     &    atmflatstem(sr), trbc
+
+        ! get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        ! read buried residue amounts
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    dmassres, zmassres, dmassrot, zmassrot
+
+        ! get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        ! read total manure mass amount and buried fraction
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    manure_total_mass, manure_buried_fraction
+       ! Now we add the "flat and buried" manure to the generic residue
+       ! flat and buried quantities
+        atmflatstem(sr) = atmflatstem(sr) +                             &      
+     &          (1.0 - manure_buried_fraction) * manure_total_mass
+        dmassres = dmassres +                                           &
+     &          (manure_buried_fraction) * manure_total_mass
+
+        ! place buried residue in pools by layer
+        call resinit(dmassrot, zmassrot, nslay(sr),                     &
+     &               atmbgrootfiberz(1,sr), aszlyt(1,sr))
+        call resinit(dmassres,zmassres,nslay(sr),                       &
+     &               atmbgstemz(1,sr), aszlyt(1,sr))
+
+        ! get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        ! read decomposition parameters
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    tdkrate(1), tdkrate(2), tdkrate(3), tdkrate(4), tdkrate(5),   &
+     &    txstm, tddsthrsh, tcovfact
+
+        ! get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        ! read parameters for residue suppression of evaporation
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &    tresevapa, tresevapb
+
+        !Set to 0
+        !above ground
+        atmstandleaf(sr) = 0.0
+        atmstandstore(sr) = 0.0
+        atmflatleaf(sr) = 0.0
+        atmflatstore(sr) = 0.0
+        atmflatrootstore(sr) = 0.0
+        atmflatrootfiber(sr) = 0.0
+        !below ground by layer
+        dmassres = 0.0
+        zmassres = 0.0
+        dmassrot = 0.0
+        zmassrot = 0.0
+        call resinit(dmassres, zmassres, nslay(sr),                     &
+     &               atmbgleafz(1,sr), aszlyt(1,sr))
+        call resinit(dmassres, zmassres, nslay(sr),                     &
+     &               atmbgstorez(1,sr), aszlyt(1,sr))
+        call resinit(dmassrot, zmassrot, nslay(sr),                     &
+     &               atmbgrootstorez(1,sr), aszlyt(1,sr))
+
+        atgrainf(sr) = 1.0
+        atxstmrep(sr) = txstm
+        thyfg = 0
+
+        !I don't think it matters what values we put here.
+        !We set leaf mass to 0 anyway.
+        t0sla = 0.0
+        t0ck = 0.0
+
+          call trans(                                                   &
+     &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),      &
+     &      atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),         &
+     &      atmflatrootstore(sr), atmflatrootfiber(sr),                 &
+     &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
+     &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
+     &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
+     &      admstandstem(1,sr), admstandleaf(1,sr), admstandstore(1,sr),&
+     &      admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),   &
+     &      admflatrootstore(1,sr), admflatrootfiber(1,sr),             &
+     &      admbgstemz(1,1,sr), admbgleafz(1,1,sr), admbgstorez(1,1,sr),&
+     &      admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),           &
+     &      adzht(1,sr), addstm(1,sr), adxstmrep(1,sr), adgrainf(1,sr), &
+     &      cropname, txstm, trbc, t0sla, t0ck,                         &
+     &      tdkrate(1), tcovfact, tddsthrsh, thyfg,                     &
+     &      tresevapa, tresevapb,                                       &
+     &   ad0nam(1,sr),adxstm(1,sr),adrbc(1,sr),ad0sla(1,sr),ad0ck(1,sr),&
+     &      dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), adhyfg(1,sr),&
+     &      adresevapa(1,sr), adresevapb(1,sr),                         &
+     &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
+     &      nslay(sr) )
+ 
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After add manure process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END add manure process (process code 66)
+
+      case (71)
+!-----START irrigate process (process code 71) (OBSOLETE)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before irrigation process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) roughflg, irrig
+
+!     do process
+        ! replaced am0irr (1 - sprinkler, 2 furrow) with ahlocirr
+        ! using roughflg to read in old value and set some default values
+        if( roughflg .eq. 1 ) then
+            ahlocirr(sr) = 2000.0
+        else
+            ahlocirr(sr) = 0.0
+        end if
+        ahzirr(sr) = ahzirr(sr) + irrig
+        ! make sure rate and duration are consistent
+        ! these values are not set in this process but may have been set
+        ! in process 72, if this is used in conjunction with it
+        call ratedura(ahzirr(sr), ahratirr(sr), ahdurirr(sr))
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After irrigate process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END irrigate process (process code 71)
+
+      case (72)
+!-----START irrigation monitoring process (process code 72)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before irrigation monitoring process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    am0monirr(sr), ahzdmaxirr(sr), ahratirr(sr), ahdurirr(sr),    &
+     &    ahlocirr(sr), ahminirr(sr), ahmadirr(sr), ahmintirr(sr)
+!     do process
+        ! set next irrigation day to zero so irrigations will trigger
+        ahndayirr(sr) = 0
+        ! use inputs to set the irrigation rate, if 
+        call ratedura(ahzdmaxirr(sr), ahratirr(sr), ahdurirr(sr))
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After irrigation monitoring process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END irrigation monitoring process (process code 72)
+
+      case (73)
+!-----START single event irrigation process (process code 73)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before single event irrigation process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901)                        &
+     &    irrig, ahratirr(sr), ahdurirr(sr), ahlocirr(sr)
+!     do process
+        ! add this irrigation event to any previous event on this same day
+        ahzirr(sr) = ahzirr(sr) + irrig
+        ! use inputs to set the irrigation rate, if 
+        call ratedura(ahzirr(sr), ahratirr(sr), ahdurirr(sr))
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After single event irrigation process//'
+          !call tdbug(sr, nslay(sr),prcode)
+        end if
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After single event irrigation process//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END irrigation monitoring process (process code 73)
+
+      case (74)
+!-----START terminate irrigation monitoring terminate process (process code 74)
+!     pre-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*)
+          write (29,*) '//Before terminate irrigation monitoring proc//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!     do process
+        am0monirr(sr) = 0
+!     post-process stuff
+        if (am0tdb .eq. 1) then
+          write (29,*) '//After terminate irrigation monitoring proc//'
+          call tdbug(sr, nslay(sr),prcode)
+        end if
+!-----END terminate irrigation monitoring process (process code 74)
+
+      case default
+        goto 902
+      end select
+
+      return
+
+! Error stops
+
+  901 write(0,*) 'Error reading parameter ', line
+      call exit (1)
+  902 write(0,*) 'Invalid process ', prname, ' ', prcode
+      call exit (1)
+      end

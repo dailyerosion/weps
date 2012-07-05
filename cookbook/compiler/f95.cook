@@ -1,0 +1,95 @@
+/**********************************
+	   Absoft compiler COOK OPTIONS
+ **********************************/
+
+/**********************************
+	    	  COMPILER
+ **********************************/
+
+fc			= f95;
+fc_version 		= [collect [fc] --version | head -1];
+
+fc_compile_flag		= "-c ";
+fc_out_flag		= "-o ";	/* requires space for arg following option */
+
+fc_flags		= "";
+
+fc_fixed		= "-f fixed";
+fc_free			= "-f free";
+
+fc_default		= "-O2";	/* default mode flags */
+fc_debug		= "-O0 -g";	/* debug flags */
+
+if [is_windows] then{
+	fc_optimize	= "-O4";	/* optimization flags */
+}
+else {
+	fc_optimize	= "-Ofast";	/* optimization flags */
+}
+
+fc_release		= "-O3";	/* release flags	*/
+
+/* includes */
+fc_inc_flag		= "-I ";
+fc_inc_join		= [false];	/* if true, includes joined into single arg with separator */
+fc_inc_sep		= ";";
+
+fc_mod_inc_flag	= "-p ";
+
+fc_mod_out_flag	= "-YMOD_OUT_DIR=";
+
+/* Case of the module names: lower, upper or mixed*/
+fc_mod_case	= upper;
+
+
+/**********************************
+	    	  LINKER
+ **********************************/
+ld				= [fc];
+ld_version		= [fc_version];
+
+if [is_windows] then{
+	ld_link_flag	= "unix.lib";
+}
+else {
+	ld_link_flag	= "";
+	ld_libs			= "-lU77";
+}
+
+ld_out_flag		= "-o ";
+
+ld_flags		= "-v" [ld_link_flag];
+ld_default		= "-O2";
+ld_debug		= "-O0";	/* debug flags */
+if [is_windows] then {
+	ld_optimize	= "-O4";	/* optimization flags */
+
+	if [in [mode] default debug release] then {
+		ld_lib_prefix	= "-Xlinker --start-group ";
+		ld_lib_suffix	= " -Xlinker --end-group";
+	}
+}
+else {
+	ld_optimize	= "-Ofast";	/* optimization flags */
+
+	if [in [mode] default debug release] then {
+		ld_lib_prefix	= "-Xlinker --start-group ";
+		ld_lib_suffix	= " -Xlinker --end-group";
+	}
+}
+ld_release		= "-O3";	/* optimization flags */
+
+
+/* includes */
+ld_inc_flag		= [fc_inc_flag];
+ld_inc_join		= [fc_inc_join];	/* if true, includes joined into single arg with separator */
+ld_inc_sep		= [fc_inc_sep];
+
+
+/**********************************
+	    	  ARCHIVER
+ **********************************/
+ar			= ar;
+ar_version	= [collect [ar] --version | head -1];
+
+ar_flags	= "-cq ";

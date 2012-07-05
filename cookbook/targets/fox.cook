@@ -1,0 +1,52 @@
+/* Defines targets and recipies for the FoX Fortran XML Library */
+
+fox.src			= ext/fox;                      /*src files*/
+fox.dir			= [build.dir]/fox;		/*directory for the fox library*/
+
+/* fox modules */
+[mod.dir]%0[lum fox_]%[mod]: [fox.dir]/objs/finclude/fox_%[mod]{
+	/*
+            cp [need] [target];
+        */
+}
+
+/* fox libraries */
+[lib.dir]/[lib.prefix]FoX_%[lib]: [fox.dir]/objs/lib/libFoX_%.a{                        
+	cp [need] [target];
+}
+
+/* actually do the making */
+[fox.dir]%0%:{
+    cp -ru [fox.src]/"*" [fox.dir];
+    function print "making FoX library";     
+
+    /* configure */
+    cd [fox.dir] && "./configure FC="[fc];
+    
+    
+    sed -i "'s/^FFLAGS=.*$/FFLAGS="[oneline [fc_flags]]"/g'" [fox.dir]/arch.make;
+    sed -i "'s/^LDFLAGS=.*$/LDFLAGS="[oneline [ld_flags]]"/g'" [fox.dir]/arch.make;
+        
+    /* make */    	
+    cd [fox.dir] && make dom_lib;	  
+
+    /* copy all the mods to the cook build environment */
+    mkdir -p [mod.dir];
+    cp [fox.dir]/objs/finclude/"*"[mod] [mod.dir];
+        
+}
+
+/*cascade the head FoX modules to their libraries */
+cascade [mod.dir]/fox_dom[mod] = [lib.dir]/[lib.prefix]FoX_dom[lib];
+cascade [mod.dir]/fox_sax[mod] = [lib.dir]/[lib.prefix]FoX_sax[lib];
+
+/* cascade the FoX library dependencies 
+FoX_dom
+FoX_sax
+FoX_common
+FoX_fsys
+FoX_utils
+*/
+cascade [lib.dir]/[lib.prefix]FoX_dom[lib] = [lib.dir]/[lib.prefix]FoX_sax[lib];
+cascade [lib.dir]/[lib.prefix]FoX_sax[lib] = [lib.dir]/[lib.prefix]FoX_common[lib];
+cascade [lib.dir]/[lib.prefix]FoX_common[lib] = [lib.dir]/[lib.prefix]FoX_fsys[lib] [lib.dir]/[lib.prefix]FoX_utils[lib];

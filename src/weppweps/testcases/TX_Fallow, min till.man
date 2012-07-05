@@ -1,0 +1,96 @@
+Version: 1.40
+*START 1
+N This management file was updated to contain the most current crop and operation records for WEPS on - Fri Jul 07 10:40:21 CDT 2006
+#------------
+D 20/07/01
+O 01 Wide-sweep plow (60 inch blade spacing)
++ 2.2351363 0.0 2.2351363 1.5645955 2.9056773
+T Enter Operation notes here
+G 01 Tillage
++ 101.600204 0.5 1.0 101.600204 50.800102 127.00026
+P 01 Break Crust
+P 02 Random Roughness
++ 1 7.6200156
+P 05 Ridges and Dikes
++ 1 50.800102 1524.003 0.0 0.0 0.0
+P 11 Aggregate Crushing
++ 2.4 -2.0
+P 12 Soil Loosening
++ 0.8
+P 13 Soil Layer Mixing
++ 0.3
+P 31 Kill or Defoliate Growing Crop
++ 2
+P 40 End crop Biomass Manipulation
+P 24 Flatten Standing Biomass
++ 0 0.4 0.25 0.15 0.15 1.0
+P 25 Bury Flat Biomass
++ 1 0.50 0.15 0.1 0.05 0.25
+P 26 Resurface Buried Biomass
++ 0.02 0.03 0.05 0.07 0.02
+P 34 Change Standing Biomass Fall Rate
++ 7 3.0 2.5 2.0 1.5 1.0
++ 0.5 0.6 0.7 0.8 1.0
+#------------
+D 31/08/01
+O 01 Wide-sweep plow (60 inch blade spacing)
++ 2.2351363 0.0 2.2351363 1.5645955 2.9056773
+T Enter Operation notes here
+G 01 Tillage
++ 101.600204 0.5 1.0 101.600204 50.800102 127.00026
+P 01 Break Crust
+P 02 Random Roughness
++ 1 7.6200156
+P 05 Ridges and Dikes
++ 1 50.800102 1524.003 0.0 0.0 0.0
+P 11 Aggregate Crushing
++ 2.4 -2.0
+P 12 Soil Loosening
++ 0.8
+P 13 Soil Layer Mixing
++ 0.3
+P 31 Kill or Defoliate Growing Crop
++ 2
+P 40 End crop Biomass Manipulation
+P 24 Flatten Standing Biomass
++ 0 0.4 0.25 0.15 0.15 1.0
+P 25 Bury Flat Biomass
++ 1 0.50 0.15 0.1 0.05 0.25
+P 26 Resurface Buried Biomass
++ 0.02 0.03 0.05 0.07 0.02
+P 34 Change Standing Biomass Fall Rate
++ 7 3.0 2.5 2.0 1.5 1.0
++ 0.5 0.6 0.7 0.8 1.0
+#------------
+D 15/10/01
+O 01 Wide-sweep plow (60 inch blade spacing)
++ 2.2351363 0.0 2.2351363 1.5645955 2.9056773
+T Enter Operation notes here
+G 01 Tillage
++ 101.600204 0.5 1.0 101.600204 50.800102 127.00026
+P 01 Break Crust
+P 02 Random Roughness
++ 1 7.6200156
+P 05 Ridges and Dikes
++ 1 50.800102 1524.003 0.0 0.0 0.0
+P 11 Aggregate Crushing
++ 2.4 -2.0
+P 12 Soil Loosening
++ 0.8
+P 13 Soil Layer Mixing
++ 0.3
+P 31 Kill or Defoliate Growing Crop
++ 2
+P 40 End crop Biomass Manipulation
+P 24 Flatten Standing Biomass
++ 0 0.4 0.25 0.15 0.15 1.0
+P 25 Bury Flat Biomass
++ 1 0.50 0.15 0.1 0.05 0.25
+P 26 Resurface Buried Biomass
++ 0.02 0.03 0.05 0.07 0.02
+P 34 Change Standing Biomass Fall Rate
++ 7 3.0 2.5 2.0 1.5 1.0
++ 0.5 0.6 0.7 0.8 1.0
+#------------
+*END
+*EOF

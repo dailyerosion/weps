@@ -1,0 +1,27 @@
+NOQUITONERROR
+DEBUG
+lf95
+include=inc
+FILES=eros_main\*.for
+OBJDIR=eros_main
+compile=@lf95 -g -chk -in -c %fi -i %id -o %od%sf%oe
+AND
+compile=@lf95 -g -chk -in -c %fi -i %id -o %od%sf%oe
+FILES=eros_init\*.for
+AND
+compile=@lf95 -g -chk -in -c %fi -i %id -o %od%sf%oe
+FILES=eros_for\*.for
+AND
+compile=@lf95 -g -chk -in -c %fi -i %id -o %od%sf%oe
+FILES=util\nt\*.for
+AND
+compile=@lf95 -g -chk -in -c %fi -i %id -o %od%sf%oe
+FILES=util\date\*.for
+AND
+compile=@lf95 -g -chk -in -c %fi -i %id -o %od%sf%oe
+FILES=util\misc\*.for
+AND
+TARGET=eros13.exe
+
+LINK=@lf95 @%rf -exe %ex
+

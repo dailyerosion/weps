@@ -1,0 +1,239 @@
+c**********************************************************************
+c
+c**********************************************************************
+      subroutine saeinp
+
+c
+c     +++ PURPOSE +++
+c     print out input file for stand alone erosion
+c
+c     +++ ARGUMENT DECLARATIONS +++
+
+c     +++ ARGUMENT DEFINITIONS +++
+
+c
+c     +++ PARAMETER +++
+c
+c     + + + GLOBAL COMMON BLOCKS + + +
+c     compiler instr. - no warn of unreferenced symbols in include files
+*$noreference
+      include  'p1werm.inc'
+      include  'm1subr.inc'
+      include  'p1const.inc'
+      include  'b1glob.inc'
+c    include  'b1geom.inc'
+      include  'm1geo.inc'
+      include  'w1wind.inc'
+      include  'w1pavg.inc'
+      include  's1dbh.inc'
+      include  's1layr.inc'
+      include  's1phys.inc'
+      include  's1agg.inc'
+      include  's1surf.inc'
+      include  's1sgeo.inc'
+      include  'h1db1.inc'
+      include  'm1flag.inc'
+      include  'm1sim.inc'
+*$reference
+c
+c     + + + LOCAL COMMON BLOCKS + + +
+*$noreference
+      include 'erosion/e2grid.inc'
+      include 'erosion/e3grid.inc'
+      include 'erosion/m2geo.inc'
+      include 'erosion/s2sgeo.inc'
+      include 'erosion/s2agg.inc'
+      include 'erosion/s2surf.inc'
+      include  'erosion/e2erod.inc'
+c      include  'erosion/w2wind.inc'
+*$reference
+c
+c     +++ LOCAL VARIABLES +++
+      integer i,j,wustfl, icsr, outfl
+      integer  n
+      integer b, day, mon, yr
+      real  wuref, a
+      real wzzo, wzzov
+      real tempegt
+      integer l, k
+c      real wr
+c
+c     + + + LOCAL VARIABLE DEFINITIONS + + +
+c     i     =
+c     wustfl=
+c     icsr  =
+c     outfl =
+c     nhill =
+c     wuref =
+c     a     =
+c     wzzo  =
+c     wus   =
+c     wust  =
+c     wusp  =
+c     wr    =
+c
+c
+c     +++ SAVES +++
+c
+c     +++ SUBROUTINES CALLED +++
+c     sbzo
+c     sbwus
+c     sbwusv
+c     sbwust
+c     sbinit
+c     sbigrd
+c     sbwind
+c     sberod
+c
+c     sbout
+c     sbsfdi
+c
+c     +++ FUNCTION DECLARATIONS +++
+c
+c     +++ END SPECIFICATIONS +++
+c
+
+c     code for output
+      call caldat (am0jd,day,mon,yr)
+
+      if ((day.eq.29).and.(mon.eq.3).and.(yr.eq.18)) then
+        write(42,*) '# day mon yr',day,mon,yr
+
+      do 23  j = jmax, 0, -1
+      write (40,10)  (egt(i,j), i = 0, imax)
+   23 continue
+      do 24  j = jmax, 0, -1
+      write (40,10)  (egtss(i,j), i = 0, imax)
+   24 continue
+   10 format (1x, 31f14.8)
+
+         tempegt = 0.
+         do 550 j = 1, jmax-1
+            do 545 i = 1, imax-1
+               tempegt = tempegt+egt(i,j)
+  545       continue
+  550    continue
+         write(42,*) '#tempegt', tempegt
+
+         write(42,*) '0'
+         write(42,*) '.TRUE.'
+         write(42,*) '1'
+         write(42,2100)
+ 2100    format ('# amxsim(1,1),amxsim(2,1),amxsim(1,2),amxsim(2,2)')
+         write(42,*) amxsim(1,1), amxsim(2,1), amxsim(1,2),amxsim(2,2)
+         write(42,2105)
+ 2105    format('# amasim')
+         write(42,*) amasim
+         write(42,2110)
+ 2110    format('# nacctr')
+         write(42,*) nacctr
+         write(42,2115)
+ 2115    format('# amxar(1,1), amxar(2,1), amxar(1,2),amxar(2,2)')
+         write(42,*) amxar(1,1,nacctr), amxar(2,1,nacctr),
+     &               amxar(1,2,nacctr),amxar(2,2,nacctr)
+c       barriers
+         write(42,2120)
+ 2120    format ('# nbr')
+         write(42,*) nbr
+       do 33 b = 1,nbr
+         write(42,2125)
+ 2125    format('# amxar(1,1,b), amxar(2,1), amxar(1,2),amxar(2,2)')
+         write(42,*) amxbr(1,1,b),amxbr(2,1,b),amxbr(1,2,b),amxbr(2,2,b)
+
+         write (42,2130)
+ 2130    format('# amzbr(b), ampbr(b), amxbrw(b)')
+         write (42,*) amzbr(b), ampbr(b), amxbrw(b)
+   33  continue
+c       subregions
+         write(42,2135)
+ 2135    format('# nsubr')
+         write(42,*) '1'
+         write(42,2140)
+ 2140    format('# amxsr(1,1), amxsr(2,1), amxsr(1,2),amxsr(2,2)')
+         write(42,*) amxsr(1,1,1),amxsr(2,1,1),amxsr(1,2,1),amxsr(2,2,1)
+
+c       crop
+         write(42,2145)
+ 2145    format('# abzht(1)')
+         write(42,*) abzht(1)
+         write(42,2150)
+ 2150    format('# abrsai(1),  abrlai(1)')
+         write(42,*) abrsai(1), abrlai(1)
+         write(42,2155)
+ 2155    format ('# abffcv(1)')
+         write(42,*) abffcv(1)
+c       soil
+         write(42,2160)
+ 2160    format('# nslay(1)')
+         write(42,*) nslay(1)
+         write(42,2165)
+ 2165    format( '# aszlyt(l,1)')
+         write(42,*) (aszlyt(l,1), l=1,nslay(1))
+         write(42,2170)
+ 2170    format('# asdblk(l,1)')
+         write(42,*) (asdblk(l,1), l=1,nslay(1))
+         write(42,2175)
+ 2175    format('# asfsan(l,1)')
+         write(42,*) (asfsan(l,1), l=1,nslay(1))
+         write(42,2180)
+ 2180    format('# asfsil(l,1)')
+         write(42,*) (asfsil(l,1), l=1,nslay(1))
+         write(42,*) '# asfcla(l,1)'
+         write(42,*) (asfcla(l,1), l=1,nslay(1))
+         write(42,*) '# asvroc(l,1)'
+         write(42,*) (asvroc(l,1), l=1,nslay(1))
+         write(42,*) '# asdagd(l,1)'
+         write(42,*) (asdagd(l,1), l=1,nslay(1))
+         write(42,*) '# aseags(l,1)'
+         write(42,*) (aseags(l,1), l=1,nslay(1))
+         write(42,*) '# aslagm(l,1)'
+         write(42,*) (aslagm(l,1), l=1,nslay(1))
+         write(42,*) '#aslagn(l,1)'
+         write(42,*) (aslagn(l,1), l=1,nslay(1))
+         write(42,*) '# aslagx(l,1)'
+         write(42,*) (aslagx(l,1), l=1,nslay(1))
+         write(42,*) '# as0ags(l,1)'
+         write(42,*) (as0ags(l,1), l=1,nslay(1))
+         write(42,*) '# asfcr(1) aszcr(1) asflos(1) asfmos(1) asdcr(1)',
+     &               '  asecr(1)'
+         write(42,*) asfcr(1), aszcr(1), asflos(1), asmlos(1), asdcr(1),
+     &               asecr(1)
+         write(42,*) '#aslrr(1)'
+         write(42,*) aslrr(1)
+         write(42,*) '# aszrgh(1)  asxrgs(1)  asxrgw(1)   asargo(1)'
+         write(42,*) aszrgh(1), asxrgs(1), asxrgw(1), asargo(1)
+         write(42,*) '# asxdks(1)'
+         write(42,*) asxdks(1)
+c      hydrology
+         write(42,*) '# ahzsnd(1)'
+         write(42,*) ahzsnd(1)
+         write(42,*) '# ahrwcw(l,1), l=1,nslay(1)'
+         write(42,*) (ahrwcw(l,1), l=1,nslay(1))
+         write(42,*) '# ahrwca(l,1), l=1,nslay(1)'
+         write(42,*) (ahrwca(l,1), l=1,nslay(1))
+         write(42,*) '# ahrwc0(l,1), l=1,12'
+         write(42,22) (ahrwc0(l,1), l=1,12)
+         write(42,*) '# ahrwc0(l,1), l=13,24'
+  22      format(12(1x,f10.8))
+         write(42,22) (ahrwc0(l,1), l=13,24)
+c      weather
+         write(42,*) '# awdair'
+         write(42,*) awdair
+         write(42,*) '# awadir'
+         write(42,*) awadir
+         write(42,*) '# ntstep'
+         write(42,*) ntstep
+         write(42,*) '# anemht awzzo wzoflg'
+         write(42,*) anemht, awzzo, wzoflg
+         write(42,*) '#wflg (read wind speeds only, no Weibull params)'
+         write(42,*) '1'
+         write(42,*) '# awu(k), k=1,24'
+         write(42,*) (awu(k), k=1,6)
+         write(42,*) (awu(k), k=7,12)
+         write(42,*) (awu(k), k=13,18)
+         write(42,*) (awu(k), k=19,24)
+      end if
+c
+      return
+      end
+c++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

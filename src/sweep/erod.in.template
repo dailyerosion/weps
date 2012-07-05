@@ -1,0 +1,446 @@
+#****************************************************************
+#    erod.in.template   Template INPUT DATA FILE
+#                       Updated January 2006 - LEW
+#                       Updated February, 2006 - JT
+#****************************************************************
+#
+#     +++ PURPOSE +++
+#
+#     Input file for standalone erosion submodel program (tsterode)
+#
+#     All lines beginning with a "#" character are assumed to
+#     be comment lines and are skipped.
+#
+#     +++ DEFINITIONS +++
+#
+#     All comments prior to each line of data input
+#     in this template input file have the following format:
+#
+#     Variable_Name, Var_type, Text Definition
+#
+#     where Var_type is: I = integer L = logical R = real
+#
+#
+# +++ DEBUG STUFF +++
+#
+#     debugflg - debug flag for providing different levels of debug info
+#                currently useful to debug/check input file data format
+#
+#                value of 0 will print no debug information
+#                value of 1 will print out and number all input file lines
+#                value of 2 will print out and number all data input lines
+#                value of 3 will do both 1 and 2
+ 0
+#
+#
+# +++ INIT STUFF +++
+#
+#     am0eif, L, EROSION "initialization" flag
+#                Must be set to .TRUE. for standalone erosion runs
+ .TRUE.
+#
+#     am0efl, I, EROSION "print" flag
+#               NOTE:  Not sure if all of these have yet been replaced by
+#                      "tsterode" cmdline options.  Regardless, this flag
+#                      should be considered deprecated in this file. - LEW
+#               Range: 0 to 6
+#               0 = print input, no output
+#               1 = print input, standard output
+#               2 = print input, 1 line output
+#               3 = used in WEPS to print input, then create file "emit.out"
+#                       containing hourly suspended emission rates
+# 		4 = used in standalone to print input, then create file "emit.out"
+#                       containing hourly suspended emission rates
+#               5 = not used at present
+#               6 = print input, detail output each step using calls
+#                       to sb1out and sb2out
+ 1
+#
+# +++ SIMULATION REGION +++
+#
+#     amxsim(x,y), R, Simulation Region diagonal coordinates (meters)
+#                     Input (x,y) coordinates in this form: x1,y1 x2,y2
+#                      Typical Range: 10.0 to 1600.0
+#
+#                     NOTE:  Accounting region and Subregion coordinates
+#                            must also be set to the same values
+#
+  0.0, 0.0 1000.0, 200.0
+#
+#
+#     amasim, R, Simulation Region orientation angle (degrees from North)
+ 0.0
+#
+#
+# +++ ACCOUNTING REGIONS +++
+#
+#     nacctr, I, Number of accounting regions (must always be 1 for now)
+ 1
+#
+#     amxar(x,y,a), R, Accounting Region diagonal coordinates (meters)
+#                      Input (x,y) coordinates in this form: x1,y1 x2,y2
+#                      for each Accounting Region specified (nacctr)
+#
+#                      NOTE:  Accounting Region coordinate values must
+#                             match Simulation Region coordinates above
+#
+ 0.0, 0.0 1000.0, 200.0
+#
+#
+# +++ BARRIERS +++
+#
+#     nbr, I, Number of barriers (0-5)
+ 2
+#     NOTE: Remaining BARRIER inputs are repeated for each barrier specified
+#           If no barriers specified (nbr=0), then no BARRIER inputs will
+#           be listed here.
+#
+#     amxbr(x,y,b), R, Barrier linear coordinates (meters)
+#                      Input (x,y) coordinates in this form: x1,y1 x2,y2
+#                      for each barrier specified (nbr)
+ 0.0, 0.0 0.0, 200.0
+#
+#       amzbr(b),  R, Barrier height (meters)
+#       ampbr(b),  R, Barrier porosity (i.e., optical density) (m^2/m^2)
+#       amxbrw(b), R, Barrier width (meters)
+#
+ 0.2 0.5 15.0
+#
+#       Repeat previous two input lines for each additional barrier
+#
+#       Barrier #2 coordinates (x1,y1) (x2,y2)
+ 0.0, 0.0 1000.0, 0.0
+#       Barrier #2 height, porosity and width
+ 0.2 0.5 15.0
+#
+#
+# +++ SUBREGION REGIONS +++
+#
+#     nsubr, I, Number of subregions (1-5)
+#               NOTE:  Currently not fully tested for multiple subregions
+#                      Only use value of 1
+#
+ 1
+#
+#     NOTE: Remaining SUBREGION inputs (BIOMASS, SOIL, and HYDROLOGY,
+#     ie. variables defined by subregion) are repeated for "nsubr"
+#     subregions specified
+#
+#     amxsr(x,y,s), R, Subregion diagonal coordinates (m)
+#                      Input (x,y) coordinates in this form: x1,y1 x2,y2
+#                      for each subregion specified (subr)
+#
+#                      NOTE:  Since only one subregion is currently supported,
+#                             subregion coordinate values must match
+#                             Simulation Region coordinates above
+#
+ 0.0, 0.0 1000.0, 200.0
+#
+#
+#     +++ BIOMASS +++
+#
+#
+#       adzht_ave(s), R, Height of standing residue (meteres)
+#                        WEPS generated input files will provide
+#                        "SAI weighted" average residue height
+#                        across all residue pools.
+#		Typical Range: 0.0 to 3.0
+ 0.21
+#
+#       aczht(s), R, Average height of growing crop (meters)
+ 0.0
+#
+#       acrsai(s), R, Growing crop stem area index (m^2/m^2)
+#               Typical Range: 0.0 to 3.0
+#       acrlai(s), R, Growing crop leaf area index (m^2/m^2)
+#               Typical Range: 0.0 to 8.0
+ 0.0 0.0
+#
+#       adrsaitot(s), R, Residue stem area index (m^2/m^2)
+#       adrlaitot(s), R, Residue leaf area index (m^2/m^2)
+#                        WEPS generated input files will provide
+#                        total "SAI" and "LAI" values
+#                        across all residue pools.
+ 0.02 0.00
+#
+#      acxrow(s), R, Growing crop row spacing (meters)
+#                    Use value of 0.0 if not planted in rows,
+#                    e.g. broadcast seeded
+#      ac0rg(s) , I, Specify seed location (0=furrow,1=ridge)
+#                    Value doesn't matter if no ridges exist
+ 0.3, 0
+#
+#       abffcv(s), R, Flat biomass cover (m^2/m^2)
+ 0.0
+#
+#
+#     +++ SOIL +++
+#
+#     nslay(s), I, (s1layr.inc) Number of soil layers (1-100)
+#                  NOTE:  Only surface soil layer necessary
+ 1
+#
+#     NOTE: Remaining SOIL inputs are repeated on each input line
+#           for each layer specified
+#
+#     aszlyt(l,s), R, Thickness (mm)
+ 1000.0
+#
+#     asdblk(l,s), R, Bulk density of soil layer (Mg/m^3)
+#                  Typical Range: >0.0 to 10.0
+ 1.8
+#     asfsan(l,s), R, Fraction of sand content in soil layer (Mg/Mg)
+#                  Range: 0.0 to 1.0 (sand + silt + clay = 1.0)
+ 0.90
+#     asfvfs(l,s), R  Fraction of very fine sand in soil layer (Mg/Mg)
+#                  Range: 0.0 to 1.0 (fraction of total soil < 2.0 mm)
+ 0.21
+#     asfsil(l,s), R, Fraction of silt content in soil layer (Mg/Mg)
+#                  Range: 0.0 to 1.0 (sand + silt + clay = 1.0)
+ 0.08
+#     asfcla(l,s), R, Fraction of clay content in soil layer (Mg/Mg)
+#                  Range: 0.0 to 1.0 (sand + silt + clay = 1.0)
+ 0.02
+#
+#     asvroc(l,s), R, Rock volume in soil layer (m^3/m^3)
+#                  Range: 0.0 to 1.0
+ 0.30
+#
+#     asdagd(l,s), R, Average aggregate density for the soil layer (Mg/m^3)
+#                  Typical Range: 0.5 to 2.5
+ 1.8
+#     aseags(l,s), R, Average dry aggregate stability for the soil layer [ln(J/kg)]
+#                  Typical Range: 0.1 to 7.0
+ 2.50
+#
+#       ---- Size distribution of soil aggregates ----
+#         GMD - Geometric Mean Diameter of aggregates
+#         GSD - Geometric Mean Standard Deviation of aggregates
+#
+#     aslagm(l,s), R, GMD of aggregate sizes in soil layer (mm)
+#                  Typical Range: 0.03 to 30.0
+ 0.47
+#     aslagn(l,s), R, Minimum aggregate size in soil layer (mm)
+#                  Typical Range: 0.001 to 5.0
+ 0.043
+#     aslagx(l,s), R, Maximum aggregate size in soil layer (mm)
+#                  Typical Range: 1.0 to 1000.0
+ 89.8
+#     as0ags(l,s), R, GSD of aggregate sizes in soil layer (mm/mm)
+#                  Typical Range: 1.0 to 40.0
+ 12.0
+#
+#     +++ SOIL SURFACE +++
+#
+#     asfcr(s),  R, Surface crust fraction (m^2/m^2)
+#		 Range: 0.0 to 1.0
+#     aszcr(s),  R, Surface crust thickness (mm)
+#		 Typical Range: 0.0 to 23.0
+#     asflos(s), R, Fraction of crusted surface with loose material on top of crust (m^2/m^2)
+#		 Range: 0.0 to 1.0
+#     asmlos(s), R, Mass of loose material on top of crust (kg/m^2)
+#		 Typical Range: 0.0 to 3.0
+#     asdcr(s),  R, Density of soil crust (Mg/m^3)
+#		 Typical Range: 0.6 to 2.0
+#     asecr(s),  R, Dry crust stability [ln(J/kg)]
+#		 Typical Range: 0.0 to 7.0
+ 0.6 7.0 0.2 0.4 0.1 1.0
+#
+#     aslrr(s),  R, Allmaras random roughness (mm)
+#		 Typical Range: 1.0 to 60.0
+ 5.0
+#     aszrgh(s), R, Ridge height (mm)
+#		 Typical Range: 0.0 to 500.0
+#     asxrgs(s), R, Ridge spacing (mm)
+#		 Typical Range: 0.0 to 2000.0
+#     asxrgw(s), R, Ridge width (mm)
+#		 Typical Range: 0.0 to 4000.0
+#     asxrgo(s), R, Ridge orientation (degrees)
+#		 Range: 0.0 to 179.99
+#                   NOTE: If no ridges, then specify 0.0  for height, width and spacing
+ 0.0 0.0 0.0 0
+#     asxdks(s), R, Dike spacing (mm)
+#		 Typical Range: 0.0 to 1000.0
+#                   NOTE: If no dikes, then specify 0.0
+ 0.0
+#
+#     +++ HYDROLOGY +++
+#
+#     ahzsnd(s), R, Snow depth (mm)
+#		 Typical Range: 0.0 to 1000.0
+ 0.0
+#
+#     ahrwcw(l,s), R, Wilting point water content of soil layer (Mg/Mg)
+#		 Typical Range: 0.0 to 0.25
+ 0.077
+#
+#     ahrwca(l,s), R, Current water content of soil layer (Mg/Mg)
+#		 Typical Range: 0.0 to 0.50
+ 0.0
+#
+#
+#     ahrwc0(h,s), R, Surface layer water content (Mg/Mg)
+#		 Typical Range: 0.0 to 0.50
+#                  NOTE: The near surface water content is specified on an
+#                        hourly basis.  We read in the hrly water content
+#                        on two lines, with 12 values in each line.
+ 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+ 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+#
+#
+# NOTE: This is the end of the SUBREGION variables
+#
+#     +++ WEATHER +++
+#
+#     awdair, R, Air density (kg/m^3)
+#		 Typical Range: 0.7 to 1.5
+ 1.2
+#
+#     awadir, R, Wind direction (degrees) measured clockwise from North
+#		 Typical Range: 0.0 to 359.9
+ 270.0
+#
+#     ntstep, I, Number of intervals/day to run EROSION
+#		 Range: 24 to 96
+#
+#                NOTE:  ntstep = 24 means hourly updates
+#                       ntstep = 48 means 30 minute updating
+#                       ntstep = 96 means 15 minute updating
+ 24
+#
+#     anemht, R  anemometer height (m)
+#		 Typical Range: 0.5 to 30.0
+#     awzzo,  R  aerodynamic roughness at anemometer site (mm)
+#		 Typical Range: 0.5 to 2000.0
+#     wzoflg, I (global variable) zo location flag
+#               (flag =0 - at weather station location - zo is a constant)
+#               (flag = 1 - on field location - zo varies based on field surface)
+    10.0,  10.00  0
+#
+#     wflg, I, Wind/Weibull flag
+#              (0 - read in Weibull parameters, 1 - read in wind speeds)
+ 1
+#
+# NOTE: This is only present when (wflg=0)
+#     wfcalm, R, Fraction of time winds are calm (hr/hr)
+#		 Range: 0.0 to 1.0
+#     wuc, R, Weibull "c" factor (m/s)
+#		 Typical Range: >0.0 to 30.0
+#     w0k, R, Weibull "k" factor
+#		 Typical Range: 1.0 to 3.0
+#  0.217 7.125 2.971  <--- Example data line for wind expressed as Weibull parameters
+#
+# NOTE: The remaining data is only present when (wflg=1)
+#     awu(i), R, Wind speed for (ntstep) intervals (m/s)
+#		 Typical Range: 0.0 to 30.0
+#
+#                NOTE: We can read multiple lines with 6 values per line
+#                      Wind data should be AVERAGES for the period.
+#                      Hourly averages will often under estimate wind erosion.
+#                      30 minute averages or shorter time interval is more suitable.
+8.181	4.068	4.068	4.426	5.052	5.052	
+4.739	4.292	4.515	3.353	3.621	2.280	
+5.275	6.750	7.242	7.868	9.835	13.814	
+17.211	12.651	11.712	12.964	10.014	8.583	
+#
+#
+# *******************************************************
+#    NOTE:  Not necessary to modify any information below this line
+#           unless one is interested in generating a "plot.out" file.
+# *******************************************************
+#
+#    + + + DATA TO PLOT + + +
+#
+#      "xplot" flag for writing variables to file 'tsterode.eplt'.
+#       -1 = write nothing
+#        0 = write erosion variables;
+#      Actual variables listed below are only written if flagged with a 1
+#
+#      NOTE:  This flag is deprecated.  Tsterode cmdline options determine
+#             if this file is create and/or data appended to it.
+  0
+#
+#      Next are 2 lines per variable:
+#       1st line: flag (0=don't write, 1=do write) and variable description
+#       2nd line: this info is used as a header in 'plot.out'
+#           place header within first 12 positions of the line
+#
+# xin(i), R, (field length)
+   1
+  Length(m)
+# abzht, R, (biomass ht.(m))
+   1
+ bio_ht(m)
+# abrsai, R (stem area index)
+  1
+ stem_area
+#   abrlai(s), R, Biomass leaf area index (m^2/m^2)
+  1
+ lai_area
+# abffcv, R, (biomass flat fraction cover)
+  0
+ flat_cov
+#     asfvfs(1,s), R, (soil fraction very fine sand in layer 1)
+  0
+  vfsand
+#     asfsan(1,s), R, (soil fraction sand in layer 1)
+  1
+   sand
+#     asfsil(1,s), R (soil fraction silt in layer 1)
+  0
+  silt
+#     asfcla(1,s), R (soil fraction clay in layer 1)
+  0
+  clay
+#     asvoc(1,s), R (soil volume roc in layer 1)(m^3/m^3)
+  0
+  rock_vol
+#     aseags(1,s), R (soil aggregate stability) (ln J/m^3)
+  0
+  ag_stab
+#     aslagm(1,s), R (soil aggregate geom. mean dia.) (mm)
+  0
+  ag_gmd
+#     aslagn(1,s), R (soil aggregate min. dia.) (mm)
+  0
+  ag_min
+#     aslagx(1,s), R (soil aggregate max. dia.) (mm)
+  0
+  ag_max
+#     as0ags(1,s), R (soil aggregate geo. std. dev.)
+  0
+  ag_std
+#     asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)
+  0
+  crust_cv
+#     aszcr(s), R, (s1surf.inc) Surface crust thickness (mm)
+  0
+ crust_z(mm)
+#     asflos(s), R, (s1surf.inc) Fraction of loose material on surface (m^2/m^2)
+  0
+  los_cv
+#     asmlos(s), R, (s1surf.inc) Mass of loose material on crust (kg/m^2)
+  0
+  los(kg/m^2)
+#     asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)
+  0
+  cr_den(Mg/m^3)
+#     asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)
+  0
+  cr_se
+#     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)
+  0
+  rr(mm)
+#     aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)
+  0
+  z_rgh(mm)
+#     asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)
+  0
+  x_rgs(mm)
+#     asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)
+  0
+  x_rgw(mm)
+#     asxrgo(s), R, (s1sgeo.inc) Ridge orientation (deg)
+  0
+  a_rgo(deg)
+#

@@ -1,0 +1,59 @@
+/* Set the default WEPS directory structure here */
+
+#ifndef WEPS_ROOT
+	WEPS_ROOT = ../..;		/* WEPS default "root" (relative) path/name */
+#endif
+#ifndef WEPS_BIN
+	WEPS_BIN = bin;			/* WEPS default "bin" (relative) path/name */
+#endif
+
+#ifndef WEPS_INC			/* WEPS default include (relative) path */
+	WEPS_INC = [addprefix [WEPS_ROOT]/ inc];
+#endif
+
+BIN = [WEPS_BIN];
+INC = [WEPS_INC];
+
+
+/*
+Note: No suffixes in dir names are currently allowed, ie:
+      (dir1.src and dir2/dir1.abc not allowed)
+Note: Directory names currently must be unique, ie:
+      (both dir1 and dir2/dir1 not allowed)
+*/
+
+/* list all WEPS submodel src directories */
+src_dirs =  asd/test;
+src_dirs += asd util/math;
+src_dirs = [addprefix [WEPS_ROOT]/ [src_dirs]];
+
+/* list possible dirs with include files beside [src_dirs] */
+inc_dirs = [INC] [addprefix [INC]/ [src_dirs]] util;
+
+#include "cookbook/compiler.weps" /* determine host/compiler */
+#include "cookbook/cook.weps"
+#include "cookbook/recipes.weps"	/* determines the correct recipe file */
+#include "cookbook/recipes.dep"	/* recipes for dependency files */
+/*
+#include "../../cookbook/target.weps"
+*/
+
+/* create variable for TSTASD obj file list */
+tstasd[E]_obj = [obj_files];
+[BIN]/tstasd[E]_obj = [obj_files];
+TSTASD_obj = [obj_files];
+
+TSTASD: [BIN]/tstasd[E]; /* only one executable for now */
+
+all: [BIN]/tstasd[E]; /* build "everything" */
+
+show:
+{
+	echo "src_dirs: " [src_dirs];
+	echo "inc_dirs: " [inc_dirs];
+	echo "manifest: " [manifest];
+	echo "src_files: " [src_files];
+	echo "inc_files: " [inc_files];
+	echo "obj_files: " [obj_files];
+	echo "dep_files: " [dep_files];
+}

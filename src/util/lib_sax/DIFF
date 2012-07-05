@@ -1,0 +1,249 @@
+=====================================
+m_dictionary.f90
+=====================================
+12,15c12,15
+<    private
+<    integer                               :: number_of_items
+<    type(buffer_t), dimension(MAX_ITEMS)  :: key
+<    type(buffer_t), dimension(MAX_ITEMS)  :: value
+---
+> private
+>       integer                               :: number_of_items
+>       type(buffer_t), dimension(MAX_ITEMS)  :: key
+>       type(buffer_t), dimension(MAX_ITEMS)  :: value
+43,44c43
+<    module procedure sax_get_value_qname
+<    module procedure sax_get_value_i
+---
+>    module procedure sax_get_value
+45a45
+> private :: sax_get_value
+76c76
+< subroutine sax_get_value_qname(dict,key,value,status)
+---
+> subroutine sax_get_value(dict,key,value,status)
+94,111c94
+< end subroutine sax_get_value_qname
+< 
+< subroutine sax_get_value_i(dict,i,value,status)
+< type(dictionary_t), intent(in)            :: dict
+< integer,          intent(in)              :: i
+< character(len=*), intent(out)             :: value
+< integer,          intent(out)             :: status
+< 
+< if (i <= dict%number_of_items) then
+<       value = str(dict%value(i))
+<       status = 0
+< else
+<    value = ""
+<    status = -1
+< endif
+< 
+< end subroutine sax_get_value_i
+< 
+---
+> end subroutine sax_get_value
+
+=====================================
+m_xml_parser.f90
+=====================================
+40,48c40,48
+<   character(len=*), intent(in)      :: fname
+<   integer, intent(out)              :: iostat
+<   type(xml_t), intent(out)          :: fxml
+<   integer, intent(in), optional     :: record_size
+<   
+<   call open_file(fname,fxml%fb,iostat,record_size)
+<   call init_fsm(fxml%fx)
+<   fxml%path_mark = ""
+<   
+---
+> character(len=*), intent(in)      :: fname
+> integer, intent(out)              :: iostat
+> type(xml_t), intent(out)          :: fxml
+> integer, intent(in), optional     :: record_size
+> 
+> call open_file(fname,fxml%fb,iostat,record_size)
+> call init_fsm(fxml%fx)
+> fxml%path_mark = ""
+> 
+53,58c53,58
+<   type(xml_t), intent(inout) :: fxml
+<   
+<   call rewind_file(fxml%fb)
+<   call reset_fsm(fxml%fx)
+<   fxml%path_mark = ""
+<   
+---
+> type(xml_t), intent(inout) :: fxml
+> 
+> call rewind_file(fxml%fb)
+> call reset_fsm(fxml%fx)
+> fxml%path_mark = ""
+> 
+63c63
+<   type(xml_t), intent(inout) :: fxml
+---
+> type(xml_t), intent(inout) :: fxml
+65c65
+<   call mark_eof_file(fxml%fb) 
+---
+> call mark_eof_file(fxml%fb) 
+71,75c71,75
+<   type(xml_t), intent(inout) :: fxml
+<   
+<   call close_file_buffer(fxml%fb)
+<   call reset_fsm(fxml%fx)         ! just in case
+<   fxml%path_mark = ""             ! ""
+---
+> type(xml_t), intent(inout) :: fxml
+> 
+> call close_file_buffer(fxml%fb)
+> call reset_fsm(fxml%fx)         ! just in case
+> fxml%path_mark = ""             ! ""
+81,86c81,86
+<   type(xml_t), intent(inout) :: fxml
+<   integer, intent(out)       :: iostat
+<   
+<   call sync_file(fxml%fb,iostat)
+<   ! Do not reset fx: that's the whole point of synching.
+<   
+---
+> type(xml_t), intent(inout) :: fxml
+> integer, intent(out)       :: iostat
+> 
+> call sync_file(fxml%fb,iostat)
+> ! Do not reset fx: that's the whole point of synching.
+> 
+91,95c91,95
+<   type(xml_t), intent(in)          :: fxml
+<   logical                          :: res
+<   
+<   res = eof_file(fxml%fb)
+<   
+---
+> type(xml_t), intent(in)          :: fxml
+> logical                          :: res
+> 
+> res = eof_file(fxml%fb)
+> 
+101,103c101,105
+<   type(xml_t), intent(in)          :: fxml
+<   integer                          :: nc
+<   nc = nchars_processed(fxml%fb)
+---
+> type(xml_t), intent(in)          :: fxml
+> integer                          :: nc
+> 
+> nc = nchars_processed(fxml%fb)
+> 
+114c116
+<                            cdata_section_handler,    &
+---
+>                            cdata_section_handler,     &
+117c119
+<                            signal_handler,           &
+---
+>                            signal_handler,            &
+119,121c121
+<                            empty_element_handler,    &
+<                            start_document,           &  ! JW
+<                            end_document)                ! JW
+---
+>                            empty_element_handler)
+136,137d135
+< optional                            :: start_document  ! JW
+< optional                            :: end_document    ! JW
+187,192d184
+<    subroutine start_document()    ! JW
+<    end subroutine start_document  ! JW
+< 
+<    subroutine end_document()      ! JW
+<    end subroutine end_document    ! JW
+< 
+209,210c201
+<                         have_error_handler, have_signal_handler, &
+<                         have_start_document_handler, have_end_document_handler
+---
+>                         have_error_handler, have_signal_handler
+228,229d218
+< have_start_document_handler = present(start_document)  ! JW
+< have_end_document_handler = present(end_document)      ! JW
+239d227
+< if (have_start_document_handler) call start_document() ! JW - no arguments
+256d243
+<          if (have_end_document_handler) call end_document()  !! JW - no arguments
+466,470c453,457
+<   type(xml_t), intent(in) :: fxml
+<   character(len=*), intent(out)  :: path
+<   
+<   call get_elstack_signature(fxml%fx%element_stack,path)
+<   
+---
+> type(xml_t), intent(in) :: fxml
+> character(len=*), intent(out)  :: path
+> 
+> call get_elstack_signature(fxml%fx%element_stack,path)
+> 
+475,483c462,470
+<   !
+<   ! Marks the current path
+<   !
+<   type(xml_t), intent(inout) :: fxml
+<   character(len=*), intent(out)  :: path
+<   
+<   call get_elstack_signature(fxml%fx%element_stack,fxml%path_mark)
+<   path = fxml%path_mark
+<   
+---
+> !
+> ! Marks the current path
+> !
+> type(xml_t), intent(inout) :: fxml
+> character(len=*), intent(out)  :: path
+> 
+> call get_elstack_signature(fxml%fx%element_stack,fxml%path_mark)
+> path = fxml%path_mark
+> 
+488,495c475,482
+<   !
+<   ! Returns the currently markd path (or an empty string if there are no marks)
+<   !
+<   type(xml_t), intent(in)        :: fxml
+<   character(len=*), intent(out)  :: path
+<   
+<   path = fxml%path_mark
+<   
+---
+> !
+> ! Returns the currently markd path (or an empty string if there are no marks)
+> !
+> type(xml_t), intent(in)        :: fxml
+> character(len=*), intent(out)  :: path
+> 
+> path = fxml%path_mark
+> 
+500,504c487,491
+<   type(xml_t), intent(in) :: fxml
+<   character(len=*), intent(out)  :: name
+<   
+<   name = char(fxml%fx%element_name)
+<   
+---
+> type(xml_t), intent(in) :: fxml
+> character(len=*), intent(out)  :: name
+> 
+> name = char(fxml%fx%element_name)
+> 
+508,512c495,499
+<   type(xml_t), intent(in) :: fxml
+<   type(dictionary_t), intent(out)  :: attributes
+<   
+<   attributes = fxml%fx%attributes
+<   
+---
+> type(xml_t), intent(in) :: fxml
+> type(dictionary_t), intent(out)  :: attributes
+> 
+> attributes = fxml%fx%attributes
+> 

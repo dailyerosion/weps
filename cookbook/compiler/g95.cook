@@ -1,0 +1,80 @@
+/**********************************
+	   G95 COOK OPTIONS
+ **********************************/
+
+/**********************************
+	    	  COMPILER
+ **********************************/
+
+fc				= g95;
+fc_version 		= [collect [fc] --version | head -1];
+
+fc_compile_flag	= "-c ";
+fc_out_flag		= "-o ";
+
+fc_flags		=;
+
+
+fc_fixed		=;
+fc_free			=;
+
+
+/* default mode flags */
+fc_default		=;
+
+/* debug flags */
+fc_debug		=;
+
+/* optimization flags */
+fc_optimize		=;
+
+/*release flags	*/
+fc_release		=;
+
+
+/* includes */
+fc_inc_flag		= "-I";
+fc_inc_join		= [false];		/*if true, the includes are joined into a single argument with the separator */
+fc_inc_sep		= ;
+
+fc_mod_inc_flag	= "-I";
+fc_mod_out_flag	= "-fmod=";		/* Specifies path to put "mod" files separately from path to find "mod" files */
+
+/* Case of the module names: lower, upper or mixed*/
+fc_mod_case	= lower;
+
+/**********************************
+	    	  LINKER
+ **********************************/
+ld				= [fc];
+ld_version		= [fc_version];
+
+/* ld_flags		= "-static"; */
+ld_flags		= "";	/* Links ok without the "-static" option (g95 might not be using ld) - LEW */
+
+ld_link_flag	=;
+ld_out_flag		= "-o ";
+
+/* debug flags */
+ld_debug		=;
+
+/* optimization flags */
+ld_optimize		=;
+
+/* includes */
+ld_inc_flag		= [fc_inc_flag];
+ld_inc_join		= [fc_inc_join];		/*if true, the includes are joined into a single argument with the separator */
+ld_inc_sep		= [fc_inc_sep];
+
+ld_lib_prefix   = "-Xlinker --start-group ";
+ld_lib_suffix   = " -Xlinker --end-group";
+
+
+
+/**********************************
+	    	  ARCHIVER
+ **********************************/
+ar			= ar;
+ar_version	= [collect [ar] --version | head -1];
+
+ar_flags	= "-cq ";

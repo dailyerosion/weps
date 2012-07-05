@@ -1,0 +1,1651 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioProject ProjectCreator="Intel Fortran" Keyword="Console Application" Version="9.10" ProjectIdGuid="{79E7B271-8626-4ABD-BD81-1C757E39C0BF}">
+	<Platforms>
+		<Platform Name="Win32"/></Platforms>
+	<Configurations>
+		<Configuration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="../inc" Interfaces="true" WarnDeclarations="true" WarnInterfaces="true" ImproveFloatingPointConsistency="true" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" GenerateDebugInformation="true" SubSystem="subSystemConsole"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/></Configuration>
+		<Configuration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="../inc" InitLocalVarToNAN="true" ImproveFloatingPointConsistency="true" FloatingPointSpeculation="fpSpeculationOff" UninitializedVariablesCheck="true"/>
+				<Tool Name="VFLinkerTool" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" SubSystem="subSystemConsole"/>
+				<Tool Name="VFResourceCompilerTool"/>
+				<Tool Name="VFMidlTool" SuppressStartupBanner="true"/>
+				<Tool Name="VFCustomBuildTool"/>
+				<Tool Name="VFPreLinkEventTool"/>
+				<Tool Name="VFPreBuildEventTool"/>
+				<Tool Name="VFPostBuildEventTool"/></Configuration></Configurations>
+	<Files>
+		<Filter Name="Header Files" Filter="fi;fd">
+		<Filter Name="inc">
+		<Filter Name="crop">
+		<File RelativePath="..\inc\crop\cenvr.inc"/>
+		<File RelativePath="..\inc\crop\cfert.inc"/>
+		<File RelativePath="..\inc\crop\cgrow.inc"/>
+		<File RelativePath="..\inc\crop\chumus.inc"/>
+		<File RelativePath="..\inc\crop\cparm.inc"/>
+		<File RelativePath="..\inc\crop\csoil.inc"/>
+		<File RelativePath="..\inc\crop\p1crop.inc"/>
+		<File RelativePath="..\inc\crop\prevstate.inc"/></Filter>
+		<Filter Name="decomp">
+		<File RelativePath="..\inc\decomp\decomp.inc"/></Filter>
+		<Filter Name="erosion">
+		<File RelativePath="..\inc\erosion\e2erod.inc"/>
+		<File RelativePath="..\inc\erosion\e2grid.inc"/>
+		<File RelativePath="..\inc\erosion\e3grid.inc"/>
+		<File RelativePath="..\inc\erosion\m2geo.inc"/>
+		<File RelativePath="..\inc\erosion\p1erode.inc"/>
+		<File RelativePath="..\inc\erosion\s2agg.inc"/>
+		<File RelativePath="..\inc\erosion\s2sgeo.inc"/>
+		<File RelativePath="..\inc\erosion\s2surf.inc"/>
+		<File RelativePath="..\inc\erosion\w2wind.inc"/></Filter>
+		<Filter Name="hydro">
+		<File RelativePath="..\inc\hydro\clayomprop.inc"/>
+		<File RelativePath="..\inc\hydro\dvolwparam.inc"/>
+		<File RelativePath="..\inc\hydro\heatcap.inc"/>
+		<File RelativePath="..\inc\hydro\heatcond.inc"/>
+		<File RelativePath="..\inc\hydro\hpsd.inc"/>
+		<File RelativePath="..\inc\hydro\htheta.inc"/>
+		<File RelativePath="..\inc\hydro\lsoda.inc"/>
+		<File RelativePath="..\inc\hydro\partden.inc"/>
+		<File RelativePath="..\inc\hydro\snowprop.inc"/>
+		<File RelativePath="..\inc\hydro\vapprop.inc"/></Filter>
+		<Filter Name="main">
+		<File RelativePath="..\inc\main\main.inc"/>
+		<File RelativePath="..\inc\main\output.inc"/>
+		<File RelativePath="..\inc\main\plot.inc"/>
+		<File RelativePath="..\inc\main\w1cli.inc"/>
+		<File RelativePath="..\inc\main\w1win.inc"/></Filter>
+		<Filter Name="manage">
+		<File RelativePath="..\inc\manage\asd.inc"/>
+		<File RelativePath="..\inc\manage\man.inc"/>
+		<File RelativePath="..\inc\manage\mproc.inc"/>
+		<File RelativePath="..\inc\manage\oper.inc"/>
+		<File RelativePath="..\inc\manage\tcrop.inc"/></Filter>
+		<Filter Name="soil">
+		<File RelativePath="..\inc\soil\cumulat.inc"/>
+		<File RelativePath="..\inc\soil\prevday.inc"/></Filter>
+		<Filter Name="util">
+		<Filter Name="misc">
+		<File RelativePath="..\inc\util\misc\f2kcli.inc"/>
+		<File RelativePath="..\inc\util\misc\getenv.inc"/></Filter></Filter>
+		<File RelativePath="..\inc\b1glob.inc"/>
+		<File RelativePath="..\inc\c1db1.inc"/>
+		<File RelativePath="..\inc\c1db2.inc"/>
+		<File RelativePath="..\inc\c1db3.inc"/>
+		<File RelativePath="..\inc\c1gen.inc"/>
+		<File RelativePath="..\inc\c1glob.inc"/>
+		<File RelativePath="..\inc\c1info.inc"/>
+		<File RelativePath="..\inc\c1report.inc"/>
+		<File RelativePath="..\inc\command.inc"/>
+		<File RelativePath="..\inc\d1gen.inc"/>
+		<File RelativePath="..\inc\d1glob.inc"/>
+		<File RelativePath="..\inc\file.inc"/>
+		<File RelativePath="..\inc\h1balance.inc"/>
+		<File RelativePath="..\inc\h1db1.inc"/>
+		<File RelativePath="..\inc\h1et.inc"/>
+		<File RelativePath="..\inc\h1hydro.inc"/>
+		<File RelativePath="..\inc\h1scs.inc"/>
+		<File RelativePath="..\inc\h1temp.inc"/>
+		<File RelativePath="..\inc\m1dbug.inc"/>
+		<File RelativePath="..\inc\m1flag.inc"/>
+		<File RelativePath="..\inc\m1geo.inc"/>
+		<File RelativePath="..\inc\m1sim.inc"/>
+		<File RelativePath="..\inc\m1subr.inc"/>
+		<File RelativePath="..\inc\p1const.inc"/>
+		<File RelativePath="..\inc\p1solar.inc"/>
+		<File RelativePath="..\inc\p1strlen.inc"/>
+		<File RelativePath="..\inc\p1unconv.inc"/>
+		<File RelativePath="..\inc\p1werm.inc"/>
+		<File RelativePath="..\inc\precision.inc"/>
+		<File RelativePath="..\inc\s1agg.inc"/>
+		<File RelativePath="..\inc\s1aggclass.inc"/>
+		<File RelativePath="..\inc\s1dbc.inc"/>
+		<File RelativePath="..\inc\s1dbh.inc"/>
+		<File RelativePath="..\inc\s1layr.inc"/>
+		<File RelativePath="..\inc\s1phys.inc"/>
+		<File RelativePath="..\inc\s1psd.inc"/>
+		<File RelativePath="..\inc\s1sgeo.inc"/>
+		<File RelativePath="..\inc\s1surf.inc"/>
+		<File RelativePath="..\inc\soil_save.inc"/>
+		<File RelativePath="..\inc\timer.inc"/>
+		<File RelativePath="..\inc\w1clig.inc"/>
+		<File RelativePath="..\inc\w1info.inc"/>
+		<File RelativePath="..\inc\w1pavg.inc"/>
+		<File RelativePath="..\inc\w1wind.inc"/>
+		<File RelativePath="..\inc\wepp_erosion.inc"/>
+		<File RelativePath="..\inc\wepp_parameters.inc"/>
+		<File RelativePath="..\inc\weps_parameters.inc"/>
+		<File RelativePath="..\inc\wpath.inc"/></Filter></Filter>
+		<Filter Name="Resource Files" Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"/>
+		<Filter Name="Source Files" Filter="f90;for;f;fpp;ftn;def;odl;idl">
+		<Filter Name="asd">
+		<File RelativePath="..\asd\asd2m.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\asd\asdinit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\asd\m2asd.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File></Filter>
+		<Filter Name="crop">
+		<File RelativePath="..\crop\callcrop.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\cdbug.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\chillu.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\cinit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\cookyield.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\cpout.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\crop.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\crop_endseason.for"/>
+		<File RelativePath="..\crop\cropinit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\growth.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\heatunit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\ht_dia_sai.for"/>
+		<File RelativePath="..\crop\huc1.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\nconc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\nmnim.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\npcy.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\npmin.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\nuse.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\nuts.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\scrv1.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\sdst.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\shoot_grow.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\shootnum.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\spline.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\splint.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File>
+		<File RelativePath="..\crop\temps.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/crop"/></FileConfiguration></File></Filter>
+		<Filter Name="decomp">
+		<File RelativePath="..\decomp\ddbug.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/decomp"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/decomp"/></FileConfiguration></File>
+		<File RelativePath="..\decomp\decoinit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/decomp"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/decomp"/></FileConfiguration></File>
+		<File RelativePath="..\decomp\decomp.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/decomp"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/decomp"/></FileConfiguration></File>
+		<File RelativePath="..\decomp\decopen.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/decomp"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/decomp"/></FileConfiguration></File>
+		<File RelativePath="..\decomp\decout.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/decomp"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/decomp"/></FileConfiguration></File></Filter>
+		<Filter Name="erosion">
+		<File RelativePath="..\erosion\block.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\calcwu.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\daily_erodout.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\erodinit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\erosion.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\saeinp.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sb1out.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sb2out.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbaglos.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbbr.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbdirini.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbemit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sberod.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbgrid.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbigrd.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbinit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbpm10.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbqout.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbsfdi.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbwind.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbwus.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbwust.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbzdisp.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File>
+		<File RelativePath="..\erosion\sbzo.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/erosion"/></FileConfiguration></File></Filter>
+		<Filter Name="hydro">
+		<File RelativePath="..\hydro\acplwu.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\addsnow.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\airtempsin.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\albedo.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\atmpreselev.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\availwc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\calctht0.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\callhydr.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\darcy.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\depstore.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\diffusive.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\drainsnow.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\dvolw.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\et.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\evapredu.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\extra.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\fricfact.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\hdbug.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\heat.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\heatcap.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\heatcond.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\hinit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\hydrinit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\hydro.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\internode_wt_bc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\matricpot_bc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\matricpot_from_rh.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\movewind.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\param_blkden_adj.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\param_pot_bc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\param_prop_bc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\plant_wat_g.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\plant_wat_t.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\preslaps.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\printlayval.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\propsaxt.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\proptext.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\psd.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\radnet.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\ratedura.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\report_hydrobal.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\resevapredu.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\satvappres.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\scsq.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\set_prevday_blk.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\setlsnow.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\soilrelhum.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\statesnow.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\store.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\transp.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\unsatcond_bc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\vaporden.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\volwat_matpot_bc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\volwatadsorb.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\waterk.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File>
+		<File RelativePath="..\hydro\wetbulb.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/hydro"/></FileConfiguration></File></Filter>
+		<Filter Name="main">
+		<File RelativePath="..\main\blkdat.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\bpools.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\clear_erosion.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\cliginit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\cmdline.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\dmpall.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\g_argc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\get_nperiods.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\getcli.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\getwin.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\inp_ifc.for"/>
+		<File RelativePath="..\main\inprun.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\inpsub.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\input.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\input_ifc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\man_opcrop_dates_type_def.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\mandate_vars.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\mandates.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\openfils.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\plot.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\save_restore_soil.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\sci_cum.for"/>
+		<File RelativePath="..\main\sci_init.for"/>
+		<File RelativePath="..\main\sci_report.for"/>
+		<File RelativePath="..\main\sort.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\spllay.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\spllay_ifc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\stir_crop.for"/>
+		<File RelativePath="..\main\stir_cum.for"/>
+		<File RelativePath="..\main\stir_oper.for"/>
+		<File RelativePath="..\main\stir_report.for"/>
+		<File RelativePath="..\main\submodels.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\sumbio.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\updres.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\wepp_interface_defs.f95"/>
+		<File RelativePath="..\main\weps.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File>
+		<File RelativePath="..\main\weps_interface_defs.f95"/>
+		<File RelativePath="..\main\wsum.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/main"/></FileConfiguration></File></Filter>
+		<Filter Name="manage">
+		<File RelativePath="..\manage\calib_crop_m.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\cropupdate.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\dogroup.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\dooper.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\doproc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\get_calib_crops.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\get_calib_yield.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\manage.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\mfinit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\mgdreset.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\poolmass.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\poolupdate.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\report_calib_harvest.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\report_harvest.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\set_calib.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\skpnam.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\tdbug.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File>
+		<File RelativePath="..\manage\tillay.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/manage"/></FileConfiguration></File></Filter>
+		<Filter Name="mproc">
+		<File RelativePath="..\mproc\buryadj.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\burydist.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\burylift.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\crush.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\crust.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\cut.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\fall_mod_vt.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\flatvt.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\func.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\invert.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\invproc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\kill.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\liftvt.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\loosn.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\mburyvt.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\mix.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\mixproc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\orient.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\orient1.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\orient2.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\remove.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\resinit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\rootlay.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\rough.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\thin.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\trans.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\mproc\trapzd.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File></Filter>
+		<Filter Name="reports">
+		<File RelativePath="..\reports\alloc_pd_vars.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\alloc_period_mandates.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\init_report_vars.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\pd_dates_type_def.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\pd_dates_vars.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\pd_report_vars.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\pd_update_vars.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\pd_var_tables.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\pd_var_type_def.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\period_mandates_table_def.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\period_mandates_var.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\print_mandate.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\print_nui_output.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\print_report_vars.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\print_ui1_output.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\print_yr_report_vars.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\running_ave.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\update_hmonth_vars.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\update_monthly_vars.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\update_period_vars.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\reports\update_yrly_vars.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File></Filter>
+		<Filter Name="soil">
+		<File RelativePath="..\soil\aggsta.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration></File>
+		<File RelativePath="..\soil\asd.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration></File>
+		<File RelativePath="..\soil\callsoil.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration></File>
+		<File RelativePath="..\soil\cru.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration></File>
+		<File RelativePath="..\soil\den.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration></File>
+		<File RelativePath="..\soil\depthini.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration></File>
+		<File RelativePath="..\soil\ranrou.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration></File>
+		<File RelativePath="..\soil\rid.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration></File>
+		<File RelativePath="..\soil\sdbug.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration></File>
+		<File RelativePath="..\soil\sinit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration></File>
+		<File RelativePath="..\soil\soil4.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration></File>
+		<File RelativePath="..\soil\soilinit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration></File>
+		<File RelativePath="..\soil\updlay.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc;../inc/soil"/></FileConfiguration></File></Filter>
+		<Filter Name="util">
+		<Filter Name="build">
+		<File RelativePath="..\util\build\bd_date.for"/>
+		<File RelativePath="..\util\build\rel_ver.for"/></Filter>
+		<Filter Name="date">
+		<File RelativePath="..\util\date\caldat.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\date\caldatw.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\date\dayear.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\date\difdat.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\date\isleap.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\date\julday.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\date\lstday.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\date\mvdate.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\date\wkday.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\date\wkjday.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File></Filter>
+		<Filter Name="math">
+		<File RelativePath="..\util\math\binomial.for"/>
+		<File RelativePath="..\util\math\erf.for"/>
+		<File RelativePath="..\util\math\factln.for"/>
+		<File RelativePath="..\util\math\gammln.for"/>
+		<File RelativePath="..\util\math\rerf.for"/></Filter>
+		<Filter Name="misc">
+		<File RelativePath="..\util\misc\begtrim.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\misc\biodrag.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\misc\dbgdmp.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\misc\distriblay.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\misc\f2kcli.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\misc\file.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\misc\generic_list.f95">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\misc\intersect.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\misc\move_ave_val.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\misc\setbds.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\misc\valbydepth.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File></Filter>
+		<Filter Name="nt">
+		<File RelativePath="..\util\nt\timer.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File></Filter>
+		<Filter Name="odepack">
+		<File RelativePath="..\util\odepack\isamax.for"/>
+		<File RelativePath="..\util\odepack\iumach.for"/>
+		<File RelativePath="..\util\odepack\ixsav.for"/>
+		<File RelativePath="..\util\odepack\rumach.for"/>
+		<File RelativePath="..\util\odepack\saxpy.for"/>
+		<File RelativePath="..\util\odepack\sbnorm.for"/>
+		<File RelativePath="..\util\odepack\scfode.for"/>
+		<File RelativePath="..\util\odepack\sdot.for"/>
+		<File RelativePath="..\util\odepack\sewset.for"/>
+		<File RelativePath="..\util\odepack\sfnorm.for"/>
+		<File RelativePath="..\util\odepack\sgbfa.for"/>
+		<File RelativePath="..\util\odepack\sgbsl.for"/>
+		<File RelativePath="..\util\odepack\sgefa.for"/>
+		<File RelativePath="..\util\odepack\sgesl.for"/>
+		<File RelativePath="..\util\odepack\sintdy.for"/>
+		<File RelativePath="..\util\odepack\slsoda.for"/>
+		<File RelativePath="..\util\odepack\smnorm.for"/>
+		<File RelativePath="..\util\odepack\sprja.for"/>
+		<File RelativePath="..\util\odepack\sscal.for"/>
+		<File RelativePath="..\util\odepack\ssolsy.for"/>
+		<File RelativePath="..\util\odepack\ssrcma.for"/>
+		<File RelativePath="..\util\odepack\sstoda.for"/>
+		<File RelativePath="..\util\odepack\xerrwv.for"/>
+		<File RelativePath="..\util\odepack\xsetf.for"/>
+		<File RelativePath="..\util\odepack\xsetun.for"/></Filter>
+		<Filter Name="solar">
+		<File RelativePath="..\util\solar\dawn.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\solar\daylen.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\solar\declination.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\solar\equa_time.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\solar\hourangle.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\util\solar\radext.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File></Filter></Filter>
+		<Filter Name="wepp">
+		<File RelativePath="..\wepp\arraymerge.for"/>
+		<File RelativePath="..\wepp\const.for"/>
+		<File RelativePath="..\wepp\dblex.for"/>
+		<File RelativePath="..\wepp\disag.for"/>
+		<File RelativePath="..\wepp\eqroot.for"/>
+		<File RelativePath="..\wepp\FRSOIL.FOR"/>
+		<File RelativePath="..\wepp\grna.for"/>
+		<File RelativePath="..\wepp\infparsub.for"/>
+		<File RelativePath="..\wepp\newton.for"/>
+		<File RelativePath="..\wepp\parestsub.for"/>
+		<File RelativePath="..\wepp\perc.for"/>
+		<File RelativePath="..\wepp\purk.for"/>
+		<File RelativePath="..\wepp\rainenergy.for"/>
+		<File RelativePath="..\wepp\SAXFUN.FOR"/>
+		<File RelativePath="..\wepp\SAXPAR.FOR"/>
+		<File RelativePath="..\wepp\usdatx.for"/>
+		<File RelativePath="..\wepp\waterbal.for"/></Filter>
+		<Filter Name="wepp_erosion">
+		<File RelativePath="..\wepp_erosion\cross.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\depc.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\depend.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\depeqs.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\depos.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\enrich.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\enrprt.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\eprint.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\erod.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\falvel.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\getFromWeps.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\init_wepp.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\inpwepp.for"/>
+		<File RelativePath="..\wepp_erosion\param.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\print.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\print_bug.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\profil.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\prtcmp.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\root.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\route.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\runge.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\sedia.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\sedist.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\sedmax.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\sedout.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\sedseg.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\sedsta.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\shear.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\shears.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\SHEART.FOR"/>
+		<File RelativePath="..\wepp_erosion\shield.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\sloss.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\soil_adj.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\trcoeff.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\undflo.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\water_erosion.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\weppsum.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\write_event.for"/>
+		<File RelativePath="..\wepp_erosion\write_hydro_summary.for"/>
+		<File RelativePath="..\wepp_erosion\write_main_event.for"/>
+		<File RelativePath="..\wepp_erosion\write_plot.for"/>
+		<File RelativePath="..\wepp_erosion\xcrit.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\xinflo.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File>
+		<File RelativePath="..\wepp_erosion\yalin.for">
+			<FileConfiguration Name="Debug|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration>
+			<FileConfiguration Name="Release|Win32">
+				<Tool Name="VFFortranCompilerTool" AdditionalIncludeDirectories="../inc"/></FileConfiguration></File></Filter>
+		<Filter Name="wepp_route">
+		<File RelativePath="..\wepp_route\bgnrnd.for"/>
+		<File RelativePath="..\wepp_route\hdepth.for"/>
+		<File RelativePath="..\wepp_route\hdrive.for"/>
+		<File RelativePath="..\wepp_route\hdriveflow.for"/>
+		<File RelativePath="..\wepp_route\phi.for"/>
+		<File RelativePath="..\wepp_route\psiinv.for"/>
+		<File RelativePath="..\wepp_route\Psis.for"/>
+		<File RelativePath="..\wepp_route\randm.for"/>
+		<File RelativePath="..\wepp_route\rdat.for"/>
+		<File RelativePath="..\wepp_route\sint.for"/></Filter></Filter></Files>
+	<Globals/></VisualStudioProject>

@@ -1,0 +1,1 @@
+This file is here to force the creation of this directory when doing a checkout with pruning of empty directories (TKCVS default setting, and keeps from getting extranneous, old unused directories cluttering up the directory tree)

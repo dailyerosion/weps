@@ -1,0 +1,37 @@
+!
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+!
+program tstsax_xmlcheck
+!
+! Checks for well-formedness of an XML file
+!
+use flib_sax
+
+  integer :: iostat
+  type(xml_t)  :: fxml
+
+  call open_xmlfile("test.xml",fxml,iostat)
+  if (iostat /= 0) stop "Cannot open file INP."
+
+  call xml_parse(fxml, verbose = .false.)
+
+  print *, "Characters processed: ", xml_char_count(fxml)
+
+end program tstsax_xmlcheck
+
+
+
+
+
+
+
+
+
+
+
+
+
+

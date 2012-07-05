@@ -1,0 +1,143 @@
+/**********************************
+	   INTEL COOK OPTIONS
+ **********************************/
+
+/*required reentry of the cook process to setup the environment*/
+#include [cookbook]/reentry.cook
+
+/**********************************
+	INITILIZE IFORT ENVIRONMENT
+ **********************************/
+
+/*if not set inspect the environment variable IFORT_HOME*/
+if [and [not [defined ifort_home]] [strlen [getenv IFORT_HOME]]] then{
+	ifort_home	= [getenv IFORT_HOME];
+}
+
+if [not [defined ifort_home]] then{
+	function print ****************************************************;
+	function print "INVALID INTEL COMPILER CONFIGURATION";
+	function print "ifort_home not defined in a config file or IFORT_HOME enviroment variable not set:";
+	function print [config];
+	function print [config-system];
+	function print [config-node];
+	function print ****************************************************;
+	fail;	
+}
+
+/*if the target platform for ifort has not been set then figure it out*/
+if [not [defined ifort_arch]] then{
+	if [in [os machine] x86 i386] then{
+		ifort_arch = ia32;
+	}
+	else if [in [os machine] x86_64 i686] then{
+		ifort_arch = intel64;
+	}
+	else{
+		function print ****************************************************;
+		function print "INVALID INTEL COMPILER CONFIGURATION";
+		function print "Unknown machine type:" [os machine];
+		function print ****************************************************;
+		fail;
+	}	
+}
+else if [not [in [ifort_arch] ia32 intel64]] then{
+	function print ****************************************************;
+	function print "INVALID INTEL COMPILER CONFIGURATION";
+	function print "ifort_arch="[ifort_arch];
+	function print "Valid values: ia32|intel64";
+	function print ****************************************************;
+	fail;
+}
+
+/*init different variables if windows or unix*/
+if [is_windows] then {
+	fail "ifort not yet implemented on windows.";
+}
+else{
+/*unix ifort*/
+	if [exists [ifort_home]/bin/compilervars.sh] then{
+		function enqueue-reentry [ifort_home]/bin/compilervars.sh [ifort_arch];
+	}
+	else{
+		function print ****************************************************;
+		function print "INVALID INTEL COMPILER CONFIGURATION";
+		function print "Valid ifort installation not found.";
+		function print "ifort_home="[ifort_home];
+		function print ****************************************************;
+		fail;	
+	}
+}
+
+/**********************************
+	    	  COMPILER
+ **********************************/
+
+fc				= ifort;
+fc_version 		= [collect [fc] --version | head -1];
+
+fc_compile_flag	= "-c -Tf";
+fc_out_flag		= "-o ";
+
+fc_flags		="-nologo";
+
+
+fc_fixed		=;
+fc_free			= "-free";
+
+
+/* default mode flags */
+fc_default		="-O0";
+
+/* debug flags */
+fc_debug		="-g";
+
+/* optimization flags */
+fc_optimize		="-O3";
+
+/*release flags	*/
+fc_release		= [fc_optimize];
+
+
+/* includes */
+fc_inc_flag		= "-I ";
+fc_inc_join		= [false];		/*if true, the includes are joined into a single argument with the separator */
+fc_inc_sep		= ;
+
+fc_mod_inc_flag		= "-I ";			
+fc_mod_out_flag		= "-module ";
+
+/* Case of the module names: lower, upper or mixed*/
+fc_mod_case	= lower;;
+
+/**********************************
+	    	  LINKER
+ **********************************/
+ld				= [fc];
+ld_version		= [fc_version];
+
+ld_link_flag	=;
+ld_out_flag		= "-o ";
+
+/* debug flags */
+ld_debug		=;
+
+/* optimization flags */
+ld_optimize		="-fast";
+
+/* includes */
+ld_inc_flag		= [fc_inc_flag];
+ld_inc_join		= [fc_inc_join];		/*if true, the includes are joined into a single argument with the separator */
+ld_inc_sep		= [fc_inc_sep];
+
+ld_lib_prefix	= "-Xlinker --start-group ";
+ld_lib_suffix	= " -Xlinker --end-group";
+
+
+/**********************************
+	    	  ARCHIVER
+ **********************************/
+ar			= xiar;
+ar_version	= ?;
+
+ar_flags	= "-cq ";

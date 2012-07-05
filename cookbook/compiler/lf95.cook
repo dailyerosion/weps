@@ -1,0 +1,99 @@
+/**********************************
+	   Lahey compiler COOK OPTIONS
+ **********************************/
+
+/**********************************
+	    	  COMPILER
+ **********************************/
+
+fc				= lf95;
+fc_version 		= [collect [fc] --version | head -1];
+
+fc_compile_flag	= "-c ";
+fc_out_flag		= "-o ";			/* requires space for arg following option */
+
+fc_flags		= "-in -trap dio -w -ap"; /* -nco -nconcc */
+/* -in		declare type of all symbols */
+/* -trap dio	runtime traps for divide-by-zero (d), invalid
+		operand (i), overflow (o), and underflow (u) */
+/* -w		issue warnings and informational messages */
+
+fc_fixed		= "-fix";
+fc_free			= "";
+
+/* default mode flags */
+fc_default		=;
+
+/* debug flags */
+fc_debug		= "-chkglobal -g -info -pca -stchk";
+/* -chkglobal forces -chk (a,e,s,u,x) -trace -o0 */
+/* -chk		subscript bounds checking (disable for speed) */
+/* -g		expanded symbol table and other information for the debugger */
+/* -info	display level of loop unrolling performed, variables declared
+		but never used, divisions changed to multiplication by reciprocal, etc. */
+/* -pca		prevent invoked subprograms from storing into constants */
+/* -stchk	stack checking */
+/* -trace	generate traceback if error */
+
+/* optimization flags */
+fc_optimize		= "-nchk -nstchk -ntrace -o2";
+/* -o 0 | 1 | 2	optimization level
+		0 - no optimizations
+		1 - optimizations
+		2 - full unrolling of nested loops, loop splitting to promote loop exchange, and array optimizations */
+
+/* release flags */
+fc_release		= "[fc_optimize]";
+
+/* includes */
+fc_inc_flag		= "-I ";
+fc_inc_join		= [true];			/*if true, the includes are joined into a single argument with the separator */
+fc_inc_sep		= "\\;";
+
+fc_mod_inc_flag	= "-mod ";		/* Lahey seems to accept option being used twice */
+fc_mod_out_flag	= "-mod ";		/* Specifies path to put "mod" files separately from path to find "mod" files */
+
+/* Case of the module names: lower, upper or mixed*/
+fc_mod_case	= lower;
+
+/**********************************
+	    	  LINKER
+ **********************************/
+ld				= [fc];
+ld_version		= [fc_version];
+
+ld_flags		= "-staticlib";
+
+ld_link_flag	=;
+ld_out_flag		= "-out ";			/* requires space for arg following option */
+
+/* debug flags */
+ld_debug		= "-fullwarn -g -trace";
+/* -fullwarn	provides the maximum level of warning and informational messages */
+/* -g		expanded symbol table and other information for the debugger */
+/* -trace	generate traceback if error */
+
+/* optimization flags */
+ld_optimize		=;
+
+/* includes */
+ld_inc_flag		= [fc_inc_flag];
+ld_inc_join		= [fc_inc_join];	/*if true, the includes are joined into a single argument with the separator */
+ld_inc_sep		= [fc_inc_sep];
+
+ld_lib_prefix	= "";
+ld_lib_suffix	= "";
+
+/*do not use libs*/
+ld_use_libs		= [false];
+
+
+/**********************************
+	    	  ARCHIVER
+ **********************************/
+/*ar			= ar;
+ar_flags	= "-cq ";*/
+
+ar			= lib;
+ar_flags	= "-out:";
+ar_version	= [collect [ar] --version | head -1];

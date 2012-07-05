@@ -1,0 +1,123 @@
+/**********************************
+	   Absoft compiler COOK OPTIONS
+ **********************************/
+
+/**********************************
+	    	  COMPILER
+ **********************************/
+
+fc			= af95;
+fc_version 		= [collect [fc] --version | head -1];
+
+fc_compile_flag		= "-c ";
+fc_out_flag		= "-o ";	/* requires space for arg following option */
+
+fc_flags		= "";
+
+fc_fixed		= "-f fixed";
+fc_free			= "-f free";
+
+
+fc_default		= "-O2 -OPT:Olimit=16480 -et -TENV:simd_imask -TENV:simd_dmask -TENV:simd_zmask -TENV:simd_omask -TENV:simd_umask -TENV:simd_pmask -Rb -Rc -Rp -Rs -trapuv";	/* default mode flags */
+
+fc_debug		= "-O0 -g -et -TENV:simd_imask -TENV:simd_dmask -TENV:simd_zmask -TENV:simd_omask -TENV:simd_umask -TENV:simd_pmask -Rb -Rc -Rp -Rs -trapuv";	/* debug flags */
+
+if [is_windows] then {
+	/* fc_optimize	= "-O4 -et -stack:0x5908000"; */	/* optimization flags */
+	fc_optimize	= "-O5 -et -stack:0x5908000";	/* optimization flags */
+}
+else {
+	fc_optimize	= "-O5 -et -apo -LNO:verbose=on -LNO:simd_verbose=on";	/* optimization flags */
+}
+
+fc_release		= "-O3 -et -Ra -Rn -YVAR_NAMES=ASIS -YALL_NAMES=ASIS";	/* release flags	*/
+
+/* includes */
+fc_inc_flag		= "-I ";
+fc_inc_join		= [false];	/* if true, includes joined into single arg with separator */
+fc_inc_sep		= ";";
+
+fc_mod_inc_flag	= "-p";
+
+fc_mod_out_flag	= "-YMOD_OUT_DIR=";
+
+/* Case of the module names: lower, upper or mixed*/
+fc_mod_case	= upper;
+
+
+/**********************************
+	    	  LINKER
+ **********************************/
+ld				= [fc];
+ld_version		= [fc_version];
+
+if [is_windows] then{
+	ld_link_flag	= "-stack:0x5908000 unix.lib";
+}
+else {
+	ld_link_flag	= "";
+	ld_libs			= "-lU77";
+}
+
+ld_out_flag		= "-o ";
+
+ld_flags		= [ld_link_flag];
+
+/* pass the "-O" option to the linker */
+if [findstring "-O0" [fc_debug]] then {
+	ld_debug	= "-O0";
+}
+if [findstring "-O2" [fc_default]] then {
+	ld_default	= "-O2";
+}
+if [findstring "-O3" [fc_release]] then {
+	ld_release	= "-O3";
+}
+if [findstring "-O4" [fc_optimize]] then {
+	ld_optimize	= "-O4";
+}
+if [findstring "-O5" [fc_optimize]] then {
+	ld_optimize	= "-O5";
+}
+if [findstring "-Ofast" [fc_optimize]] then {
+	ld_optimize	= "-Ofast";
+}
+
+function print "ld_optimize is now:" [ld_optimize];
+
+if [is_unix] then {
+	if [in [mode] default debug release] then {
+		ld_lib_prefix	= "-Xlinker --start-group ";
+		ld_lib_suffix	= " -Xlinker --end-group";
+	}
+	else {	/* we don't actually use the gnu linker with "-Ofast" specified */
+	}
+}
+
+
+/* includes */
+ld_inc_flag		= [fc_inc_flag];
+ld_inc_join		= [fc_inc_join];	/* if true, includes joined into single arg with separator */
+ld_inc_sep		= [fc_inc_sep];
+
+
+/**********************************
+	    	  ARCHIVER
+ **********************************/
+if [is_windows] then {
+	if [in [mode] optimize] then {	/* use gnu ar if "-O4" is specified */	
+		ar			= ar;
+		ar_flags	= "-cq ";
+		lib.prefix	= "lib";
+		lib			= ".a";
+	}
+	else {							/* use MS library manager */
+		ar			= lib;
+		ar_flags	= "-out:";
+	}
+}
+else {
+	ar			= ar;
+	ar_flags	= "-cq ";
+}
+ar_version	= [collect [ar] --version | head -1];

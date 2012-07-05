@@ -1,0 +1,113 @@
+/**********************************
+	   DEFAULT COMPILER OPTIONS
+ **********************************/
+/* provided by cook install.  Useful functions. */
+/**********************************
+	    	  COMPILER
+ **********************************/
+
+fc				= [defined-or-null fc];
+fc_name			= [defined-or-default fc_name [fc]];
+fc_version 		= [defined-or-null fc_version];
+
+
+/* flags always used by fc */
+fc_flags		= [defined-or-null fc_flags];
+
+/* flags only used for fixed form fortran */
+fc_fixed		= [defined-or-null fc_fixed];
+
+/* flags only used for free form fortran */
+fc_free			= [defined-or-null fc_free];
+
+/* compile flag to tell fc only to compile, not to link */
+fc_compile_flag	= [defined-or-null fc_compile_flag];
+
+/* output flag */
+fc_out_flag		= [defined-or-null fc_out_flag];
+
+/* default mode flags */
+fc_default		= [defined-or-null fc_default];
+
+/* debug flags */
+fc_debug		= [defined-or-null fc_debug];
+
+/* optimization flags */
+fc_optimize		= [defined-or-null fc_optimize];
+
+/*release flags */
+fc_release		= [defined-or-null fc_release];
+
+
+/* includes, prefix flag, if joined into one, separator */
+fc_inc_flag		= [defined-or-null fc_inc_flag];
+fc_inc_join		= [defined-or-null fc_inc_join];
+fc_inc_sep		= [defined-or-null fc_inc_sep];
+
+/* directory to place modules*/
+fc_mod_flag		= [defined-or-null fc_mod_flag];
+
+/* Case of the module names: lower, upper or mixed*/
+fc_mod_case	= [defined-or-null fc_mod_case];
+
+
+/**********************************
+	    	  LINKER
+ **********************************/
+ld				= [defined-or-null ld];
+ld_version		= [defined-or-null ld_version];
+
+ld_use_libs		= [defined-or-default ld_use_libs [true]];
+
+/* flags always used by ld */
+ld_flags	= [defined-or-null ld_flags];
+
+/* link flag, often blank  */
+ld_link_flag	= [defined-or-null ld_link_flag];
+
+/* output flag */
+ld_out_flag		= [defined-or-null ld_out_flag];
+
+/* default mode flags */
+ld_default		= [defined-or-null ld_default];
+
+/* debug flags */
+ld_debug		= [defined-or-null ld_debug];
+
+/* optimization flags */
+ld_optimize		= [defined-or-null ld_optimize];
+
+/*release flags */
+ld_release		= [defined-or-null ld_release];
+
+/* includes, prefix flag, if joined into one, separator */
+ld_inc_flag		= [defined-or-null ld_inc_flag];
+ld_inc_join		= [defined-or-null ld_inc_join];		
+ld_inc_sep		= [defined-or-null ld_inc_sep];
+
+ld_lib_prefix	= [defined-or-null ld_lib_prefix];
+ld_lib_suffix	= [defined-or-null ld_lib_suffix];
+
+ld_libs			= [defined-or-null ld_libs];
+
+
+/**********************************
+	    	  ARCHIVER
+ **********************************/
+ar			= [defined-or-null ar];
+ar_version	= [defined-or-null ar_version];
+
+ar_flags	= [defined-or-null ar_flags];
+
+
+/**********************************
+	    DEBUGGER
+ **********************************/
+fdb             = [defined-or-null fdb];
+
+fdb_flags       = [defined-or-null fdb_flags];
+
+fdb_exe_flag    = [defined-or-null fdb_exe_flag];
+fdb_args_flag   = [defined-or-null fdb_args_flag];
+
+

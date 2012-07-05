@@ -1,0 +1,5 @@
+The compiler folder contains descriptions for each of the supported Fortran compilers.  
+
+To use a specific compiler include the fc=compiler argument when invoking cook.  For example: cook fc=ifort weps (will use the intel compiler)
+
+The master cook script will look for a compiler description in the compiler folder named compiler.cook.  These description files specify the flags and magic incantations required for the given compiler.  Auto detection of the compiler is not yet supported.

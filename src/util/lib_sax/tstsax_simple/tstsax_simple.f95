@@ -1,0 +1,41 @@
+!
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+!
+program tstsax_simple
+!
+! Example driver for a stand-alone parsing of an xml document
+! Very simple version with just the minimal handlers.
+!
+use flib_sax
+use m_handlers_simple      ! Defines begin_element, end_element, pcdata_chunk
+
+  integer :: iostat
+  type(xml_t)  :: fxml
+
+  call open_xmlfile("test.xml",fxml,iostat)
+  if (iostat /= 0) stop "Cannot open file."
+
+  call xml_parse(fxml, &
+               begin_element_handler = begin_element_handler, &
+               end_element_handler = end_element_handler, &
+               pcdata_chunk_handler = pcdata_chunk_handler, &
+               verbose = .false.)
+
+end program tstsax_simple
+
+
+
+
+
+
+
+
+
+
+
+
+
+

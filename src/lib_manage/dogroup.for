@@ -1,0 +1,149 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
+      subroutine   dogroup (sr)
+
+!     + + + PURPOSE + + +
+!     Dogroup reads in any coefficients associated with the group of
+!     processes. 
+
+!     + + + KEYWORDS + + +
+!     tillage, operation, management
+
+!     + + + PARAMETERS AND COMMON BLOCKS + + +
+      include 'p1werm.inc'
+      include 'm1flag.inc'
+      include 's1layr.inc'
+      include 'c1db1.inc'
+      include 'manage/man.inc'
+      include 'manage/mproc.inc'
+      include 'manage/oper.inc'
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer sr
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     iunit - management file handle 
+!     sr - the subregion number
+
+!     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
+!     cropno - number that identifies the crop to be sown
+!     tdepth - tillage depth (mm)
+!     ti - tillage intensity (fraction)
+
+!     fracarea - fraction of area affected by process
+
+!     + + + LOCAL VARIABLES + + +
+      character*256   line
+      character*1    grdumy
+
+!     + + + SUBROUTINES CALLED + + +
+
+!     + + + FUNCTION DECLARATONS + + +
+      integer tillay
+
+!     + + + DATA INITIALIZATIONS + + +
+
+!     + + + END SPECIFICATIONS + + +
+
+      line = mtbl(mcur(sr))
+      read(line, 1001, err=901) grdumy, grcode, grname
+ 1001 format(a1,1x,i2,1x,a)
+!***  print*, 'SR',sr,' Processing process:', grcode,' ',grname
+
+      select case (grcode)
+
+      case (1)
+!-----START tillage process (process code 01)
+!     get process parameters
+!     get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+!     read tillage depth, intensity and area
+        read(line(2:len_trim(line)), *, err=901)                        &
+     &   tdepth, ti, fracarea, tstddepth, tmindepth, tmaxdepth
+
+! ***        if (getr(iunit,sr,fracarea,fracarea,fracarea,1,'r').gt.0) then
+! ***          print*,'ERROR in doproc ',prcode
+! ***          stop
+! ***        endif
+!     pre-process stuff
+        tlayer = tillay(tdepth, aszlyt(1,sr), nslay(sr))
+!     do process (usually just processes or other operations)
+!     post-process stuff
+!-----END tillage process (process code 01)
+
+      case (2)
+!-----START biomass manipulation process (process code 02)
+!     get process parameters
+!        rtn = getr(iunit, sr, bioflg,bioflg,bioflg,1,'i')
+!     expected last parameter for process, thus mlpos==0
+!     get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+!     read biomass area affected
+        read(line(2:len_trim(line)), *, err=901) fracarea
+! ***        if (getr(iunit,sr,fracarea,fracarea,fracarea,1,'r').gt.0) then
+! ***          print*,'ERROR in doproc ',prcode
+! ***          stop
+! ***        endif
+!     pre-process stuff
+!     do process (should include a tillage operation)
+!     post-process stuff
+!-----END biomass manipulation process (process code 02)
+
+      case (3)
+!-----START grow process (process code 03)
+!     get process parameters
+!     expected last parameter for process, thus mlpos==0
+!     get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+!       read crop name
+        cropname = line(2:71)   !at present, line ends with < symbol at 72
+        call stir_crop(sr, cropname, 0)
+!        read(line(2:len_trim(line)),*, err=901) cropname
+! ***        if (getr(iunit, sr, cropname,cropname,cropname,1,'c').gt.0) then
+! ***          print*,'ERROR in doproc ',prcode
+! ***          stop
+! ***        endif
+!     pre-process stuff
+!     do process (should include a tillage operation)
+!     post-process stuff
+!-----END grow process (process code 03)
+
+      case (4)
+!-----START ammend process (process code 04)
+! *** 04   continue
+!     get process parameters
+!       expected last parameter for process, thus mlpos==0
+!     get additional line of data
+        mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+!       read amendment name
+        amdname = line(2:71)   !at present, line ends with < symbol at 72
+!        read(line(2:len_trim(line)),*, err=901) amdname
+! ***        if (getr(iunit, sr, amdname,amdname,amdname,1,'c').gt.0) then
+! ***          print*,'ERROR in doproc ',prcode
+! ***          stop
+! ***        endif
+!     pre-process stuff
+!     do process (could include a tillage operation)
+!     post-process stuff
+!-----END ammend process (process code 04)
+      case default
+        goto 902
+      end select
+      return
+
+! Error stops
+      
+  901 write(0, 9901) line
+ 9901 format('Error in procedure line ', a)
+      call exit (1)
+  902 write(0, 9902) line
+ 9902 format('Bad procedure type ', a)
+      call exit (1)
+      end

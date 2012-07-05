@@ -1,0 +1,233 @@
+<?xml version="1.0" ?>
+<cml>
+ <metadataList>
+  <metadata name="program" content="GULP 1.3" />
+  <metadata name="dc:creator" content="Julian Gale" />
+  <metadata name="dc:contributor" content="S.Woodley I. Walton" />
+  <metadata name="dc:title" content="General Utility Lattice Program" />
+ </metadataList>
+ <parameterList title="Input Parameters">
+  <parameter name="grad" value="T" />
+  <parameter name="conp" value="T" />
+  <parameter name="prop" value="T" />
+ </parameterList>
+ <formula>
+ Sn
+ 2
+ O
+ 4
+ </formula>
+ <module title="Calculation">
+  <propertyList title="Initial Energy Breakdown">
+   <property dictRef="gulp:eatom">
+    <scalar units="eV">
+    48.5977615075
+    </scalar>
+   </property>
+   <property dictRef="gulp:ereal">
+    <scalar units="eV">
+    -36.6562470214
+    </scalar>
+   </property>
+   <property dictRef="gulp:erecip">
+    <scalar units="eV">
+    -233.151112271
+    </scalar>
+   </property>
+   <property dictRef="gulp:eewald">
+    <scalar units="eV">
+    -269.807359293
+    </scalar>
+   </property>
+   <property dictRef="gulp:Etot">
+    <scalar units="eV">
+    -221.209597785
+    </scalar>
+   </property>
+  </propertyList>
+  <propertyList title="Properties">
+   <property dictRef="gulp:elcon">
+    <matrix units="Dyne/cm^2" cols="6" rows="6">
+    31.2899015574
+    21.2747808061
+    19.7513243577
+    0.164291919493E-14
+    0.266500790019E-14
+    0.156720633772E-11
+    21.2747808061
+    31.2899015574
+    19.7513243577
+    0.348179795241E-14
+    -0.346568022621E-15
+    0.156899674862E-11
+    19.7513243577
+    19.7513243577
+    60.7759144193
+    0.874025534441E-14
+    0.876995473178E-14
+    -0.548064668752E-12
+    0.164291919493E-14
+    0.348179795241E-14
+    0.874025534441E-14
+    11.9737158248
+    -0.465705767532E-12
+    -0.226907186583E-14
+    0.266500790019E-14
+    -0.346568022620E-15
+    0.876995473178E-14
+    -0.466302571164E-12
+    11.9737158248
+    0.102740379517E-14
+    0.156641059955E-11
+    0.156432178684E-11
+    -0.538466077004E-12
+    -0.226907186583E-14
+    0.102740379517E-14
+    23.8874076969
+    </matrix>
+   </property>
+   <property dictRef="gulp:bulkmod">
+    <scalar units="GPa">
+    253.854084424
+    </scalar>
+   </property>
+   <property dictRef="gulp:youngmod">
+    <array units="GPa" size="3">
+    159.973253722
+    159.973253722
+    459.326852265
+    </array>
+   </property>
+   <property dictRef="gulp:piezoStress">
+    <matrix units="C/m^2" cols="6" rows="3">
+    -0.254363319919E-11
+    0.308485834673E-11
+    -0.539943956374E-11
+    -0.221913694944E-11
+    0.630211312144E-13
+    -0.139993571651E-11
+    0.252863388794E-11
+    -0.282487028510E-11
+    -0.523194725480E-11
+    0.647295386632E-13
+    -0.221927462358E-11
+    -0.129165943843E-11
+    0.513613319629E-14
+    0.527349618826E-14
+    0.975786211714E-13
+    -0.280518368908E-11
+    -0.270237590990E-11
+    -0.892359425257E-12
+    </matrix>
+   </property>
+   <property dictRef="gulp:piezoStrain">
+    <matrix units="10E-7C/Dyne" cols="6" rows="3">
+    -0.230017692447E-12
+    0.331981676876E-12
+    -0.121978638476E-12
+    -0.185334025120E-12
+    0.526328936954E-14
+    -0.586055939711E-13
+    0.306342654515E-12
+    -0.228199494898E-12
+    -0.111481303267E-12
+    0.540596917536E-14
+    -0.185345523149E-12
+    -0.540728175624E-13
+    -0.674085634396E-15
+    -0.660370074157E-15
+    0.203922705065E-14
+    -0.234278458763E-12
+    -0.225692337237E-12
+    -0.373568968462E-13
+    </matrix>
+   </property>
+   <property dictRef="gulp:statDielec">
+    <matrix units="GPa" cols="3" rows="3">
+    13.7367665259
+    0.224903041266E-11
+    -0.476488735322E-14
+    0.224790702085E-11
+    13.7367665259
+    -0.471873912432E-14
+    -0.476488735322E-14
+    -0.471873912432E-14
+    9.41114400417
+    </matrix>
+   </property>
+   <property dictRef="gulp:hifiDielec">
+    <matrix units="GPa" cols="3" rows="3">
+    3.93579567306
+    0.153834466600E-12
+    -0.326575011717E-15
+    0.153808137105E-12
+    3.93579567306
+    -0.322590020486E-15
+    -0.326575011717E-15
+    -0.322590020486E-15
+    3.91635590063
+    </matrix>
+   </property>
+   <property dictRef="gulp:srefind">
+    <array size="3">
+    3.06775879172
+    3.70631441271
+    3.70631441271
+    </array>
+   </property>
+   <property dictRef="gulp:hfrefind">
+    <array size="3">
+    1.97897849929
+    1.98388398680
+    1.98388398680
+    </array>
+   </property>
+  </propertyList>
+
+  <crystal title="Final cell parameters">
+   <!-- No way to choose the units they are set to Angstrom --> 
+   <scalar title="a" units="angstrom">4.73800000000</scalar>
+   <scalar title="b" units="angstrom">4.73800000000</scalar>
+   <scalar title="c" units="angstrom">3.18650000000</scalar>
+   <scalar title="alpha" units="degree">90.0000000000</scalar>
+   <scalar title="beta"  units="degree">90.0000000000</scalar>
+   <scalar title="gamma" units="degree">90.0000000000</scalar>
+  </crystal>
+
+  <propertyList title="Basic Properties">
+   <property dictRef="gulp:vol">
+    <scalar units="angs**3">
+    71.5326041060
+    </scalar>
+   </property>
+   <property dictRef="gulp:dens">
+    <scalar units="angs**3">
+    6.99719586465
+    </scalar>
+   </property>
+   <property dictRef="gulp:volf">
+    <scalar units="angs**3">
+    71.5326041060
+    </scalar>
+   </property>
+  </propertyList>
+  <propertyList title="Derivatives">
+   <property dictRef="gulp:forces">
+    <matrix cols="3" rows="4" units="eV">
+    0.00000000000
+    0.00000000000
+    0.00000000000
+    21.3648630308
+    0.00000000000
+    0.00000000000
+    0.00000000000
+    0.00000000000
+    0.00000000000
+    -22.3365111185
+    0.00000000000
+    0.00000000000
+    </matrix>
+   </property>
+  </propertyList>
+ </module>
+</cml>

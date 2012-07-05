@@ -1,0 +1,9 @@
+/*This file handles the special logic for the timer library.  A different object is used depending on if it is cooked for windows or unix. */
+
+if [is_windows] then{
+	filter_[lib.dir]/util/[lib.prefix]timer[lib] = ".*_windows.*";
+}
+else{
+	filter_[lib.dir]/util/[lib.prefix]timer[lib] = ".*_unix.*";
+}
+

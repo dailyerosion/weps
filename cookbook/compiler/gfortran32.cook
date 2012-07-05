@@ -1,0 +1,10 @@
+/**********************************
+	   GFORTRAN32 COOK OPTIONS
+ **********************************/
+#include gfortran.cook
+
+/*add the 64bit flag to fc and ld*/
+fc_flags	+= "-m32";
+fc_name		=  [fc]_32;
+
+ld_flags	+= "-m32";

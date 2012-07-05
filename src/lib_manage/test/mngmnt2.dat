@@ -1,0 +1,105 @@
+# SAMPLE MANAGEMENT FILE                         72 chars long records <
+#This is line 2                                           end of line 2<
+# for testing purposes                                         testing3<
+#                                                                      <
+# Characters that begin a line in this file                            <
+# represent one of the following:                                      <
+#                                                                      <
+#               '#' <- comment line                                    <
+#               '+' <- continuation line                               <
+#               '*' <- flag line                                       <
+#               'O' <- operation line                                  <
+#               'P' <- process line                                    <
+#               'D' <- date line                                       <
+#                                                                      <
+#       +---- subregion number                                         <
+#       |   +---- number of years in each cycle                        <
+#       |   |                                                          <
+*START 001 003                                                         <
+#                                                                      <
+#   +--- date field - where the year refers to the year in the cycle   <
+#   |       +----- operation class code                                <
+#   |       |     +---- operation class name                           <
+#   |       |     |                                                    <
+D14/02/0001 06 Irrigation                                              <
+#                                                                      <
+O 05 Irrigate-furrow                                                   <
+#                                                                      <
+#   +---- continuation lines following the date/operation line hold    <
+#   |     global values for all processes used in this operation       <
+#   |                                                                  <
++ 1.234                                                            67.3<
++ -12.0    4.0                                                         <
+#                                                                      <
+D30/06/0001 01 Primary-Tillage                                         <
+#                                                                      <
+O 01 Tillage                                                           <
++ 07.0 30.03 NNE Disk-Offset                                           <
+#                                                                      <
+#  +---- process code                                                  <
+#  |    +---- process name                                             <
+#  |    |                                                              <
+P 01 Crushing                                                          <
++ 002.8 0.75                                                           <
+#                                                                      <
+#P 02 Mixing                                                           <
+#                                                                      <
+#  +---- continuation lines following a process line hold coefficients <
+#  |     that are used in that process                                 <
+#  |                                                                   <
+# 2.0     .60                                                          <
+#                                                                      <
+D27/09/0002 05 Harvesting                                              <
+#                                                                      <
+O 04 Harvest-Small-Grain                                               <
++ 27.09                                                                <
+# 08 Cut                                                               <
+# 1.5                                                                  <
+# 09 Killing                                                           <
+#709.0                                                             7.09<
+#                                                                      <
+D10/06/0003 05 Harvesting                                              <
+#                                                                      <
+O 04 Harvest-Corn                                                      <
++ 27.09                                                                <
+#                                                                      <
+# 08 Cut                                                               <
+# 2.03462                                                              <
+#                                                                      <
+*END   001  <---- end of subregion 1 list of management tasks          <
+#                                                                      <
+*START 002 005                                                         <
+#                                                                      <
+D01/05/0001 03 Cultivation                                             <
+#                                                                      <
+O 02 Cultivate                                                         <
++ 60.20                                                                <
+#                                                                      <
+O 01 Tillage                                                           <
++ 07.0 30.03 NNE Disk-Offset                                           <
+P 01 Crushing                                                          <
++ 03.4              +0.1415                                            <
+# no operations on the second year                                     <
+D30/10/0003 01 Primary-Tillage                                         <
+O 01 Tillage                                                           <
++ 067.0 30.03  SE   Plow                                               <
+P 01 Crushing                                                          <
++ 010.0 0.20                                                           <
+D30/10/0003 02 Secondary-Tillage                                       <
+O 01 Tillage                                                           <
++ 007.0 10.03  SE   Springtooth1                                       <
+P 01 Crushing                                                          <
++ 010.0 0.20                                                           <
+O 01 Tillage                                                           <
++ 007.0 10.03  SE   Springtooth2                                       <
+P 01 Crushing1                                                         <
++ 010.0 0.20                                                           <
+P 01 Crushing2                                                         <
++ 010.0 0.20                                                           <
+# no operations on the fourth year                                     <
+# no operations on the fifth year                                      <
+*END   002                                                             <
+#                                                                      <
+*START 003 007                                                         <
+*END   003                                                             <
+*EOF         <-------------- End of management file marker             <

@@ -1,0 +1,119 @@
+#---------------------- WEPS SIMULATION RUN FILE ----------------
+#
+#
+# --USER INFORMATION
+#   User name:
+      Wind E. Rosion
+#   Simulation ID:
+      Agronomy Farm 111 - initial values measured March 19, 1992
+#   Site location:
+      Manhattan, Kansas   NW 1/4, 27-19-36
+#
+# --SITE INFORMATION
+#    Site Latitude (decimal degrees):
+ 39.11
+#    Site Longitude (decimal degrees):
+                    90.33
+#    Site Elevation:
+                     500.0
+#
+# --SIMULATION PERIOD
+#    Start date:  day  month  year
+                   01    01   1982
+#    End date:    day  month  year
+                   31    12   1985
+#    Number of time steps per day for wind speed distribution
+                   24
+#
+# --RUN FILES (INPUT)
+#     CLIGEN file:
+../run/try.cli
+#     WINDGEN file:
+../run/oneyr.win
+#     sub-daily wind file (for 'real' data):
+#       * if entire sub-daily data set is to be
+#         generated - enter 'none'
+none
+#     Initial Field Conditions file:
+../run/bare.ifc
+#     MANAGEMENT (TILLAGE) file:
+../run/no.man
+#  WEPS OUTPUT OPTIONS
+#     General report
+#       Filename:
+../out/out.out
+#    General report forms - enter 1 for output, 0 for none
+#      Client  I/O  Weather  Sim Region  Manage  Erosion
+#      ------  ---  -------  ----------  ------  -------
+          1     1      1       1          1        1
+#    enter code number for frequency of Period output for general report
+#    note that yearly and simulation summaies are always output
+#    1 = daily, 2 = weekly, 3 = biweekly, 4 = monthly
+       2
+# -- Submodel Output
+#     Detailed submodel outputs - enter code # for output, 0 for none
+#       Code:    HYDRO    SOIL    MANAGE    CROP    DECOMP    EROSION
+                   0       0        0         0        3        0
+# -- Debug Output
+#     Generate debug file - enter 1 for output, 0 for none
+#     file name will have the format '*bug.out'  (eg. hdbug.out for HYDRO)
+#     note - no debug output for MANAGEMENT or EROSION for this release
+#                HYDRO    SOIL      CROP    DECOMP    MANAGE
+                  0         0        0        0        0
+#
+# --SIMULATION REGION INFORMATION
+#    Simulation region angle clockwise from North:
+                       5.0
+#    Simulation region coordinates (meters)
+#          point 1:   x          y
+                     0.0        0.0
+#          point 2:   x          y
+                   100.0      100.0
+#
+#    No. accounting regions:
+                             1
+#
+#      ******** repeat for each accounting region *************
+#      ******** only one allowed for current release **********
+#    Accounting region 1:
+#            coordinates (meters)
+#               point 1:   x            y
+                         25.0         25.0
+#               point 2:   x            y
+                         75.0         75.0
+#
+#    No. of subregions:
+                       1
+#
+#      ******** repeat for each subregion *********************
+#      ******** only one allowed for current release **********
+#    *Subregion 1:
+#           coordinates (meters)
+#               point 1:   x            y
+                          0.0          0.0
+#               point 2:   x            y
+                        100.0        100.0
+#     No. of barriers:
+                       1
+#     barrier endpoints (if none - all coordinates must = 0.0)
+#     Barrier 1:
+#           coordinates (meters)
+#              point 1:     x            y
+                           0.0          0.0
+#              point 2:     x            y
+                           0.0        100.0
+#     barrier height (meters)
+     20
+#     barrier width (meters)
+      10
+#     barrier porosity (decimal fraction)
+     0.6
+#     soil series:
+#                Reading Silt Loam
+#     average slope:
+                     0.50
+#
+#--------------- END OF SIMULATION RUN FILE ----------------
+
+
+

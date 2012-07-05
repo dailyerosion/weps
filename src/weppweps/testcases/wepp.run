@@ -1,0 +1,12 @@
+#
+# These fields were added to handle more complex slopes used by WEPP
+# number of slope points followed by fractional distance and slope pairs
+#
+2 
+0, 0.1 1, 0.1
+#
+#  This line indicates WEPP specific options, currently there is only one 
+#  which is the type of main output - event-by-event (1) or average annual (0)
+#
+0
+# end

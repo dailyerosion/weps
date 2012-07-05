@@ -1,0 +1,50 @@
+c $Header: /weru/cvs/weps/weps.src/inc/manage/oper.inc.keep,v 1.1.1.1 1999-03-12 17:05:26 wagner Exp $
+c     ------------------------------------------------------------------
+c     file 'oper.inc'
+c
+c     This common block contains the variables used in the MANAGEMENT
+c     process subprograms.
+c
+c     Parameter include files required:  p1werm.inc
+c
+c     + + + VARIABLE DECLARATIONS + + +
+c
+      character*20     opname
+      integer          opcode
+
+      character*20     prname
+      integer          prcode
+
+      real             speed, depth
+      integer          tlayer
+      character*20     impl
+      character*3      tdir
+      real             pertil
+
+c     next two were added by jt on Apr 8, '94
+      integer          cropno
+      character*20     crnam
+
+      real             cutht
+
+      real             calpha, cbeta
+c
+      common / oper1 / opcode
+      common / oper2 / opname,impl,tdir
+
+      common / proc1 / prcode
+      common / proc2 / prname
+
+      common / tillo / speed, depth, tlayer
+
+      common / culto / pertil
+
+      common / plant / cropno, crnam
+
+      common / harvp / cutht
+
+      common / crushp / calpha, cbeta
+
+c
+c     + + + VARIABLE DEFINITIONS + + +
+c

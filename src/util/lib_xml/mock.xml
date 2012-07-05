@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mock version="2.0" meta="2.0">
+    <notes>These notes should be ignored by the science model</notes>
+    <name>Mocking Bird 1</name>
+    <sub>
+        <thing>13</thing>
+    </sub>
+    <real data="42">3.14</real>
+    <log1>false</log1>    
+    <parameters>
+        <parameter name="p_string">testing-mock</parameter>
+        <parameter name="p_boolean">true</parameter>
+        <parameter name="p_real">5.6</parameter>
+        <parameter name="p_integer">8</parameter>        
+    </parameters>
+    
+    <layers>
+        <layer>
+            <parameters>
+                <parameter name="p_real">                <!--same name but different target-->                    
+                    <value>45.5</value>    
+                </parameter>
+                <parameter name="p_boolean">
+                    <value>true</value>                    
+                </parameter>
+            </parameters>
+        </layer>
+        <layer>
+            <parameters>
+                <parameter name="p_boolean">false</parameter>
+                <parameter name="p_real">                <!--same name but different target-->
+                    <value>42.0</value>
+                </parameter>
+            </parameters>
+        </layer>
+    </layers>
+</mock>

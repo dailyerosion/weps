@@ -1,0 +1,804 @@
+/**********************************
+      COOK EXECUTION FLAGS
+ **********************************/
+set mkdir;			/* make required directories automatically */
+set tell-position;		/* be verbose about where the call is coming from */
+setenv SHELL = /bin/sh;		/* explicit shell TODO: check if this is really required*/
+set time-adjust;		/* for super fast machines cook will move timestamps forward so build actions appear to occur in a linear fashion */
+set noerrok;			/* explicitly define the default, errors in external executables are not okay.*/		
+
+
+
+true 		= "1";		/* give credence to truth */
+false 		= "0";		/* give credence to lies */
+
+/*true if one of the special cleaning targets */
+cleaning	= [or [in clean [command-line-goals]] [in clobber [command-line-goals]]];
+cleaning_all	= [or [in clean-all [command-line-goals]] [in clobber-all [command-line-goals]]];
+configuring	= [or [in configure [command-line-goals]]  [in unconfigure [command-line-goals]] [in validate [command-line-goals]] [in "help:configure" [command-line-goals]]];
+cooking		= [not [or [cleaning] [cleaning_all] [configuring]]];
+
+/*single point to describe how to configure whenever there is a config error */
+configure_help = [self] "configure fc=compiler [mode=default|debug|optimize|release] [cross=0|1]";
+
+/*OS booleans */
+is_unix		= [in [downcase [os system]] unix linux sunos];
+is_windows	= [not [is_unix] ];
+
+
+
+
+/**********************************
+      ROOT TEMP DIRECTORIES
+ **********************************/
+build.root	= build;	/* root directory for build artifacts, removed during clean, clobber */
+dist.root	= dist;		/* root directory for programs and libraries removed during clobber */
+
+/**********************************
+      COOKBOOK INCLUDE LOGIC
+ **********************************/
+cookbook		= [dirname [__FILE__]];	/* directory of cook related files */
+config			= config.cook;			/* config for the cook script. */
+										/* Required to do anything except: */
+										/* clean, clobber, or configure */
+
+/*optional config files by system and node (hostname)*/
+if [is_windows] then{
+	config-system	= config-windows.cook;
+}
+else{
+	config-system	= config-[downcase [os system]].cook;
+}
+	config-node		= config-[downcase [os node]].cook;
+
+
+/* useful cook supplied user-defined functions */
+#include [cookbook]/functions.cook
+
+/* test if the config file has been created */ 
+configured	= [exists [config]];
+
+/**********************************
+      FAIL FAST ON CONFIG
+ **********************************/
+#if [not [or [configured] [configuring]]]
+	function print ****************************************************;
+	function print "Cook environment not configured.";
+	function print "Execute:" [configure_help];
+	function print ****************************************************;
+
+        function print;       
+        function print "Attempting Auto Configure";        
+
+        compilers = gfortran [sort [fromto %0%.cook % [stripdot [collect find [cookbook]"/compiler" -name "\\*.cook"]]]];        
+        /* try each compiler */
+        compiler = ;
+        loop compiler = [compilers]{            
+            if [find_command [compiler]] then {             
+                loopstop;
+            }          
+            compiler = "";
+        }
+        
+        if [not [compiler]] then{    
+            function print "No compilers found";
+            fail;
+        }        
+        
+        function print looks like [compiler] is on the path;
+                
+        fc = [compiler];        
+        configuring = [true];        
+        
+#endif
+
+
+/* if a config file exists, include it */
+#if [and [configured] [not [configuring]]]
+	#include [config]
+#endif
+
+#if [and [exists [config-system]] [not [configuring]]]
+	#include [config-system]
+#endif
+
+#if [and [exists [config-node]] [not [configuring]]]
+	#include [config-node]
+#endif
+
+
+
+
+
+/*TODO: Try and figure out the compiler from an environment variable or testing for compilers?*/
+
+/*The includes must occur during the preprocessing stage due to #include limitations. *unhappy programmer */
+#if [or [cooking] [cleaning]]
+	#if [and [defined fc] [count [fc]]]
+		#if [exists [cookbook]/compiler/[fc].cook]
+			#include [cookbook]/compiler/[fc].cook
+		#else
+			function print ****************************************************;
+			function print "Fortran compiler not supported:" [fc];
+			function print "Execute:" [configure_help];
+			function print ****************************************************;
+			fail;
+	
+		#endif
+	#else
+		function print ****************************************************;
+		function print "Fortran compiler must be defined.";
+		function print "Execute:" [configure_help];
+		function print ****************************************************;
+		fail;
+	#endif
+#endif
+
+/* read defaults after real compiler config, defaults only set if not otherwise. */
+#include [cookbook]/compiler/defaults.cook
+
+
+/**********************************
+ 	  INITIALIZE BUILD VARIABLES
+ **********************************/
+programs 	= [defined-or-null programs];/* empty list of programs */
+libraries 	= [defined-or-null libraries];/* empty list of libraries */
+
+mode		= [defined-or-default mode default];
+cross		= [defined-or-default cross [false]];
+
+
+src.dir 	= src;					/* source files */
+inc.dir 	=;						/* include files, should be appended from target files */
+test.dir 	= tests;				/* test scripts & source files */
+
+dep.dir 	= dep;					/* dependency build artifacts */
+
+
+
+/* if cross-compile is turned on then the path will differ */
+if [cross] then{
+        if [is_unix] then{
+                cross_mode	= [downcase [os system]_[os machine]_[fc_name]_[mode]];	
+        }
+        else{
+                cross_mode	= [downcase windows_[os machine]_[fc_name]_[mode]];
+        }
+}
+else{
+        cross_mode	= [fc_name]-[mode];	
+}
+
+build.dir	= [build.root]/[cross_mode];	/* build artifacts */
+dist.dir 	= [dist.root]/[cross_mode];		/* target executables */
+
+exe.dir 	= [build.dir]/exe;		/* linked exe */
+obj.dir 	= [build.dir]/obj;		/* object build artifacts */
+lib.dir 	= [build.dir]/lib;		/* library files */
+mod.dir 	= [build.dir]/mod;		/* module build artifacts */
+
+fpp.dir		= [build.dir]/fpp;		/* directory of preprocessed files */
+
+search_list = [fpp.dir] [src.dir];	/* search path for processed files, version, release, etc. */
+
+
+
+
+c_incl 		= [find_command c_incl];/* dependency finder included with cook */
+
+
+/**********************************
+  	      FILE EXTENSIONS
+ **********************************/
+f 			= [defined-or-default f .for ];			/* fortran fixed form */
+ff	 		= [defined-or-default ff .f95 ];				/* fortran free form */
+dep 		= [defined-or-default dep .dep ];			/* dependency */
+mod 		= [defined-or-default mod .mod ];			/* module */
+tmp 		= [defined-or-default tmp .tmp ]	;			/* temp file */
+inc 		= [defined-or-default inc .inc ]	;			/* include file	*/	
+lib_		= [defined-or-default lib_ lib_ ];			/* prefix on library in source */
+
+if [is_unix] then {
+	lib.prefix	= [defined-or-default lib.prefix lib ];	/* library prefix */
+	lib 		= [defined-or-default lib .a ];			/* library */
+	obj 		= [defined-or-default obj .o ];			/* object */
+	exe 		= [defined-or-default exe "" ];			/* executable */
+}
+else{/* Windows OS machine */
+	lib.prefix	= [defined-or-default lib.prefix "" ];	/* library prefix */
+	lib 		= [defined-or-default lib .lib ];		/* library */
+	obj 		= [defined-or-default obj .obj ];		/* object */
+	exe 		= [defined-or-default exe .exe ];		/* executable */
+}
+
+
+
+/**********************************
+      SCAN ALL SOURCE FILES
+ **********************************/
+manifest_files = [stripdot [collect find [src.dir] -name \\\\.* -prune -o -print]];	/* Every file not in a hidden directory */
+manifest_libs = [stripdot [collect find [src.dir] -name \\\\.* -prune -o -type d -name [lib_]* -print]];
+
+
+f_src 	= [filter %0%[f] [manifest_files]];		/* every fixed form fortran file */
+f90_src = [filter %0%[ff] [manifest_files]];	/* every free form Fortran file */
+inc_src = [filter %0%[inc] [manifest_files]];	/* every include file */
+all_src = [f_src] [f90_src] [inc_src];			/* combine explicit source files */
+
+
+all_dep = [addsuffix [dep] [fromto [src.dir]%0% [dep.dir]%0% [all_src] [manifest_libs]]];	/* mapped to dep.dir and dep extension added */
+all_obj = [fromto [src.dir]%0%[f] [obj.dir]%0%[obj] [f_src]] [fromto [src.dir]%0%[ff] [obj.dir]%0%[obj] [f90_src]];	/* every potential object file */
+
+
+/**********************************
+     INCLUDE TARGET COOK FILES
+ **********************************/
+/* find all *.cook files in the targets folder */
+cook_target_incs = [stripdot [collect find [cookbook]/targets -name \\\\.* -prune -o -name *\\\\.cook -print]];
+/* sorted so an end user can influence include order if required */
+cook_target_incs = [sort [cook_target_incs]];	
+/* include the target files */
+#include [cook_target_incs]	
+
+/**********************************
+        FIXUP VARIABLES
+ **********************************/
+inc.dir = [strip [inc.dir]];
+mode	= [downcase [mode]];
+
+
+/**********************************
+        TEST VARIABLES
+ **********************************/
+if [not [in [mode] default debug optimize release]] then{
+	function print *******************************************************************;
+	function print "Compiler mode not supported:" [mode];
+	function print "Execute:" [configure_help];
+	function print *******************************************************************;
+	fail;
+}
+
+/* prepare the fc/ld flags based on mode */
+if [in [mode] default] then {
+	fc_flags += [fc_default];
+	ld_flags += [ld_default];
+}
+else if [in [mode] debug] then {
+	fc_flags += [fc_debug];
+	ld_flags += [ld_debug];
+}
+else if [in [mode] optimize] then {
+	fc_flags += [fc_optimize];
+	ld_flags += [ld_optimize];
+}
+else if [in [mode] release] then {
+	fc_flags += [fc_release];
+	ld_flags += [ld_release];
+}
+
+
+
+
+/**********************************
+		 CORE RECIPIES
+ **********************************/
+
+/* default target, cooks all defined programs */
+all:[strip [programs]]
+set default
+{}
+
+/* stub for the test target */
+test:{
+	fail "There are no test scripts defined.";
+}
+
+/* stub for the documentation target */
+doc:{
+	fail "Unable to generate documentation.";
+}
+
+/* validate configuration */
+validate:{
+	if [not [defined fc]] then{
+		fail "Fortran compiler must be explicity set:" [self] "configure fc=compiler";
+	}
+}
+
+"help:configure":{
+    function print *******************************************************************;
+    function print "Configure sets up your cook build environment.";
+    function print "fc      compiler";
+    function print "mode    build option set";
+    function print "cross   1=include architecture in the build path, just for Larry.";
+    function print "Execute:" [configure_help];
+    function print *******************************************************************;
+    fail;
+}
+
+/* write out the config */
+configure:{
+	local result =;
+	if [defined fc] then{
+		result+= "fc=[defined-or-default fc "[fc]"];";
+	}
+	else{
+		function print *******************************************************************;
+		function print "Fortran compiler must be defined.";
+		function print "Execute:" [configure_help];
+		function print *******************************************************************;
+		fail;
+	}
+	
+	if [defined mode] then{
+		result+= "mode=[defined-or-default mode "[mode]"];";
+	}
+
+	if [defined cross] then{
+		result+= "cross=[defined-or-default cross "[cross]"];";
+	}
+	function write [config] [result];
+
+	function print *******************************************************************;
+	function print "Cook environment configured.";
+	function print *******************************************************************;
+}
+
+unconfigure:{
+	rm [config];
+}
+
+show:{
+	function print "Datetime:" [collect date];
+	function print "Computer:" [os node];
+	function print "User:" [collect whoami];
+	function print "System:" [os system] "Arch:" [os machine];
+	function print "Release:" [os release] "Version:" [os version];
+	function print "Mode:" [mode];
+	function print "Cross Compile:" [cross];
+	function print "Compiler:" [fc_name];
+	function print "Compiler Version:" [fc_version];
+	function print "Linker:" [ld];
+	function print "Linker Version:" [ld_version];
+	function print "Archiver:" [ar];
+	function print "Archiver Version:" [ar_version];		
+	function print "Dependencies:" [dep.dir]/;
+	function print "Build Artifacts:" [build.dir]/;
+	function print "Distributables:" [dist.dir]/;
+
+}
+
+/* inc dependency */
+[dep.dir]%0%[inc][dep] : [src.dir]%0%[inc]
+set nocascade
+{
+									/*	 incl	use		mod	   prog  */
+	function update-dep [need] [target] [true] [true] [false] [false];
+}
+
+/* fixed form dependency */
+[dep.dir]%0%[f][dep] : [src.dir]%0%[f]
+set nocascade
+{	
+									/*	 incl	use		mod	   prog */
+	function update-dep [need] [target] [true] [true] [true] [true];
+}
+
+/* free form dependency */
+[dep.dir]%0%[ff][dep] : [src.dir]%0%[ff]
+set nocascade
+{
+									/*	 incl	use		mod	   prog */
+	function update-dep [need] [target] [true] [true] [true] [true];
+}
+
+/* library dependency */
+[dep.dir]%0[lib_]%[dep]: [src.dir]%0[lib_]%
+set nocascade
+{
+	/* library name, without src.dir or lib_ prefix*/
+	local library = [subst [lib_] "" [subst [src.dir]/ "" [need]]];
+	local result =;
+	result += "libraries+="[library]";";		/* add to the list of valid libraries */
+	result += "src_"[library]"="[need]";";		/* add to the list of valid libraries */
+	
+	local libtarget = [fromto [src.dir]%0[lib_]% "[lib.dir]"%0"[lib.prefix]"%"[lib]" [need]];
+	local libobject = [fromto [src.dir]%0[lib_]% "[obj.dir]"%0"[lib_]"% [need]];
+
+	/* if the file noneighbors.dep exists we don't cascade neighbor files */
+	if [not [exists [src.dir]%0/noneighbors.dep ]] then{
+		result += "objects_"[libtarget]"=[neighbor-objects "[libobject]"];";
+	}
+	
+	function write [target] [result];	
+}
+
+/* fixed form compile */
+[obj.dir]%0%[obj]: [src.dir]%0%[f] [get-dependency [target]]{
+	if [not [exists [mod.dir]]] then{
+		mkdir -p [mod.dir];
+	}
+
+	/* prepare a local list of includes */	
+	local incs = [stringset [src.dir]%0 [fpp.dir]%0 [inc.dir] ];
+
+	if [fc_inc_join] then {
+		/* combine the incs into a single list with the separator */
+		incs = [unsplit [fc_inc_sep] [incs]];
+	}
+	
+	[fc] [fc_flags] [fc_fixed] [addprefix [fc_inc_flag] [incs]] [addprefix [fc_mod_inc_flag] [mod.dir]] [addprefix [fc_mod_out_flag] [mod.dir]] [fc_compile_flag][head [need]] [fc_out_flag][target];	
+}
+
+/* free form compile */
+[obj.dir]%0%[obj]: [src.dir]%0%[ff] [get-dependency [target]]{
+	if [not [exists [mod.dir]]] then{
+		mkdir -p [mod.dir];
+	}
+
+	/* prepare a local list of includes */
+	local incs = [stringset [src.dir]%0 [fpp.dir]%0 [inc.dir]];
+
+	if [fc_inc_join] then {
+		/* combine the incs into a single list with the separator */
+		incs = [unsplit [fc_inc_sep] [incs]];
+	}
+
+	[fc] [fc_flags] [fc_free] [addprefix [fc_inc_flag] [incs]] [addprefix [fc_mod_inc_flag] [mod.dir]] [addprefix [fc_mod_out_flag] [mod.dir]] [fc_compile_flag][head [need]] [fc_out_flag][target];	
+}
+
+/* modules */
+[mod.dir]%0%[mod]: [objects_[target]]
+{
+	if [not [exists [target]]] then{
+		fail "Unable to create module:" [target];
+	}       
+
+}
+[mod.dir]%0%[mod]:{}
+
+
+
+/* create a library */
+[lib.dir]%0[lib.prefix]%[lib] : [need-filter [target] [objects_[target]]]
+set nocascade unlink	/*don't want to grab more than what the library actually provides */
+{	
+	[ar] [ar_flags][target] [need];
+}
+
+/*execute a binary */
+"run:"% : %{    
+    if [not [defined args]] then{
+        args=;
+    }
+    function execute [dist.dir]/%[exe] [args];
+    
+}
+
+require-debug:{
+    if [not [in [mode] debug]] then {
+        function print ****************************************************;
+	function print "Cook environment not configured for debug build.";
+	function print "Execute: cook with mode=debug";
+	function print ****************************************************;
+        fail;
+    }
+}
+
+/*debug a binary */
+"debug:"% : require-debug %
+{         
+    if [not [defined args]] then{
+        args=;
+    }
+    function execute [fdb] [fdb_flags] [fdb_exe_flag][dist.dir]/%[exe] [fdb_args_flag][args];
+    
+}
+
+/* link a fortran object file into an executable 
+	libs-or-objs will check a compiler config flag and return either the libs
+	passed in or the objects within each lib.
+*/
+[exe.dir]%0%[exe]: [obj.dir]%0%[obj] [libs-or-objs [libs-dep [src.dir]%0] ] {	
+
+	/*filter the ingredients to only object files*/
+	set match-mode-regex;
+	local need_obj = [filter .*\.[obj] [need]];
+	local need_lib = [filter .*\.[lib] [need]];
+	set match-mode-cook;
+
+
+	/*TODO: if the new needs are greater than a certain count the use a temp file */
+
+	if [first_variable_by_path ld_use_libs [mode]] then{
+		[ld] [ld_flags] [need_obj] [ld_lib_prefix][need_lib][ld_lib_suffix] [ld_libs] [ld_out_flag][target];
+	}
+	else{
+		function write [build.dir]/link [need_obj];
+		[ld] [ld_flags] @[build.dir]/link [ld_libs] [ld_out_flag][target];
+	}
+}
+
+/* Copies the cascaded program into [dist.dir]*/
+%:[program_[downcase [target]]]
+if [in [downcase [target]] [programs]]	/* require the program to have been detected */
+{
+	if [not [exists [dist.dir]]] then{
+		mkdir -p [dist.dir];
+	}
+	
+	cp [head [need]] [dist.dir]/[entryname [head [need]]];
+}
+
+
+/* Cleans current build configuration.  Dependency files are not affected.  */
+clean:
+{
+	rm -rf [build.root]/[cross_mode];	
+}
+
+/* Clobbers the current configuration.  Shared dependency files are removed.  */
+clobber:
+{
+	rm -rf [build.root]/[cross_mode];	
+	rm -rf [dist.root]/[cross_mode];
+	rm -rf [dep.dir];
+}
+
+/* Cleans all build configuration artifacts.   Dependency files unaffected */
+clean-all:
+{	
+	rm -rf [build.root];
+}
+
+/* Clobbers all build and distribution files.  Dependency files are removed.  */
+clobber-all:
+{
+	rm -rf [build.root];
+	rm -rf [dist.root];
+	rm -rf [dep.dir];
+}
+
+
+/**********************************
+    	 DEPENDENCY FUNCTIONS 
+ **********************************/
+
+/* 
+	standard method to check dependency graph for different types
+	of fortran or include files 
+
+	All path variables written to the dep files are still in [path.dir] 
+	form so that only a single set of dependencies are needed for different
+	modes, compilers, or archs
+
+*/
+function update-dep = {
+	local dep_src = [@1];
+	local dep_target = [@2];
+	local scan-incl = [@3];
+	local scan-used = [@4];
+	local scan-provided = [@5];
+	local scan-program = [@6];
+
+	local result =;	/* result to be written to the dep file */
+
+	dep_obj = [toobj [dep_src]];
+
+	function print "Scanning" [dep_src];
+
+	/* scan for includes */
+	if [scan-incl] then {
+
+		local includes = [collect [c_incl] -nc -ns -nrec -asm --language\=optimistic [dep_src] [addprefix "-I " [dirname [dep_src]]] [addprefix "-I " [strip [inc.dir]]]];
+		if [includes] then{
+			/*function print "Includes" [count [includes]] "file(s)";*/
+			result += "cascade" [dep_src]"="[includes]";";
+		}				
+	}
+
+	local mods_provided = ;
+
+	/* scan for modules provided by this file */
+	if [scan-provided] then {
+		mods_provided = [modules-provided [dep_src]];
+		if [mods_provided] then{
+			/* function print "Defines" [count [mods_used]] "module(s)"; */
+			local provided =;
+			loop provided = [mods_provided] {
+
+				provided = [prepost "[lum " "]" [provided]];
+				provided = [prepost "[mod.dir]/" "[mod]" [provided]];
+				result += objects_[provided]"="[dep_obj]";";
+				result += source_[provided]"="[dep_src]";";
+				
+				/* anything depending on foo.mod will also have */
+				/* foo.o in it's list of ingredients */
+				/*result += "cascade" [provided]"="[dep_obj] ";";			*/
+			}
+			/* special variable for each target object listing its modules */
+			result += modules_[dep_obj]"="[mods_provided]";";
+		}
+	}
+
+
+	/* scan for modules used by this file */
+	if [scan-used] then {
+		local mods_used = [modules-used [dep_src]];
+		if [mods_used] then{
+
+			/* loop over each used module to make sure it's not provided by this file */
+			local used-not-in-file = ;
+			local used = ;
+			loop used = [mods_used]{
+
+				if [not [in [used] [mods_provided]]] then{
+					used-not-in-file += [used];
+				}
+			}
+
+			/* remove duplicates */
+			mods_used = [stringset [used-not-in-file]];
+			
+			mods_used = [prepost "[lum " "]" [mods_used]];
+			mods_used = [prepost "[mod.dir]/" "[mod]" [mods_used]];
+			/* foo.o depends on bar.mod */
+			result += dependency_[dep_obj]"="[mods_used]";";
+		}
+	}
+
+	/* scan for program provided by this file */
+	if [scan-program] then {
+		local prog_provided = [program-provided [dep_src]];
+		if [prog_provided] then{
+			/* set a special program_ variable so the catch all target will be able to cook */
+			result += program_[prog_provided]"="[fromto "[obj.dir]"%0%"[obj]" "[exe.dir]"%0%"[exe]" [dep_obj]]";";
+
+			/* add it to the list of programs so the all target can magically cook everything */
+			result += "programs+="[prog_provided]";";			
+
+			/* include neighbor objects */
+			/* if the file noneighbors.dep exists we don't cascade neighbor files */
+			if [not [exists [dirname [dep_src]]/noneighbors.dep ]] then{
+				result+= "cascade "[dep_obj]"=[neighbor-objects "[dirname [dep_obj]]"];";
+			}
+		}
+	}
+	
+	function write [dep_target] [result];	
+
+
+}
+
+/* function to collect modules used. */
+function modules-used = {
+	set errok;	/*no error required because grep returns 1 for no match which is okay sometimes*/
+	local need = [@1];
+
+	/* Finds all uncommented use statements and cascades an include for the module*/
+	/*| awk "'{print \""[mod.dir]"/\" tolower($0)\""[mod]"\"}'"*/
+	local used = [collect grep -RPioh "'^[ \\t]*use\\s+\\w+'" [need] | sed "'s/^\\s*use\\s*//i'"];		
+	set noerrok;
+	return [used];
+}
+
+/* function to collect modules provided. */
+function modules-provided = {
+	set errok;	/*no error required because grep returns 1 for no match which is okay sometimes*/
+	local need = [@1];
+
+	local provided = [collect grep -RPio "'^[ \\t]*module(?!\\s+procedure)\\s+\\w+'" [need] | sed "'s/\\s*module\\s*//i'"];
+	set noerrok;
+	return [provided];
+}
+
+/* function to collect program provided. */
+function program-provided = {
+	set errok;	/*no error required because grep returns 1 for no match which is okay sometimes*/
+	local need = [@1];
+
+	local provided = [collect grep -RPio "'^[ \\t]*program\\s+\\w+'" [need] | sed "'s/\\s*program\\s*//i'"];
+	set noerrok;
+	return [downcase [provided]];
+}
+
+
+
+/*function to change extensions to [obj]*/
+function toobj = {
+	local src = [@1];
+
+	/* change any f* extension to obj */
+	set match-mode-regex;
+	local result = [fromto \\(.*\\)\\.f.* \\1"[obj]" [src]];	
+
+	/* change src.dir to obj.dir */
+	set match-mode-cook;
+	result = [fromto [src.dir]%0% "[obj.dir]"%0% [result]];
+
+	return [result];
+}
+
+function libs-dep = {
+	local dir = [@1];
+	local result =;
+	local libs = ;	/*if no libs.dep file then we DO NOT include all libs */
+
+	if [exists [dir]/libs.dep] then{
+		libs = [read_lines [dir]/libs.dep];
+	}
+
+	/*loop over each library and return the cooked library name*/
+	local library =;
+	loop library = [libs] {		
+		if [defined src_[library] ] then {
+			result += [fromto [src.dir]%0[lib_]% [lib.dir]%0[lib.prefix]%[lib] [src_[library]]];
+		}
+		else{
+			result += [lib.dir]/[lib.prefix][library][lib];
+		}
+	}	
+	return [result];
+}
+
+function libs-or-objs = {
+	if [first_variable_by_path ld_use_libs [mode]] then{
+		/* default: just return the list of libs*/
+		return [arg];
+	}
+	else {
+		/*loop over each lib and collect the objects in result */
+		local result = ;
+		local lib =;
+			loop lib = [arg] {
+				result += [need-filter [lib] [objects_[lib]]];
+			}
+		return [result];
+	}
+}
+
+/*filters need by target filter*/
+function need-filter = {
+	local target = [head [arg]];
+	local need = [tail [arg]];
+
+	local result = [need];
+
+	if [defined filter_[target]] then {
+		set match-mode-regex;
+		result = [filter [filter_[target]] [result]];
+		set match-mode-cook;
+	}
+
+	return [result];
+
+}
+
+function neighbor-objects = {
+	
+	/* collect each of the objects for the given object */
+	local result = 	[filter [@1]/%0% [all_obj]];
+
+	/*okay, let's filter out the tests */
+	result = [filter_out %0test/% [result]];
+	return [result];
+}
+
+/* special dependency check to make sure target and need aren't equal*/
+function get-dependency = {
+	local result = [variable_by_path dependency [@1]];
+
+	return [result];
+}
+
+/*
+ * Include all the dependency files.  If a source file is newer than its
+ * dependency file then the dependencies are updated.  Then all the 
+ * dependency files are included into the cook.  Statements in the dep files
+ * are executed when included.  No need to include if cleaning or clobbering.
+*/
+#if [cooking]
+	#include-cooked-nowarn [all_dep]
+#endif
+
+

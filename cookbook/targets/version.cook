@@ -1,0 +1,24 @@
+
+rm -rfv [fpp.dir];
+
+[src.dir]%0build.inc: [fpp.dir]%0build.inc;
+
+[fpp.dir]%0build.inc:{	
+	function print [target];
+	local result = ;
+	result 	+=	"      character *(64) build_date";
+	result 	+=	"      character *(64) build_version";
+	result 	+=	"      character *(64) build_release";
+	result 	+=	"      character *(64) build_compiler";
+	result 	+=	"      character *(64) build_compiler_options";
+
+	result 	+=	"      data build_date/ '"[collect_lines date]"'/";
+	result 	+=	"      data build_version/ '"1.0"'/";
+	result 	+=	"      data build_release/ \""[defined-or-default release development]"\"/";
+	result 	+=	"      data build_compiler/ \""[unsplit " " [fc_name]]"\"/";
+	result 	+=	"      data build_compiler_options/ \""[mode]"\"/";
+
+	function write [target] [result];
+
+}
+

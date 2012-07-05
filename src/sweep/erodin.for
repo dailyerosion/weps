@@ -1,0 +1,1010 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
+      subroutine erodin (i_unit,o_unit,cmdebugflag,already_read_inputs)
+
+!     +++ PURPOSE +++
+!     Utility to read initial conditions and variables from
+!     input file (stdin or erod.in) for the standalone erosion submodel
+!
+!     If "o_unit" == stdout (6) then input not echo'd
+!
+!     +++ ARGUMENT DECLARATIONS +++
+!
+      integer i_unit, o_unit, cmdebugflag, already_read_inputs
+!
+!     +++ ARGUMENT DEFINITIONS +++
+!
+!
+!     +++ PARAMETERS +++
+!
+      integer mrcl
+      parameter (mrcl = 512)
+!
+!     +++ ARGUMENT DECLARATIONS & +++
+!     + + + GLOBAL COMMON BLOCKS + + +
+      include 'p1werm.inc'
+      include 'c1gen.inc'
+      include 'p1const.inc'
+      include 'm1sim.inc'
+      include 'm1flag.inc'
+      include 'm1subr.inc'
+      include 'm1geo.inc'
+      include 'b1glob.inc'
+      include 'c1glob.inc'
+      include 'd1glob.inc'
+      include 's1layr.inc'
+      include 's1phys.inc'
+      include 's1dbh.inc'
+      include 's1agg.inc'
+      include 's1surf.inc'
+      include 's1sgeo.inc'
+      include 'h1db1.inc'
+      include 'w1wind.inc'
+      include 'w1pavg.inc'
+!
+!     + + + LOCAL COMMON BLOCKS + + +
+!
+      include 'erosion/p1erode.inc'
+      integer debugflg
+      common /flags/ debugflg
+!
+      integer xplot,xflag
+      character*12 xcharin(30)
+      real xin(30)
+      common /plot/ xplot, xcharin, xin
+!
+!     +++ LOCAL VARIABLES +++
+      integer i,j,k
+      integer x,y,s,b,a,l,h
+      integer wflg
+      real f(mntime), wfcalm, wuc, w0k, step, wu(mntime)
+!
+!     + + + LOCAL VARIABLE DEFINITIONS + + +
+!     i, j, k = do-loop indices
+!     x,y,s,b,a,l,h = do-loop indices
+!     wflg = flag to determine format of wind speed data (0 = Weibull, 1 = real)
+!     debugflg = flag to output debug data (0 = none, 1 = input, 2 = more, etc.)
+!     xplot    = flag to put plot data in arrays
+!               (value>0 = no. indep input variable, 0= none)
+!     f(mntime) = cumulative frequency of wind at speeds <awu(i)
+!     wfcalm    = wind fraction intercept (+calm, - no calm in period)
+!     wuc       = Weibull wind speed distribution scale factor (m/s)
+!     w0k       = Weibull wind speed distribution shape factor
+!     step      = tmp real variable for ntstep
+!     xcharin(i)= indep. variable name(s) used in plot
+!     xin(i)    = indep. variable value(s) used in plot
+!
+!     +++ FUNCTIONS CALLED +++
+!     getline
+!
+      character*(mrcl) getline
+      character*(mrcl) line
+
+!     +++ END SPECIFICATIONS +++
+!
+!      read  +++ MAIN  COMMON BLOCKS +++
+!
+!     +++ INIT STUFF +++
+      if (already_read_inputs .gt. 0) goto 999  !Only write output 
+
+      debugflg = 0 !needs to be initialized when using full debugging compiles
+!     Read the debug flag to specify level of debug support
+!     (currently only input file level debug supported)
+
+      line = getline(i_unit)
+      if (cmdebugflag .lt. 0) then  !commandline option not set - use input file setting
+          read (line,*) debugflg
+!         read ((line=getline(i_unit)),*) debugflg
+       else
+          debugflg = cmdebugflag  !use commandline setting
+      endif
+
+!     m1flag.inc
+
+!     EROSION initialization flag (logical)
+      line = getline(i_unit)
+      read (line,*) am0eif
+!     read (getline(i_unit),*) am0eif
+
+!     EROSION "print" flag (integer)
+      line = getline(i_unit)
+      read (line,*) am0efl
+!     read (getline(i_unit),*) am0efl
+
+!     +++ SIMULATION REGION +++
+
+!     Need to make sure there is no confusion on what is x1, x2, y1, and y2
+!     Not clearly defined in include files
+
+!     m1geo.inc
+
+!     Simulation region diagonal corners (x1,y1) and (x2,y2)
+!     Note: form of amxsim(x,pt) where x=1, y=2, pt=1 or 2.
+      line = getline(i_unit)
+      read (line,*) ((amxsim (x,y), x=1,2),y=1,2)
+!     read (getline(i_unit),*) ((amxsim (x,y), x=1,2),y=1,2)
+!     write (o_unit,*) 'sim x1,y1 x1,y2 ',  amxsim(1,1), amxsim(1,2)
+!     write (o_unit,*) 'sim x2,y1 x2,y2 ',  amxsim(2,1), amxsim(2,2)
+
+!     Simulation region orientation angle
+      line = getline(i_unit)
+      read (line,*) amasim
+!     read (getline(i_unit),*) amasim
+
+!     +++ ACCOUNTING REGIONS +++
+
+!     m1geo.inc
+
+!     Number of accounting regions
+      line = getline(i_unit)
+      read (line,*) nacctr
+!     read (getline(i_unit),*) nacctr
+
+!     Accounting Region diagonal corners (x1,y1) and (x2,y2)
+      do 20 a = 1, nacctr
+        line = getline(i_unit)
+        read (line,*) ((amxar (x,y,a), x=1,2), y=1,2)
+!       read (getline(i_unit),*) ((amxar (x,y,a), x=1,2), y=1,2)
+   20 continue
+
+!     +++ BARRIERS +++
+
+!     m1geo.inc
+
+!     Number of barriers
+      line = getline(i_unit)
+      read (line,*) nbr
+!     read (getline(i_unit),*) nbr
+
+!     NOTE: Barrier data must not be in the input file if "nbr = 0"
+
+      do 30 b = 1, nbr
+!       Barrier linear endpoints (x1,y1) and (x2,y2)
+        line = getline(i_unit)
+        read (line,*) ((amxbr(x,y,b), x=1,2), y=1,2)
+!       read (getline(i_unit),*) ((amxbr(x,y,b), x=1,2), y=1,2)
+!       Barrier ht, porosity, and width
+        line = getline(i_unit)
+        read (line,*) amzbr(b), ampbr(b), amxbrw(b)
+!       read (getline(i_unit),*)  amzbr(b), ampbr(b), amxbrw(b)
+   30 continue
+
+!     +++ SUBREGION REGIONS +++
+
+!     m1subr.inc
+
+!     Number of subregions
+      line = getline(i_unit)
+      read (line,*) nsubr
+!     read (getline(i_unit),*) nsubr
+
+!     Dimensions, Biomass, Soil, and Hydrology (by subregion)
+      do 100  s=1, nsubr
+!       Subregion diagonal corners (x1,y1) and (x2,y2)
+        line = getline(i_unit)
+        read (line,*) ((amxsr (x,y,s), x=1,2),y=1,2)
+!       read (getline(i_unit),*) ((amxsr (x,y,s), x=1,2),y=1,2)
+
+!     +++ BIOMASS +++
+
+!     b1glob.inc & b1geom.inc
+
+!       Biomass height
+!        line = getline(i_unit)
+!        read (line,*)  abzht(s)
+!!       read (getline(i_unit),*) abzht(s)
+!       Now reads in average "residue height" instead of "biomass height'
+!       LEW - 1/26/06
+        line = getline(i_unit)
+        read (line,*)  adzht_ave(s)
+
+!     c1glob.inc
+
+!       Crop height
+        line = getline(i_unit)
+        read (line,*)  aczht(s)
+
+!       Crop stem area index and leaf area index
+        line = getline(i_unit)
+        read (line,*) acrsai(s), acrlai(s)
+
+!     d1glob.inc
+
+!       Residue stem area index and leaf area index
+        line = getline(i_unit)
+        read (line,*) adrsaitot(s), adrlaitot(s)
+
+!       use crop and residue values to find the total value
+!       sum the stem area index and leaf area index values
+        abrsai(s) = acrsai(s) + adrsaitot(s)
+        abrlai(s) = acrlai(s) + adrlaitot(s)
+      ! Compute the weighted average "biomass height" (residues and crop)
+      ! which is used internally by the erosion code - LEW 1/26/06
+        if (abrsai(s) .le. 0.0) then
+            abzht(s) = 0.0
+        else
+            abzht(s) = (adzht_ave(s)*adrsaitot(s)+aczht(s)*acrsai(s))/  &
+     &              abrsai(s)
+        endif
+!     c1gen.inc
+
+!       addition to code for biodrag
+!       crop row spacing and seed location
+        line = getline(i_unit)
+        read (line,*) acxrow(s), ac0rg(s)
+!
+!       These aren't used in EROSION yet
+!       Biomass stem area index by height
+!       read (getline(i_unit),*) (abrsaz(h,s), h=1,mncz)
+!       Biomass leaf area index by height
+!       read (getline(i_unit),*) (abrlaz(h,s), h=1,mncz)
+
+!       Biomass flat fraction cover, standing cover, and fraction total cover
+!       read (getline(i_unit),*) abffcv(s), abfscv(s), abftcv(s)
+!       Only flat fraction cover used yet
+        line = getline(i_unit)
+        read (line,*) abffcv(s)
+!       read (getline(i_unit),*) abffcv(s)
+
+!     +++ SOIL +++
+
+!       s1layr.inc, s1phys.inc & s1agg.inc
+
+!       Number of soil layers (in this subregion)
+        line = getline(i_unit)
+        read (line,*) nslay(s)
+!       read (getline(i_unit),*) nslay(s)
+
+!       Soil layer thickness
+        line = getline(i_unit)
+        read (line,*) (aszlyt(l,s),l=1,nslay(s))
+!       read (getline(i_unit),*) (aszlyt(l,s),l=1,nslay(s))
+
+!       Soil layer bulk density
+        line = getline(i_unit)
+        read (line,*) (asdblk(l,s), l=1,nslay(s))
+!       read (getline(i_unit),*) (asdblk(l,s), l=1,nslay(s))
+
+!       Sand, silt, and clay fractions
+        line = getline(i_unit)
+        read (line,*) (asfsan(l,s), l=1,nslay(s))
+!       read (getline(i_unit),*) (asfsan(l,s), l=1,nslay(s))
+
+!       read very fine sand content edit 6-9-01 LH
+        line = getline(i_unit)
+        read (line,*) (asfvfs(l,s), l=1,nslay(s))
+
+        line = getline(i_unit)
+        read (line,*) (asfsil(l,s), l=1,nslay(s))
+!       read (getline(i_unit),*) (asfsil(l,s), l=1,nslay(s))
+
+        line = getline(i_unit)
+        read (line,*) (asfcla(l,s), l=1,nslay(s))
+!       read (getline(i_unit),*) (asfcla(l,s), l=1,nslay(s))
+
+!       Volume of rock fraction
+        line = getline(i_unit)
+        read (line,*) (asvroc(l,s), l=1,nslay(s))
+
+!       s1agg.inc
+!       Soil layer aggregate density
+        line = getline(i_unit)
+        read (line,*) (asdagd(l,s), l=1,nslay(s))
+
+!       Soil layer aggregate stability
+        line = getline(i_unit)
+        read (line,*) (aseags(l,s), l=1,nslay(s))
+
+! Check these variables with ASD inc files and Hagen's EROSION inc files - LEW
+!       Soil layer ASD parms (gmd, min, max, gsd)
+        line = getline(i_unit)
+        read (line,*) (aslagm(l,s), l=1,nslay(s))
+
+        line = getline(i_unit)
+        read (line,*) (aslagn(l,s), l=1,nslay(s))
+
+        line = getline(i_unit)
+        read (line,*) (aslagx(l,s), l=1,nslay(s))
+
+        line = getline(i_unit)
+        read (line,*) (as0ags(l,s), l=1,nslay(s))
+
+!       s1surf.inc & s1sgeo.inc
+
+!       Crust parms (fraction, thickness)
+        line = getline(i_unit)
+        read (line,*) asfcr(s), aszcr(s),                               &
+!       read (getline(i_unit),*) asfcr(s), aszcr(s),
+!       Crust parms (fraction cover of loose material, mass loose material)
+     &       asflos(s), asmlos(s),                                      &
+!       Crust parms (crust density and stability)
+     &       asdcr(s), asecr(s)
+
+!       Random Roughness
+        line = getline(i_unit)
+        read (line,*) aslrr(s)
+!       read (getline(i_unit),*) aslrr(s)
+
+        !Lower and upper limits of grid cell RR allowed by erosion submodel
+        if (aslrr(s) < SLRR_MIN) then
+           write(0,*) 'slrr: ', aslrr(s),' < ', SLRR_MIN
+        end if
+        if (aslrr(s) > SLRR_MAX) then
+           write(0,*) 'slrr: ', aslrr(s),' < ', SLRR_MIN
+        end if
+
+        !Lower and upper limits of grid cell aerodynamic roughness allowed
+        !by erosion submodel (currently determined by equation used here)
+        if (aslrr(s) < (WZZO_MIN/0.3)) then
+           write(0,*) 'slrr: ', aslrr(s)
+           write(0,*) 'wzzo < WZZO_MIN: ', aslrr(s)*0.3,' < ', WZZO_MIN
+        else if(aslrr(s) > (WZZO_MAX/0.3)) then
+           write(0,*) 'slrr: ', aslrr(s)
+           write(0,*) 'wzzo > WZZO_MAX: ', aslrr(s)*0.3,' > ', WZZO_MAX
+        end if
+
+!       Oriented Roughness (ridge ht, spacing, width, orientation)
+        line = getline(i_unit)
+        read (line,*) aszrgh(s), asxrgs(s),                             &
+!       read (getline(i_unit),*) aszrgh(s), asxrgs(s),
+     &       asxrgw(s), asargo(s)
+
+!       Oriented Roughness ( spacing)
+        line = getline(i_unit)
+        read (line,*) asxdks(s)
+!       read (getline(i_unit),*) asxdkh(s), asxdks(s)
+
+!     +++ HYDROLOGY +++
+
+!       h1db1.inc
+
+!       Snow depth
+        line = getline(i_unit)
+        read (line,*) ahzsnd(s)
+!       read (getline(i_unit),*) ahzsnd(s)
+
+!       Soil layer wilting point
+        line = getline(i_unit)
+        read (line,*) (ahrwcw(l,s), l=1,nslay(s))
+!       read (getline(i_unit),*) (ahrwcw(l,s), l=1,nslay(s))
+!       Soil layer water content
+        line = getline(i_unit)
+        read (line,*) (ahrwca(l,s), l=1,nslay(s))
+!       read (getline(i_unit),*) (ahrwca(l,s), l=1,nslay(s))
+!       Soil surface hourly water content
+        line = getline(i_unit)
+        read (line,*) (ahrwc0(h,s), h=1,12)
+!       read (getline(i_unit),*) (ahrwc0(h,s), h=1,12)
+        line = getline(i_unit)
+        read (line,*) (ahrwc0(h,s), h=13,24)
+!       read (getline(i_unit),*) (ahrwc0(h,s), h=13,24)
+  100 continue
+
+!     +++ WEATHER +++
+
+! We need to check on the units for air density - w1pavg.inc says (kg/m^3)
+! Also, we need to see why it currently isn't being used - LJH said it was
+!     Air density
+      line = getline(i_unit)
+      read (line,*) awdair
+!     read (getline(i_unit),*) awdair
+
+!     Wind Direction
+      line = getline(i_unit)
+      read (line,*) awadir
+!     read (getline(i_unit),*) awadir
+
+!     Number of "steps" during 24 hours (96 = 15 minute intervals)
+      line = getline(i_unit)
+      read (line,*) ntstep
+!     read (getline(i_unit),*) ntstep
+
+!     anemometer height, zo at anemom, and location (station or field)
+!     note if flag=1, at field, awwzo will be changed to field value
+      line = getline(i_unit)
+      read (line,*) anemht, awzzo, wzoflg
+
+!     Weibull wind flag (0 - read Weibull parms, 1 - read wind speeds)
+      line = getline(i_unit)
+      read (line,*) wflg
+!     read (getline(i_unit),*) wflg
+
+!     w1wind.inc
+
+!     wind data inputs as the Weibull paramters
+!     (wfcalm, wuc, w0k) is indicated by code ntstep = 99
+      if (wflg .eq. 0) then
+!       Weibull parms (fraction calm, c, k)
+        line = getline(i_unit)
+        read (line,*) wfcalm, wuc, w0k
+!       read (getline(i_unit),*) wfcalm, wuc, w0k
+
+!       calculate daily max wind speed (99% speed)
+!       awudmx = wuc*(-log((1.0-0.99)/(1-wfcalm)))**(1.0/w0k)
+
+!       calculate period wind speeds
+        step = ntstep
+        do 198 i= 1, ntstep
+!         find center of each step and add empirical last term from file ntstep.mcd
+            f(i) = (1.0/(2.0*step)) + ((i-1)/step) +0.3/(step*w0k)
+!         to prevent out-of-range
+          if (f(i) .lt. wfcalm) then
+            f(i) = wfcalm
+          endif
+          awu(i) = wuc*(-log((1.0-f(i))/(1.0-wfcalm)))**(1.0/w0k)
+  198   end do
+!       Use greatest interval wind speed rather than 99% speed above
+        awudmx = awu(ntstep)
+!
+!       change weibull wind speed dist. to a symmetric shape similar
+!       to the daily distribution from wind gen
+!
+!       insure that ntstep is an even no.
+        ntstep = (ntstep/2)*2
+!
+!       store wind speed in temp array
+        do 110 i = 1, ntstep
+          wu(i) = awu(i)
+  110   end do
+!
+!       generate the symmetric distribution
+        i = -1
+        do 115 j = 1, ntstep/2
+           i = i+2
+           awu(j) = wu(i)
+  115   continue
+        i = ntstep+2
+        do 125 j = (ntstep/2+1),ntstep
+           i = i-2
+           awu(j) = wu(i)
+  125   continue
+!
+      else     ! when (wflg .eq. 1) input wind period data directly
+        do 191 j = 1, ntstep/6
+          line = getline(i_unit)
+          read (line,*) (awu(i),i=(j-1)*6+1,(j-1)*6+6)
+!         read (getline(i_unit),*) (awu(i),i=(j-1)*6+1,(j-1)*6+6)
+191     end do
+!       If not divisible evenly by 6, then get the remaining values
+        if (mod(ntstep,6) .ne. 0) then
+          line = getline(i_unit)
+          read (line,*)                                                 &
+!         read (getline(i_unit),*)
+     &      (awu(i),i=(j-1)*6+1,(j-1)*6+mod(ntstep,6))
+        endif
+
+!     Determine the maximum wind speed during the day
+        awudmx = 0.0
+        do 193 i = 1, ntstep
+           if (awudmx .lt. awu(i)) then
+              awudmx = awu(i)
+           endif
+  193   end do
+
+      endif
+
+!     + + + PLOT SECTION + + +
+!     selectively reads succesive indep variable names and values
+!     if xplot is set to zero and the xflag is set to
+!      1 for a given variable in the erodin file
+!
+!     test if plotout file to be created
+      line = getline(i_unit)
+      read (line,*) xplot
+      if (xplot .eq. 0) then
+!     intialize xin array
+      do 194 i=1,30
+         xin(i) = 0.0
+  194 continue
+!
+!     field length (good for wind parallel x-axis)
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) = amxsim(1,2) - amxsim(1,1)
+        else
+          line = getline(i_unit)
+        endif
+! ^^^ tmp out
+!      write (*,*) 'tmp out from erodin.for line 452'
+!     write (*,*)  'xplot =', xplot
+!      write (*,*)  'amxsim(2,1)=', amxsim(1,2)
+!      write (*,*) 'xin(xplot)=', xin(xplot)
+! ^^^ end tmp
+!
+!     biomass height
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) = abzht(1)
+        else
+          line = getline(i_unit)
+        endif
+! ^^^ tmp out
+!     write (*,*) 'tmp out from erod.for line 474'
+!     write (*,*)  'xplot =', xplot
+!     write (*,*)  'abzht(1)=', abzht(1)
+!     write (*,*) 'xin(xplot=', xin(xplot)
+! ^^^ end tmp
+!     biomass stem area index
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) = abrsai(1)
+        else
+          line = getline(i_unit)
+        endif
+!     biomass leaf area index
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) = abrlai(1)
+        else
+          line = getline(i_unit)
+        endif
+!     biomass flat cover
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) = abffcv(1)
+        else
+          line = getline(i_unit)
+        endif
+!     very fine sand
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) = asfvfs(1,1)
+        else
+          line = getline(i_unit)
+        endif
+!     sand
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  asfsan(1,1)
+        else
+          line = getline(i_unit)
+        endif
+!     silt
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) = asfsil(1,1)
+        else
+          line = getline(i_unit)
+        endif
+!     clay
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  asfcla(1,1)
+        else
+          line = getline(i_unit)
+        endif
+!     rock vol.
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  asvroc(1,1)
+        else
+          line = getline(i_unit)
+        endif
+!     aggregate density
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) = asdagd(1,1)
+        else
+          line = getline(i_unit)
+        endif
+!     aggregate stability
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  aseags(1,1)
+        else
+          line = getline(i_unit)
+        endif
+!     agregate geometric mean diameter
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  aslagm(1,1)
+        else
+          line = getline(i_unit)
+        endif
+!     aggreate minimum diameter
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  aslagn(1,1)
+        else
+          line = getline(i_unit)
+        endif
+!     aggregate maximum diameter
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  aslagx(1,1)
+        else
+          line = getline(i_unit)
+        endif
+!     aggregate geometric std dev
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  as0ags(1,1)
+        else
+          line = getline(i_unit)
+        endif
+!     soil fraction crust cover
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) = asfcr(1)
+        else
+          line = getline(i_unit)
+        endif
+!
+!     surface crust thickness
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) = aszcr(1)
+        else
+          line = getline(i_unit)
+        endif
+!     fraction loose material on crust
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  asflos(1)
+        else
+          line = getline(i_unit)
+        endif
+!     mass of loose material on crust
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  asmlos(1)
+        else
+          line = getline(i_unit)
+        endif
+!     soil crust stability
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  asecr(1)
+        else
+          line = getline(i_unit)
+        endif
+!     random roughness
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) = aslrr(1)
+        else
+          line = getline(i_unit)
+        endif
+!     ridge height
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  aszrgh(1)
+        else
+          line = getline(i_unit)
+        endif
+!     ridge spacing
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  asxrgs(1)
+        else
+          line = getline(i_unit)
+        endif
+!     ridge width
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  asxrgw(1)
+        else
+          line = getline(i_unit)
+        endif
+!     ridge orientation
+        line = getline(i_unit)
+        read (line,*) xflag
+        if (xflag .eq. 1) then
+          xplot = xplot + 1
+          line = getline(i_unit)
+          xcharin(xplot) = line
+          xin(xplot) =  asargo(1)
+        else
+          line = getline(i_unit)
+        endif
+      endif
+!
+! ^^^ tmp out
+!     write(*,*)'^^^'
+!     write(*,*)'tmp out from erodin.for'
+!     write(*,*)'xcharin(1)=',xcharin(1)
+!     write(*,*)'xin(1)=',xin(1)
+!     write(*,*)'^^^'
+! ^^^ end temp out
+
+!     + + + OUTPUT SECTION + + +
+!
+  200 format (1x, f6.2, 6f8.2)
+  210 format (1x, f8.2)
+  220 format (1x, 2f8.2)
+  230 format (1x, 3f8.2)
+  240 format (1x, 4f8.3)
+  250 format (1x, 5f8.2)
+  260 format (1x, 6f8.2)
+  270 format (1x, 7f8.2)
+  280 format (1x, 8f8.2)
+  300 format (1x, 8i5)
+  350 format (1x, i3, 7f8.2)
+  400 format (1x, i3, 1x, l6, 4x, i3, 4x, i3, 4x, i3, 4x, i3)
+
+999   if (o_unit .ne. 6) then  !Only echo input if stdout not specified
+      write (o_unit,*)                                                  &
+     &  '      REPORT OF INPUTS (read by erodin.for) '
+      write (o_unit,*)
+      write (o_unit,*)  '+++ Control Flags, etc. +++'
+      write (o_unit,*)
+      write (o_unit,*) 'ntstep  am0eif  nsubr  nacctr  nbr am0efl'
+      write (o_unit,400) ntstep, am0eif, nsubr, nacctr, nbr,am0efl
+
+      write (o_unit,*)
+      write (o_unit,*)  '+++ SIMULATION REGION +++'
+      write (o_unit,*)
+      write (o_unit,*) 'orientation and dimensions of sim region'
+      write (o_unit,*) 'amasim(deg)  amxsim - (x1,y1) (x2,y2)'
+      write (o_unit,250) amasim,  ((amxsim(x,y), x=1,2), y=1,2)
+
+      write (o_unit,*)
+      write (o_unit,*)  '+++ ACCOUNTING REGIONS +++'
+      write (o_unit,*)
+      write (o_unit,*) 'nacctr - number of accounting regions'
+      write (o_unit,*) nacctr
+      write (o_unit,*) 'accounting region dimensions (x1,y1) (x2,y2)'
+      do 1000 a = 1, nacctr
+        write (o_unit,250) ((amxar (x,y,a), x=1,2), y=1,2)
+ 1000 continue
+
+      write (o_unit,*)
+      write (o_unit,*)  '+++ BARRIERS +++'
+      write (o_unit,*)
+      write (o_unit,*) 'nbr - number of barriers'
+      write (o_unit,*) nbr
+      if (nbr .gt. 0) then
+        write (o_unit,*) 'barrier dim (x1,y1) (x2,y2) ',                &
+     &                   'and height, porosity, and width'
+        do 1010 b = 1, nbr
+          write (o_unit,270) ((amxbr(x,y,b), x=1,2), y=1,2),            &
+     &                       amzbr(b), ampbr(b), amxbrw(b)
+ 1010   continue
+      endif
+
+      write (o_unit,*)
+      write (o_unit,*)  '+++ SUBREGIONS +++'
+      write (o_unit,*)
+      write (o_unit,*) 'nsubr - number of subregions'
+      write (o_unit,*) nsubr
+      write (o_unit,*) 'subregion dimensions (x1,y1) (x2,y2)'
+      do 1020 s = 1, nsubr
+        write (o_unit,250) ((amxsr (i,j,s), i=1,2), j=1,2)
+ 1020 continue
+
+      do 1100 s = 1, nsubr
+        write (o_unit,*)
+        write (o_unit,*)
+        write(o_unit,*) '*********************** Subregion ', s,        &
+     &                 ' ***********************'
+
+        write (o_unit,*)
+        write(o_unit,*) '+++ BIOMASS +++'
+        write (o_unit,*)
+        write (o_unit,*) 'Biomass ht,  flat cover'
+        write (o_unit,220) abzht(s), abffcv(s)
+
+        write (o_unit,*)
+        write (o_unit,*) 'Crop height, SAI,    LAI'
+        write (o_unit,230) aczht(s), acrsai(s), acrlai(s)
+
+        write (o_unit,*)
+        write (o_unit,*) 'Residue height, SAI,    LAI'
+        write (o_unit,230) adzht_ave(s), adrsaitot(s), adrlaitot(s)
+
+        write (o_unit,*)
+        write (o_unit,*) '+++ SOIL +++ '
+        write (o_unit,*)
+        write (o_unit,*) 'nslay - number of soil layers'
+        write (o_unit,*) nslay(s)
+
+        write (o_unit,*)
+        write (o_unit,*) 'layer depth b.density ',                      &
+     &                   'vfsand   sand   silt   clay    rock vol'
+        do 1030 l = 1, nslay(s)
+          write (o_unit,350) l, aszlyt(l,s), asdblk(l,s),               &
+     &  asfvfs(l,s),asfsan(l,s), asfsil(l,s), asfcla(l,s), asvroc(l,s)
+ 1030   continue
+
+        write (o_unit,*)
+          write (o_unit,*) 'layer    AgD     AgS ',                     &
+     &                   ' GMD    GMDmn     GMDmx    GSD'
+        do 1040 l = 1, nslay(s)
+          write (o_unit,350) l, asdagd(l,s), aseags(l,s),               &
+     &           aslagm(l,s),aslagn(l,s), aslagx(l,s), as0ags(l,s)
+ 1040   continue
+
+        write (o_unit,*)
+        write (o_unit,*) 'Crust frac thick mass LOS frac.LOS, ',        &
+     &                   'density stability'
+        write (o_unit,260)asfcr(s),aszcr(s),asmlos(s),asflos(s),        &
+     &                    asdcr(s),asecr(s)
+
+        write (o_unit,*)
+        write (o_unit,*) '    RR,    Rg ht,  width, spacing, ',         &
+     &                   'orient., dike spacing'
+        write (o_unit,270) aslrr(s), aszrgh(s), asxrgw(s), asxrgs(s),   &
+     &                     asargo(s),  asxdks(s)
+
+        write (o_unit,*)
+        write (o_unit,*) '+++ HYDROLOGY +++ '
+        write (o_unit,*)
+
+        write (o_unit,*) 'Snow depth (mm)'
+        write (o_unit,*) ahzsnd(s)
+
+        write (o_unit,*)
+        write (o_unit,*) 'layer  wilting and actual water contents'
+        do 1050 l = 1, nslay(s)
+          write (o_unit,350) l, ahrwcw (l,s), ahrwca(l,s)
+ 1050   continue
+        write (o_unit,*) 'Hourly water contents - ahrwc0'
+        write (o_unit,260) (ahrwc0(h,s), h=1,6)
+        write (o_unit,260) (ahrwc0(h,s), h=7,12)
+        write (o_unit,260) (ahrwc0(h,s), h=13,18)
+        write (o_unit,260) (ahrwc0(h,s), h=19,24)
+
+ 1100 continue
+
+      write (o_unit,*)
+      write (o_unit,*) '+++ WEATHER +++'
+      write (o_unit,*)
+      write (o_unit,*) ' anemht    awwzo   wzoflg '
+      write (o_unit,*)   anemht, awzzo, wzoflg
+      write (o_unit,*) ' wind dir (deg) and max wind speed (m/s)'
+      write (o_unit,220) awadir, awudmx
+
+      write (o_unit,*)
+      write (o_unit,*) 'Wind speeds (m/s) - ', ntstep,' intervals'
+      k = 6
+      j = 1
+  860 if(k .lt. ntstep) then
+        write (o_unit,260) (awu(i), i=j,k)
+        j = k+1
+        k = k+6
+        go to 860
+      else
+        k = ntstep
+        write (o_unit,260) (awu(i), i=j,k)
+      endif
+      write (o_unit,*)
+      write (o_unit,*) 'END OF INPUTS'
+
+      endif !(o_unit .ne. 6)
+
+      !close (i_unit)
+      return
+      end
+
+!**********************************************************************
+      character*(*) function getline(i_unit)
+
+      integer debugflg
+      common /flags/ debugflg
+
+      integer i_unit
+      integer dataline, linecount
+
+      save dataline, linecount
+
+
+1     read (i_unit, '(A)') getline
+      linecount = linecount + 1
+      if (BTEST(debugflg,0)) then
+        write (6, *) linecount, ': ', trim(getline)
+      endif
+
+      if (getline(1:1) .ne. '#') goto 2
+      goto 1
+
+2     dataline = dataline + 1
+      if (BTEST(debugflg,1)) then
+        write (6, *) linecount, ':', dataline, ': ', trim(getline)
+      endif
+
+      return
+      end
+!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

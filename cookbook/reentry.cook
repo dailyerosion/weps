@@ -1,0 +1,28 @@
+/**********************************
+      COOK REENTRY LOGIC
+ **********************************/
+
+/*include this file only once*/
+#pragma once
+
+function enqueue-reentry = {
+	if [not [defined-or-null reentry]] then{
+		/*First time through.  Restart and kill current cook process.*/		
+		local cmd = [collect ps h -o cmd $PPID] "reentry=1";
+
+		/*start an identical cook process with the added reentry flag to prevent an endless loop*/
+/*		function execute [cmd] "reentry=1";*/
+		set errok;
+		function print "reenter cook:";
+		bash -c "'source" [arg]";" [cmd]"'";
+
+		/*silently kill the current cook process*/
+                set errok;
+		function execute kill $PPID;
+                set noerrok;
+	}
+	else{
+		/*Second time through.  Do nothing.*/
+		return;	
+	}
+}

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VisualStudioUserFile ProjectCreator="Intel Fortran" Keyword="Console Application" Version="9.10" ProjectIdGuid="{79E7B271-8626-4ABD-BD81-1C757E39C0BF}">
+	<Configurations>
+		<Configuration Name="Debug|Win32" CommandArguments="-W2 -E3" WorkingDirectory="F:\wepswepp\trunk\weppweps\testcases"/>
+		<Configuration Name="Release|Win32"/></Configurations></VisualStudioUserFile>

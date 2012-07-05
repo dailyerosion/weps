@@ -1,0 +1,345 @@
+#****************************************************************
+#    erod.in   Example INPUT DATA FOR STORM, Prospect, June 2, 2002
+#****************************************************************
+#
+#     +++ PURPOSE +++
+#
+#     Input file which is read by subroutine erodin.for
+#
+#     All lines beginning with a "#" character are assumed to
+#     be comment lines and are skipped.
+#
+#     +++ DEFINITIONS +++
+#
+#     * = inputs NOT presently used by erosion
+#         (most of these are expected to be used in the future)
+#     All other input values must be correctly specified.
+#
+#     All comments prior to each line of data input
+#     in this template input file have the following format:
+#
+#     Variable_Name, Var_type, (src include file)  Text Definition
+#
+#     where Var_type is: I = integer L = logical R = real
+#
+#
+# +++ DEBUG STUFF +++
+#
+#     debugflg - debug flag for providing different levels of debug info
+#                value of 0 will print no debug information
+#                value of 1 will print out and number all input lines
+#                value of 2 will print out and number all data input lines
+#                value of 3 will do both 1 and 2 input line debug output
+ 0
+#
+#
+# +++ INIT STUFF +++
+#
+#     am0eif, L, (m1flag.inc) EROSION initialization flag
+ .TRUE.
+#     am0efl, L, (m1flag.inc) EROSION "print" flag
+ 1
+#
+# +++ SIMULATION REGION +++
+#
+#     amxsim(x,y), R, (m1geo.inc) Simulation Region diag. coordinates (m)
+#                     Input x,y coordinates in this form: x1,y1  x2,y2
+  0.0, 0.0, 1000.0, 200.0
+#
+#     amasim, R, (m1geo.inc) Simulation Region orientation angle (deg. from North)
+ 0.0
+#
+# +++ ACCOUNTING REGIONS +++
+#
+#     nacctr, I, (m1geo.inc) Number of accounting regions (must be 1 for now)
+ 1
+#
+#     amxar(x,y,a), R, (m1geo.inc) Accounting Region diag. coordinates (m)
+#                     Input x,y coordinates in this form: x1,y1  x2,y2
+#                     for each accounting region specified (nacctr)
+ 0.0, 0.0, 1000.0, 200.0
+#
+# +++ BARRIERS +++
+#
+#     nbr, I, (m1geo.inc) Number of barriers (0-5)
+  2
+#     NOTE: Remaining BARRIER inputs are repeated for each barrier specified
+#     If no barriers specified (nbr=0), then no BARRIER inputs will be here
+#
+#     amxbr(x,y,b), R, (m1geo.inc) Barrier linear coordinates (m)
+#                     Input x,y coordinates in this form: x1,y1  x2,y2
+#                     for each barrier specified (nbr)
+ 0.0 0.0 0.0 200.0
+#       amzbr(b), R, (m1geo.inc) Barrier height (m)
+#       ampbr(b), R, (m1geo.inc) Barrier porosity (m^2/m^2)
+#       amxbrw(b), R, (m1geo.inc) Barrier width (m)
+ 0.2 0.5 15.0
+#       Repeat previous two input lines for each additional barrier
+ 0.0 0.0 1000.0 0.0
+ 0.2 0.5 15.0
+#
+# +++ SUBREGION REGIONS +++
+#
+#     nsubr, I, (m1subr.inc) Number of subregions (1-5)
+ 1
+#
+#     NOTE: Remaining SUBREGION inputs (BIOMASS, SOIL, and HYDROLOGY,
+#     ie. variables defined by subregion) are repeated for nsubr"
+#     subregions specified
+#
+#     amxsr(x,y,s), R, (m1subr.inc) Subregion diag. coordinates (m)
+#                     Input x,y coordinates in this form: x1,y1  x2,y2
+#                     for each subregion specified (subr)
+ 0.0, 0.0, 1000.0, 200.0
+#
+#     +++ BIOMASS +++
+#
+#       abzht(s), R, (b1glob.inc) Overall biomass height (m)
+ 0.21
+#
+#       aczht(s), R, (c1glob.inc) Crop height (m)
+ 0
+#
+#       acrsai(s), R, (c1glob.inc) Crop stem area index (m^2/m^2)
+#       acrlai(s), R, (c1glob.inc) Crop leaf area index (m^2/m^2)
+ 0 0
+#
+#       adrsaitot(s), R, (d1glob.inc) Residue stem area index (m^2/m^2)
+#       adrlaitot(s), R, (d1glob.inc) Residue leaf area index (m^2/m^2)
+ 0.02  0.00
+#
+#      acxrow(s), R, (c1gen.inc) crop row spacing (m), 0=broadcast
+#      ac0rg(s) , I, (c1gen.inc) seed location (0=furrow,1=ridge)
+  0.3, 0
+# These are not implemented within EROSION
+#       abrsaz(h,s), R, (b1geom.inc) Biomass stem area index by ht (1/m)
+# (should be 5 values here when used)
+#       abrlaz(h,s), R, (b1geom.inc) Biomass leaf area index by ht (1/m)
+# (should be 5 values here when used)
+#
+# Only abffcv(s) is currently implemented within EROSION
+#       abffcv(s), R, (b1geom.inc) Flat biomass cover (m^3/m^3)
+#       abfscv(s), R, (b1geom.inc) Standing biomass cover (m^3/m^3)
+#       abftcv(s), R, (b1geom.inc) Total biomass cover (m^3/m^3)
+# (should be 3 values here when abffcv(s) and abfscv(s) get used in the future)
+# 0.098 with residue
+ 0.0 no residue
+#
+#     +++ SOIL +++
+#
+#     nslay(s), I, (s1layr.inc) Number of soil layers (1-10)
+ 1
+#
+#     NOTE: Remaining SOIL inputs are repeated for each layer specified
+#
+#     aszlyt(l,s), R, (s1layr.inc) Soil layer thickness (mm)
+ 1000.0
+#
+#     asdblk(l,s), R, (s1phys.inc) Soil layer bulk density (Mg/m^3)
+ 1.8
+#
+#     asfsan(l,s), R, (s1dbh.inc) Soil layer sand content (Mg/Mg)
+ 0.90
+#     asfvfs(l,s), R  (s1dbh.inc) Soil layer very fine sand(Mg/Mg)
+ 0.21
+#     asfsil(l,s), R, (s1dbh.inc) Soil layer silt content (Mg/Mg)
+ 0.08
+#     asfcla(l,s), R, (s1dbh.inc) Soil layer clay content (Mg/Mg)
+ 0.02
+#
+#     asvroc(l,s), R, (s1dbh.inc) Soil layer rock volume (m^3/m^3)
+ 0.30
+#
+#     asdagd(l,s), R, (s1agg.inc) Soil layer agg density (Mg/m^3)
+ 1.8
+#     aseags(l,s), R, (s1agg.inc) Soil layer agg stability ln(J/kg)
+ 2.50
+#     aslagm(l,s), R, (s1agg.inc) Soil layer GMD (mm)
+ 0.47
+#     aslagn(l,s), R, (s1agg.inc) Soil layer minimum agg size (mm)
+ 0.043
+#     aslagx(l,s), R, (s1agg.inc) Soil layer maximum agg size (mm)
+ 89.8
+#     as0ags(l,s), R, (s1agg.inc) Soil layer GSD (mm/mm)
+ 12.0
+#
+#
+#     asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)
+#     aszcr(s), R, (s1surf.inc) Surface crust thickness (mm)
+#     asflos(s), R, (s1surf.inc) Fraction of loose material on surface (m^2/m^2)
+#     asmlos(s), R, (s1surf.inc) Mass of loose material on crust (kg/m^2)
+#     asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)
+#     asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)
+ 0.6 7.0 0.2 0.4 0.1 1.0
+#
+#
+#
+#     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)
+ 5.0
+#     aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)
+#     asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)
+#     asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)
+#     asxrgo(s), R, (s1sgeo.inc) Ridge orientation (deg)
+ 0.0 0.0 0.0 0
+#     asxdks(s), R, (s1sgeo.inc) Dike spacing (mm)
+ 0.0
+#
+#     +++ HYDROLOGY +++
+#
+#     ahzsnd(s), R, (s1sgeo.inc) Snow depth (mm)
+ 0.0
+#
+#     ahrwcw(l,s), R, (h1db1.inc) Soil layer wilting point water content (Mg/Mg)
+ 0.077
+#
+#     ahrwca(l,s), R, (h1db1.inc) Soil layer water content (Mg/Mg)
+ 0.0
+#
+#     ahrwc0(h,s), R, (h1db1.inc) Surface layer water content (Mg/Mg)
+#                  NOTE: the near surface water content is specified on an
+#                        hourly basis.  We read in the hrly water content
+#                        on two lines, with 12 values in each line.
+ 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+ 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+# 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01
+# 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01 0.01
+# 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02
+# 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02 0.02
+# 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05
+# 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05 0.05
+# 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07
+# 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07 0.07
+# 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0.08
+# 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0.08 0.08
+# 0.10 0.10 0.10 0.10 0.10 0.10 0.10 0.10 0.10 0.10 0.10 0.10
+# 0.10 0.10 0.10 0.10 0.10 0.10 0.10 0.10 0.10 0.10 0.10 0.10
+# 0.12 0.12 0.12 0.12 0.12 0.12 0.12 0.12 0.12 0.12 0.12 0.12 top 8 mm measurement
+# 0.12 0.12 0.12 0.12 0.12 0.12 0.12 0.12 0.12 0.12 0.12 0.12
+#
+#
+# NOTE: This is the end of the SUBREGION variables
+#
+#     +++ WEATHER +++
+#
+#     awdair, R, (w1pavg.inc) Air density (kg/m^3)
+ 1.2
+#
+#     awadir, R, (w1wind.inc) Wind direction (deg)
+ 270
+#
+#     ntstep, I, (local variable) Number of intervals/day to run EROSION
+ 24
+#
+#     anemht, R  anemometer height (m)
+#     awzzo,  R  aerodynamic roughness at anemometer site (mm)
+#     wzoflg, I (global variable) zo location flag
+#               (flag =0 - zo fixed at wx sta. location)
+#               (flag = 1 - zo variable at field location)
+    10.0,  10.00  0
+#     wflg, I, (local variable) Wind/Weibull flag
+#              (0 - read in Weibull parameters, 1 - read in wind speeds)
+ 1
+#
+# NOTE: This is only present when (wflg=0)
+#     wfcalm, R, (local variable) Fraction of time winds are calm (hr/hr)
+#     wuc, R, (local variable) Weibull "c" factor (m/s)
+#     w0k, R, (local variable) Weibull "k" factor (fraction)
+#
+# NOTE: The remaining data is only present when (wflg=1)
+#
+#     awu(i), R, (w1wind) Wind speed for (ntstep) intervals (m/s)
+# I think I can read multiple lines with variable number of values
+# We will try and see - LEW  ( Note: no blank lines allowed - LH)
+8.181	4.068	4.068	4.426	5.052	5.052	
+4.739	4.292	4.515	3.353	3.621	2.280	
+5.275	6.750	7.242	7.868	9.835	13.814	
+17.211	12.651	11.712	12.964	10.014	8.583	
+#
+#    + + + DATA TO PLOT + + +
+#
+#    names and values to input for plot
+# place 1 flag in 1st line after #-name line for variables to include in plot
+#
+#  initial xplot value,I, (-1=no plot, 0 = output indep.variables with 1 flag)
+  0
+####
+#    xin(i), R, (field length)
+   1
+  Length(m)
+# abzht, R, (biomass ht.(m))
+   1
+ bio_ht(m)
+# abrsai, R (stem area index)
+  1
+ stem_area
+#   abrlai(s), R, (b1geom.inc) Biomass leaf area index (m^2/m^2)
+  1
+ lai_area
+# abffcv, R,( biomass flat fraction cover)
+  0
+ flat_cov
+#     asfvfs(1,s), R, (soil fraction very fine sand in layer 1)
+  0
+  vfsand
+#     asfsan(1,s), R, (soil fraction sand in layer 1)
+  1
+   sand
+#     asfsil(1,s), R (soil fraction silt in layer 1)
+  0
+  silt
+#     asfcla(1,s), R (soil fraction clay in layer 1)
+  0
+  clay
+#     asvoc(1,s), R (soil volume roc in layer 1)(m^3/m^3)
+  0
+  rock_vol
+#     aseags(1,s), R (soil aggregate stability) (ln J/m^3)
+  0
+  ag_stab
+#     aslagm(1,s), R (soil aggregate geom. mean dia.) (mm)
+  0
+  ag_gmd
+#     aslagn(1,s), R (soil aggregate min. dia.) (mm)
+  0
+  ag_min
+#     aslagx(1,s), R (soil aggregate max. dia.) (mm)
+  0
+  ag_max
+#     as0ags(1,s), R (soil aggregate geo. std. dev.)
+  0
+  ag_std
+#     asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)
+  0
+  crust_cv
+#     aszcr(s), R, (s1surf.inc) Surface crust thickness (mm)
+  0
+ crust_z(mm)
+#     asflos(s), R, (s1surf.inc) Fraction of loose material on surface (m^2/m^2)
+  0
+  los_cv
+#     asmlos(s), R, (s1surf.inc) Mass of loose material on crust (kg/m^2)
+  0
+  los(kg/m^2)
+#     asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)
+  0
+  cr_den(Mg/m^3)
+#     asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)
+  0
+  cr_se
+#     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)
+  0
+  rr(mm)
+#     aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)
+  0
+  z_rgh(mm)
+#     asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)
+  0
+  x_rgs(mm)
+#     asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)
+  0
+  x_rgw(mm)
+#     asxrgo(s), R, (s1sgeo.inc) Ridge orientation (deg)
+  0
+  a_rgo(deg)
+#
+
