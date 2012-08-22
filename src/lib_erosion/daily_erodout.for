@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine daily_erodout (o_unit, o_E_unit)
+      subroutine daily_erodout (o_unit, o_E_unit,isr)
 
 !     +++  PURPOSE +++
 
@@ -11,7 +11,7 @@
 
 !     +++ ARGUMENT DECLARATIONS +++
 
-      integer o_unit, o_E_unit
+      integer o_unit, o_E_unit, isr
 
       integer i, j
       real aegt, aegtss, aegt10
@@ -301,8 +301,8 @@
       !(deposition values are positive - erosion values are negative)
       if (btest(am0efl,0)) then
          call caldatw (da, mo, yr) !get day, month and year
-         write (UNIT=o_E_unit,FMT="(' ',i5,i3,i3,' ')",ADVANCE="NO")    &
-     &         yr, mo, da
+         write (UNIT=o_E_unit,FMT="(' ',i3,i5,i3,i3,' ')",ADVANCE="NO")    &
+     &         isr,yr, mo, da
          write (UNIT=o_E_unit,FMT="(4(f12.6),' ')",ADVANCE="YES")       &
      &          aegt, (aegt-aegtss), aegtss, aegt10
       endif
