@@ -4,7 +4,7 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine inpsub
+      subroutine inpsub (isubr)
 ! ***************************************************************** wjr
 ! reads initial field conditions (IFC) file for all subregions
 !
@@ -44,6 +44,8 @@
       integer       max_typidx  !Maximum number of lines to read in
       real          temp   ! temporary variable, throw away value
 
+! add parameter parameters isr
+      integer       isubr
 !     + + + FUNCTION DECLARATIONS + + +
       real   plant_wat_g
 !
@@ -61,7 +63,8 @@
       max_typidx = 54   ! new ifc format (additional parms)
 
 !     open simulation run file
-      call fopenk (lui1, sinfil, 'old')
+
+      call fopenk (lui1, sinfil(isubr), 'old')
 
 !     read subregion information
       do 200 isr = 1,nsubr
@@ -394,12 +397,12 @@
 !
 !      call dmpall('wrk.dmp')
       return
-   81 write(*,9001) trim(sinfil), linnum, trim(line)
+   81 write(*,9001) trim(sinfil(isr)), linnum, trim(line)
 9001  format (' inpsub error - original format IFC file ',a,            &
      &' on line #',i4,' ',a)
       call exit(1)
 
-   82 write(*,9002) trim(sinfil), linnum, typidx, trim(line)
+   82 write(*,9002) trim(sinfil(isr)), linnum, typidx, trim(line)
 9002  format (' inpsub error - original format IFC file ',a,            &
      &' on line #',i4,'(',i2,')',' ',a)
       call exit(1)
