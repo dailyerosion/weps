@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine erosion (min_erosion_awu)
+      subroutine erosion (min_erosion_awu, icsr)
 
 !     +++ PURPOSE +++
 !     subroutine erosion is the control subroutine and calls other
@@ -23,7 +23,8 @@
                                  !to evaluate for erosion loss
 
 !     +++ ARGUMENT DEFINITIONS +++
-
+! added by JG 
+      integer icsr    
 !     +++ PARAMETER +++
 
       real SNODEP                !Minimum snow depth to prevent erosion
@@ -65,8 +66,9 @@
       include 'erosion/s2surf.inc'
       include 'erosion/threshold.inc'
 
+
 !     +++ LOCAL VARIABLES +++
-      integer i,j,wustfl, icsr, outfl
+      integer i,j,wustfl, outfl
       integer nhill, n
       integer day, mon, yr, hidx
       real wuref, rusust, rut
@@ -182,7 +184,8 @@
       rusust = 0
 
 !*****this check cannot be done if subhourly wind is used  FAF
-      do 20 icsr=1, nsubr
+! Remove the do-loop from erosion by JG
+   !   do 20 icsr=1, nsubr
        ! If snow depth > 20 mm in all subregions, then no erosion
        if (ahzsnd(icsr) .le. SNODEP) then
         ! Have insufficient snow depth
@@ -190,7 +193,6 @@
 
         ! calc if daily max friction vel. exceeds threshold in any 
         ! subregions without hill and barrier effects
-
         ! calc. ridge spacing parallel the wind
         if (aszrgh(icsr) > 5.0) then
           sina = abs(sin(PID180*abs(awdir(icsr) - asargo(icsr))))
@@ -202,8 +204,7 @@
         else
 	  sxprg(icsr) = 1000
         endif
-
-        ! Compute Zo (wzzo) of surface
+      !compute Zo (wzzo) of surface
         call sbzo                                                       &
      &   (sxprg(icsr), aszrgh(icsr), aslrr(icsr),                       &
      &    wzoflg, adrlaitot(icsr), adrsaitot(icsr), abzht(icsr),        &
@@ -294,7 +295,8 @@
         ne_wzzo(icsr) = 0
         ne_sfcv(icsr) = 0
        endif
-   20 continue
+ !  20 continue
+    ! remove the do-loop by JG
 
 !     Some placeholder code for hills
 !     (it adjusts the threshold ratio cutoff for erosion)
@@ -519,7 +521,6 @@
    41 continue
 
 !     Average surface conditions and update
-
 !     Purpose: update global variables changed by erosion at end of day
 !     not implemented partly because windgen does not correlate days.
 
