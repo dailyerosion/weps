@@ -15,9 +15,9 @@
       character        hinfil*512
       character        runfil*512
       character        simout*512
-      character        sinfil*512
+      character        sinfil(mnsub)*512
       character        subfil*512
-      character        tinfil*512
+      character        tinfil(mnsub)*512
       character        usrid*80
       character        usrloc*80
       character        usrnam*80
@@ -126,6 +126,7 @@
 
 !     subflg - This logical variable is used to read header information
 !              in the subdaily wind file (if .true., read header).
+!     tinfil - This variable holds the crop management files for each sub region 
 
 !     tyears - The total number of years in the simulation run.
 
