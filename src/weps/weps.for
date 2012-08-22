@@ -80,7 +80,7 @@
 
 !     + + + LOCAL VARIABLES + + +
       logical first
-
+   
       integer :: dt(8)
       character(len=3) :: mstring
       common / datetime / dt, mstring
@@ -282,14 +282,19 @@
 
 !     Read command line arguments and options
       call cmdline()
-
+      
       if (calibrate_crops > 3) max_calib_cycles = calibrate_crops
 
 !     open input files and read run files
       call input
 
       write(*,*) "Made it here after input"
-      call save_soil(1)  !Assuming only one subregion for now
+
+! save variabled for each subregion by JG
+      do isr =1, nsubr 
+      call save_soil(isr)  
+      end do
+
       write(*,*) "Made it here after save_soil"
 
 9898  continue    !Start of initialization section (calibration)
@@ -297,22 +302,27 @@
       ! moved from input.for so that IFC file can be re-read and re-initialized
       ! for calibration run purposes.
       ! call input_ifc  !Changed bck for now
+      do  isr =1, nsubr   
+      call restore_soil(isr)  !Assuming only one subregion for now
+      end do
 
-      call restore_soil(1)  !Assuming only one subregion for now
       write(*,*) "Made it here after restore_soil"
+! add do loop for subregion JG
 !     temporarily initialize old random roughness
-      aslrrc(1) = 10.
-      as0rrk(1) = 0.9
-
+      do isr =1, nsubr 
+      aslrrc(isr) = 10.
+      as0rrk(isr) = 0.9
+      
+ 
       call openfils
 
       ! this prints header to plot.out file (isr not yet set)
-      call plotdata(1)  ! print to plot data file
+      call plotdata(isr)  ! print to plot data file
       ! this prints header to decomp.out file (isr not yet set)
-      call bpools(1,1,1,1)
+      call bpools(1,1,1,isr)
 
 !     Initialize the management file and rotation counters
-      call mfinit(1, tinfil, maxper)
+      call mfinit(isr, tinfil(isr), maxper)
 
 !     check for consistency maxper, n_rot_cycles, number of years to run
       if( maxper*n_rot_cycles .ne. ly-iy+1 ) then
@@ -331,7 +341,7 @@
       endif
 
 !     This is all the initialization for the new output reporting code
-      call mandates(1)  !Get man dates, op names, and crop names
+      call mandates(isr)  !Get man dates, op names, and crop names
       nperiods = get_nperiods(maxper)   !Get # of periods for reports
       if( report_debug >= 1 ) then
           write(*,*) '# rot years', maxper, "nperiods", nperiods,       &
@@ -343,6 +353,8 @@
       call asdini()
       call erodinit
       am0gdf = .true.
+      end do    
+! end of the subregion do loop
 
 !     Likely that we will put all management data into memory
 !     and only read and initialize everything here, looping through
@@ -365,7 +377,8 @@
         call soilinit(isr)
 
    10 continue
-
+! Subregion running loop
+      do isr=1,nsubr   ! do multiple subregion      
       call cliginit     !read "yearly average info" from cligen header
 
 !     calculate first and last Julian dates for simulation
@@ -392,13 +405,10 @@
       do am0jd = ijday, end_init_jday   !will not enter if end before beginning
 
          call caldatw (cd, cm, cy)
-
-         ! determine number of days in the year
+      ! determine number of days in the year
          ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
-
          call getcli(cd, cm, cy); call getwin(cd, cm, cy)
-
-         ! print current day of simulation to screen periodically
+      ! print current day of simulation to screen periodically
          daysim = daysim + 1
          if ((cm .eq. 1) .and. (cd .eq. 1)) then
             yrsim = yrsim + 1
@@ -406,19 +416,15 @@
             write(6,*) 'Year', yrsim, ' of', simyrs, '(initialization)'
             call flush(6)
          end if
-
-         isr = 1 !Note: we are no longer dealing with multiple subregions here
+!         isr = 1 !Note: we are no longer dealing with multiple subregions here
          call submodels(isr, cd, cm, cy)
-
-         ! set initialization flag to .false. after first day
+! set initialization flag to .false. after first day
          if (am0ifl) am0ifl = .false.
 
          call plotdata(isr)  ! print to plot data file
-
-         ! write decomposition biomass pool amounts to files
-         call bpools(cd,cm,cy,1)
-
-!         write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',                 &
+       ! write decomposition biomass pool amounts to files
+         call bpools(cd,cm,cy,isr)
+!        write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',                 &
 !     &              yrsim," ",cd,cm,cy," ",am0jd,daysim
 
          ! if last day of year, check for end of rotation
@@ -433,16 +439,12 @@
                lopyr = amnryr(isr)
             end if
          end if
-
-      end do
+      end do    ! end loop of multiple years
       init_loop = .false.
       write(6,*) "Finished initialization stage"
-
 !     End of "initialization" section
-
-      ! Do all resetting of variables necessary for "calibrate" and "report"
-      ! portions of the simulation
-
+! Do all resetting of variables necessary for "calibrate" and "report"
+! portions of the simulation
       am0jd = ijday           ! Reset loop counter to first day of simulation
       daysim = 0              ! Reset to zero (blkdat.for)
       yrsim = 0               ! Reset to zero (weps.for)
@@ -456,12 +458,11 @@
          calib_cycle = calib_cycle + 1
          write(6,*) "Starting calibrate phase"
          calib_loop = .true. ! Signifies that we are in the calibration loop
-
          lcaljday = ljday
          if (calibrate_rotcycles .ne. max_calib_cycles) then
              !calculate last julian date for single calibration cycle
              lcaljday = julday(31, 12,(maxper*calibrate_rotcycles) )
-      
+
              write(6,*) "CAL1 ",ljday, lcaljday, calibrate_rotcycles,   &
      &                         maxper, maxper*calibrate_rotcycles
          endif
@@ -469,14 +470,10 @@
      &                         maxper, maxper*calibrate_rotcycles
 
          do am0jd = ijday,lcaljday
-
             call caldatw (cd, cm, cy)
-
             ! determine number of days in the year
             ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
-
             call getcli(cd, cm, cy); call getwin(cd, cm, cy)
-
 !           print current day of simulation to screen periodically
             daysim = daysim + 1
             if ((cm .eq. 1) .and. (cd .eq. 1)) then
@@ -492,7 +489,7 @@
                 call flush(6)
             end if
 
-            isr = 1 !Note: we are no longer dealing with multiple subregions here
+!            isr = 1 !Note: we are no longer dealing with multiple subregions here
             call submodels(isr, cd, cm, cy)
 
             call plotdata(isr)  ! print to plot data file
@@ -530,9 +527,7 @@
 !        else !calibrate
 !
 !        end if
-
-
-         ! Go back to "initialization" and restart after resetting the appropriate variables here
+! Go back to "initialization" and restart after resetting the appropriate variables here
          daysim = 0
          outcnt = 0
          amnryr = 1
@@ -554,11 +549,9 @@
          goto 9898
 
 ! End of "calibrate" section
-
 ! Start of "report" section
 
       else
-
          amnrotcycle(isr) = 1   ! set here for use in confidence interval calculation (no other use?)
          am0sif = .false.  ! Done with all initialization and calibration phases
          ci_year = 0  ! nothing has yet been printed into ci.out
@@ -590,25 +583,23 @@
 !           if (am0jd.eq.ijday+1) call dbgdmp(daysim, isr)
 !           if (am0jd.eq.ljday) call dbgdmp(daysim, isr)
 
-            isr = 1 !Note: we are no longer dealing with multiple subregions here
+ !           isr = 1 !Note: we are no longer dealing with multiple subregions here
             call submodels(isr, cd, cm, cy)
-
             if (run_erosion > 0) then   ! Are we simulating erosion in this RUN
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
                   ! write(*,*) "Start calcwu"
                   call calcwu
                   ! write(*,*) "Start erosion"
-                  call erosion (5.0)
+                  call erosion (5.0,isr)
                   if (btest(am0efl,0) .or. btest(am0efl,1)) then
-                     call daily_erodout (luo_egrd, luo_erod)
+                     call daily_erodout (luo_egrd, luo_erod,isr)
                   endif
                end if
             end if
 
             call sci_cum(isr)   ! Keep running total for soil conditioning index (SCI)
             call plotdata(isr)  ! print to plot data file
-
-            ! write decomposition biomass pool amounts to files
+    ! write decomposition biomass pool amounts to files
             call bpools(cd,cm,cy,1)
 
 !           write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',              &
@@ -616,8 +607,7 @@
 
             ! set initialization flag to .false. after first day
             if (am0ifl) am0ifl = .false.
-
-            ! if last day of year, check for end of rotation
+       ! if last day of year, check for end of rotation
             if (dayear(cd,cm,cy) .eq. ndiy) then
                ! check if at end of subregion's rotation cycle
                if (mod(amnryr(isr),maxper) == 0) then
@@ -682,13 +672,12 @@
      &                                     ci_year)
                end if
             endif
-
          end do   ! end of "reporting" loop
          report_loop = .false.
       end if
 ! End of "report" section
-
-
+      end do 
+! end for the do loop of subregions
 ! Done with simulation here ..................
 
       if (report_debug >= 1) then
@@ -697,13 +686,10 @@
       if (report_debug >= 2) then
           call print_yr_report_vars(nperiods, maxper, n_rot_cycles)
       end if
-
       call sci_report
       call print_ui1_output(nperiods, maxper, n_rot_cycles) !Use for new WEPS gui
       call print_mandate_output(luomandate)
-
-!     call print_nui_output(nperiods, maxper) !Obsolete
-
+! call print_nui_output(nperiods, maxper) !Obsolete
 ! We need to create a "close files ()" call and remove/move all of this stuff - LEW
       close (luiwin)
       close (luicli)
