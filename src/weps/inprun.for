@@ -36,7 +36,7 @@
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
 !     + + + LOCAL VARIABLES + + +
-      integer       i, isr, iar, ios, ibr
+      integer       i,j,isr, iar, ios, ibr
       character     line*256
       real          sclsim, sclbar
       real          cligen_version
@@ -52,7 +52,9 @@
       wepsrun_version = -1.0
       linnum = 1
       typidx = 0
- 
+      i = 0
+      j = 0
+
 !     open simulation run file
       write (*,*) 'runfil is ', '>>',                                   &
      &  runfil(1:len_trim(runfil)), '<<'
@@ -77,12 +79,12 @@
           if( typidx .eq. 42 ) go to 200
       end if
   105 read (lui1,'(a)',err=80) line
-!
+      
 ! skip comment lines
       if (line(1:1) .eq. '#') go to 100
-!
+       
 !!use case statement to appropriately assign values
-      typidx = typidx + 1
+      typidx = typidx + 1     
       select case (typidx)
       case (1)
         usrnam = line
@@ -106,7 +108,7 @@
           goto 80
         end if
       case (6)
-        read (line,*,err=80) amzele
+        read (line,*,err=80) amzele,nsubr
       case (7)
         read (line,*,err=80) awclsn
       case (8)
@@ -248,10 +250,25 @@
         endif
       case (15)
 !     read in initial field conditions file name
-        sinfil = rootp(1:len_trim(rootp)) // line
+!     read in the subregion soils into an array of soil files
+          if (i .lt. nsubr) then
+            i=i+1
+            sinfil(i) = rootp(1:len_trim(rootp)) // line           
+            write(*,*) "soil file:",i, sinfil(i)
+            typidx = typidx -1
+            if (i .eq. nsubr) typidx = typidx +1             
+          end if                         
       case (16)
 !     read in management file name
-        tinfil = rootp(1:len_trim(rootp)) // line
+! read in the subregion management file into an array of management files
+          if (j .lt. nsubr) then
+            j=j+1
+            write(*,*) 'J:',j, typidx,nsubr  
+            tinfil(j) = rootp(1:len_trim(rootp)) // line
+            write(*,*) 'Tinfil:',j,tinfil(j)           
+            typidx = typidx -1
+            if (j .eq. nsubr) typidx = typidx +1
+          end if                    
       case (17)
 !     read output file name
         simout = rootp(1:len_trim(rootp)) // line
@@ -299,41 +316,58 @@
         write(6,*) "Simulation area (m^2)", sim_area
         !write(6,*) amxsim(2,1),amxsim(1,1),amxsim(2,2),amxsim(1,2)
       case (25)
-!       These values are scaling factors for interface, not used in WEPS
+ !       These values are scaling factors for interface, not used in WEPS
         read (line,*,err=80) sclsim, sclbar
       case (26)
         read (line,*,err=80) nacctr
-! set up iar for reading in next lines
+ ! set up iar for reading in next lines
         iar = 1
       case (27)
         read (line,*,err=80) amxar(1,1,iar), amxar(2,1,iar)
+     
       case (28)
         read (line,*,err=80) amxar(1,2,iar), amxar(2,2,iar)
+      
 ! send us back to case (25) to read in array
-        if (iar.lt.nacctr) typidx = typidx - 2
-        iar = iar + 1
+!        if (iar.lt.nacctr) typidx = typidx - 2
+!        iar = iar + 1       
       case (29)
         read (line,*,err=80) nsubr
         isr = 1
 ! read in sub-region data (currently only 1 allowed),
 ! although the code will now read in more :)
+! amxsr(1,1,i) as lower x-coor, and amxsr(1,2,i) as upper x-coor
+! amxsr(2,1,i) as lower y-coor, and amxsr(2,2,i) as upper y-coor
+! store them in the same line for each subregion
       case (30)
-        read (line,*,err=80) amxsr(1,1,isr), amxsr(2,1,isr)
+        read (line,*,err=80) amxsr(1,1,isr),amxsr(2,1,isr)
+! call sbgrid to assign subregion index for each grid in a region by JG
       case (31)
-        read (line,*,err=80) amxsr(1,2,isr), amxsr(2,2,isr)
+        read (line,*,err=80) amxsr(1,2,isr), amxsr(2,2,isr)  
+        if (isr.lt.nacctr) then
+          typidx = typidx - 2      
+          isr = isr + 1
+        else 
+         isr = 1
+        end if
       case (32)
         !        The new "versioned" IFC files contain a slope value
         !        which will be used if this value is set negative, 
         !        ie. not entered. It is now the only way to set a 
         !        non default slope when using the older "non-versioned"
         !        IFC files.
+       
         read (line,*,err=80) amrslp(isr)        ! weps.run file has slope gradient (m/m)
-        isr = isr + 1
-        if (isr.le.nsubr) typidx=typidx-3
+        if (isr.lt.nsubr) then 
+           typidx=typidx-1
+           isr = isr + 1
+        else
+           isr = 1
+        end if
       case (33)
 !       read in barrier info
         read (line,*,err=80) nbr
-!      write(6,*) ' reading barriers ', nbr
+ !     write(6,*) ' reading barriers ', nbr
         ibr = 1
       case (34)
         read (line,*,err=80) amxbr(1,1,ibr), amxbr(2,1,ibr)
@@ -417,23 +451,27 @@
 
       case (42)
         read (line,*,err=80) WaterErosion(isr)
+        write(*,*) "WaterErosion",WaterErosion(isr)
         isr = isr + 1
-        if (isr.le.nsubr) typidx=typidx-1
+        if (isr.le.nsubr) then
+           typidx=typidx-1
+        else
+
         !!!! I don't think this works as intended - LEW
         ! will only work if isr .le. 2 not .gt. 2
         ! set subregion counter for next line
-        isr = 1
+           isr = 1
+        end if
 
       case (43)
-        read (line,*,err=80) SoilRockFragments(isr)
+        read (line,*,err=80) SoilRockFragments(isr)   
         write(6,*) 'SoilRockFragments = ', SoilRockFragments(isr)
         isr = isr + 1
         if (isr.le.nsubr) typidx=typidx-1
         !!!! I don't think this works as intended - LEW
         ! will only work if isr .le. 2 not .gt. 2
         ! set subregion counter for next line
-        isr = 1
-
+ !       isr = 1
       end select
       goto 100
 !
