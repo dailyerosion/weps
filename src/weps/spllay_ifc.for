@@ -90,7 +90,6 @@
         aszlyd(1, isr) = aszlyt(1, isr)
         do ldx = 2, nslay(isr)
           aszlyd(ldx, isr) = aszlyd(ldx-1, isr) + aszlyt(ldx, isr)
-        write(*,*) 'aszlyd 0:',aszlyd(ldx,isr), aszlyt(ldx,isr),ldx
         end do
        
         ! based on depth to impermeable, bedrock layer, increase depth 
@@ -110,8 +109,6 @@
         oldcur = 1
         newcur = 1
         tmpcur = 1
-        write(*,*) 'aszlyd :',aszlyd(oldcur,isr), aszlyt(oldcur,isr)
-        write(*,*) 'target:',targetdep(newcur)
         do while ( (newcur .le. mnsz) .and. (oldcur .le. nslay(isr)) )
           if( targetdep(newcur) .le. aszlyd(oldcur, isr) ) then
             ! totally within layer
@@ -132,7 +129,7 @@
             oldcur = oldcur + 1
           end if 
         end do
-        write(*,*) 'Tempnslay 0',tempnslay, tmpcur
+     
         tempnslay = tmpcur-1
         
         ! even out layer spacing of last surface layers
@@ -158,7 +155,7 @@
         ! even out layer spacing between fixed layers
         oldcur = 0
         newcur = 0
-        write(*,*) 'Tempnslay:',tempnslay
+    
         do tmpcur = 1, tempnslay
           if( tempstat(tmpcur) .eq. 1 ) then
             ! fixed layer found
@@ -206,7 +203,7 @@
         ! new layers to be either smaller or larger than original
      
 !     IP soil physical properties
-        write(*,*) 'Tempnslay 1:',tempnslay
+     
         call move_ave_val( nslay(isr), aszlyd(1,isr), asfsan(1,isr),    &
      &                     tempnslay, tempdep )
         call move_ave_val( nslay(isr), aszlyd(1,isr), asfsil(1,isr),    &
@@ -282,9 +279,9 @@
         ! before the layers are split
         call move_ave_val( nslay(isr), aszlyd(1,isr), ahfredsat(1,isr), &
      &                     tempnslay, tempdep )
-         write(*,*) 'Tempnslay 2:',tempnslay
+     
         ! set new number of soil layers into original variable
-        ! why we need to assign it into original value? remove it by JG       
+         
         nslay(isr) = tempnslay
  
         ! put new thickness into array
