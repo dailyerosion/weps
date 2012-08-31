@@ -1,0 +1,107 @@
+Version: 1.40
+*START 1
+N Originating Program: RUSLE2
+N Skel Format Version: 1.1
+N This management file was originally converted from the NRCS standard XML format on - Tue Jun 09 09:28:53 CDT 2009
+#------------
+D 15/04/01
+O 04 Sprayer, post emergence
++ 1.2160101 .15
+T Spray pest control chemicals on growing crop.  Crop is not killed.
+T In the MCREW management screen the user must select the kind of weeds killed in the growing crop as external residue.   080404 DTL
+T Cloned from Defoliate (spray) crop.oprn, Changed the P31 to No crop kill and added G4 to add material to field MAS 9-28-06
+T DO NOT LEAVE CROP COLUMN SET TO "no crop".  User must select the crop and then drill into the operation and specify the amount of weed
+T mass that will be killed and turned into residue.
+G 03 Crop Name
++ weed residue; 0-3 mo
+P 65 Add Crop Residue Amounts
++ 0.0 0.0 0.0 0.0056042504 1
++ 0.0 0.0 0.0056042504 152.4003
++ 0.025 0.025 0.025 0.025 0.169 0.0050 17.1 5.227942
++ -1.20379 0.604887
+T Enter crop notes here.
+#------------
+D 20/07/01
+O 04 Harvest, killing crop 50pct standing stubble
++ 14.311503 .15
+T ARS record - filename is:  Harvest Wheat - grain (combine cutterbar header).oprn
+T This operation record is designed to represent actual field harvesting operation
+T of removing the grain from small grain crops with a cutterbar head on a combine.
+T This harvesting operation record removes all the reproductive component of a crop above the
+T cutting height.  Typically this is specified as the "yield" component in the crop record.
+T The non-harvested crop plant material above the specified cut height becomes flat residue.
+T The remaining above ground crop material below the specified cut height becomes standing residue.
+T Nov 02, 2005	Created - Larry Wagner
+T Detailed info regarding this operation record:
+T This harvest record specifies the actual cut height dependent upon the height
+T of the crop.  The cut height is specified as a fraction of the crop height.
+T Added 0.2 for the flatting of the combine and tire trafic for haulling grain.
+T MAS 1-18-07
+T The harvesting operation could also have an effect on the "standing stalk"
+T fall rate and fall threshold values.  The default "biomass pool" flag parameter
+T is set to "No adjustments applied" so that no "stalk residue decay rate change" will occur.
+T However, this flag value can be changed along with the default parameter values
+T to change the "stalk residue decay processes".
+G 02 Biomass Manipulation
++ 1.0
+P 31 Kill or Defoliate Growing Crop
++ 2
+P 43 Cut/Remove Biomass by Fraction (flags)
++ 1 1 0 1 0.2 1 0 0
+P 34 Change Standing Biomass Fall Rate
++ 0 1.0 1.0 1.0 1.0 1.0
++ 1.0 1.0 1.0 1.0 1.0
+P 40 End crop Biomass Manipulation
+P 24 Flatten Standing Biomass
++ 0 0.2 0.2 0.15 0.2 1
+#------------
+D 01/10/01
+O 03 Drill or airseeder, double disk
++ 3.3674128 6.34 2.2351363 0.0 2.2351363 1.5645955 2.9056773
+T Drill or air seeder with double disk openers on 7 to 10 inch spacings.  Rev102403 DTL  RUSLE MAS 10-26-06
+T G2 was added into file in front of the flattening (P24), burial (P25), and resurfacing (P26) factors because the area affected is less than 1.0 and
+T the RUSLE values were normalized to 1.0.  This change will imulate the correct residue changes based on the method set forth in RUSLE.
+T RUSLE's factors have been redused to based on the area affected.
+T The stalk fall rate factor (P34) was moved ahead of the new (G2) factor to set the fall rate to the  less than 1.0 area affected.  8/8/07 MAS
+G 01 Tillage
++ 38.100075 0.4 0.65 38.100075 25.400051 50.800102
+P 01 Break Crust
+P 02 Random Roughness
++ 1 7.6200156
+P 05 Ridges and Dikes
++ 1 25.400051 203.20041 25.400051 0.0 0.0
+P 11 Aggregate Crushing
++ 2.8 0.75
+P 12 Soil Loosening
++ 0.6
+P 13 Soil Layer Mixing
++ 0.3
+P 34 Change Standing Biomass Fall Rate
++ 7 3.0 2.5 2.0 1.5 1.0
++ 0.5 0.6 0.7 0.8 1.0
+G 02 Biomass Manipulation
++ 1.0
+P 24 Flatten Standing Biomass
++ 0 0.6 0.4 0.35 0.15 1.0
+P 25 Bury Flat Biomass
++ 1 0.2275 0.1625 0.13 0.065 0.13
+P 26 Resurface Buried Biomass
++ 0.01 0.01 0.01 0.02 0.01
+G 03 Crop Name
++ Wheat, winter, CMZ 50 lo ppt, 16-18 in spac
+P 51 Seeding Configuration
++ 1 0.0 0
++ 220.0 8.0 1 60 1 1.0 0
++ bu/ac
++ 13.5 148.7 5 0.8 0.6 0.8
++ 1.2 0.025 1.2192148 0.0 25.0 1 270 1800.0
++ -5.0 -15.0 0.005 0.05 0.035 30.0
++ 0.013 0.8013 0.4293 -0.086 -0.018 0.932 0.556 0.0736
++ 0.3293 -0.086 2.87 1.0 20.0 0.05 0 0.3
++ 28.571428 335.0 1.4 0.012 0.1 0.1 0.0 2
++ 0.0133 0.0133 0.0133 0.0133 0.12 0.0050 17.1 5.227942
++ -2.08165 0.548606 1.1111 0.11208501 0.0 0.0 0.0 0.0
+T This is the same as wheat, winter, soft white in WEPS for use in CMZ 50 and 32, 49 and 51 where similar climate exists.  Calibrated at 40 yield. MAS 5/4/06
+#------------
+*END
+*EOF

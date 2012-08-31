@@ -1,0 +1,120 @@
+Version: 1.0
+#
+# Soil ID
+SC069-NoA-Norfolk-90-LS-South Carolina-Marlboro County-Marlboro County, South Carolina
+#
+# Local Phase
+unknown
+# Soil Order
+Ultisols
+# Soil Loss Tolerance (tons/acre/year)
+5
+# Dry soil albedo (fraction)
+0.360
+# Slope gradient (fraction)
+0.010
+# Surface fragment cover or surface layer fragments (area fraction)
+0.000
+#
+# Depth to bedrock (mm)
+99990
+# Depth to root restricting layer (mm)
+99990
+#
+# Number of layers
+3
+# Layer thickness (mm)
+180     200     1450     
+#
+# Sand fraction
+0.792     0.792     0.558     
+# Silt fraction
+0.158     0.158     0.177     
+# Clay fraction
+0.050     0.050     0.265     
+# Rock fragments
+0.040     0.040     0.040     
+# Sand fraction very coarse
+0.032     0.032     0.013     
+# Sand fraction coarse
+0.125     0.125     0.082     
+# Sand fraction medium
+0.208     0.208     0.148     
+# Sand fraction fine
+0.273     0.273     0.202     
+# Sand fraction very fine
+0.154     0.154     0.113     
+#
+# Bulk Density (1/3 bar)(Mg/m^3)
+1.680     1.680     1.600     
+# Organic matter (kg/kg)
+0.0125     0.0050     0.0025     
+# Soil PH (0-14)
+4.80     4.80     4.60     
+# Calcium carbonate equivalent (CaCO3)
+0.00     0.00     0.00     
+# Cation exchange capacity (CEC) (meq/100g)
+3.30     1.60     3.20     
+# Linear extensibility
+1.500     1.500     1.500     
+#
+# Aggregate geometric mean diameter (mm)
+1.167     1.430     10.979     
+# Aggregate geometric standard deviation
+9.819     10.625     14.772     
+# Maximum aggregate size (mm)
+29.785     30.468     44.335     
+# Minimum aggregate size (mm)
+0.010     0.010     0.010     
+# Aggregate density (Mg/m^3)
+1.800     1.800     1.800     
+# Aggregate stability (ln(J/m^2))
+1.555     1.555     3.319     
+#
+# Crust thickness (mm)
+0.010
+# Crust density (Mg/m^3)
+1.800
+# Crust stability (ln(J/m^2))
+1.56
+# Crust surface fraction (m^2/m^2)
+0.00
+# Mass of loose material on crust (kg/m^2)
+0.00
+# Fraction of loose material on crust (m^2/m^2)
+0.00
+#
+# Random roughness (mm)
+4.00
+# Ridge orientation (deg)
+0.00
+# Ridge height (mm)
+0.00
+# Spacing between ridge tops (mm)
+10.00
+# Ridge width (mm)
+10.00
+#
+# Initial Bulk Density (1/3 bar)(Mg/m^3)
+1.680     1.680     1.600     
+# Initial soil water content (m^3/m^3)
+0.102     0.089     0.211     
+# Saturation soil water content (m^3/m^3)
+0.364     0.364     0.473     
+# Field capacity water content (m^3/m^3)
+0.148     0.133     0.247     
+# Wilting point water content (m^3/m^3)
+0.056     0.044     0.175     
+#
+# Soil CB value (exponent to Campbell's SWRC)
+4.288     4.288     7.574     
+# Air entry potential (J/kg)
+-0.805     -0.805     -0.342     
+# Saturated hydraulic conductivity (m/s)
+9.2E-5     9.2E-5     9.0E-6     
+#
+# Notes:
+# # WARNING: Local Phase (localphase) is missing.  Null value was substituted with 'unknown'.
+# # WARNING: Bedrock Depth (bedrockDepth) is missing.  Null value was substituted with '9999.0'.
+# # WARNING: Impermiable/Restrictive Depth (resdept_r_min) is missing.  Null value was substituted with '9999.0'.
+

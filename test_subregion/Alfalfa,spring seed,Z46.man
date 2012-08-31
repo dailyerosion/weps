@@ -1,0 +1,362 @@
+Version: 1.40
+*START 1
+N Originating Program: RUSLE2
+N Skel Format Version: 1.1
+N This management file was originally converted from the NRCS standard XML format on - Mon Jan 04 09:15:05 CST 2010
+#------------
+D 01/03/01
+O 03 Harrow, spike tooth
++ 3.1803343 15.6 2.6821637 0.0 2.6821637 1.3410819 3.129191
+T 6/7/01 DTL RUSLE MAS 10-26-06
+G 01 Tillage
++ 50.800102 0.50 1.0 50.800102 25.400051 76.20015
+P 01 Break Crust
+P 02 Random Roughness
++ 1 10.160021
+P 05 Ridges and Dikes
++ 1 25.400051 101.600204 6.350013 0.0 0.0
+P 11 Aggregate Crushing
++ 3.0 -0.22
+P 12 Soil Loosening
++ 0.6
+P 13 Soil Layer Mixing
++ 0.2
+P 31 Kill or Defoliate Growing Crop
++ 2
+P 40 End crop Biomass Manipulation
+P 24 Flatten Standing Biomass
++ 0 0.6 0.4 0.25 0.1 1.0
+P 25 Bury Flat Biomass
++ 1 0.3 0.25 0.2 0.1 0.3
+P 26 Resurface Buried Biomass
++ .01 0.01 .01 0.02 0.01
+P 34 Change Standing Biomass Fall Rate
++ 7 3.0 2.5 2.0 1.5 1.0
++ 0.5 0.6 0.7 0.8 1.0
+#------------
+D 03/03/01
+O 03 Fert applic. surface broadcast
++ 1.4966278 .06 2.2351363 0.0 2.2351363 1.5645955 2.9056773
+T Broadcast fertilizer spreader.  Wheel traffic only.  11/17/01 DTL
+T Added processes to match RUSLE and some that Fred Fox and I discussed were needed.  MAS 8/8/07
+T G2 was added into file in front of the flattening (P24), burial (P25), and resurfacing (P26) factors because the area affected is less than 1.0 and
+T the RUSLE values were normalized to 1.0.  This change will imulate the correct residue changes based on the method set forth in RUSLE.
+T RUSLE's factors have been redused to based on the area affected.
+T The stalk fall rate factor (P34) was moved ahead of the new (G2) factor to set the fall rate to the less than 1.0 area affected.  8/7/07 MAS
+G 01 Tillage
++ 25.400051 0.01 .05 25.400051 25.400051 25.400051
+P 01 Break Crust
+P 02 Random Roughness
++ 1 8.8900175
+P 34 Change Standing Biomass Fall Rate
++ 7 3.0 2.5 2.0 1.5 1.0
++ 0.5 0.6 0.7 0.8 1.0
+G 02 Biomass Manipulation
++ 1.0
+P 24 Flatten Standing Biomass
++ 0 0.25 0.2 0.25 0.1 1.0
+P 25 Bury Flat Biomass
++ 1 0.003 0.003 0.003 0.003 0.003
+P 26 Resurface Buried Biomass
++ 0 0 0 0 0
+#------------
+D 04/03/01
+O 03 Cultivator, field 6-12 in sweeps
++ 6.921904 26 2.6821637 0.0 2.6821637 1.3410819 3.5762181
+T Added a flattening to the file for fallow application.  This flattens any weed growth (fragil only) completely and
+T leaves the standing residue to go though the normal flattening.  This keep the model from showing addtional
+T standing residue when there never is any from the small summer fallow weeds.  MAS 11-19-09
+G 01 Tillage
++ 101.600204 0.4 1.0 101.600204 50.800102 152.4003
+P 01 Break Crust
+P 02 Random Roughness
++ 1 15.240031
+P 05 Ridges and Dikes
++ 1 50.800102 228.60045 0.0 0.0 0.0
+P 11 Aggregate Crushing
++ 3.0 1.0
+P 12 Soil Loosening
++ 0.65
+P 13 Soil Layer Mixing
++ 0.3
+P 24 Flatten Standing Biomass
++ 1 1 0 0 0 0
+P 31 Kill or Defoliate Growing Crop
++ 2
+P 40 End crop Biomass Manipulation
+P 24 Flatten Standing Biomass
++ 0 0.7 0.4 0.3 0.2 1.0
+P 25 Bury Flat Biomass
++ 1 0.4 0.35 0.3 0.2 0.85
+P 26 Resurface Buried Biomass
++ 0.05 0.06 0.07 0.2 0.05
+P 34 Change Standing Biomass Fall Rate
++ 7 3.0 2.5 2.0 1.5 1.0
++ 0.5 0.6 0.7 0.8 1.0
+#------------
+D 05/03/01
+O 03 Cultipacker, roller
++ 5.799433 35.59 2.6821637 0.0 2.6821637 1.3410819 3.5762181
+T Based on RUSLE core Cultipacker Roller finishing tool.
+T Consists of an inline gang of ridged rollers follow by one or more rows of staggerd
+T spring culivator teeth, followed by a second row of ridged rollers.
+T When the culivator teeth are raised out of the ground use the
+T operation Roller, corregated packer MAS 10-18-06
+G 01 Tillage
++ 38.100075 0.5 1.0 38.100075 25.400051 50.800102
+P 01 Break Crust
+P 02 Random Roughness
++ 1 10.160021
+P 05 Ridges and Dikes
++ 1 25.400051 76.20015 0.0 0.0 0.0
+P 11 Aggregate Crushing
++ 3.0 -0.22
+P 24 Flatten Standing Biomass
++ 0 0.95 .95 .95 .95 1.0
+P 25 Bury Flat Biomass
++ 1 .05 .05 .05 .05 .05
+P 26 Resurface Buried Biomass
++ 0.01 0.01 0.01 .01 0.01
+G 01 Tillage
++ 101.600204 .5 1.0 101.600204 50.800102 152.4003
+P 01 Break Crust
+P 02 Random Roughness
++ 1 20.320042
+P 05 Ridges and Dikes
++ 1 50.800102 228.60045 0.0 0.0 0.0
+P 11 Aggregate Crushing
++ 3.0 1.0
+P 12 Soil Loosening
++ 0.5
+P 13 Soil Layer Mixing
++ .4
+P 40 End crop Biomass Manipulation
+P 24 Flatten Standing Biomass
++ 0 0.8 .7 .4 .3 1.0
+P 25 Bury Flat Biomass
++ 1 .5 .4 .35 .2 .85
+P 26 Resurface Buried Biomass
++ 0.05 0.06 0.07 .2 0.05
+G 01 Tillage
++ 38.100075 0.5 1.0 38.100075 25.400051 50.800102
+P 01 Break Crust
+P 02 Random Roughness
++ 1 10.160021
+P 05 Ridges and Dikes
++ 1 25.400051 76.20015 0.0 0.0 0.0
+P 11 Aggregate Crushing
++ 3.0 -0.22
+P 24 Flatten Standing Biomass
++ 0 .95 .95 .95 .95 1.0
+P 25 Bury Flat Biomass
++ 1 .05 .05 .05 .05 .05
+P 26 Resurface Buried Biomass
++ 0.01 0.01 0.01 .01 0.01
+P 34 Change Standing Biomass Fall Rate
++ 7 3.0 2.5 2.0 1.5 1.0
++ 0.5 0.6 0.7 0.8 1.0
+#------------
+D 06/03/01
+O 03 Drill or airseeder, double disk
++ 3.3674128 6.34 2.2351363 0.0 2.2351363 1.5645955 2.9056773
+T Drill or air seeder with double disk openers on 7 to 10 inch spacings.  Rev102403 DTL  RUSLE MAS 10-26-06
+T G2 was added into file in front of the flattening (P24), burial (P25), and resurfacing (P26) factors because the area affected is less than 1.0 and
+T the RUSLE values were normalized to 1.0.  This change will imulate the correct residue changes based on the method set forth in RUSLE.
+T RUSLE's factors have been redused to based on the area affected.
+T The stalk fall rate factor (P34) was moved ahead of the new (G2) factor to set the fall rate to the  less than 1.0 area affected.  8/8/07 MAS
+G 01 Tillage
++ 38.100075 0.4 0.65 38.100075 25.400051 50.800102
+P 01 Break Crust
+P 02 Random Roughness
++ 1 7.6200156
+P 05 Ridges and Dikes
++ 1 25.400051 203.20041 25.400051 0.0 0.0
+P 11 Aggregate Crushing
++ 2.8 0.75
+P 12 Soil Loosening
++ 0.6
+P 13 Soil Layer Mixing
++ 0.3
+P 34 Change Standing Biomass Fall Rate
++ 7 3.0 2.5 2.0 1.5 1.0
++ 0.5 0.6 0.7 0.8 1.0
+G 02 Biomass Manipulation
++ 1.0
+P 24 Flatten Standing Biomass
++ 0 0.6 0.4 0.35 0.15 1.0
+P 25 Bury Flat Biomass
++ 1 0.2275 0.1625 0.13 0.065 0.13
+P 26 Resurface Buried Biomass
++ 0.01 0.01 0.01 0.02 0.01
+G 03 Crop Name
++ Alfalfa, hay
+P 51 Seeding Configuration
++ 1 0.0 0
++ 400.0 1.0 0 6.5 1 1.0 2
++ ton/ac
++ 15.0 4.465 3 1.0 0.69 0.9
++ 1.0 0.01 2.0 3.0 30.0 1 120 1800.0
++ -5.0 -9.444445 0.01 0.95 0.0 30
++ 0.023 0.8063 0.4146 -0.061 -0.024 0.9911 0.6435 0.0494
++ 0.3 -0.075 3.9 1.0 30 0.05 0 0.3
++ 2.0 110.0 0.6 0.013 0.2 0.2 0.1 2
++ 0.0536 0.0536 0.0536 0.0536 0.2 0.0020 20.0 7.0
++ -1.20379 0.604887 0.0 0.0 0.0 0.0 0.0 0.0
+T Size ranges
+T J.J. rquez-Ortiz, J.F.S. Lamb, L.D. Johnson, D.K. Barnes and R.E. Stucker, 1999, Heritability of crown traits in alfalfa, Crop Science, Vol 39, Issue 1 pgs. 38-43
+T Crown Depth (distance from the soil level to the top of the tap root) - 0.5cm to 5cm
+T Crown width (just below the soil surface) - 2cm to 12cm or greater
+T Number of crown stems - 2 to 10 or more
+T Crown stem width - 2mm to 6mm or greater
+T Number of crown buds - none to 12 or more
+T
+T D.K. Barnes, R.B. Pearce, G.E. Carlson, R.H. Hart, and C.H. Hanson. 1969. SPecific Leaf Weight Differences in Alfalfa Associated with Variety and
+T Plant Age. Crop Science, Vol 9, pgs. 421-423.
+T Values of Specific leaf weight measured in the paper varied from 2.15 to 4.3, with early season growth mostly in the area of 2.15 to 2.72 mg/cm^2
+T Conversion to m^2/kg is * 10^6 mg/kg * 10^-4 m^2/cm^2 = 100 / mg/cm^2
+T
+T 2.15 mg/cm^2 = 100 / 2.15 m^2/kg = 46.5 m^2/kg, 100 / 2.72 = 36.8, 100 / 4.3 = 23.3
+T
+T M. H. Hall, C. J. Nelson, J. H. Coutts and R. C. Stout. 2004. Effect of Seeding Rate on Alfalfa Stand Longevity. Agron. J. 96:717-722
+T Stem densities for the MO94 study (data not presented) were not different among seeding rates at any sampling time. There were 623 stems m–2 13 MAP
+T and only 350 stems m–2 by 25 MAP. Stem density remained nearly constant at that level through 49 MAP. During the same time period, plant density
+T declined from an average of 100 down to 25 plants m–2. This means that there was a fourfold increase in stems per plant from 25 to 49 MAP during
+T the same time period. Thereafter, stem density continued to decline to 290 and 260 stems m–2 at 63 and 73 MAP, respectively, while plant density fell
+T below 15 plants m–2 during the same time period. Crowns develop stems in response to light (Cowett and Sprague, 1962) and apparently could not
+T continue to maintain high stem density with the thin stand and older plants.
+T
+T data as shown above.
+T MAP = months after planting
+T SPM2 = stems per square meter
+T PPM2 = plants per square meter
+T SPP = stems per plant
+T
+T MAP	SPM2	PPM2	 SPP
+T 13	623	100	62.3
+T 25	350	36	9.7
+T 49	350	25	14
+T 63	290	16	18
+T 73	260	13	20
+T
+T With the critical period of alfalfa being establishment, a stem count, equals plant count of 400 stems per square meter is used to try and get early cover.
+T
+T Fick, G.W., D.A. Holt, D.G. Lugg. 1988. Environmental Physiology and Crop Growth. in A.A. Hanson, D.K. Barnes, R.R. Hill , Jr., eds. 1988 Alfalfa and Alfalfa
+T Improvement. Agronomy Monograph Number 29. American Society of Agronomy.
+T page 181. Growth temperatures: GDD base from 0 to 5 C, varies depending on time of year. GDD totals 0 C base, 700 to bud, 880 to first flower,
+T 1075 to full bloom, 1900 to ripe seed stages. Suggests a GDD max temperature around 30 C
+#------------
+D 25/07/01
+O 04 Harvest, hay, legume
++ 33.674126 .15
+T Harvest legume hay crops such as Alfalfa and Red clover and grass-legume mixed hay such as Alfalfa-Bromegrass.
+T Use Harvest, grass hay" for pure grass hay. Rev 11/17/01 DTL"  MAS 11-29-06
+G 02 Biomass Manipulation
++ 1.0
+P 31 Kill or Defoliate Growing Crop
++ 0
+P 42 Cut/Remove Biomass to Height (flags)
++ 1 0 0 0 0 101.600204 .9 .9 1
+P 34 Change Standing Biomass Fall Rate
++ 0 1.1 1.08 1.06 1.04 1.0
++ 0.9 0.92 0.93 0.95 1.0
+P 40 End crop Biomass Manipulation
+P 24 Flatten Standing Biomass
++ 14 .6 .5 .4 .5 .5
+#------------
+D 15/10/01
+O 03 Disk, tandem heavy primary op
++ 7.0154433 39 2.2351363 0.0 2.2351363 1.3410819 2.6821637
+T 11-12in. Spacing, Front and Rear
+T Recommended for primary tillage in medium to heavy soils
+T Excellent residue-handling capability. MAS 10-26-06
+G 01 Tillage
++ 152.4003 1.0 1.0 152.4003 101.600204 177.80035
+P 01 Break Crust
+P 02 Random Roughness
++ 1 38.100075
+P 05 Ridges and Dikes
++ 1 101.600204 279.40057 0.0 0.0 0.0
+P 11 Aggregate Crushing
++ 2.8 0.75
+P 12 Soil Loosening
++ 0.9
+P 13 Soil Layer Mixing
++ 0.4
+P 31 Kill or Defoliate Growing Crop
++ 2
+P 40 End crop Biomass Manipulation
+P 24 Flatten Standing Biomass
++ 0 1.0 0.9 0.8 0.5 1.0
+P 25 Bury Flat Biomass
++ 1 0.95 0.85 0.8 0.6 0.95
+P 26 Resurface Buried Biomass
++ 0.05 0.06 0.07 0.08 0.05
+P 34 Change Standing Biomass Fall Rate
++ 7 3.0 2.5 2.0 1.5 1.0
++ 0.5 0.6 0.7 0.8 1.0
+#------------
+D 15/10/01
+O 03 Disk, tandem secondary op
++ 4.4898834 32.5 2.2351363 0.0 2.2351363 1.3410819 2.6821637
+T 9-in. Spacing, Front and Rear; Good for seedbed preparation/chemical incorporation in medium to heavy soils
+T Works well in primary tillage in light to medium soils
+T Provides good residue-handling capability.  MAS 10-26-06
+G 01 Tillage
++ 127.00027 0.75 1.0 127.00026 76.20015 152.4003
+P 01 Break Crust
+P 02 Random Roughness
++ 1 15.240031
+P 05 Ridges and Dikes
++ 1 50.800102 228.60046 0.0 0.0 0.0
+P 11 Aggregate Crushing
++ 2.8 0.75
+P 12 Soil Loosening
++ 0.85
+P 13 Soil Layer Mixing
++ 0.4
+P 31 Kill or Defoliate Growing Crop
++ 2
+P 40 End crop Biomass Manipulation
+P 24 Flatten Standing Biomass
++ 0 0.85 0.7 0.6 0.5 1.0
+P 25 Bury Flat Biomass
++ 1 0.73 0.63 0.55 0.4 0.73
+P 26 Resurface Buried Biomass
++ 0.02 0.04 0.02 0.05 0.02
+P 34 Change Standing Biomass Fall Rate
++ 7 3.0 2.5 2.0 1.5 1.0
++ 0.5 0.6 0.7 0.8 1.0
+#------------
+D 17/10/01
+O 03 Plow, moldboard
++ 17.491838 65 2.2351363 0.0 2.2351363 1.5645955 2.6821637
+T Moldboard plow 8 inch operating depth.  060701 DTL  Modified flattening and burial per McCool and Foster 05/21/02 DTL RUSLE MAS 10-26-06
+G 01 Tillage
++ 203.20041 1.0 1.0 203.20041 152.4003 254.0005
+P 01 Break Crust
+P 02 Random Roughness
++ 1 48.260098
+P 05 Ridges and Dikes
++ 1 25.400051 406.40082 0.0 0.0 0.0
+P 11 Aggregate Crushing
++ 2.8 1.0
+P 12 Soil Loosening
++ 1.0
+P 13 Soil Layer Mixing
++ 0.7
+P 14 Soil Layer Inversion
+P 31 Kill or Defoliate Growing Crop
++ 2
+P 40 End crop Biomass Manipulation
+P 24 Flatten Standing Biomass
++ 0 1 1 1 0.75 1.0
+P 25 Bury Flat Biomass
++ 3 0.99 0.99 0.99 0.85 0.97
+P 26 Resurface Buried Biomass
++ 0.01 0.02 0.04 0.1 0.02
+P 34 Change Standing Biomass Fall Rate
++ 7 3.0 2.5 2.0 1.5 1.0
++ 0.5 0.6 0.7 0.8 1.0
+#------------
+*END
+*EOF

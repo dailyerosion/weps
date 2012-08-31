@@ -1,0 +1,121 @@
+Version: 1.0
+#
+# Soil ID
+WA001-AKC-Anders-45-ST-SIL-Washington-Adams County-Adams County, Washington
+#
+# Local Phase
+unknown
+# Soil Order
+Mollisols
+# Soil Loss Tolerance (tons/acre/year)
+2
+# Dry soil albedo (fraction)
+0.160
+# Slope gradient (fraction)
+0.080
+# Surface fragment cover or surface layer fragments (area fraction)
+0.000
+#
+# Depth to bedrock (mm)
+99990
+# Depth to root restricting layer (mm)
+99990
+#
+# Number of layers
+2
+# Layer thickness (mm)
+200     380     
+#
+# Sand fraction
+0.304     0.304     
+# Silt fraction
+0.556     0.556     
+# Clay fraction
+0.140     0.140     
+# Rock fragments
+0.170     0.270     
+# Sand fraction very coarse
+0.025     0.025     
+# Sand fraction coarse
+0.036     0.036     
+# Sand fraction medium
+0.050     0.050     
+# Sand fraction fine
+0.095     0.095     
+# Sand fraction very fine
+0.098     0.098     
+#
+# Bulk Density (1/3 bar)(Mg/m^3)
+1.250     1.350     
+# Organic matter (kg/kg)
+0.0150     0.0050     
+# Soil PH (0-14)
+7.00     7.60     
+# Calcium carbonate equivalent (CaCO3)
+0.00     0.00     
+# Cation exchange capacity (CEC) (meq/100g)
+12.50     11.50     
+# Linear extensibility
+1.500     1.500     
+#
+# Aggregate geometric mean diameter (mm)
+3.396     4.942     
+# Aggregate geometric standard deviation
+13.980     15.001     
+# Maximum aggregate size (mm)
+34.403     36.841     
+# Minimum aggregate size (mm)
+0.010     0.010     
+# Aggregate density (Mg/m^3)
+1.800     1.800     
+# Aggregate stability (ln(J/m^2))
+2.562     2.562     
+#
+# Crust thickness (mm)
+0.010
+# Crust density (Mg/m^3)
+1.800
+# Crust stability (ln(J/m^2))
+2.56
+# Crust surface fraction (m^2/m^2)
+0.00
+# Mass of loose material on crust (kg/m^2)
+0.00
+# Fraction of loose material on crust (m^2/m^2)
+0.00
+#
+# Random roughness (mm)
+4.00
+# Ridge orientation (deg)
+0.00
+# Ridge height (mm)
+0.00
+# Spacing between ridge tops (mm)
+10.00
+# Ridge width (mm)
+10.00
+#
+# Initial Bulk Density (1/3 bar)(Mg/m^3)
+1.250     1.350     
+# Initial soil water content (m^3/m^3)
+0.137     0.148     
+# Saturation soil water content (m^3/m^3)
+0.456     0.456     
+# Field capacity water content (m^3/m^3)
+0.202     0.221     
+# Wilting point water content (m^3/m^3)
+0.072     0.075     
+#
+# Soil CB value (exponent to Campbell's SWRC)
+4.026     4.026     
+# Air entry potential (J/kg)
+-3.905     -3.905     
+# Saturated hydraulic conductivity (m/s)
+9.0E-6     9.0E-6     
+#
+# Notes:
+# # WARNING: Layer dropped for texture UWB.
+# # WARNING: Local Phase (localphase) is missing.  Null value was substituted with 'unknown'.
+# # WARNING: Bedrock Depth (bedrockDepth) is missing.  Null value was substituted with '9999.0'.
+# # WARNING: Impermiable/Restrictive Depth (resdept_r_min) is missing.  Null value was substituted with '9999.0'.
+
