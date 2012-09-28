@@ -5,7 +5,7 @@
 !**********************************************************************
 !     subroutine sbgrid
 !**********************************************************************
-      subroutine sbgrid 
+      subroutine sbgrid
 !
 !     +++ PURPOSE +++
 !     to calculate grid size and spacing for EROSION.
@@ -17,8 +17,6 @@
 !     to assign subregion index no. to each grid point.
 !
 !     +++ ARGUMENT DECLARATION +++
-
-!
 
 !     +++ LOCAL DEFINITIONS +++
 !     imax  - no. grid intervals in x-direction
@@ -67,6 +65,11 @@
 !       calc. lx and ly sides of field
       lx = amxsim (1,2)-amxsim(1,1)
       ly = amxsim (2,2)-amxsim(2,1)
+     
+! Change lx and ly into subregion length here by JG 
+ !      lx = amxsr(1,2,isr)-amxsr(1,1,isr)
+ !      ly = amxsr(2,2,isr)-amxsr(2,1,isr)
+
 !
 !^^^tmp out
 !      write(*,*) 'tmp out from sbgrid, line 69'
@@ -78,12 +81,14 @@
 !         ngdpt = B_G_DPT
 !      endif
 !
+! change imax and jmax size into subregion size by JG
 !        case where lx > ly
       if ( lx .gt. ly)then
         imax  = int ( lx / dxmin)
         imax = min(imax,ngdpt)
         imax = max(imax,2)
 !     calculate spacing for square or with barriers a rectangular grid
+! Why do we need to minus 1 from max? JG
         ix  = lx / (imax - 1)
 
          if (nbr .gt. 0) then
