@@ -5,7 +5,7 @@
 !**********************************************************************
 !     subroutine sberod
 !**********************************************************************
-      subroutine sberod (time,flg)
+      subroutine sberod (time,flg,isr)
 
 !     To calc loss/dep of saltation/creep, susp. and PM-10 at cells
 !     To call sbqout to calc. qo, qsso, q10o for each cell
@@ -17,7 +17,7 @@
 
       real      time
       integer   flg    !Surface update flag (1=on, 0=off)
-!
+      integer   isr    
 !     +++ ARGUMENT DEFINITIONS +++
 !     time     = time interval (seconds)
 
@@ -33,7 +33,7 @@
       include  'h1db1.inc'
       include  'timer.inc'
       include  'w1clig.inc'
-!
+      include  'wpath.inc'
 !     + + + LOCAL COMMON BLOCKS + + +
       include  'erosion/m2geo.inc'
       include  'erosion/e2grid.inc'
@@ -47,7 +47,7 @@
 !     +++ PARAMETERS +++
 !
 !     +++ LOCAL VARIABLES +++
-      integer i, j, icsr
+      integer i, j,icsr
 !*
       real lx,aa,bb,dd,la,lb,ld,ly
 !
@@ -75,6 +75,9 @@
 !
 !     +++ END SPECIFICATIONS +++
 !
+     
+!      call fopenk (500,rootp(1:len_trim(rootp))//'CSR.out','unknown') 
+ 
 !     set initial conditions to zero
       do 50 j = 0, jmax
       do 45 i = 0, imax
@@ -110,10 +113,14 @@
 ! ^^^ tmp out
 !      write (*,*) ' output from sberod'
 !      write (*,*) 'la=', la, 'lb=', lb,'ld=', ld
+
 !      write (*,*) 'lx=', lx,'ly=',ly,'ix=',ix,'jy=', jy
 !      write (*,*) '-----------------------------'
 !
 !     update interior grid cells:
+! test of i value
+         
+
       do  110  i = i1, i2, i3
       do  100  j = i4, i5, i6
 
@@ -122,7 +129,7 @@
       qi   = (qx(i-i3,j)*jy   + qy(i,j-i6)*ix)/ly
       qssi = (qssx(i-i3,j)*jy + qssy(i,j-i6)*ix)/ly
       q10i = (q10x(i-i3,j)*jy + q10y(i,j-i6)*ix)/ly
-
+    
 !       calc. output discharge
       icsr = csr(i,j)
 !^^^ tmp out
@@ -140,7 +147,8 @@
 
       call timer(TIMSBEROD,TIMSTOP)
       call timer(TIMSBQOUT,TIMSTART)
-
+! Only working for grids at each subregion by JG
+      if (csr(i,j) .eq. isr)  then
        call sbqout (flg,                                                &
      & wus(i,j), wust(i,j), wusp(i,j), sf10(i,j), sf84(i,j),            &
      & sf200(i,j), szcr(i,j), sfcr(i,j), sflos(i,j), smlos(i,j),        &
@@ -160,13 +168,15 @@
 !
 !       update output accumulation arrays
 !       soil loss is negative:
+
         eg =   -time*(qo - qi)/lx
         egss = -time*(qsso - qssi)/lx
         eg10 = -time*(q10o - q10i)/lx
+
         egt(i,j)   = egt (i,j) + eg + egss
         egtss(i,j) = egtss(i,j) + egss
-        egt10(i,j) = egt10(i,j) + eg10
-!
+        egt10(i,j) = egt10(i,j) + eg10    
+
 !*       update discharge scalars
         aa = abs(-ix*cos_awa)
         bb = abs(-jy*sin_awa)
@@ -178,6 +188,7 @@
         qssy(i,j) = qsso*ly*aa/(ix*dd)
         q10x(i,j) = q10o*ly*bb/(jy*dd)
         q10y(i,j) = q10o*ly*aa/(ix*dd)
+        end if
 ! ^^^tmp
 !        if (i .eq. 1 .and. qy(i,j) .gt. 0.00001) then
 !           write (*,*) 'tmp out sberod line 172'
@@ -197,11 +208,11 @@
 !       the meaning also differs.
 !       egt = salt/creep discharge (not total)
 !       egtss = suspension discharge
-!       egt10 = pm-10 discharge
+!       egt10 = pm-10 d
 !
 !       calculate scalar discharge crossing borders
 !
-       if (i .eq. i2) then
+       if ((i .eq. i2) .and. (csr(i2+i3,j) .eq. isr)) then
          if (qx(i,j) .gt. 1.0e-10) then
            egt(i2+i3, j) = egt(i2+i3,j) + time*qx(i2, j)
          endif
@@ -210,7 +221,7 @@
            egt10(i2+i3, j) = egt10(i2+i3,j) + time*q10x(i2, j)
          endif
        endif
-       if (j .eq. i5) then
+       if ((j .eq. i5) .and. (csr(i,i5+i6) .eq. isr)) then
          if (qy(i,j) .gt. 1.0e-10) then
            egt(i, i5+i6) = egt(i,i5+i6) + time*qy(i,i5)
          endif
@@ -276,20 +287,16 @@
 !     i ' szrgh, slrr, wust, wusp'
 !
 !      endif
-
 !^^^ end tmp out
-
-
 
   100 continue
 !
-
 !
   110 continue
 !
 !     temp code for output c
   210 continue
-
+  
       return
       end
 
