@@ -23,7 +23,7 @@
                                  !to evaluate for erosion loss
 
 !     +++ ARGUMENT DEFINITIONS +++
-! added by JG 
+! added icsr for subregion by JG 
       integer icsr    
 !     +++ PARAMETER +++
 
@@ -323,7 +323,7 @@
 !     sbinit calls sbsdfi to get sf< 0.01,0.1,0.84,2.0 mm
 !     and writes to grid, writes other var. to grid and
 !     zeros eros output arrays.
-      call sbinit
+      call sbinit(icsr)
 !     calc. sweep direction based on wind direction for sberod
       prev_dir = awdir(1)+ 1.0   !make different to force calculation
       call sbdirini( awdir(1), prev_dir )
@@ -480,7 +480,7 @@
                call timer(TIMEROS,TIMSTOP)
                call timer(TIMSBEROD,TIMSTART)
 
-               call sberod (time,SURF_UPD_FLG)
+               call sberod (time,SURF_UPD_FLG, icsr)
 
                call timer(TIMSBEROD,TIMSTOP)
                call timer(TIMEROS,TIMSTART)
@@ -515,7 +515,7 @@
          if (btest(am0efl,2)) then
             ! write(0,*) 'i is:', i, 'hr is:', hr
             ! Note that we use "hr" not "hrs" here so we report the end of the "ntstep" hr period
-            call sbemit (luo_emit, awu(i), hr)  !Should only write data here
+            call sbemit (luo_emit, awu(i), hr,icsr)  !Should only write data here
          endif
 
    41 continue
