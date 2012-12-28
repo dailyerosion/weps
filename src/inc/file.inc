@@ -2,7 +2,9 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-!
+
+! note: 42 is reserved for use by saeinp.for routine
+
       integer   lui1
       parameter (lui1=141)
 !

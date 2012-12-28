@@ -226,7 +226,6 @@
       write(6,*) 'Compiled flags: ', trim(build_compiler_options)
       write(6,*)
 
-!      call fopenk(500,rootp(1:len_trim(rootp))//'CS.out','unknown')
       ! Determine date of Run
       call date_and_time(values=dt)
 

@@ -473,7 +473,9 @@
      &     '#   initial xplot value,I, (-1=no plot, 0 = plot indep.varia&
      &bles with 1 flag)')
       write(42,*) '-1'
-!
+
+      close(42)
+
       return
       end
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
