@@ -7,7 +7,7 @@
 
 !     file: 'wsum.for'
 
-      subroutine wsum
+      program wsum
 
 !     + + + PURPOSE + + +
 !     This subroutine summarizes the WINDGEN and CLIGEN weather

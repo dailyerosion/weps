@@ -738,9 +738,6 @@
       ! free memory for array of polygons
       deallocate(subr_poly)
 
-!     output the weather summary report
-!     call wsum
-
       write (*,*) 'The WEPS simulation run is finished'
 
       call timer(TIMWEPS,TIMSTOP)
