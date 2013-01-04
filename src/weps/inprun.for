@@ -285,23 +285,25 @@
 !     read flags to print submodel output
       case (17)
         read (line,*,err=80) am0hfl,am0sfl,am0tfl,am0cfl,am0dfl,am0efl
-      if (am0tfl .eq. 1) call fopenk(15, rootp(1:len_trim(rootp)) //    &
-     &  'manage.out', 'unknown')
+        if (am0tfl .eq. 1) then
+          call fopenk(luomanage,rootp(1:len_trim(rootp)) //'manage.out',&
+     &         'unknown')
+        end if
       case (18)
         ! debug flag line. Add zero integer to end to make sure six values
         ! are available to read. Previously interface only set 5 flags.
         ! Now should set six.
         line = line(1:len_trim(line)) // ' 0'
         read (line,*,err=80) am0hdb,am0sdb,am0tdb,am0cdb,am0ddb,am0edb
-        if (am0hdb .eq. 1) open (unit = 25,                             &
+        if (am0hdb .eq. 1) open (unit = luohdb,                         &
      &   file = rootp(1:len_trim(rootp)) // 'hdbug.out')
-        if (am0sdb .eq. 1) open (unit = 26,                             &
+        if (am0sdb .eq. 1) open (unit = luosdb,                         &
      &   file = rootp(1:len_trim(rootp)) // 'sdbug.out')
-      if (am0tdb .eq. 1) call fopenk(29, rootp(1:len_trim(rootp)) //    &
-     &  'tdbug.out', 'unknown')
-        if (am0cdb .eq. 1) open (unit = 27,                             &
+        if (am0tdb .eq. 1) open(unit = luotdb,                          &
+     &   file = rootp(1:len_trim(rootp)) // 'tdbug.out')
+        if (am0cdb .eq. 1) open (unit = luocdb,                         &
      &   file = rootp(1:len_trim(rootp)) // 'cdbug.out')
-        if (am0ddb .eq. 1) open (unit = 28,                             &
+        if (am0ddb .eq. 1) open (unit = luoddb,                         &
      &   file = rootp(1:len_trim(rootp)) // 'ddbug.out')
 
       case (19)

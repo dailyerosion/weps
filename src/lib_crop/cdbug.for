@@ -39,6 +39,7 @@
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'
+      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'crop/cenvr.inc'
@@ -113,39 +114,40 @@
 !          write weather cligen and windgen variables
       if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and.  &
      &   (isr .eq. tisr)) then
-         write(27,2030) cd,cm,cy,isr
+         write(luocdb,2030) cd,cm,cy,isr
       else
-         write(27,2031) cd,cm,cy,isr
+         write(luocdb,2031) cd,cm,cy,isr
       end if
-      write(27,2032)
-      write(27,2038) awzdpt, awtdmx, awtdmn, aweirr, awudmx, awudmn,    &
+      write(luocdb,2032)
+      write(luocdb,2038) awzdpt, awtdmx, awtdmn, aweirr, awudmx, awudmn,&
      &               awtdpt, awadir, awhrmx, awrrh
 
-!      write(27,2045) isr
+!      write(luocdb,2045) isr
 
-      write(27,2050) isr, isr, isr, isr, isr, isr, isr
+      write(luocdb,2050) isr, isr, isr, isr, isr, isr, isr
 ! admf(isr) is not dimensioned correctly anymore - LEW 04/23/99
 ! just commenting it out for now since it is a debug routine
-!      write(27,2051) amrslp(isr), acftcv(isr), acrlai(isr), aczrtd(isr),
+!      write(luocdb,2051) amrslp(isr), acftcv(isr), acrlai(isr), aczrtd(isr),
 !     &               admf(isr), ahfwsf(isr), ac0nam(isr)
-      write(27,2052) isr, isr, isr, isr
-      write(27,2053) actdtm(isr), acthucum(isr), acmst(isr), acmrt(isr),&
+      write(luocdb,2052) isr, isr, isr, isr
+      write(luocdb,2053)                                                &
+     &               actdtm(isr), acthucum(isr), acmst(isr), acmrt(isr),&
      &               ahzeta, ahzetp, ahzpta
-      write(27,2054) isr, isr, isr, isr
-      write(27,2055) ahzea, ahzep, ahzptp, actmin(isr),                 &
+      write(luocdb,2054) isr, isr, isr, isr
+      write(luocdb,2055) ahzea, ahzep, ahzptp, actmin(isr),             &
      &               actopt(isr), as0rrk(isr), aslrr(isr)
-      write(27,2056)
+      write(luocdb,2056)
 
       do 200 l = 1,slay
-         write(27,2060) l, aszlyt(l,isr), ahrsk(l,isr), ahrwc(l,isr),   &
+         write(luocdb,2060) l,aszlyt(l,isr), ahrsk(l,isr), ahrwc(l,isr),&
      &                  ahrwcs(l,isr), ahrwca(l,isr), ahrwcf(l,isr),    &
      &                  ahrwcw(l,isr), ah0cb(l,isr), aheaep(l,isr),     &
      &                  ahtsmx(l,isr), ahtsmn(l,isr)
   200 continue
-         write(27,2065)
+         write(luocdb,2065)
 
       do 300 l=1,slay
-         write(27,2070) l, asfsan(l,isr), asfsil(l,isr), asfcla(l,isr), &
+         write(luocdb,2070) l,asfsan(l,isr),asfsil(l,isr),asfcla(l,isr),&
      &                  asfom(l,isr), asdblk(l,isr),                    &
      &                  aslagm(l,isr), as0ags(l,isr), aslagn(l,isr),    &
      &                  aslagx(l,isr), aseags(l,isr)

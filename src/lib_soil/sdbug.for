@@ -39,6 +39,7 @@
       include 'h1scs.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'
+      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
@@ -122,15 +123,15 @@
 !          write weather cligen and windgen variables
       if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and.  &
      &   (isr .eq. tisr)) then
-         write(26,2030) cd,cm,cy,daysim,isr
+         write(luosdb,2030) cd,cm,cy,daysim,isr
       else
-         write(26,2031) cd,cm,cy,daysim,isr
+         write(luosdb,2031) cd,cm,cy,daysim,isr
       end if
-      write(26,2032)
-      write(26,2038) awzdpt,awtdmx,awtdmn,aweirr,awudmx,awudmn,         &
+      write(luosdb,2032)
+      write(luosdb,2038) awzdpt,awtdmx,awtdmn,aweirr,awudmx,awudmn,     &
      &               awtdpt,awadir,awhrmx,amzele
 
-      write(26,2050) isr,isr,isr,isr,isr,isr,isr
+      write(luosdb,2050) isr,isr,isr,isr,isr,isr,isr
 
 ! We no longer have a global variable that sums all the flat residue
 ! from each decomp pool.  Therefore, we are computing it here for now.
@@ -140,23 +141,23 @@
         bdmft = bdmft + admf(i,isr)
 20    continue
 
-      write(26,2051) amrslp(isr),acftcv(isr),acrlai(isr),aczrtd(isr),   &
-     &               bdmft,ahfwsf(isr),ahzper(isr)
-      write(26,2052) isr,isr,isr,isr,isr,isr,isr
-      write(26,2053) ahzrun(isr),ahzirr(isr),ahzsno(isr),ahzsmt(isr),   &
-     &               asxrgs(isr),aszrgh(isr),aslrr(isr)
-      write(26,2054) isr,isr,isr,isr,isr,isr,isr
-      write(26,2055) asfcr(isr),asecr(isr),asmlos(isr),asflos(isr),     &
+      write(luosdb,2051) amrslp(isr),acftcv(isr),acrlai(isr),           &
+     &               aczrtd(isr), bdmft,ahfwsf(isr),ahzper(isr)
+      write(luosdb,2052) isr,isr,isr,isr,isr,isr,isr
+      write(luosdb,2053) ahzrun(isr),ahzirr(isr),ahzsno(isr),           &
+     &               ahzsmt(isr), asxrgs(isr),aszrgh(isr),aslrr(isr)
+      write(luosdb,2054) isr,isr,isr,isr,isr,isr,isr
+      write(luosdb,2055) asfcr(isr),asecr(isr),asmlos(isr),asflos(isr), &
      &               ac0rg(isr),as0rrk(isr),aszcr(isr)
-      write(26,2056)
+      write(luosdb,2056)
 
       do 200 l = 1,slay
-         write(26,2060) l,aszlyt(l,isr),ahrsk(l,isr), ahrwc(l,isr),     &
+         write(luosdb,2060) l,aszlyt(l,isr),ahrsk(l,isr), ahrwc(l,isr), &
      &                  ahrwcs(l,isr),ahrwca(l,isr), ahrwcf(l,isr),     &
      &                  ahrwcw(l,isr),ah0cb(l,isr),aheaep(l,isr),       &
      &                  ahtsmx(l,isr), ahtsmn(l,isr)
   200 continue
-      write(26,2065)
+      write(luosdb,2065)
 !     om, bulk density, min ag dia., and ag. stability do not have
 !     values at the surface and thus are set to high values so the
 !     output will read '*******' for these values
@@ -167,7 +168,7 @@
 !      if (aslagn(0,isr) .eq. 0.0) aslagn(0,isr)  = 1111111111111.
 
       do 300 l=1,slay
-         write(26,2070) l,asfsan(l,isr),asfcla(l,isr),asfom(l,isr),     &
+         write(luosdb,2070) l,asfsan(l,isr),asfcla(l,isr),asfom(l,isr), &
      &                  asdsblk(l,isr),asdblk(l,isr),                   &
      &                  aslagm(l,isr), as0ags(l,isr), aslagn(l,isr),    &
      &                  aslagx(l,isr), aseags(l,isr)

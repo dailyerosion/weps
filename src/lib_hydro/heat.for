@@ -30,6 +30,7 @@
       include 'm1flag.inc'
       include 'p1const.inc'
       include 'p1unconv.inc'
+      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/snowprop.inc'
@@ -146,8 +147,8 @@
 
       if ((am0ifl .eqv. .true.).and.((am0hfl .eq. 4)                    &
      &  .or.(am0hfl .eq. 5).or.(am0hfl .eq. 6).or.(am0hfl .eq. 7))) then
-         write(13,2009) layrsn
-         write(13,2010)
+         write(luotempsoil,2009) layrsn
+         write(luotempsoil,2010)
       end if
 
       ! calculate simple (explicit) soil heat balance on a daily basis
@@ -353,7 +354,7 @@
       if ((am0hfl .eq. 4) .or. (am0hfl .eq. 5) .or. (am0hfl .eq. 6)     &
      &   .or. (am0hfl .eq. 7)) then
          call caldatw (day,mo,yr)
-         write(13,2040) day,mo,yr,(bhtsmn(lay), bhtsmx(lay),            &
+         write(luotempsoil,2040) day,mo,yr,(bhtsmn(lay), bhtsmx(lay),   &
      &      lay=1,layrsn)
       end if
 

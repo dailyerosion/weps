@@ -39,6 +39,7 @@
       include 'h1scs.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'
+      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
@@ -114,40 +115,40 @@
 
       if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and.  &
      &   (isr .eq. tisr)) then
-         write(25,2030) cd,cm,cy,isr
+         write(luohdb,2030) cd,cm,cy,isr
       else
-         write(25,2031) cd,cm,cy,isr
+         write(luohdb,2031) cd,cm,cy,isr
       end if
-      write(25,2032)
-      write(25,2038) awzdpt, awtdmx, awtdmn, aweirr, awudmx, awudmn,    &
+      write(luohdb,2032)
+      write(luohdb,2038) awzdpt, awtdmx, awtdmn, aweirr, awudmx, awudmn,&
      &               awtdpt, awadir, awhrmx, awrrh
 
-!      write(25,2045) isr
+!      write(luohdb,2045) isr
 
-      write(25,2050) isr, isr, isr, isr, isr, isr, isr
+      write(luohdb,2050) isr, isr, isr, isr, isr, isr, isr
 ! admf(isr) is not dimensioned correctly anymore - LEW 04/23/99
 ! just commenting it out for now since it is a debug routine
-!      write(25,2051) amrslp(isr), acftcv(isr), acrlai(isr), aczrtd(isr),
+!      write(luohdb,2051) amrslp(isr), acftcv(isr), acrlai(isr), aczrtd(isr),
 !     &               admf(isr), ahfwsf(isr), ahzper(isr)
-      write(25,2052) isr, isr, isr, isr
-      write(25,2053) ahzrun(isr), ahzirr(isr), ahzsno(isr), ahzsmt(isr),&
-     &               ahzeta, ahzetp, ahzpta
-      write(25,2054) isr, isr, isr, isr
-      write(25,2055) ahzea, ahzep, ahzptp, ah0cng(isr),                 &
+      write(luohdb,2052) isr, isr, isr, isr
+      write(luohdb,2053) ahzrun(isr), ahzirr(isr), ahzsno(isr),         &
+     &               ahzsmt(isr), ahzeta, ahzetp, ahzpta
+      write(luohdb,2054) isr, isr, isr, isr
+      write(luohdb,2055) ahzea, ahzep, ahzptp, ah0cng(isr),             &
      &               ah0cnp(isr), as0rrk(isr), aslrr(isr)
-      write(25,2056)
+      write(luohdb,2056)
 
       do 200 l = 1,slay
-         write(25,2060) l, aszlyt(l,isr), ahrsk(l,isr), ahrwc(l,isr),   &
+         write(luohdb,2060) l, aszlyt(l,isr), ahrsk(l,isr),ahrwc(l,isr),&
      &                  ahrwcs(l,isr), ahrwca(l,isr), ahrwcf(l,isr),    &
      &                  ahrwcw(l,isr), ah0cb(l,isr), aheaep(l,isr),     &
      &                  ahtsmx(l,isr), ahtsmn(l,isr)
   200 continue
-         write(25,2065)
+         write(luohdb,2065)
 
       do 300 l=1,slay
-         write(25,2070) l, asfsan(l,isr), asfsil(l,isr), asfcla(l,isr), &
-     &                  asfom(l,isr), asdblk(l,isr),                    &
+         write(luohdb,2070) l, asfsan(l,isr), asfsil(l,isr),            &
+     &                  asfcla(l,isr), asfom(l,isr), asdblk(l,isr),     &
      &                  aslagm(l,isr), as0ags(l,isr), aslagn(l,isr),    &
      &                  aslagx(l,isr), aseags(l,isr)
   300 continue

@@ -5,21 +5,35 @@
 
 ! note: 42 is reserved for use by saeinp.for routine
 
-      integer   lui1
+
+      ! input file numbers that are used and then immediately closed
+      ! these numbers can be resused in multiple contexts (open then close)
+      integer   lui1, lui2, lui3
       parameter (lui1=141)
-!
-      integer   lui2
       parameter (lui2=102)
-!
-      integer   lui3
       parameter (lui3=103)
+
+!     no longer needed
+!      integer   lui4
+!      parameter (lui4=104)
 !
-      integer   lui4
-      parameter (lui4=104)
+!      integer   lui5
+!      parameter (lui5=105)
+
+      ! output file numbers that are used and then immediately closed
+      ! these numbers can be resused in multiple contexts (open then close)
+      integer   luo1, luo2, luo3
+      parameter (luo1=111)
+      parameter (luo2=112)
+      parameter (luo3=113)
+
+!     no longer needed
+!      integer   luo4
+!      parameter (luo4=114)
 !
-      integer   lui5
-      parameter (lui5=105)
-!
+!      integer   luo5
+!      parameter (luo5=115)
+
       integer   luicli
       parameter (luicli=146)
 !
@@ -32,21 +46,6 @@
       !Logical Unit number for "mandate.man" (MCREW management) file
       integer   luimandate
       parameter (luimandate=149)
-!      
-      integer   luo1
-      parameter (luo1=111)
-!
-      integer   luo2
-      parameter (luo2=112)
-!
-      integer   luo3
-      parameter (luo3=113)
-!
-      integer   luo4
-      parameter (luo4=114)
-!
-      integer   luo5
-      parameter (luo5=115)
 !
       integer   luolog
       parameter (luolog=116)
@@ -56,6 +55,10 @@
 !
       integer   luoplt
       parameter (luoplt=118)
+
+      ! logical unit number for management detail output file
+      integer   luomanage
+      parameter (luomanage=15)
 
 ! these are for debugging the crop and decomp biomass variables - LEW
 
@@ -111,6 +114,23 @@
       integer   luowater
       parameter (luowater=12)
 
+      ! soil temperature output in heat.for
+      integer   luotempsoil
+      parameter (luotempsoil=13)
+
+!     legacy debugging output files (when "debug" flags set)
+      integer   luohdb
+      parameter (luohdb=25)
+      integer   luosdb
+      parameter (luosdb=26)
+      integer   luotdb
+      parameter (luotdb=29)
+      integer   luocdb
+      parameter (luocdb=27)
+      integer   luoddb
+      parameter (luoddb=28)
+
+
 !     new output units for general information
 
       integer   luoharvest_si
@@ -138,7 +158,8 @@
       parameter (luomandate=81)
 
 !     New output units for erosion submodel
-
+      integer   luo_subday       ! subdaily wind output
+      parameter (luo_subday=24)
       integer   luo_egrd         ! For daily grid output
       parameter (luo_egrd=201)
       integer   luo_erod         ! For daily erosion summary output
@@ -147,6 +168,10 @@
       parameter (luo_emit=203)
       integer   luo_sgrd         ! For subdaily grid output
       parameter (luo_sgrd=204)
+
+!     saeinp output stand alone erosion single day simulation file
+      integer   luo_saeinp
+      parameter (luo_saeinp=42)
 
       ! Logical Unit number for "soilsurf.out" file
       integer   luosoilsurf

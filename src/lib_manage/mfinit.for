@@ -94,20 +94,9 @@
       end do
 
 !     + + + END SPECIFICATIONS + + +
-!
-!     Open management debug file (tdbug.out) and manage.out file
-!     if flags are set.
-!
-!  These have been moved to "inprun.for"
-!      if (am0tdb .eq. 1) call fopenk(29, rootp(1:len_trim(rootp)) // 
-!     *  'tdbug.out', 'unknown')
 
-!      if (am0tfl .eq. 1) call fopenk(15, rootp(1:len_trim(rootp)) // 
-!     *  'manage.out', 'unknown')
-! LEW - 8/18/99
-!
 !     read in management file
-!
+
       call fopenk(luimandate, fname(1:len_trim(fname)), 'old')
    10 read(luimandate, '(a)', end=20) line
       if (line(1:1).eq.'#') goto 10

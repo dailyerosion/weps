@@ -42,9 +42,10 @@
       include 'h1scs.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'
-      include 'decomp/decomp.inc'
+      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
+      include 'decomp/decomp.inc'
       include 'decomp/tddbug.inc'
       include 'main/main.inc'
 
@@ -107,41 +108,41 @@
 !      write(*,*) 'd1',cd,cm,cy,isr,tday,tmo,tyr,tisr
       if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and.  &
      &   (isr .eq. tisr)) then
-         write(28,2030) cd,cm,cy,isr
+         write(luoddb,2030) cd,cm,cy,isr
       else
-         write(28,2031) cd,cm,cy,isr
+         write(luoddb,2031) cd,cm,cy,isr
       end if
 
 !      do 200 l = 1,slay
-!         write(28,2060) l, aszlyt(l,isr), ahrsk(l,isr), ahrwc(l,isr),
+!         write(luoddb,2060) l, aszlyt(l,isr), ahrsk(l,isr), ahrwc(l,isr),
 !     &                  ahrwcs(l,isr), ahrwca(l,isr), ahrwcf(l,isr),
 !     &                  ahrwcw(l,isr), ah0cb(l,isr), aheaep(l,isr),
 !     &                  ahtsmx(l,isr), ahtsmn(l,isr)
 !  200 continue
-         write(28,*)
-         write(28,2065)
+         write(luoddb,*)
+         write(luoddb,2065)
       do 300 l=1,slay
-         write(28,2070)                                                 &
+         write(luoddb,2070)                                             &
      &          l,admbgz(l,1,isr),admbgz(l,2,isr),admbgz(l,3,isr),      &
      &            admrtz(l,1,isr),admrtz(l,2,isr),admrtz(l,3,isr)
   300 continue
-!         write(28,2066)
+!         write(luoddb,2066)
 !      do 310 l=1,slay
-!         write(28,2071) l,admbgz(l,1,isr),admbgz(l,2,isr),admbgz(l,3,isr),
+!         write(luoddb,2071) l,admbgz(l,1,isr),admbgz(l,2,isr),admbgz(l,3,isr),
 !     &                  admrtz(l,1,isr),admrtz(l,2,isr),admrtz(l,3,isr)
 !  310 continue
 
-         write(28,2067)
+         write(luoddb,2067)
       do 320 l=1,slay
-         write(28,2072) l,cumddg(l,1,isr),cumddg(l,2,isr),              &
+         write(luoddb,2072) l,cumddg(l,1,isr),cumddg(l,2,isr),          &
      &                  cumddg(l,3,isr)
   320 continue
 
-         write(28,2068)
-         write(28,2073) cumdds(1,isr),cumdds(2,isr),cumdds(3,isr),      &
+         write(luoddb,2068)
+         write(luoddb,2073) cumdds(1,isr),cumdds(2,isr),cumdds(3,isr),  &
      &                  cumddf(1,isr),cumddf(2,isr),cumddf(3,isr)
-         write(28,2069)
-         write(28,2074) admst(1,isr),admst(2,isr),admst(3,isr),         &
+         write(luoddb,2069)
+         write(luoddb,2074) admst(1,isr),admst(2,isr),admst(3,isr),     &
      &                  admf(1,isr),admf(2,isr),admf(3,isr)
       tisr = isr
       tday = cd

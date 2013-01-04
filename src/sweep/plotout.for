@@ -29,6 +29,7 @@
 !     + + + PARAMETERS + + +
 !
 !     + + + GLOBAL COMMON BLOCKS + + +
+      include 'file.inc'
 !
 !     + + + LOCAL COMMON BLOCKS + + +
 
@@ -73,32 +74,32 @@
       if(.not.used) then
 
 !       write heading for tsterode.eplt
-        open(UNIT=80,FILE='tsterode.eplt',STATUS='new')
-        write(80,201)
-        write(80,202)
-!        write(80,*)((ycharin(i),i=1,yplot),(xcharin(i),i=1,xplot))
-        write(80,*)  ycharin(1:yplot), xcharin(1:xplot)
-        write(80,*)
-        close(UNIT=80)
+        open(UNIT=luo1,FILE='tsterode.eplt',STATUS='new')
+        write(luo1,201)
+        write(luo1,202)
+!      write(luo1,*)((ycharin(i),i=1,yplot),(xcharin(i),i=1,xplot))
+        write(luo1,*)  ycharin(1:yplot), xcharin(1:xplot)
+        write(luo1,*)
+        close(UNIT=luo1)
       endif
 !
 !     read current tsterode.eplt file to plotdat char. array
-      open(UNIT=80,FILE='tsterode.eplt',STATUS='old')
+      open(UNIT=luo1,FILE='tsterode.eplt',STATUS='old')
       j=0
-   20 read (80, '(a)', end=50) line
+   20 read (luo1, '(a)', end=50) line
       j=j + 1
       plotdat(j) = line
       go to 20
 !
 !     update the tsterode.eplt file
    50 nline=j
-      rewind (UNIT=80)
+      rewind (UNIT=luo1)
       do 55 j=1,nline
-         write(80,'(a)') plotdat(j)
+         write(luo1,'(a)') plotdat(j)
    55 continue
 !     change sign of erosion components (yin) and write variables
-      write (80,200)  (-1)*yin(1:yplot), xin(1:xplot)
-      close (UNIT=80)
+      write (luo1,200)  (-1)*yin(1:yplot), xin(1:xplot)
+      close (UNIT=luo1)
 
       return
       end

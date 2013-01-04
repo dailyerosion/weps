@@ -28,6 +28,8 @@
       include 'manage/man.inc'
       include 'manage/asd.inc'
       include 'manage/oper.inc'
+      include 'file.inc'
+
 ! for debugging
 ! ***      include 's1layr.inc'      
 
@@ -96,8 +98,8 @@
       if (difdat (dd,mm,myear,day,month,year).ne.0) return
 
       if (am0tfl .eq. 1) then
-        write (15,*)
-        write (15,2015) dd,mm,yyyy,year,sr
+        write (luomanage,*)
+        write (luomanage,2015) dd,mm,yyyy,year,sr
       endif
 
 !     pass date of operation to MAIN for output purposes, used by STIR also

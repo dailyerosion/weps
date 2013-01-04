@@ -66,17 +66,9 @@
 !     open erosion output files
 
       if (am0efl.gt.0) then
-          call fopenk (20, rootp(1:len_trim(rootp)) // 'erosion.out',   &
-     &    'unknown')
-          call fopenk (21, rootp(1:len_trim(rootp)) // 'eegt.out',      &
-     &    'unknown')
-!         open temporary file to hold accounting region erosion values
-          call fopenk (40, rootp(1:len_trim(rootp)) // 'eros.tmp',      &
-     &    'unknown')
+          call fopenk (luo_subday, rootp(1:len_trim(rootp)) //          &
+     &                 'subday.out', 'unknown')
       endif
-!      open (unit = 22, file = outp(1:len_trim(outp)) // 'eegtss.out')
-!      open (unit = 23, file = outp(1:len_trim(outp)) // 'eegt10.out')
-!      call fopenk (7,rootp(1:len_trim(rootp)) // 'grid.out','unknown')
 
       if (btest(am0efl,0)) then
        call fopenk (luo_erod, rootp(1:len_trim(rootp)) //               &
@@ -128,7 +120,7 @@
 
       if ((am0hfl .eq. 4).or.(am0hfl .eq. 5)                            &
      &   .or.(am0hfl .eq. 6).or.(am0hfl .eq. 7)) then
-         call fopenk (13, rootp(1:len_trim(rootp)) // 'temp.out',       &
+         call fopenk(luotempsoil,rootp(1:len_trim(rootp)) // 'temp.out',&
      &        'unknown')
       end if
 

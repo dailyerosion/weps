@@ -609,9 +609,9 @@
                   ! write(*,*) "Start calcwu"
                   call calcwu
                   ! write(*,*) "Start erosion"
-                  call erosion (5.0,isr)         
+                  call erosion (5.0)         
                   if (btest(am0efl,0) .or. btest(am0efl,1)) then
-                     call daily_erodout (luo_egrd,luo_erod,isr)
+                     call daily_erodout (luo_egrd,luo_erod)
                   endif
                end if
             end if

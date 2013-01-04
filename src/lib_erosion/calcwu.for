@@ -81,10 +81,7 @@
 !      small = 1e20
 !      large = -1e20
 
-!    if 'real' sub-daily data exixts - read it
-      if( am0efl.gt.0) then
-          open(unit=24, file=rootp(1:len_trim(rootp)) // 'subday.out')
-      endif
+!    if 'real' sub-daily data exists - read it
       inquire (file = subfil, exist = fexist)
       if (fexist) then
          write(*,2005) subfil
@@ -139,7 +136,7 @@
 
   600 call caldatw (day,month,year)
       if( am0efl.gt.0) then
-          write(24,2000) day,month,year,awadir,(awu(i),i=1,ntstep)
+        write(luo_subday,2000) day,month,year,awadir,(awu(i),i=1,ntstep)
       endif
 
       return

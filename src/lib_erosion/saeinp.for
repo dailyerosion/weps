@@ -40,6 +40,7 @@
       include  'm1subr.inc'
       include  'wpath.inc'
       include  'c1gen.inc'
+      include  'file.inc'
 !
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'erosion/e2grid.inc'
@@ -65,13 +66,14 @@
 !
 !     +++ END SPECIFICATIONS +++
 !
-      call fopenk (42,rootp(1:len_trim(rootp)) //'saeros.in','unknown')
+      call fopenk (luo_saeinp,                                          &
+     &     rootp(1:len_trim(rootp)) //'saeros.in','unknown')
       call caldat (am0jd,day,mon,yr)
-      write(42,2101) day, mon, yr
+      write(luo_saeinp,2101) day, mon, yr
  2101 format('# day mon yr',2(1x,i2),2x,i4)
 
 !     print header info
-      write(42,1005)
+      write(luo_saeinp,1005)
  1005 format ('#',65('*'),/,'#      file:  erod.in',/,'#',65('*'),/,    &
      & '#',/,                                                           &
      & '# +++ PURPOSE +++',/,                                           &
@@ -105,40 +107,41 @@
      & '#                value of 3 will do both 1 and 2 input line debu&
      &g output')
 
-      write(42,*) '0'
-      write(42,2000)
+      write(luo_saeinp,*) '0'
+      write(luo_saeinp,2000)
  2000 format(                                                           &
      & '#',/,                                                           &
      & '# +++ INITIALIZATIONS +++',/,                                   &
      & '#',/,                                                           &
      & '#     am0eif, L, (m1flag.inc) EROSION initialization flag')
-      write(42,*) '.TRUE.'
-      write(42,2005)
+      write(luo_saeinp,*) '.TRUE.'
+      write(luo_saeinp,2005)
  2005 format('#    am0efl, L, (m1flag.inc) EROSION "print" flag')
-      write(42,*) '1'
-      write(42,2100)
+      write(luo_saeinp,*) '1'
+      write(luo_saeinp,2100)
  2100 format ('#',/,                                                    &
      &'# +++ SIMULATION REGION +++',/,                                  &
      &'#',/,                                                            &
      &'#     amxsim(x,y), R, (m1geo.inc) Simulation Region coordinates (&
      &m)',/,                                                            &
      &'#              Input x,y coordinates in this form: x1,y1  x2,y2')
-      write(42,*) amxsim(1,1), amxsim(2,1), amxsim(1,2),amxsim(2,2)
-      write(42,2105)
+      write(luo_saeinp,*)                                               &
+     &    amxsim(1,1), amxsim(2,1), amxsim(1,2), amxsim(2,2)
+      write(luo_saeinp,2105)
  2105 format(                                                           &
      &'#',/,                                                            &
      &'#     amxsim(x,y), R, (m1geo.inc) Simulation Region orientation a&
      &ngle',/,                                                          &
      &'#     clockwise with 0=north')
-      write(42,*) amasim
-      write(42,2110)
+      write(luo_saeinp,*) amasim
+      write(luo_saeinp,2110)
  2110 format('#',/,                                                     &
      &'#  +++ ACCOUNTING REGIONS +++',/,                                &
      &'#',/,                                                            &
      &'# nacctr, I, (m1geo.inc) Number of accounting regions (must be 1 &
      &for now)')
-      write(42,*) nacctr
-      write(42,2115)
+      write(luo_saeinp,*) nacctr
+      write(luo_saeinp,2115)
  2115 format('#',/,                                                     &
      &'#     amxar(x,y,a), R, (m1geo.inc) Accounting Region coordinates &
      &(m)',/,                                                           &
@@ -146,16 +149,16 @@
      &x2,y2',/,                                                         &
      &'#                     for each accounting region specified (nacct&
      &r)')
-      write(42,*) amxar(1,1,nacctr), amxar(2,1,nacctr),                 &
+      write(luo_saeinp,*) amxar(1,1,nacctr), amxar(2,1,nacctr),         &
      &            amxar(1,2,nacctr),amxar(2,2,nacctr)
 !       barriers
-      write(42,2120)
+      write(luo_saeinp,2120)
  2120 format ('#',/,                                                    &
      &'# +++ BARRIERS +++',/,                                           &
      &'#',/,                                                            &
      &'#     nbr, I, (m1geo.inc) Number of barriers (0-5) ')
-      write(42,*) nbr
-      write(42,2122)
+      write(luo_saeinp,*) nbr
+      write(luo_saeinp,2122)
  2122 format ('#',/,                                                    &
      &'#     NOTE: Remaining BARRIER inputs are repeated for each barrie&
      &r specified',/,                                                   &
@@ -175,23 +178,24 @@
      &'#')
 
       do 33 b = 1,nbr
-         write(42,2125)
+         write(luo_saeinp,2125)
  2125    format('# amxar(1,1,b), amxar(2,1), amxar(1,2),amxar(2,2)')
-         write(42,*) amxbr(1,1,b),amxbr(2,1,b),amxbr(1,2,b),amxbr(2,2,b)
+         write(luo_saeinp,*)                                            &
+     &   amxbr(1,1,b), amxbr(2,1,b), amxbr(1,2,b), amxbr(2,2,b)
 
-         write (42,2130)
+         write (luo_saeinp,2130)
  2130    format('#, amzbr(b), ampbr(b), amxbrw(b)')
-         write (42,*) amzbr(b), ampbr(b), amxbrw(b)
+         write (luo_saeinp,*) amzbr(b), ampbr(b), amxbrw(b)
    33 continue
 
 !       subregions
-      write(42,2135)
+      write(luo_saeinp,2135)
  2135 format('#',/,                                                     &
      &'# +++ SUBREGIONS +++',/,                                         &
      &'#',/,                                                            &
      &'#     nsubr, I, (m1subr.inc) Number of subregions (1-5)')
-      write(42,*) nsubr
-      write(42,2137)
+      write(luo_saeinp,*) nsubr
+      write(luo_saeinp,2137)
  2137 format('#',/,                                                     &
      &'#     NOTE: Remaining SUBREGION inputs (BIOMASS, SOIL, and HYDROL&
      &OGY,',/,                                                          &
@@ -202,7 +206,7 @@
       ! loop through all subregions
       do sr = 1, nsubr
 
-      write(42,2138)
+      write(luo_saeinp,2138)
  2138 format('#',/,                                                     &
      &'#     subregion polygon, count, xy pairs (subregions_mod)',/,    &
      &'#         polygons can be:',/,                                   &
@@ -210,52 +214,53 @@
      &'#         - closed (last point is same as first point)',/,       &
      &'#         - complex (multiple closed polygons entered as one)')
       ! number of coordinate pairs in polygon
-      write(42,*) subr_poly(sr)%np
-      ! teh coordinate pairs
+      write(luo_saeinp,*) subr_poly(sr)%np
+      ! the coordinate pairs
       do ip = 1, subr_poly(sr)%np
-       write(42,*) subr_poly(sr)%points(ip)%x,subr_poly(sr)%points(ip)%y
+        write(luo_saeinp,*)                                             &
+     &  subr_poly(sr)%points(ip)%x,subr_poly(sr)%points(ip)%y
       end do
 
-      write(42,2140)
+      write(luo_saeinp,2140)
  2140 format('#',/,                                                     &
      &'#     +++ BIOMASS +++',/,                                        &
      &'#',/,                                                            &
      &'#      adzht_ave(s), R, (d1glob.inc) Average residue height (m)')
-      write(42,*) adzht_ave(sr)
+      write(luo_saeinp,*) adzht_ave(sr)
 ! Changed above to use "average residue height" instead of "overall height" - LEW 1/26/06
 !     &'#       abzht(s), R, (b1glob.inc) Overall biomass height (m)')
-!      write(42,*) abzht(sr)
+!      write(luo_saeinp,*) abzht(sr)
 
-      write(42,2146)
+      write(luo_saeinp,2146)
  2146 format('#',/,                                                     &
      &'#       aczht(s), R, (c1glob.inc) Crop height (m)')
-      write(42,*) aczht(sr)
+      write(luo_saeinp,*) aczht(sr)
 
-      write(42,2147)
+      write(luo_saeinp,2147)
  2147 format('#',/,                                                     &
      &'#       acrsai(s), R, (c1glob.inc) Crop stem area index (m^2/m^2)&
      &',/,                                                              &
      &'#       acrlai(s), R, (c1glob.inc) Crop leaf area index (m^2/m^2)&
      &')
-      write(42,*) acrsai(sr), acrlai(sr)
+      write(luo_saeinp,*) acrsai(sr), acrlai(sr)
 
-      write(42,2148)
+      write(luo_saeinp,2148)
  2148 format('#',/,                                                     &
      &'#       adrsaitot(s), R, (d1glob.inc) Residue stem area index (m^&
      &2/m^2)',/,                                                        &
      &'#       adrlaitot(s), R, (d1glob.inc) Residue leaf area index (m^&
      &2/m^2)')
-      write(42,*) adrsaitot(sr), adrlaitot(sr)
+      write(luo_saeinp,*) adrsaitot(sr), adrlaitot(sr)
 
-      write(42,2149)
+      write(luo_saeinp,2149)
  2149 format('#',/,                                                     &
      &'#       acxrow(s) Crop row spacing (m)'                          &
      &,/,                                                               &
      &'#       ac0rg(s)  Crop seed placement (0 - furrow, 1 - ridge)'   &
      &)
-      write(42,*) acxrow(sr), ac0rg(sr)
+      write(luo_saeinp,*) acxrow(sr), ac0rg(sr)
 
-      write(42,2150)
+      write(luo_saeinp,2150)
  2150 format('#',/,                                                     &
      &'# These are not implemented within EROSION',/,                   &
      &'#       abrsaz(h,s), R, (b1geom.inc) Biomass stem area index by h&
@@ -274,79 +279,79 @@
      &,/,                                                               &
      &'#             (should be 3 values here when abffcv(s) and abfscv(&
      &s) are used)')
-      write(42,*) abffcv(sr)
+      write(luo_saeinp,*) abffcv(sr)
 
 !      soil
-      write(42,2160)
+      write(luo_saeinp,2160)
  2160 format('#',/,                                                     &
      &'#     +++ SOIL +++',/,                                           &
      &'#',/,                                                            &
      &'#     nslay(s), I, (s1layr.inc) Number of soil layers (3-10)')
 
-      write(42,*) nslay(sr)
+      write(luo_saeinp,*) nslay(sr)
 
-      write(42,2165)
+      write(luo_saeinp,2165)
  2165 format('#',/,                                                     &
      &'#     NOTE: Remaining SOIL inputs are repeated for each layer spe&
      &cified',/,                                                        &
      &'#',/,                                                            &
      &'#     aszlyt(l,s), R, (s1layr.inc) Soil layer thickness (mm)')
-      write(42,*) (aszlyt(l,sr), l=1,nslay(sr))
-      write(42,2170)
+      write(luo_saeinp,*) (aszlyt(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2170)
  2170 format('#',/,                                                     &
      &'#     asdblk(l,s), R, (s1phys.inc) Soil layer bulk density (Mg/m^&
      &3')
-      write(42,*) (asdblk(l,sr), l=1,nslay(sr))
-      write(42,2175)
+      write(luo_saeinp,*) (asdblk(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2175)
  2175 format('#',/,                                                     &
      &'#     asfsan(l,s),R,(s1dbh.inc) Soil layer sand content (Mg/Mg)')
-      write(42,*) (asfsan(l,sr), l=1,nslay(sr))
-      write(42,2177)
+      write(luo_saeinp,*) (asfsan(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2177)
  2177 format('#',/,                                                     &
      &'#     asfvfs(l,s), R, (s1dbh.inc) Soil layer very fine sand (Mg/M&
      &g)')
-      write(42,*) (asfvfs(l,sr), l=1,nslay(sr))
-      write(42,2180)
+      write(luo_saeinp,*) (asfvfs(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2180)
  2180 format('#',/,                                                     &
      &'#     asfsil(l,s),R,(s1dbh.inc) Soil layer silt content (Mg/Mg)')
-      write(42,*) (asfsil(l,sr), l=1,nslay(sr))
-      write(42,2185)
+      write(luo_saeinp,*) (asfsil(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2185)
  2185 format('#',/,                                                     &
      &'#     asfcla(l,s),R,(s1dbh.inc) Soil layer clay content (Mg/Mg)')
-      write(42,*) (asfcla(l,sr), l=1,nslay(sr))
-      write(42,2190)
+      write(luo_saeinp,*) (asfcla(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2190)
  2190 format('#',/,                                                     &
      &'#     asvroc(l,s), R, (s1dbh.inc) Soil layer rock volume (m^3/m^3&
      &)')
-      write(42,*) (asvroc(l,sr), l=1,nslay(sr))
-      write(42,2195)
+      write(luo_saeinp,*) (asvroc(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2195)
  2195 format('#',/,                                                     &
      &'#     asdagd(l,s),R,(s1agg.inc) Soil layer agg density (Mg/m^3)')
-      write(42,*) (asdagd(l,sr), l=1,nslay(sr))
-      write(42,2200)
+      write(luo_saeinp,*) (asdagd(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2200)
  2200 format('#',/,                                                     &
      &'#     aseags(l,s), R, (s1agg.inc) Soil layer agg stability ln(J/k&
      &g)')
-      write(42,*) (aseags(l,sr), l=1,nslay(sr))
-      write(42,2205)
+      write(luo_saeinp,*) (aseags(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2205)
  2205 format('#',/,                                                     &
      &'#     aslagm(l,s), R, (s1agg.inc) Soil layer GMD (mm)')
-      write(42,*) (aslagm(l,sr), l=1,nslay(sr))
-      write(42,2210)
+      write(luo_saeinp,*) (aslagm(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2210)
  2210 format('#',/,                                                     &
      &'#     aslagn(l,s), R, (s1agg.inc) Soil layer minimum agg size (mm&
      &)')
-      write(42,*) (aslagn(l,sr), l=1,nslay(sr))
-      write(42,2215)
+      write(luo_saeinp,*) (aslagn(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2215)
  2215 format('#',/,                                                     &
      &'#     aslagx(l,s), R, (s1agg.inc) Soil layer maximum agg size (mm&
      &)')
-      write(42,*) (aslagx(l,sr), l=1,nslay(sr))
-      write(42,2220)
+      write(luo_saeinp,*) (aslagx(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2220)
  2220 format('#',/,                                                     &
      &'#     as0ags(l,s), R, (s1agg.inc) Soil layer GSD (mm/mm)')
-      write(42,*) (as0ags(l,sr), l=1,nslay(sr))
-      write(42,2225)
+      write(luo_saeinp,*) (as0ags(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2225)
  2225 format('#',/,                                                     &
      &'#     asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)'&
      &,/,                                                               &
@@ -357,41 +362,41 @@
      &(kg/m^2)',/,                                                      &
      &'#     asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)',/,  &
      &'#     asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)')
-      write(42,*) asfcr(sr), aszcr(sr), asflos(sr), asmlos(sr),         &
+      write(luo_saeinp,*) asfcr(sr), aszcr(sr), asflos(sr), asmlos(sr), &
      &            asdcr(sr), asecr(sr)
-      write(42,2230)
+      write(luo_saeinp,2230)
  2230 format('#',/,                                                     &
      &'#     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)')
-      write(42,*) aslrr(sr)
-      write(42,2235)
+      write(luo_saeinp,*) aslrr(sr)
+      write(luo_saeinp,2235)
  2235 format('#',/,                                                     &
      &'#     aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)',/,           &
      &'#     asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)',/,          &
      &'#     asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)',/,            &
      &'#     asargo(s), R, (s1sgeo.inc) Ridge orientation (deg)')
-      write(42,*) aszrgh(sr), asxrgs(sr), asxrgw(sr), asargo(sr)
-      write(42,2240)
+      write(luo_saeinp,*) aszrgh(sr), asxrgs(sr), asxrgw(sr), asargo(sr)
+      write(luo_saeinp,2240)
  2240 format('#',/,                                                     &
      &'#     asxdks(s), R, (s1sgeo.inc) Dike spacing (mm)')
-      write(42,*) asxdks(sr)
-      write(42,2245)
+      write(luo_saeinp,*) asxdks(sr)
+      write(luo_saeinp,2245)
 !      hydrology
  2245 format('#',/,                                                     &
      &'#     +++ HYDROLOGY +++',/,                                      &
      &'#',/,                                                            &
      &'#     ahzsnd(s), R, (s1sgeo.inc) Snow depth (mm)')
-      write(42,*) ahzsnd(sr)
-      write(42,2250)
+      write(luo_saeinp,*) ahzsnd(sr)
+      write(luo_saeinp,2250)
  2250 format('#',/,                                                     &
      &'#     ahrwcw(l,s), R, (h1db1.inc) Soil layer wilting point water &
      &content (Mg/Mg)')
-      write(42,*) (ahrwcw(l,sr), l=1,nslay(sr))
-      write(42,2255)
+      write(luo_saeinp,*) (ahrwcw(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2255)
  2255 format('#',/,                                                     &
      &'#     ahrwca(l,s), R, (h1db1.inc) Soil layer water content (Mg/Mg&
      &)')
-      write(42,*) (ahrwca(l,sr), l=1,nslay(sr))
-      write(42,2260)
+      write(luo_saeinp,*) (ahrwca(l,sr), l=1,nslay(sr))
+      write(luo_saeinp,2260)
  2260 format('#',/,                                                     &
      &'#     ahrwc0(h,s), R, (h1db1.inc) Surface layer water content (Mg&
      &/Mg)',/,                                                          &
@@ -401,46 +406,46 @@
      & content',/,                                                      &
      &'#                        on two lines, with 12 values in each lin&
      &e.')
-      write(42,22) (ahrwc0(l,sr), l=1,12)
+      write(luo_saeinp,22) (ahrwc0(l,sr), l=1,12)
  22   format(12(1x,f10.7))
-      write(42,22) (ahrwc0(l,sr), l=13,24)
+      write(luo_saeinp,22) (ahrwc0(l,sr), l=13,24)
 
       ! end of subregion loop
       end do
 
 !      weather
-      write(42,2270)
+      write(luo_saeinp,2270)
  2270 format('#',/,                                                     &
      &'# NOTE: This is the end of the SUBREGION variables',/,           &
      &'#',/,                                                            &
      &'#     +++ WEATHER +++',/,                                        &
      &'#',/,                                                            &
      &'#     awdair, R, (w1pavg.inc) Air density (kg/m^3)')
-      write(42,*) awdair
-      write(42,2275)
+      write(luo_saeinp,*) awdair
+      write(luo_saeinp,2275)
  2275 format('#',/,                                                     &
      &'#     awadir, R, (w1wind.inc) Wind direction (deg)')
-      write(42,*) awadir
-      write(42,2280)
+      write(luo_saeinp,*) awadir
+      write(luo_saeinp,2280)
  2280 format('#',/,                                                     &
      &'#     ntstep, I, (local variable) Number of intervals/day to run &
      &EROSION')
-      write(42,*) ntstep
-      write(42,2285)
+      write(luo_saeinp,*) ntstep
+      write(luo_saeinp,2285)
  2285 format('#',/,                                                     &
      &'#     anemht, R  anemometer height (m)',/,                       &
      &'#     awzzo,  R  aerodynamic roughness at anemometer site (mm)', &
      &/,'#     wzoflg, I (global variable) zo location flag',/,         &
      &'#               (flag =0 - zo fixed at wx sta. location)',/,     &
      &'#               (flag = 1 - zo variable at field location)')
-      write(42,*) anemht, awzzo, wzoflg
-      write(42,2290)
+      write(luo_saeinp,*) anemht, awzzo, wzoflg
+      write(luo_saeinp,2290)
  2290 format('#',/,                                                     &
      &'#     wflg, I, (local variable) Wind/Weibull flag',/,            &
      &'#              (0 - read in Weibull parameters, 1 - read in wind &
      &speeds)')
-      write(42,*) '1'
-      write(42,2295)
+      write(luo_saeinp,*) '1'
+      write(luo_saeinp,2295)
  2295 format('#',/,                                                     &
      &'# NOTE: This is only present when the above (wflg=0)',/,         &
      &'#     wfcalm, R, (local variable) Fraction of time winds are calm&
@@ -458,11 +463,11 @@
      &s',/,                                                             &
      &'# We will try and see - LEW  Must use 6 values per line LH.',/,  &
      &'#')
-      write(42,*) (awu(k), k=1,6)
-      write(42,*) (awu(k), k=7,12)
-      write(42,*) (awu(k), k=13,18)
-      write(42,*) (awu(k), k=19,24)
-      write(42,2300)
+      write(luo_saeinp,*) (awu(k), k=1,6)
+      write(luo_saeinp,*) (awu(k), k=7,12)
+      write(luo_saeinp,*) (awu(k), k=13,18)
+      write(luo_saeinp,*) (awu(k), k=19,24)
+      write(luo_saeinp,2300)
  2300 format('#',/,                                                     &
      &     '#    + + + DATA TO PLOT + + +',/,                           &
      &     '#',/,                                                       &
@@ -472,7 +477,7 @@
      &     '#',/,                                                       &
      &     '#   initial xplot value,I, (-1=no plot, 0 = plot indep.varia&
      &bles with 1 flag)')
-      write(42,*) '-1'
+      write(luo_saeinp,*) '-1'
 
       close(42)
 

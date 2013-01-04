@@ -40,6 +40,7 @@
       include 'w1wind.inc'
       include 'w1clig.inc'
       include 'timer.inc'
+      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS      
 
@@ -91,9 +92,8 @@ C read in parameters
       read(*,*) sinfil
       write(*,*) 'Enter cli_gen file name '
       read(*,*) clifil
-      call fopenk (21, clifil, 'old')
-      call fopenk(25, 'h1.out', 'unknown')
-      call fopenk(26, 'h2.out', 'unknown')
+      call fopenk (luicli, clifil, 'old')
+      call fopenk(luo1, 'h1.out', 'unknown')
 
 ! read in the ifc file        
 
@@ -120,17 +120,17 @@ C read in parameters
 ! actually call hydro, printing out variables as we go
 
       daysim = 0
-      write(25,1001) daysim, (ahrwca(idx,isr), idx=1,10)
-      write(25,1004) daysim, (ahrwc(idx,isr), idx=1,10)
-      write(25,1002) daysim, (ahrwcf(idx,isr), idx=1,10)
-      write(25,1003) daysim, (ahrwcw(idx,isr), idx=1,10)
-      write(25,1007) daysim, (ahrwcs(idx,isr), idx=1,10)
+      write(luo1,1001) daysim, (ahrwca(idx,isr), idx=1,10)
+      write(luo1,1004) daysim, (ahrwc(idx,isr), idx=1,10)
+      write(luo1,1002) daysim, (ahrwcf(idx,isr), idx=1,10)
+      write(luo1,1003) daysim, (ahrwcw(idx,isr), idx=1,10)
+      write(luo1,1007) daysim, (ahrwcs(idx,isr), idx=1,10)
 
-      write(25,1005) 
+      write(luo1,1005) 
  1005 format('      awzdpt  ',                                          &
      &  '   ahrwc     ahrwc     ahrwc     ahrwc  ')
       write(*,*) ' ah0cnp, ah0cng ', ah0cnp(isr), ah0cng(isr)
-      write(25,1006) 0, 0.0, (ahrwc(idx,isr), idx=1,7)
+      write(luo1,1006) 0, 0.0, (ahrwc(idx,isr), idx=1,7)
       do 10 daysim=(1+365*2000),mxdasm+365*2000
         awzdpt=0.0
         call caldat (daysim, cd, cm, cy)
@@ -156,18 +156,18 @@ C read in parameters
 
       temp =  sum(ahrwc0(1:24,isr))/(24 *  asdblk(1,isr))
 
-      write(25,1006) daysim, awzdpt, temp, (ahrwc(idx,isr), idx=1,7)
+      write(luo1,1006) daysim, awzdpt, temp, (ahrwc(idx,isr), idx=1,7)
 1006  format(i8, 9f10.4) 
    10 continue
-      write(25,1002) daysim, (ahrwcf(idx,isr), idx=1,10)
-      write(25,1001) daysim, (ahrwca(idx,isr), idx=1,10)
+      write(luo1,1002) daysim, (ahrwcf(idx,isr), idx=1,10)
+      write(luo1,1001) daysim, (ahrwca(idx,isr), idx=1,10)
 1001  format(i4, ' ahrwca ', 10f8.4) 
 1004  format(i4, ' ahrwc  ', 10f8.4) 
 1002  format(i4, ' ahrwcf ', 10f8.4) 
-      write(25,1003) daysim, (ahrwcw(idx,isr), idx=1,10)
+      write(luo1,1003) daysim, (ahrwcw(idx,isr), idx=1,10)
 1003  format(i4, ' ahrwcw ', 10f8.4) 
-      write(25,1007) daysim, (ahrwcs(idx,isr), idx=1,10)
+      write(luo1,1007) daysim, (ahrwcs(idx,isr), idx=1,10)
 1007  format(i4, ' ahrwcs ', 10f8.4) 
  
-      close (25)
+      close (luo1)
       end
