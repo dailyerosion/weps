@@ -2,40 +2,40 @@ Version: 1.40
 *START 5
 N Calibrated from run [Alfalfa 3yr-Potato-WWheat, circle irr CMZ 49.wjr] on:
 N Tue Dec 04 20:39:27 CST 2007
-N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac	100 bu/ac	1 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.225
-N 20/04/05	Potato, late, harvest	600 cwt/ac	1 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.225
+N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac	100 bu/ac	1 -->  1.225
+N 20/04/05	Potato, late, harvest	600 cwt/ac	1 -->  1.225
 N Calibrated from run [Alfalfa 3yr-Potato-WWheat, circle irr CMZ 49 Cal new.wjr] on:
 N Tue Dec 04 16:11:41 CST 2007
-N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac	100 bu/ac	1.037 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.193
-N 20/04/05	Potato, late, harvest	600 cwt/ac	1.225 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.225
+N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac	100 bu/ac	1.037 -->  1.193
+N 20/04/05	Potato, late, harvest	600 cwt/ac	1.225 -->  1.225
 N Calibrated from run [Alfalfa 3yr-Potato-WWheat, circle irr CMZ 49 new_2.wjr] on:
 N Tue Dec 04 16:05:27 CST 2007
-N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac	80 bu/ac	1 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.037
-N 20/04/05	Potato, late, harvest	600 cwt/ac	1.0 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.225
+N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac	80 bu/ac	1 -->  1.037
+N 20/04/05	Potato, late, harvest	600 cwt/ac	1.0 -->  1.225
 N Calibrated from run [Alfalfa 3yr-Potato-WWheat, circle irr CMZ 49_4.wjr] on:
 N Thu Oct 18 13:34:15 CDT 2007
-N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac	100 bu/ac	1 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.600
-N 20/04/05	Potato, high yield	600 cwt/ac	1.0 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.300
+N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac	100 bu/ac	1 -->  1.600
+N 20/04/05	Potato, high yield	600 cwt/ac	1.0 -->  1.300
 N Calibrated from run [Alfalfa 3yr-Potato-WWheat, circle irr CMZ 49 cal.wjr] on:
 N Thu Oct 18 08:21:26 CDT 2007
-N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac.	100 bu/ac	1 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.600
-N 20/04/05	Potato, high yield	600 cwt/ac	1.0 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.300
+N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac.	100 bu/ac	1 -->  1.600
+N 20/04/05	Potato, high yield	600 cwt/ac	1.0 -->  1.300
 N Calibrated from run [Alfalfa 3yr-Potato-WWheat, circle irr CMZ 49.wjr] on:
 N Wed Sep 26 14:37:15 CDT 2007
-N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac.	100 bu/ac	1 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.600
-N 20/04/05	Potato, high yield	600 cwt/ac	1 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.300
+N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac.	100 bu/ac	1 -->  1.600
+N 20/04/05	Potato, high yield	600 cwt/ac	1 -->  1.300
 N Calibrated from run [Alfalfa 3yr-Potato-WWheat, circle irr CMZ 49.wjr] on:
 N Wed Sep 26 10:30:48 CDT 2007
-N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac.	100 bu/ac	1 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.600
-N 20/04/05	Potato, high yield	600 cwt/ac	1 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.300
+N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac.	100 bu/ac	1 -->  1.600
+N 20/04/05	Potato, high yield	600 cwt/ac	1 -->  1.300
 N Calibrated from run [Alfalfa 3yr-Potato-WWheat, circle irr CMZ 49 grant FS cal.wjr] on:
 N Wed Sep 26 08:29:39 CDT 2007
-N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac.	100 bu/ac	1.150 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.667
-N 20/04/05	Potato, high yield	600 cwt/ac	1 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.375
+N 01/10/05	Wheat, winter, CMZ 50 hi ppt 7-10in spac.	100 bu/ac	1.150 -->  1.667
+N 20/04/05	Potato, high yield	600 cwt/ac	1 -->  1.375
 N Calibrated from run [Alfalfa 3yr-Potato-WWheat, circle irr test CMZ 49 cal 40.wjr] on:
 N Tue Sep 25 15:52:02 CDT 2007
-N 01/10/03	Wheat, winter, CMZ 50 hi ppt 7-10in spac.	100 bu/ac	1 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.150
-N 20/04/03	Potato, high yield	600 cwt/ac	1.0 --&amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;amp;gt;  1.300
+N 01/10/03	Wheat, winter, CMZ 50 hi ppt 7-10in spac.	100 bu/ac	1 -->  1.150
+N 20/04/03	Potato, high yield	600 cwt/ac	1.0 -->  1.300
 N Originating Program: RUSLE2
 N Skel Format Version: 1.1
 N This management file was originally converted from the NRCS standard XML format on - Tue Sep 25 10:13:17 CDT 2007
@@ -288,11 +288,11 @@ T
 T 2.15 mg/cm^2 = 100 / 2.15 m^2/kg = 46.5 m^2/kg, 100 / 2.72 = 36.8, 100 / 4.3 = 23.3
 T
 T M. H. Hall, C. J. Nelson, J. H. Coutts and R. C. Stout. 2004. Effect of Seeding Rate on Alfalfa Stand Longevity. Agron. J. 96:717-722
-T Stem densities for the MO94 study (data not presented) were not different among seeding rates at any sampling time. There were 623 stems m–2 13 MAP
-T and only 350 stems m–2 by 25 MAP. Stem density remained nearly constant at that level through 49 MAP. During the same time period, plant density
-T declined from an average of 100 down to 25 plants m–2. This means that there was a fourfold increase in stems per plant from 25 to 49 MAP during
-T the same time period. Thereafter, stem density continued to decline to 290 and 260 stems m–2 at 63 and 73 MAP, respectively, while plant density fell
-T below 15 plants m–2 during the same time period. Crowns develop stems in response to light (Cowett and Sprague, 1962) and apparently could not
+T Stem densities for the MO94 study (data not presented) were not different among seeding rates at any sampling time. There were 623 stems m^2 13 MAP
+T and only 350 stems m^2 by 25 MAP. Stem density remained nearly constant at that level through 49 MAP. During the same time period, plant density
+T declined from an average of 100 down to 25 plants m^2. This means that there was a fourfold increase in stems per plant from 25 to 49 MAP during
+T the same time period. Thereafter, stem density continued to decline to 290 and 260 stems m^2 at 63 and 73 MAP, respectively, while plant density fell
+T below 15 plants m^2 during the same time period. Crowns develop stems in response to light (Cowett and Sprague, 1962) and apparently could not
 T continue to maintain high stem density with the thin stand and older plants.
 T
 T data as shown above.

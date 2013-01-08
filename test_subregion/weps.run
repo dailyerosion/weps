@@ -45,7 +45,7 @@ none
 #   RFD-OutputPeriod
 2
 #   RFD-SubmodelOutput
-0 1 1 1 1 1
+1 1 1 1 1 1
 #   RFD-DebugOutput
 0 0 0 0 0 0
 #
@@ -103,9 +103,9 @@ WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
 #   RFD-SoilRockFragments
 0.0
 #   RFD-SoilFile
-Anders_1_90_SIL.ifc
+Anders_AKC_45_ST_SIL.ifc
 #   RFD-ManageFile
-WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
+Alfalfa, fall seed, 3yr-Potato-WWheat, circle irr CMZ49.man
 #   RFD-WaterErosionLoss
 0.0000
 #
@@ -124,9 +124,9 @@ WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
 #   RFD-SoilRockFragments
 0.0
 #   RFD-SoilFile
-Anders_1_90_SIL.ifc
+Norfolk_NoA_90_LS.ifc
 #   RFD-ManageFile
-WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
+Wheat,winter,after fallow,conv.,CMZ50.man
 #   RFD-WaterErosionLoss
 0.0000
 #
@@ -147,7 +147,7 @@ WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
 #   RFD-SoilFile
 Anders_1_90_SIL.ifc
 #   RFD-ManageFile
-WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
+Canola, fall; Fallow_ Wheat, winter; Fallow; mulch till, Z50.man
 #   RFD-WaterErosionLoss
 0.0000
 #
