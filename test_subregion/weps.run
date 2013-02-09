@@ -7,7 +7,7 @@
 #   RFD-UserName
 Excercise 5
 #   RFD-FarmId RFD-TractId RFD-FieldId RFD-runtypedisp RFD-RotationYears RFD-CycleCount
- |  |  | cycle | 1 | 10
+ |  |  | cycle | 1 | 3
 #   RFD-Site
 FIPS:US-WA-021
 #
@@ -27,7 +27,7 @@ choice|windgen|+46.267;-119.117|727845|US|WA|PASCO/TRI-CITIES
 #   RFD-StartDate(day month year)
 01 01 0001
 #   RFD-EndDate(day month year)
-31 12 0200
+31 12 0840
 #   RFD-TimeSteps(per day)
 24
 # --RUN FILE FILENAMES (INPUT)
