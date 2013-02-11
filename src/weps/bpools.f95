@@ -108,8 +108,7 @@
 
 ! tf=temperature factor, wf=water factor, dd=decomposition day
    
-2222     format (' ',i6,' ',i3,' ',i4,' ',3f7.1,f7.3,f7.2,4f7.3,17f7.4, &
-     &           24f7.4,4f7.1,3f7.2)  !added by Simon
+2222     format (' ',i6,' ',i3,' ',i4,' ', 3f7.1, f7.3, f7.2, 4f7.3, 17(1x,f8.4), 21f7.4, 4(1x,f7.2), 4(1x,f7.3), f8.4)  !added by Simon
 
 !     &    acffcv(isr), acfscv(isr), acftcv(isr),
 !     &    accovfact(isr), acrsai(isr), acrlai(isr),
