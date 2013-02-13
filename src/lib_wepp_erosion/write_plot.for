@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
  
 
       subroutine write_plotfile(plotfile,stdist,ydist,dstot,count)

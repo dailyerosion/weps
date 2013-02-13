@@ -35,6 +35,7 @@
       include 'm1geo.inc'
       include 'm1flag.inc'
       include 'm1dbug.inc'
+      include 'command.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
@@ -61,6 +62,10 @@
 !     Moving this call into weps.for so that the IFC file can be re-read and re-initialized
 !     for calibration run purposes.
       call input_ifc  ! Put back in for now
+
+!     If this is a simulation that does water erosion read any extra WEPP
+!     input data.
+      if (run_erosion.gt.1) call inpwepp
 
       return
       end

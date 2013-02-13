@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       function sedia(spg,eqfall)
       implicit none
 !*******************************************************************

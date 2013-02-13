@@ -30,6 +30,7 @@
       integer soil_cond
       integer resurf_roots
       integer calc_confidence
+      real    frac_frst_mass_lost
       integer transpiration_depth
 
       common /command_args/ wc_type, ifc_format, report_debug,          &
@@ -38,7 +39,7 @@
      & layer_scale, layer_infla, layer_weighting, puddle_warm,          &
      & winter_ann_root, wind_max_value, wepp_hydro, soil_cond,          &
      & calibrate_rotcycles, resurf_roots, calc_confidence,              &
-     & transpiration_depth
+     & frac_frst_mass_lost, transpiration_depth
 
       save :: /command_args/
 
@@ -143,5 +144,8 @@
 !                 layer in the soil to which the roots can reach for water.
 !                 Transpiration depth will be deeper than the crop root depth.
                 
+!     frac_frst_mass_lost - fraction of leaf mass that is frozen that disappears
+
+
 !     Default values are set in "cmdline.for"
 !     ------------------------------------------------------------------

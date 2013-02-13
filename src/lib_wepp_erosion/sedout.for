@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine sedout(sumfile,irdgdx,dslost,avsole,                   &
      &    npart,frac,                                                   &
      &    dia,spg,slplen,fwidth,avgslp,                                 &

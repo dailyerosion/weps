@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 
 
       subroutine  write_event(luowepperod,cd, cm, cy, precp,runoff,     &

@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       real function depc(xu,a,b,phi,theta,du,ktrato,qostar)
       implicit none
 !

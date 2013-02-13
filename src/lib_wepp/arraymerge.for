@@ -29,7 +29,7 @@
 
 !     + + + PARAMETERS + + +
       integer mxtime
-      parameter (mxtime = 1000)
+      parameter (mxtime = 1500)
 
 !     + + + PARAMETER DEFINITIONS + + +
 
@@ -170,7 +170,7 @@
       nf = idx - 1
       if( nf .lt. 3 ) then
          do jdx = 1, nf
-            rr(nf) = 0.0
+            rr(jdx) = 0.0
          end do
       else
          rr(nf) = rr(nf-1) + r(nf-1) * (tr(nf)-tr(nf-1))

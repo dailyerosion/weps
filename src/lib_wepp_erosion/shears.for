@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine shears(q,sslope,rspace,width,frcsol,frctrl,shearq,     &
      &  rwflag)
       implicit none

@@ -56,7 +56,7 @@
      &            asfsan(1,isr), asfsil(1,isr), asfcla(1,isr),          &
      &            asvroc(1,isr), asfom(1,isr), asfcec(1,isr),           &
      &            ahtsav(1,isr), abdstm(isr), abffcv(isr),              &
-     &            asxrgs(isr), aszrgh(isr),                             &
+     &            asxrgs(isr), aszrgh(isr), asfcr(isr),                 &
      &            aslrro(isr), aslrr(isr), amzele,                      &
      &            ah0cng(isr), ah0cnp(isr), ahzper(isr),                &
      &       ahzirr(isr), ahzdmaxirr(isr), ahratirr(isr), ahdurirr(isr),&

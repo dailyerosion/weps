@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       SUBROUTINE PSIS(TIME, UU, TSTAR, T, S, SI, OSINT, NS, A2, II,     &
      &                M, PSI, DPSI)
      

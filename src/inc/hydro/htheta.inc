@@ -44,11 +44,9 @@
 !                    conductivity model
 !      real cm(mnsz)
 !-----------------------------------------------------------------------
-!                    cumulative kinetic energy since last tillage (J/m2)
-       real rkecum
 
       common /stheta/ theta, thetadmx, thetas, thetaf, thetaw,          &
 !     &       thetes, thetar, wc, swc, swci, lswc, swm, potm, cm
-     &       thetes, thetar, swc, swci, rkecum
+     &       thetes, thetar, swc, swci
 
       save :: /stheta/

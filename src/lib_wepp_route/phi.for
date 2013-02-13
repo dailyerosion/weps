@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       SUBROUTINE PHI_SUB(TIME, TSTAR, SI, NS, II, M, A2, S, T, OPHI)
       
       use wepp_interface_defs

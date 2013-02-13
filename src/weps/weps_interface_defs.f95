@@ -774,7 +774,7 @@
      &                   bsfsan, bsfsil, bsfcla,                        &
      &                   bsvroc, bsfom, bsfcec,                         &
      &                   bhtsav, bbdstm, bbffcv,                        &
-     &                   bsxrgs, bszrgh,                                &
+     &                   bsxrgs, bszrgh, bsfcr,                         &
      &                   bslrro, bslrr, bmzele,                         &
      &                   bh0cng, bh0cnp, bhzper,                        &
      &                   bhzirr, bhzdmaxirr, bhratirr, bhdurirr,        &
@@ -811,7 +811,7 @@
       real bsfsan(*), bsfsil(*), bsfcla(*)
       real bsvroc(*), bsfom(*), bsfcec(*)
       real bhtsav(*), bbdstm, bbffcv
-      real bsxrgs, bszrgh
+      real bsxrgs, bszrgh, bsfcr
       real bslrro, bslrr, bmzele
       real bh0cng, bh0cnp, bhzper
       real bhzirr, bhzdmaxirr, bhratirr, bhdurirr
@@ -2115,24 +2115,28 @@
      &                   dprecip, bwdurpt, bwpeaktpt, bwpeakipt,        &
      &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
      &                   bhzsno, bslrr, bmrslp, bsfsan, bsfcla,         &
-     &                   bsvroc, bsdblk, bsfcec,                        &
+     &                   bsfcr, bsvroc, bsdblk, bsfcec,                 &
      &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
      &                   bhzep, theta, thetadmx, bhrwc0,                &
      &                   bhzea, bhzper, bhzrun, bhzinf, bhzwid,         &
-     &                   rkecum )
+     &                   slen, cd, cm, cy, luowepphdrive,               &
+     &                   wepp_hydro,init_loop,calib_loop,bhfice)
       integer, intent(in) :: layrsn
       real, intent(in) :: thetas(*), thetes(*), thetaf(*), thetaw(*)
       real, intent(in) :: bszlyt(*), bszlyd(*), satcond(*)
       real, intent(in) :: dprecip, bwdurpt, bwpeaktpt, bwpeakipt
       real, intent(in) :: dirrig, bhdurirr, bhlocirr, bhzoutflow
       real, intent(in) :: bhzsno, bslrr, bmrslp, bsfsan(*), bsfcla(*)
-      real, intent(in) :: bsvroc(*), bsdblk(*), bsfcec(*)
+      real, intent(in) :: bsfcr, bsvroc(*), bsdblk(*), bsfcec(*)
       real, intent(in) :: bbffcv, bbfcancov, bbzht
       integer, intent(in) :: bcdayap
       real, intent(in) :: bhzep
       real, intent(inout) :: theta(0:*), thetadmx(*), bhrwc0(*)
       real, intent(inout) :: bhzea, bhzper, bhzrun, bhzinf, bhzwid
-      real, intent(inout) :: rkecum
+      logical, intent(in) :: init_loop,calib_loop
+      integer, intent(in) :: cd, cm, cy, luowepphdrive, wepp_hydro
+      real, intent(inout) :: slen
+      real, intent(in) :: bhfice(*)
       end subroutine waterbal
 !-----------------------
       subroutine arraymerge( nr, dt, trf, rf, irrig, durirr,            &
@@ -2165,28 +2169,33 @@
 !-----------------------
       SUBROUTINE grna( NF, DEPSTO, TR, R, RR, KS, SM,                   &
      &     NS, TF, RCUM, F, FF, RE, RECUM, TP,                          &
-     &     RPRINT, DDEPSTO, RUNOFF, DUREXR, EFFINT, EFFDRR )
+     &     RPRINT, DDEPSTO, RUNOFF, DUREXR, EFFINT, EFFDRR, IT )
+      INTEGER MXTIME, MXPOND
+      PARAMETER (MXTIME = 1500, MXPOND = 1000)
       INTEGER, intent(in) :: NF
-      REAL, intent(in) :: DEPSTO, TR(*), R(*), RR(*), KS, SM
+      REAL, intent(in) :: DEPSTO, TR(MXTIME), R(MXTIME), RR(MXTIME),    &
+     &     KS, SM
       INTEGER, intent(inout) :: NS
-      REAL, intent(inout) :: TF(*), RCUM(*),                            &
-     &     F(*), FF(*), RE(*), RECUM(*), TP(*),                         &
-     &     RPRINT(*), DDEPSTO(*),                                       &
+      REAL, intent(inout) :: TF(MXTIME), RCUM(MXTIME),                  &
+     &     F(MXTIME), FF(MXTIME), RE(MXTIME), RECUM(MXTIME), TP(MXPOND),&
+     &     RPRINT(MXTIME), DDEPSTO(MXTIME),                             &
      &     RUNOFF, DUREXR, EFFINT, EFFDRR
+      INTEGER, intent(out) :: IT
       end SUBROUTINE grna
 !-----------------------
-      subroutine infparsub( nsl, ssc, dg, cec1, st, ul,                 &
+      subroutine infparsub( nsl, ssc, sscv, dg, cec1, st, ul, frzw,     &
      &                      avclay, avsand, avbdin, avporin, avrocvol,  &
      &                      avsatin, rescov, cancov, canhgt,            &
      &                      rrc, dsnow, prcp, rkecum, bcdayap,          &
-     &                      ks, sm )
+     &                      ks, sm, frdp )
       integer, intent(in) :: nsl
-      real, intent(in) :: ssc(*), dg(*), cec1(*), st(*), ul(*)
+      real, intent(in) :: ssc(*), sscv(*), dg(*), cec1(*), st(*), ul(*)
       real, intent(in) :: avclay, avsand, avbdin, avporin, avrocvol
       real, intent(in) :: avsatin, rescov, cancov, canhgt
       real, intent(in) :: rrc, dsnow, prcp, rkecum
       integer, intent(in) :: bcdayap
       real, intent(inout) :: ks, sm
+      real, intent(in) :: frzw(*),frdp
       end subroutine infparsub
 !-----------------------
       SUBROUTINE NEWTON(TIME, FFPAST, FFNOW, KS, SM)
@@ -2219,6 +2228,14 @@
       integer class
       real sand, clay
       end subroutine usdatx
+!-----------------------
+      real function effksat(uselan, clay, sand, cec, orgmat, rooty,     &
+     &              rilcov, bascov, rescov, rrough, fbasr, fbasi, fresi)
+      integer, intent(in) :: uselan
+      real, intent(in) ::  clay, sand, cec, orgmat, rooty
+      real, intent(in) ::  rilcov, bascov, rescov, rrough
+      real, intent(in) ::  fbasr, fbasi, fresi
+      end function effksat
 !-----------------------
 !---------------- WEPP Routines ----------------------------
       real function cross(x1,y1,x2,y2)

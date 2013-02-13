@@ -23,8 +23,14 @@
       include 'w1clig.inc'
       include 'h1scs.inc'
 
+      include 's1dbh.inc'
+      include 's1dbc.inc'
+      
+      include 'wepp_erosion.inc'
+
       integer isr, idx
       real ltheta(mnsz)
+      real sand(mnsz),clay(mnsz),orgmat(mnsz)
 
       do idx = 1, nslay(isr)
         ! Initialize the water holding capacity variable
@@ -77,8 +83,6 @@
       ahndayirr(isr) = 0
       ahmintirr(isr) = 0
 
-      rkecum = 0.0
-
       ! first call to hdbug, finds this uninitialized, It is set in hydro/et
       awrrh = 0.0
       ahzrun(isr) = 0.0
@@ -91,6 +95,27 @@
           ahtsmn(idx, isr) = 0.0
       end do
 
+      do idx = 1, nslay(isr)
+          ! Soil layer sand content (Mg/Mg)
+          sand(idx) = asfsan(idx,isr)
+          ! Soil layer clay content (Mg/Mg)		
+          clay(idx) = asfcla(idx,isr)
+          ! Soil layer organic matter content (Mg/Mg)		
+          orgmat(idx) = asfom(idx,isr)
+      end do
+	
+      call saxpar(sand,clay,orgmat,nslay(isr),wp_saxwp,wp_saxfc,        &
+     &    wp_saxenp,wp_saxpor,wp_saxA, wp_saxB,wp_saxks)
+
+      ! Added for WEPP bookeeping      
+      wp_totalPrecip = 0.0
+      wp_totalRunoff = 0.0
+      wp_precipEvents = 0
+      wp_runoffEvents = 0
+      wp_snowmeltEvents = 0
+      wp_totalSnowrunoff = 0.0
+      wp_prev_crust_frac = -1.0
+      ! End WEPP addition      
 
       ahztranspdepth(isr) = 0.0
       ahzfurcut(isr) = 0.0

@@ -89,6 +89,11 @@ module file_io_mod
     integer :: luohlayers      ! write hlayers.out for hydrology subsurface details
     integer :: luowater        ! write water.out for darcy detailed solution info
 
+    integer :: luowepphdrive   ! write wepp_runoff.out for epp runoff details
+    integer :: luowepperod     ! write wepp_eroevents.out water erosion event details
+    integer :: luoweppplot     ! write wepp_eroplot.out
+    integer :: luoweppsum      ! write wepp_summary.out
+
     integer :: luotempsoil     ! write tempsoil.out for soil temperature details
     integer :: luosoilsurf     ! write "soilsurf.out" for soil surface details
     integer :: luosoillay      ! write "soillay.out" for soil layer details

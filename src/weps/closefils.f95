@@ -150,4 +150,14 @@
          close(luoci)
       endif
 
+      if (wepp_hydro .gt. 1) then
+         close (luowepphdrive)
+      endif
+	  
+      if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
+         close (luowepperod)
+         close (luoweppplot)
+         close (luoweppsum)
+      endif
+
       end

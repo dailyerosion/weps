@@ -26,6 +26,8 @@
       real             mgtokg
       real             fractopercent
       real             percenttofrac
+      real             hrtomin
+      real             sectohr
 
 !     + + + VARIABLE DECLARATIONS + + +
 
@@ -40,6 +42,8 @@
       parameter (mgtokg = 0.000001) ! milligram to kilogram
       parameter (fractopercent = 100.0)
       parameter (percenttofrac = 0.01)
+      parameter (hrtomin = 60.0)
+      parameter (sectohr =  1.0/3600.0)
 
 !     + + + VARIABLE DEFINITIONS + + +
 !     mtomm  - Unit conversion constant (mm/m)
@@ -53,4 +57,6 @@
 !     mgtokg - To convert milligrams to kilograms, multiply by 0.000001
 !     fractopercent - convert fraction to percent
 !     percenttofrac - convert percent to fraction
+!     hrtomin - Unit conversion constant (min/hr)
+!     sectohr - Unit conversion constant (hr/sec)
 !     ------------------------------------------------------------------

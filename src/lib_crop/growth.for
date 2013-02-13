@@ -184,6 +184,8 @@
       real adjleaf2stor, adjstem2stor, adjstor2stor
       real tempdstm, temptotshoot
 
+      real froz_mass, live_leaf, dead_leaf ! mass in kg/m^2
+
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     frst - frost damage factor
 !     par - photosynthetically active radiation (MJ/m2)
@@ -242,8 +244,8 @@
 !     i - array index used in loops
 !     wcg - root mass distribution function exponent (see reference at equation)
 !     wmaxd - root mass distribution function depth limit parameter
-!     dead_mass - mass of living tissue that died today
-!     lost_mass - biomass that decayed (disappeared) 
+!     froz_mass - mass of living tissue that died today
+!     lost_mass - biomass that decayed (disappeared) from scenescence and freeze damage
 
 !     drswt - biomass diverted from partitioning to root storage
 !     wffiber - total of weight fractions for fibrous roots (normalization)
@@ -259,6 +261,9 @@
 !         - fullness of storage root reservoir
 !     tempdstm - number of stem possible from root stores
 !     temptotshoot - amount of storage required from each stem
+
+! From command.inc
+!     frac_frst_mass_lost - fraction of leaf mass that is frozen that disappears
 
 !     + + + LOCAL PARAMETERS + + +
       integer shoot_flg
@@ -285,6 +290,9 @@
       call caldatw(day, mo, yr)
       doy = dayear (day, mo, yr)
 
+      ! find the heat unit index that indicates the start of scenescence
+      hui0f=bcehu0-bcehu0*.1
+
 !     reduce green leaf mass in freezing weather
       if (bhtsmn(1).lt.-2.0) then
 !          xw=abs(bwtdmn)
@@ -297,14 +305,40 @@
           frst = xw / (xw + exp(a_fr-b_fr*xw))
           frst = min(1.0, max(0.0, frst))
 
-          ! eliminate these in favor of dead to live ratio
-          ! reduce green leaf area due to frost damage (10/1/99)
-          ! dead_mass = bcmstandleaf * bcfliveleaf * frst
-          ! bcmstandleaf = bcmstandleaf - dead_mass
-          ! bcmflatleaf = bcmflatleaf + dead_mass
+          ! is it before or after scenescence?
+          if (hui.lt.hui0f) then
+              ! before scenescence, frost killed mass is fragile and a fraction disappears
+              ffa = 1.0 - frst
+              ffw = 1.0 - frst * frac_frst_mass_lost
+              lost_mass  = bcmstandleaf * (1.0 - ffw)
 
-          ! reduce green leaf area due to frost damage (9/22/2003)
-          bcfliveleaf = bcfliveleaf * (1.0 - frst)
+              ! eliminate these in favor of dead to live ratio
+              ! reduce green leaf area due to frost damage (10/1/99)
+              live_leaf = bcmstandleaf * bcfliveleaf
+              dead_leaf = bcmstandleaf * (1.0 - bcfliveleaf)
+
+!        write(*,*) 'Freeze: ',frac_frst_mass_lost,frst,ffa,ffw,lost_mass
+!        write(*,*) 'Freeze: before ', bcmstandleaf, bcfliveleaf,         &
+!     &            live_leaf/(live_leaf + dead_leaf)
+
+              froz_mass = bcmstandleaf * bcfliveleaf * frst
+              live_leaf = live_leaf - froz_mass
+              dead_leaf = dead_leaf+froz_mass*(1.0-frac_frst_mass_lost)
+
+              ! adjust here for lost mass amount so consistent below)
+              bcmstandleaf = bcmstandleaf * ffw
+              ! change in living mass fraction due freezing
+              ! and accounting for weathering mass loss of dead leaf
+              bcfliveleaf = ffa*bcfliveleaf/(1.0+bcfliveleaf*(ffw-1.0))
+!        write(*,*) 'Freeze: after  ', bcmstandleaf, bcfliveleaf,         &
+!     &            live_leaf/(live_leaf + dead_leaf)
+
+          else
+              ! after scenescence, frost killed mass is tougher and is not lost immediately
+              ! reduce green leaf area due to frost damage (9/22/2003)
+              bcfliveleaf = bcfliveleaf * (1.0 - frst)
+              lost_mass = 0.0
+           end if
 
           ! these are set here to show up on the output as initialized
           p_rw = 0.0
@@ -313,6 +347,7 @@
           p_rp = 0.0
       else
           frst = 0.0
+          lost_mass = 0.0
       endif
 
       !!!!! START SINGLE PLANT CALCULATIONS !!!!!
@@ -529,8 +564,8 @@
           ffa = ff**0.125
           ffw = ff**0.0625
           ffr = 0.98
-          ! loss from weathering of leaf mass
-          lost_mass  = bcmstandleaf * (1.0 - ffw)
+          ! loss from weathering of leaf mass added to mass lost to freeze damage
+          lost_mass = lost_mass + bcmstandleaf * (1.0 - ffw)
           ! adjust for senescence (done here, not below, so consistent with lost mass amount)
           bcmstandleaf = bcmstandleaf * ffw
           ! change in living mass fraction due scenescence
@@ -541,7 +576,6 @@
           ffa = 1.0
           ffw = 1.0
           ffr = 1.0
-          lost_mass = 0.0
       endif
 
       ! yield residue relationship adjustment

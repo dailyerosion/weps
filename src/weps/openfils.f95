@@ -206,4 +206,28 @@
             call fopenk (luoddb(idx), rootp(1:len_trim(rootp)) // subr_text(idx) // 'ddbug.out', 'unknown')
          end do
       end if
+
+!   WEPP Related files
+!
+       if (wepp_hydro .gt. 1) then
+         call fopenk(luowepphdrive, rootp(1:len_trim(rootp)) // 'wepp_runoff.out','unknown')
+         write(luowepphdrive,*) ' WEPP Flow Routing Output'
+         write(luowepphdrive,*) ' # day   mon  yr     precip  runoff    peakro  effdrn    effint   effdrr/rainfall excess'
+         write(luowepphdrive,*) '                      (mm)   (mm)     (mm/hr)  (min)    (mm/hr)     (min)'
+       endif
+
+       if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
+         call fopenk(luowepperod,rootp(1:len_trim(rootp)) // 'wepp_eroevents.out','unknown')
+         write(luowepperod,*) 'WEPP Erosion Events Output'
+         write(luowepperod,*) 'day mo  year    Precp  Runoff  IR-det Av-det Mx-det  Point  Av-dep Max-dep  Point Sed.Del    ER'
+         write(luowepperod,*) '--- --  ----     (mm)    (mm)  kg/m^2 kg/m^2 kg/m^2    (m)  kg/m^2  kg/m^2    (m)  (kg/m)  ----'
+
+         call fopenk(luoweppplot,rootp(1:len_trim(rootp)) // 'wepp_eroplot.out','unknown')
+     
+         call fopenk(luoweppsum,rootp(1:len_trim(rootp)) // 'wepp_summary.out','unknown')
+         write(luoweppsum,*) 'WEPS/WEPP Common Model'
+         write(luoweppsum,*) 'March 3, 2009  (2009.3)'
+         write(luoweppsum,*) '---------------------------------------'
+       endif
+
       end

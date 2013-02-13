@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine sedseg(dslost,jun,iyear,noout,dstot,stdist,irdgdx,     &
      &    ysdist,avgslp,slplen,y,avedet,maxdet,ptdet,avedep,maxdep,     &
      &    ptdep,                                                        &

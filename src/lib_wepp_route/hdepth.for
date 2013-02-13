@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       
       SUBROUTINE HDEPTH(T2, X, A1, A2, TSTAR, T, S, SI, NS, II, M,      & 
      &                 HDPTHO, A, MRND)

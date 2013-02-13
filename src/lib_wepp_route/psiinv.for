@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       SUBROUTINE PSIINV(TIME, X, TSTAR, T, S, SI, OSINT, NS, A2,        & 
      &                  II, M, PSI, DPSI, OPSII, A, MRND)
      

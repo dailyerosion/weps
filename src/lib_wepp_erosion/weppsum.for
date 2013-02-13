@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine weppsum(luoweppplot, luoweppsum, years)
       
       use wepp_interface_defs

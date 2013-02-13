@@ -3,20 +3,21 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine infparsub( nsl, ssc, dg, cec1, st, ul,                 &
+      subroutine infparsub( nsl, ssc, sscv, dg, cec1, st, ul, frzw,     &
      &                      avclay, avsand, avbdin, avporin, avrocvol,  &
      &                      avsatin, rescov, cancov, canhgt,            &
      &                      rrc, dsnow, prcp, rkecum, bcdayap,          &
-     &                      ks, sm )
+     &                      ks, sm, frdp )
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: nsl
-      real, intent(in) :: ssc(*), dg(*), cec1(*), st(*), ul(*)
+      real, intent(in) :: ssc(*), sscv(*), dg(*), cec1(*), st(*), ul(*)
       real, intent(in) :: avclay, avsand, avbdin, avporin, avrocvol
       real, intent(in) :: avsatin, rescov, cancov, canhgt
       real, intent(in) :: rrc, dsnow, prcp, rkecum
       integer, intent(in) :: bcdayap
       real, intent(inout) :: ks, sm
+      real, intent(in) :: frzw(*),frdp
 
 !     temporary declarations
       integer lanuse, ksflag
@@ -119,7 +120,7 @@
       real solthk
       real avks, sf, wetfrt, a, rra, bbbb, tc, crust, ffi
       real eke, sc, cke, crstad, kbare, ktmp, ccovef, scovef, kcov
-      real dtheta
+      real dtheta,fzul
 
 !     + + + LOCAL DEFINITIONS + + +
 !     idx    - array index
@@ -193,8 +194,9 @@
       avks = ssc(1)
       solthk = dg(1)
       do idx = 2, nsl
-          solthk = solthk + dg(idx)
-          avks = solthk / (solthk/avks + dg(idx)/ssc(idx))
+          tmpvr2 = solthk + dg(idx)
+          avks = tmpvr2 / (solthk/avks + dg(idx)/ssc(idx))
+          solthk = tmpvr2 ! update thickness for next step
       end do
 
 ! ---- Compute the matric potential of the infiltration zone (SF)
@@ -425,12 +427,23 @@
 
       idx = 0
    20 continue
+  
+!
+!d    Modified by S. Dun, April 17, 2008
+!      for frozen soil effect   
       idx = idx + 1
+      fzul =ul(idx) - frzw(idx)
 ! ---- If the water content is above the upper limit for this layer....
-      if (st(idx).ge.0.95*ul(idx)) then
+      if (st(idx).ge.0.95*fzul) then
 ! ------ If this layer's Ksat is less than the average Ksat for the
 !        plow layer ....
         if (ssc(idx).le.eke) eke = ssc(idx)
+!
+!       Frost check - jrf 2/20/2009        
+        if ((frdp .gt. 0.0).and. (sscv(idx).gt.0.0)                     &
+     &     .and. (sscv(idx).le.eke) ) then
+            eke = sscv(idx)
+        endif
       else
 ! ------ (force exit from loop)
         idx = nsl

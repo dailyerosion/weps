@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine print(slplen,avgslp,runoff,peakro,effdrn,efflen,       &
      &    effint,effdrr)
      

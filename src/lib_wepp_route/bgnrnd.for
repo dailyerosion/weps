@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       SUBROUTINE BGNRND(X0, X, A, MRND)
       
       use wepp_interface_defs

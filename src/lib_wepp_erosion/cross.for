@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       real function cross(x1,y1,x2,y2)
       implicit none
 !

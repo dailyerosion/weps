@@ -15,7 +15,7 @@
      &                   bsfsan, bsfsil, bsfcla,                        &
      &                   bsvroc, bsfom, bsfcec,                         &
      &                   bhtsav, bbdstm, bbffcv,                        &
-     &                   bsxrgs, bszrgh,                                &
+     &                   bsxrgs, bszrgh, bsfcr,                         &
      &                   bslrro, bslrr, bmzele,                         &
      &                   bh0cng, bh0cnp, bhzper,                        &
      &                   bhzirr, bhzdmaxirr, bhratirr, bhdurirr,        &
@@ -46,7 +46,7 @@
 !     hydrology
 
       use weps_interface_defs
-      use file_io_mod, only: luohydro, luohlayers
+      use file_io_mod, only: luohydro, luohlayers, luowepphdrive
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn
@@ -65,7 +65,7 @@
       real bsfsan(*), bsfsil(*), bsfcla(*)
       real bsvroc(*), bsfom(*), bsfcec(*)
       real bhtsav(*), bbdstm, bbffcv
-      real bsxrgs, bszrgh
+      real bsxrgs, bszrgh, bsfcr
       real bslrro, bslrr, bmzele
       real bh0cng, bh0cnp, bhzper
       real bhzirr, bhzdmaxirr, bhratirr, bhdurirr
@@ -134,6 +134,7 @@
 !     bbffcv   - 
 !     bsxrgs  - ridge spacing (mm)
 !     bszrgh  - ridge height (mm)
+!     bsfcr   - fraction of the surface that is crusted
 !     bslrro   - original random roughness height, after tillage, mm
 !     bslrr    - Allmaras random roughness parameter (mm)
 !     bmzele   - Average site elevation (m)
@@ -219,6 +220,8 @@
       include 'timer.inc'
       include 'command.inc'
 
+      include 'm1geo.inc'
+      include 'wepp_erosion.inc'
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/htheta.inc'
       include 'hydro/vapprop.inc'
@@ -239,7 +242,7 @@
       real rad_surf
       real eff_lai
       real loc_zorr, loc_zordg, loc_zo, loc_zov, loc_zd, brcd, fld_wind
-      real rootz_p_con, rootz_p_cap, paw, paw1
+      real rootz_p_con, rootz_p_cap, paw, paw1, slen
 !      real old_wind, old_etp
 
       real d1, d2
@@ -251,6 +254,8 @@
       real standevapredu, totalevapredu, accheck
       real temp, airentry(mnsz), lambda(mnsz), theta80rh(mnsz)
       real cropdp
+
+      real temp1, temp2
 
 !     + + + LOCAL DEFINITIONS + + +
 !     idoy      - Day of year
@@ -287,6 +292,7 @@
 !     standevapredu  -  evaporation reduction factor attributed to standing mass
 !     totalevapredu  -  combined (standing and flat) evaporation reduction factor
 !     paw       - plant available water (fraction field cap - wilting point)
+!     slen      - slope length(m)
 !     cropdp - depth into soil layering that a plant extracts water
 !                  This is either bczrtd or bhztranspdepth depending on
 !                  the command line flag transpiration_depth
@@ -636,21 +642,20 @@
          ! use WEPP infiltration, evaporation, redistribution
          ! passing in reduced saturation instead of full saturation
 
-         ! decrease in bulk density indicates tillage occured
-         if( bsdblk(1) .lt. bsdblk0(1) ) then
-             ! rainfall kinetic energy since last tillage is zeroed
-             rkecum = 0.0
-         end if
+         slen = amxsim(2,2)-amxsim(2,1)
+         write(*,*) 'daysim:', daysim
+
          call waterbal(layrsn, thetas, thetes, thetaf, thetaw,          &
      &                   bszlyt, bszlyd, bhrsk,                         &
      &                   dprecip, bwdurpt, bwpeaktpt, bwpeakipt,        &
      &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
      &                   bhzsno, bslrr, bmrslp, bsfsan, bsfcla,         &
-     &                   bsvroc, bsdblk, bsfcec,                        &
+     &                   bsfcr, bsvroc, bsdblk, bsfcec,                 &
      &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
      &                   ahzep, theta, thetadmx, bhrwc0,                &
      &                   ahzea, bhzper, bhzrun, bhzinf, bhzwid,         &
-     &                   rkecum )
+     &                   slen, day, mo, yr, luowepphdrive,              &
+     &                   wepp_hydro, init_loop, calib_loop, bhfice)
 
       end if
 
@@ -709,6 +714,23 @@
       presswc = swc
       pressnow = bhzsno
       presday = daysim
+      
+!     Added for WEPP bookeeping      
+      wp_totalPrecip = wp_totalPrecip + bwzdpt
+      wp_totalRunoff = wp_totalRunoff + bhzrun
+      
+      if (bwzdpt.gt.0) then
+         wp_precipEvents = wp_precipEvents + 1
+      endif
+      
+      if (bhzrun.gt.0) then
+         wp_runoffEvents = wp_runoffEvents + 1
+         if (bhzsmt .gt. 0.0) then    ! due to snowmelt
+            wp_snowmeltEvents = wp_snowmeltEvents + 1
+            wp_totalSnowrunoff = wp_totalSnowrunoff + bhzrun
+         endif
+      endif
+!     End WEPP addition      
 
 !     Print the daily soil water balance results to hydro.out
       if ((am0hfl .eq. 1).or.(am0hfl .eq. 3).or.(am0hfl .eq. 5).or.     &

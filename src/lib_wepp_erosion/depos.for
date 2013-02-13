@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine depos(xb,xe,cdep,a,b,c,phi,theta,ilast,dl,ldlast,      &
      &    xinput,ktrato,detach,load,tc,qostar)
      

@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine runge(a,b,c,atc,btc,ctc,eata,tauc,theta,dx,x,ldold,    &
      &    ldnew,xx,eatax,taucx,shr,dcap,ktrato)
      

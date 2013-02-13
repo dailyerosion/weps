@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 !
       SUBROUTINE HDRIVEFLOW(NS,NF,RECUM,SLEN,SLOPE,DUREXR,DT,TF,RE,     &     
      & SC,PEAKRO,DURRUN)
@@ -32,7 +37,7 @@
 !
 !
       INTEGER MXTIME, MXPOND
-      PARAMETER (MXTIME = 1500, MXPOND = 120)
+      PARAMETER (MXTIME = 1500, MXPOND = 1000)
 
       integer, intent(in) :: NF
 	integer, intent(inout) :: NS

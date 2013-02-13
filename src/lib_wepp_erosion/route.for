@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine route(qin,qout,qostar,strldn,ktrato,ainf,binf,         &
      &    cinf,ainftc,binftc,cinftc,npart,frac,frcly,frslt,frsnd,frorg, &
      &    fall,frcflw,nslpts,xinput,xu,xl,load,enrato,tcf1,fidel,sand,  &

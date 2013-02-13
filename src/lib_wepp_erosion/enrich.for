@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine enrich(kk,xtop,xbot,xdetst,ldtop,ldbot,lddend,theta,   &
      &    iendfg,slplen,ktrato,qin,qout,qostar,ainftc,binftc,cinftc,    &
      &    npart,frac,fall,frcly,frslt,frsnd,frorg,sand,silt,clay,orgmat,&

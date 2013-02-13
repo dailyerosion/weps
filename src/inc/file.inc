@@ -185,6 +185,22 @@
       integer   luoci
       parameter (luoci=162)
 
+!     new output for wepp flow routing, runoff events
+      integer luowepphdrive
+      parameter (luowepphdrive=180)
+
+!     output for wepp erosion events
+      integer luowepperod
+      parameter (luowepperod=181)
+
+!     output for wepp erosion plot
+      integer luoweppplot
+      parameter (luoweppplot=182)
+
+!     output for wepp erosion summary
+      integer luoweppsum
+      parameter (luoweppsum=183)
+
 ! Note:  One must check main/openfils.for to ensure unit numbers are unique.
 !        Not all files are using logical unit numbers yet.
 

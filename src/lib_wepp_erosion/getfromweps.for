@@ -1,4 +1,9 @@
-      subroutine getFromWeps(isr,canhgt,cancov,sand,silt,clay,orgmat,   &
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
+      subroutine getfromweps(isr,canhgt,cancov,sand,silt,clay,orgmat,   &
      & rtm15,thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh,                  &
      & frctrl, frcsol,rtm, smrm, precip)
      

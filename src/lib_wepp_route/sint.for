@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       SUBROUTINE SINT(TIME, T, TSTAR, II, S, SI, NS, OSINT)
       
       use wepp_interface_defs

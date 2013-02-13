@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       real function depend(xu,xl,a,b,cdep,phi,theta,ktrato,qostar)
       implicit none
 !

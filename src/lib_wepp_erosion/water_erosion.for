@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 !
       SUBROUTINE water_erosion(isr, cd, cm, cy,luowepperod,sumfile)
       
@@ -227,7 +232,7 @@
 !     if detailed output in main file write event output there also
 !     but in a different format 
 !     
-      if (wp_detailout) then   
+      if (wp_detailout .eq. 1) then   
          call write_main_event(sumfile,cd, cm, cy, prcp,                &
      &     wp_runoff*1000,                                              &
      &     wp_irdgdx,avedet,maxdet,ptdet,avedep,maxdep,ptdep,avsole,    &

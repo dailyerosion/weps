@@ -9,6 +9,8 @@ reports
 soil
 structures
 wepp
+wepp_erosion
+wepp_route
 util/confidence
 util/date
 util/math

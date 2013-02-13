@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine write_hydro_summary(sumfile,totalPrecip,precipEvents,  &
      & totalRunoff,runoffEvents,totalSnowrunoff, snowmeltEvents,years)
       

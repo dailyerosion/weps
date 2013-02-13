@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine enrprt(jun,npart,frac,frcflw,dia,spg,frsnd,            &
      &    frslt,frcly,frorg,enrato)
      

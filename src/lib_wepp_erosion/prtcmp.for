@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 !
       subroutine prtcmp(npart,spg,dia,frac,frcly,frslt,frsnd,frorg,     &
      & sand1,silt1,clay1,orgmat1)

@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine yalin(effsh,tottc,sand,dia,spg,tcf1,npart,frac)
       
       use wepp_interface_defs

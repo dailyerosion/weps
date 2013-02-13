@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine erod(xb,xe,a,b,c,atc,btc,ctc,eata,tauc,theta,phi,ilast,&
      &    dl,ldlast,xdbeg,ndep,xinput,ktrato,load,tc,detach,qostar)
      

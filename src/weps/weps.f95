@@ -40,7 +40,7 @@
       USE pd_var_tables
       use Polygons_Mod, only: destroy_polygon
       use subregions_mod, only: subr_poly
-      use file_io_mod, only: luo_egrd, luo_erod, luomandate, luod_above, luod_below
+      use file_io_mod, only: luo_egrd, luo_erod, luomandate, luod_above, luod_below, luowepperod, luoweppplot, luoweppsum
       use biomaterial
       use debug_mod
 
@@ -445,6 +445,10 @@
           lopyr = 1
       endif
 
+      if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
+      	     call init_wepp(0)        ! specific wepp initializations
+      end if
+      
 ! begin initialization simulation phase
       init_loop = .true. ! Signifies that we are in the "initialization" loop
       do am0jd = ijday, end_init_jday   !will not enter if end before beginning
@@ -492,6 +496,9 @@
 !     End of "initialization" section
 ! Do all resetting of variables necessary for "calibrate" and "report"
 ! portions of the simulation
+
+      call init_wepp(1)
+
       am0jd = ijday           ! Reset loop counter to first day of simulation
       daysim = 0              ! Reset to zero (blkdat.for)
       yrsim = 0               ! Reset to zero (weps.for)
@@ -605,6 +612,7 @@
 ! Start of "report" section
 
       else
+         call init_wepp(1)
          ncycles = 1   ! set here for use in confidence interval calculation (no other use?)
          am0sif = .false.  ! Done with all initialization and calibration phases
          ci_year = 0  ! nothing has yet been printed into ci.out
@@ -654,6 +662,10 @@
             end if
 
             do isr=1,nsubr   ! do multiple subregion     
+               if ((run_erosion .eq. 2) .or. (run_erosion .eq. 3)) then
+                  call water_erosion(isr,cd,cm,cy,luowepperod,luoweppsum)
+               end if
+
                call sci_cum(isr, restot(isr))   ! Keep running total for soil conditioning index (SCI)
                call plotdata(isr, restot(isr))  ! print to plot data file
                ! write decomposition biomass pool amounts to files
@@ -753,6 +765,10 @@
       call print_ui1_output(nperiods, maxper, n_rot_cycles) !Use for new WEPS gui
       call print_mandate_output(luomandate)
      
+      if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
+          call weppsum(luoweppplot,luoweppsum,simyrs)
+      endif
+
       ! close all open files
       call closefils
 

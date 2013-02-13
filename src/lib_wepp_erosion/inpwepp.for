@@ -1,5 +1,11 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
 
       subroutine inpwepp
+
+      use file_io_mod, only: fopenk
 
       include 'wepp_erosion.inc'
       
@@ -12,7 +18,7 @@
       
       data weppfil /"wepp.run"/
       
-      luiwp = 300
+      luiwp = 1001
       write (*,*) 'WEPP runfil is ', '>>',                              &
      &  weppfil(1:len_trim(weppfil)), '<<'
      

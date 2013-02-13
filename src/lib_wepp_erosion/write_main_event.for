@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine write_main_event(sumfile,cd, cm, cy, precp,            &
      &        runoff,                                                   &
      &      irdgdx,avedet,maxdet,ptdet,avedep,maxdep,ptdep,avsole,      &
@@ -41,8 +46,8 @@
       character*4 mths(12)
       integer defaultHill,defaultOFE
       real areaHa
-      data mths /'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug',
-     1    'sep', 'oct', 'nov', 'dec'/
+      data mths /'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug',&
+     &    'sep', 'oct', 'nov', 'dec'/
       
       defaultHill = 1
       defaultOFE = 1 
@@ -68,9 +73,9 @@
       write(sumfile,3000)
       
       do i=1,ndetach
-         write (sumfile,3350)detpt1(i),detpt2(i),
-     1               dtavls(i),detstd(i),detmax(i), pdtmax(i),
-     1               detmin(i), pdtmin(i)
+         write (sumfile,3350)detpt1(i),detpt2(i),                       &
+     &               dtavls(i),detstd(i),detmax(i), pdtmax(i),          &
+     &               detmin(i), pdtmin(i)
          
       end do
       
@@ -82,7 +87,7 @@
         write(sumfile,3850)
       
         do i=1,ndepos
-          write (sumfile,3350)deppt1(i), deppt2(i),                      &
+          write (sumfile,3350)deppt1(i), deppt2(i),                     &
      &                   dpavls(i), depstd(i), depmax(i),               &
      &                   pdpmax(i), depmin(i), pdpmin(i) 
          
@@ -140,81 +145,81 @@
  !
  !    Main event information, only printed if summary file has detailed event output
  !
- 1000 format (///'HILLSLOPE ',i1,' RESULTS',/,19('-'),//
-     1    'I.   ABBREVIATED EVENT-BY-EVENT HYDROLOGY',/,5x,11('-'),1x,14
-     1    ('-'),1x,9('-'))
- 1100 format (/7x,'Overland flow element number:',i3/7x,'Event date: ',1
-     1    x,a3,1x,i2,', year ',i4)
- 1300 format (/,7x,'precipitation amount',f8.2,7x,'rainfall amount    ',
-     1    f8.2/,7x,'snow melt amount    ',f8.2,7x,'runoff amount      ',
-     1    f8.2/,7x,'rain/melt duration  ',f8.2,7x,'effective duration ',
-     1    f8.2/,7x,'peak runoff rate    ',f8.2,7x,'effective length   ',
-     1    f8.2/)
+ 1000 format (///'HILLSLOPE ',i1,' RESULTS',/,19('-'),//                &
+     &    'I.   ABBREVIATED EVENT-BY-EVENT HYDROLOGY',/,5x,11('-'),1x,  &
+     &    14('-'),1x,9('-'))
+ 1100 format (/7x,'Overland flow element number:',i3/7x,'Event date: ',1&
+     &    x,a3,1x,i2,', year ',i4)
+ 1300 format (/,7x,'precipitation amount',f8.2,7x,'rainfall amount    ',&
+     &    f8.2/,7x,'snow melt amount    ',f8.2,7x,'runoff amount      ',&
+     &    f8.2/,7x,'rain/melt duration  ',f8.2,7x,'effective duration ',&
+     &    f8.2/,7x,'peak runoff rate    ',f8.2,7x,'effective length   ',&
+     &    f8.2/)
      
- 1700 format (7x,'note: amounts = mm, durations = min, rates = mm/hr',
-     1    ', length = meters'/)
+ 1700 format (7x,'note: amounts = mm, durations = min, rates = mm/hr',  &
+     &    ', length = meters'/)
  
 
  !
  !  Areas of net soil or deposition along profile
  !
- 2500 format (//'II.  ON SITE EFFECTS  ON SITE EFFECTS',
-     1    '  ON SITE EFFECTS',/,5x,(3(15('-'),2x))/)  
+ 2500 format (//'II.  ON SITE EFFECTS  ON SITE EFFECTS',                &
+     &    '  ON SITE EFFECTS',/,5x,(3(15('-'),2x))/)
  2600 format (/2x,'A.  AREA OF NET SOIL LOSS')     
- 2750 format (/6x,'** Soil Loss (Avg. of Net Detachment',' Areas) = ',f8
-     1    .3,' kg/m2 **')
- 2850 format (6x,'** Maximum Soil Loss  = ',f8.3,' kg/m2 at ',f7.2,
-     1    ' meters **'/)
- 2950 format (6x,'** Interrill Contribution = ',f8.3,' kg/m2 ',
-     1    ' for OFE #',i2)   
- 3000 format (/,6x,'Area of',4x,'Soil Loss',3x,'Soil Loss',3x,'MAX',3x,
-     1    'MAX Loss',3x,'MIN',3x,'MIN Loss',/,6x,'Net Loss',6x,'MEAN',6
-     1    x,'STDEV',6x,'Loss',4x,'Point',4x,'Loss',3x,'Point',/,8x,
-     1    '(m)',7x,'(kg/m2)',5x,'(kg/m2)',2x,'(kg/m2)',4x,'(m)',4x,
-     1    '(kg/m2)',2x,'(m)',/,72('-'))   
- 3350 format (f7.2,'-',f7.2,1x,f8.3,2x,f8.3,2x,f9.3,1x,f7.2,2x,f8.3,2x,
-     1    f7.2)  
+ 2750 format (/6x,'** Soil Loss (Avg. of Net Detachment',' Areas) = ',  &
+     &    f8.3,' kg/m2 **')
+ 2850 format (6x,'** Maximum Soil Loss  = ',f8.3,' kg/m2 at ',f7.2,     &
+     &    ' meters **'/)
+ 2950 format (6x,'** Interrill Contribution = ',f8.3,' kg/m2 ',         &
+     &    ' for OFE #',i2)
+ 3000 format (/,6x,'Area of',4x,'Soil Loss',3x,'Soil Loss',3x,'MAX',3x, &
+     &    'MAX Loss',3x,'MIN',3x,'MIN Loss',/,6x,'Net Loss',6x,'MEAN',  &
+     &    6x,'STDEV',6x,'Loss',4x,'Point',4x,'Loss',3x,'Point',/,8x,    &
+     &    '(m)',7x,'(kg/m2)',5x,'(kg/m2)',2x,'(kg/m2)',4x,'(m)',4x,     &
+     &    '(kg/m2)',2x,'(m)',/,72('-'))   
+ 3350 format (f7.2,'-',f7.2,1x,f8.3,2x,f8.3,2x,f9.3,1x,f7.2,2x,f8.3,2x, &
+     &    f7.2)  
  3700 format (/2x,'B.  AREA OF SOIL DEPOSITION') 
- 3750 format (/6x,'** Soil Deposition (Avg. of Net Deposition',
-     1    ' Areas) = ',f9.3,' kg/m2 **')  
- 3800 format (6x,'** Maximum Soil Deposition  = ',f9.3,' kg/m2 at ',f7
-     1    .2,' meters **'/) 
- 3850 format (6x,'Area of',4x,'Soil Dep',3x,'Soil Dep',5x,'MAX',4x,
-     1    'MAX Dep',3x,'MIN',3x,'MIN Dep',/,6x,'Net Dep',7x,'MEAN',5x,
-     1    'STDEV',7x,'Dep',5x,'Point',4x,'Dep',4x,'Point',/,8x,'(m)',7x,
-     1    '(kg/m2)',4x,'(kg/m2)',3x,'(kg/m2)',4x,'(m)',4x,'(kg/m2)',2x,
-     1    '(m)',/,72('-'))              
+ 3750 format (/6x,'** Soil Deposition (Avg. of Net Deposition',         &
+     &    ' Areas) = ',f9.3,' kg/m2 **')  
+ 3800 format (6x,'** Maximum Soil Deposition  = ',f9.3,' kg/m2 at ',f7  &
+     &    .2,' meters **'/) 
+ 3850 format (6x,'Area of',4x,'Soil Dep',3x,'Soil Dep',5x,'MAX',4x,     &
+     &    'MAX Dep',3x,'MIN',3x,'MIN Dep',/,6x,'Net Dep',7x,'MEAN',5x,  &
+     &    'STDEV',7x,'Dep',5x,'Point',4x,'Dep',4x,'Point',/,8x,'(m)',7x,&
+     &    '(kg/m2)',4x,'(kg/m2)',3x,'(kg/m2)',4x,'(m)',4x,'(kg/m2)',2x, &
+     &    '(m)',/,72('-'))
      
 !
 
 !    Plot of soil loss or depsition along profile
 !
- 3100 format (///2x,'C.  SOIL LOSS/DEPOSITION ALONG SLOPE PROFILE',//,10
-     1    x,'Profile distances are from top to bottom of hillslope'//)
- 3200 format (1x,'distance',1x,'soil',10x,'distance',3x,'soil',
-     1    10x,'distance',3x,'soil')  
- 3300 format (4x,'(m)',3x,'loss',13x,'(m)',5x,'loss',13x,
-     1    '(m)',5x,'loss')  
+ 3100 format (///2x,'C.  SOIL LOSS/DEPOSITION ALONG SLOPE PROFILE',//,  &
+     &    10x,'Profile distances are from top to bottom of hillslope'//)
+ 3200 format (1x,'distance',1x,'soil',10x,'distance',3x,'soil',         &
+     &    10x,'distance',3x,'soil')  
+ 3300 format (4x,'(m)',3x,'loss',13x,'(m)',5x,'loss',13x,               &
+     &    '(m)',5x,'loss')  
  3400 format (9x,'(kg/m2)',18x,'(kg/m2)',18x,'(kg/m2)')
  3500 format (72('-'),/)  
  3550 format (3(5x,f7.2,5x,f7.3))
  3580 format (2(5x,f7.2,5x,f7.3))
- 3600 format (/'note:  (+) soil loss - detachment     (-) soil loss',
-     1    ' - deposition')
+ 3600 format (/'note:  (+) soil loss - detachment     (-) soil loss',   &
+     &    ' - deposition')
 
 !
 !    Offsite effects and sediment enrichment information
 !
- 4000 format (///'III. OFF SITE EFFECTS  OFF SITE EFFECTS',
-     1    '  OFF SITE EFFECTS',/,5x,(3(16('-'),2x))/)
- 4100 format (5x,'A.  SEDIMENT LEAVING PROFILE for ',a3,1x,i3,1x,i4,1x,
-     1    f9.3,' kg/m'/)
+ 4000 format (///'III. OFF SITE EFFECTS  OFF SITE EFFECTS',             &
+     &    '  OFF SITE EFFECTS',/,5x,(3(16('-'),2x))/)
+ 4100 format (5x,'A.  SEDIMENT LEAVING PROFILE for ',a3,1x,i3,1x,i4,1x, &
+     &    f9.3,' kg/m'/)
  4110 format (5x,'A.  AVERAGE  ANNUAL SEDIMENT LEAVING PROFILE  ',/,    &
      &    14x,f10.3, ' kg/m of width',/,14x,f10.3,' kg (based on a ',   &
      &    'profile width of ',f7.3,' m)',/,14x,f10.3,' t/ha (assuming'  &
      &    ' contributions from ',f7.3,' ha)',/)     
- 4150 format (9x,'Predicted sediment leaving side of OFE ',i2,1x,
-     1        'is ',f10.3,' kg/m width')     
+ 4150 format (9x,'Predicted sediment leaving side of OFE ',i2,1x,       &
+     &        'is ',f10.3,' kg/m width')     
  4200 format (/5x,'sediment particle information leaving profile',/,    &
      &    '-------------------------------------------------------',    &
      &    '------------------------',/,                                 &
@@ -230,8 +235,8 @@
  4400 format (1x,i2,4x,f6.3,6x,f4.2,4x,f5.1,4x,f5.1,4x,f5.1,4x,f5.1,5x, &
      &    f5.3,4x,f5.3)
  4500 format (/5x,'SSA enrichment ratio leaving profile = ',f6.2)
- 4550 format (/5x,'SSA enrichment ratio leaving profile for ',a3,1x,i3,1
-     1    x,i4,' = ',f6.2)
+ 4550 format (/5x,'SSA enrichment ratio leaving profile for ',a3,1x,i3, &
+     &   1x,i4,' = ',f6.2)
  4600 format (//5x,'B.  SEDIMENT CHARACTERISTICS AND ENRICHMENT')
      
 !     

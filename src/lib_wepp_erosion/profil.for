@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine profil(a,b,avgslp,nslpts,slplen,xinput,slpinp,xu,xl,   &  
      & y,x,totlen)
      

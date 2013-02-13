@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine sedist(dslost,dstot,stdist,delxx,slplen,avgslp,        &
      &    y,ysdist)
      

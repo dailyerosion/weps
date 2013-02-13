@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       real function shear(a,b,c,x)
       implicit none
 !

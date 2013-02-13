@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine sedmax(jnum,amax,amin,ptmax,ptmin,dstot,stdist,ibegin, &
      &    iend,jflag,lseg)
      

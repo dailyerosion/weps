@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine param(qin,qout,qostar,qshear,qsout,a,b,avgslp,         &
      &    width,rspace,ktrato,shrsol,tcend,frcsol,frctrl,rrc,npart,frac,&
      &    dia,spg,fall,runoff,effdrn,effint,effdrr,strldn,tcf1,fidel,   &

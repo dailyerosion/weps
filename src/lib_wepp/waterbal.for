@@ -8,16 +8,19 @@
      &                   dprecip, bwdurpt, bwpeaktpt, bwpeakipt,        &
      &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
      &                   bhzsno, bslrr, bmrslp, bsfsan, bsfcla,         &
-     &                   bsvroc, bsdblk, bsfcec,                        &
+     &                   bsfcr, bsvroc, bsdblk, bsfcec,                 &
      &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
      &                   bhzep, theta, thetadmx, bhrwc0,                &
      &                   bhzea, bhzper, bhzrun, bhzinf, bhzwid,         &
-     &                   rkecum )
+     &                   slen, cd, cm, cy, luowepphdrive,               &
+     &                   wepp_hydro,init_loop,calib_loop,bhfice)
 
 !     + + + PURPOSE + + +
 !     Implements soil water balance using routines from WEPP
 
       use weps_interface_defs
+
+      implicit none
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: layrsn
@@ -26,14 +29,19 @@
       real, intent(in) :: dprecip, bwdurpt, bwpeaktpt, bwpeakipt
       real, intent(in) :: dirrig, bhdurirr, bhlocirr, bhzoutflow
       real, intent(in) :: bhzsno, bslrr, bmrslp, bsfsan(*), bsfcla(*)
-      real, intent(in) :: bsvroc(*), bsdblk(*), bsfcec(*)
+      real, intent(in) :: bsfcr, bsvroc(*), bsdblk(*), bsfcec(*)
       real, intent(in) :: bbffcv, bbfcancov, bbzht
       integer, intent(in) :: bcdayap
       real, intent(in) :: bhzep
       real, intent(inout) :: theta(0:*), thetadmx(*), bhrwc0(*)
       real, intent(inout) :: bhzea, bhzper, bhzrun, bhzinf, bhzwid
-      real, intent(inout) :: rkecum
-
+      logical, intent(in) :: init_loop,calib_loop
+      integer, intent(in) :: cd, cm, cy, luowepphdrive, wepp_hydro
+      real, intent(inout) :: slen
+      real, intent(in) :: bhfice(*)
+      
+      include 'wepp_erosion.inc'
+      
 !     + + + ARGUMENT DEFINITIONS + + +
 !     layrsn - number of soil layers
 !     thetas - saturated volumetric water content (= porosity)
@@ -58,6 +66,7 @@
 !     bmrslp   - Average slope of subregion (mm/mm)
 !     bsfsan   - Fraction of soil mineral which is sand
 !     bsfcla   - Fraction of soil mineral which is clay
+!     bsfcr    - Fraction of soil surface that is crusted
 !     bsvroc   - Soil layer coarse fragments, rock (m^3/m^3)
 !     bsdblk   - soil bulk density (Mg/m^3)
 !     bsfcec - Soil layer cation exchange capacity (cmol/kg) (meq/100g)
@@ -74,17 +83,23 @@
 !     bhzrun     - accumulated daily runoff (mm)
 !     bhzinf     - depth of water infiltrated (mm)
 !     bhzwid     - Water infiltration depth into soil profile (mm)
-!     rkecum     - cumulative kinetic energy since last tillage (J/m2)
+!     slen       - field length(m)
+!     cd        - day of simulation
+!     cm        - month of simulation
+!     cy         - year of simulation
 
 !     + + + PARAMETERS + + +
       integer mxtime, mxpond, nr
-      parameter (mxtime = 1000, mxpond = 1000, nr = 11)
+      parameter (mxtime = 1500, mxpond = 1000, nr = 11)
 
       real mmtom, mtomm
       parameter (mmtom = 0.001, mtomm = 1000.0)
 
       real hrtosec, sectohr
       parameter (hrtosec = 3600.0, sectohr = 1.0/3600.0)
+      
+      real hrtomin
+      parameter (hrtomin = 60.0)
 
       real surflay, eflim, eflay
       parameter (surflay = 0.2, eflim = 0.2, eflay = 0.3)
@@ -109,7 +124,7 @@
 !     weightsurf - summation of surface layer numbers, to form series that sums to 1
 
 !     + + + LOCAL VARIABLES + + +
-      integer idx, nrain, ninf, ns
+      integer idx, nrain, ninf, ns, i
       integer locidx, nextidx, evapidx
       integer hrpond, hrend
       real st(layrsn), ul(layrsn), fc(layrsn), hk(layrsn)
@@ -129,9 +144,17 @@
       real nrew(layrsn)
       real tottew, totrew, totwfevp, dval
       real settle_seep, inf_seep, irr_seep
+      real peakro, durrun, precipmm, effintmm, effdrr_min
       integer nsl
       real surfcap, temp, laycap(layrsn)
+      real effdrn
+      real ssc(layrsn), sscv(layrsn), sscunf(layrsn), dg(layrsn)
+      real kfactor,frdp,bottom,slsic(layrsn)
+      integer LNfrst
+      real rkecum_update
+      
 !      real ksold, smold
+      integer it
 
 !     + + + LOCAL DEFINITIONS + + +
 !     idx - array indexing variable
@@ -214,19 +237,45 @@
 !     surfcap - available water holding capacity of "surface layer"
 !     temp    - temporary variable
 !     laycap  - available water holding capacity of individual layers
+!     peakro  - peak runoff
+!     durrun  - runoff duration
+!     effdrn  - effective runoff duration
+
+!     rkecum_update - wp_rkecum value to set for next day
 
 !     + + + SUBROUTINES CALLED + + +
 
 !     + + + FUNCTION DECLARATIONS + + +
-!      real depstore, valbydepth, rainenergy
+!      real depstore, valbydepth, rainenergy, effksat
 
 !     + + + DATA INITIALIZATIONS + + +
       dtinf = 180.0 !in seconds = three minutes)
       tf(1) = 0.0
+      kfactor = 1e-5
+      frdp = 0
+      bottom = 0
+      LNfrst = 0
 
 !     + + + OUTPUT FORMATS + + +
 
 !     + + + END SPECIFICATIONS + + +
+
+
+!     zero out any hydrology variables that will be computed
+      runoff = 0.0
+      peakro = 0.0
+      effdrn = 0.0
+      effint = 0.0
+      effdrr = 0.0
+
+      wp_runoff = runoff
+      wp_peakro = peakro
+      wp_effdrn = effdrn
+      wp_effint = effint
+      wp_effdrr	= effdrr
+      wp_qout = 0.0
+      wp_qin = 0.0
+      wp_qsout = 0.0
 
       ! zero out seepage accumulators
       settle_seep = 0.0
@@ -294,6 +343,12 @@
       irrig = dirrig * mmtom
       durirr = bhdurirr * hrtosec
 
+      ! factors for crust effect on infiltration
+      if( bsfcr .lt. wp_prev_crust_frac ) then
+          ! surface was disturbed, reset
+          wp_rkecum = 0.0
+      end if
+
       if(    (precip .gt. 0.0)                                          &
      &  .or. ((bhlocirr .ge. 0.0) .and. (irrig .gt. 0.0)) ) then
 
@@ -302,7 +357,7 @@
           call disag(nrain,trf, rf, precip, durpre, bwpeaktpt,bwpeakipt)
 
           ! accumulate rainfall kinetic energy for today
-          rkecum = rkecum + rainenergy(nrain, trf, rf)
+          rkecum_update = wp_rkecum + rainenergy(nrain, trf, rf)
 
           ! merge infiltration, rainfall and irrigation "arrays"
           ! returns infiltation array dimension
@@ -352,16 +407,65 @@
               ! irrigation is below the canopy, do not include
               prcp = precip
           end if
-          call infparsub( nsl, satcond, layth, bsfcec, st, ul,          &
+          
+!         Adjust conductivity (ks) for frozen soil in top layers
+          Do i = 1, nsl
+             slsic(i) = 0
+             ! only implemented for landuse = 1, croplands. Rangeland not implemented.
+             ssc(i) = effksat(1, bsfcla(i),  bsfsan(i), bsfcec(i), 0.0, &
+     &                0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+             sscv(i) = ssc(i)
+             sscunf(i) = ssc(i)
+             dg(i) = bszlyt(i) * mmtom
+             bottom = bottom + dg(i)
+             if (bhfice(i).ge.0.5) then
+		        frdp = bottom
+		        LNfrst = i
+		        slsic(i) = (theta(i) - thetaw(i)) * dg(i)
+			 endif
+          end do
+          
+          if (frdp.gt.0.0) then
+             call frsoil(nsl,sscunf,LNfrst,ssc,sscv,dg,kfactor,slsic,   &
+     &         wp_saxfc,wp_saxwp,wp_saxA,wp_saxB,wp_saxpor,wp_saxenp,   &
+     &         wp_saxks)
+          endif
+            
+          call infparsub( nsl, ssc, sscv, layth, bsfcec, st,ul,slsic,   &
      &                    clay, sand, avbulkd, avporos, avrockvol,      &
      &                    wcon, bbffcv, bbfcancov, bbzht,               &
-     &                    ranrough, dsnow, prcp, rkecum, bcdayap,       &
-     &                    ks, sm )
+     &                    ranrough, dsnow, prcp, wp_rkecum, bcdayap,    &
+     &                    ks, sm, frdp )
+   
+          ! debugging output
+!          if (init_loop.eqv..false.) then
+!              write(63,1500) cy, cm, cd, wepp_hydro, prcp, ks, sm,      &
+!     &                       depsto, ranrough, bmrslp, wcon
+!1500          format(1x, 4i6, 7E12.3)
+!              write(163,1510) cy, cm, cd, wepp_hydro, ks, wp_rkecum
+!1510          format(1x, 4i6, 2E12.3)
+!          end if
 
           ! call infiltration
           call grna( ninf, depsto, train, rrain, rr, ks, sm,            &
      &         ns, tf, rcum, f, ff, re, recum, tp,                      &
-     &         rprint, ddepsto, runoff, durexr, effint, effdrr )
+     &         rprint, ddepsto, runoff, durexr, effint, effdrr, it )
+
+!      write(*,*) 'it', it
+!      if( it .gt. 60 ) then
+!        do idx = 1, nrain
+!          write(*,*) 'idx,trf,rf', idx, trf(idx), rf(idx)
+!        end do
+!        do idx = 1, it
+          ! write out ponding array
+!          write(*,*) 'idx,tp', idx, tp(idx)
+!        end do
+!        do idx = 1, ns
+          ! write out infiltration array
+!          write(*,*) 'idx,tf,ddepsto,re,f,rprint', idx, tf(idx),        &
+!     &               ddepsto(idx), re(idx), f(idx), rprint(idx)
+!        end do
+!      end if
 
           ! set return values
           bhzrun = runoff * mtomm
@@ -372,59 +476,102 @@
 
           ! insert infiltration water into soil
           if (xfin.gt.0.0) then
-              ! check available storage in surface layers
-              surfcap = 0.0
-              do idx = 1, nsl
-                  laycap(idx) = ul(idx) - st(idx)
-                  surfcap = surfcap + laycap(idx)
-              end do
-              ! Starting at top, infiltrate water into each layer.
-              do idx = 1, layrsn
-                  ! check for layer being in surface layer and having capacity
-                  if( (idx .le. nsl) .and. (surfcap .gt. 0.0) ) then
-                      ! prorate infiltration water into surface layers
-                      temp = xfin * laycap(idx) / surfcap               & ! weight by available capacity
-     &                     * weightsurf                                   ! skew toward surface
-                      temp = min( temp, xfin )                            ! can't put in more than ya' got
-                      surfcap = surfcap - laycap(idx)                     ! adjust so next layer gets enough
-                      st(idx) = st(idx) + temp                            ! adding the water to the layer
-                      xfin = xfin - temp                                  ! infiltrated amount remaining for next layer
-                  else
-                      ! fill layer to capacity
-                      st(idx) = st(idx) + xfin
-                      xfin = 0.0
-                  end if
-                  if( st(idx) .gt. ul(idx) ) then
-                      ! this is more water than this layer can hold
-                      xfin = xfin + st(idx) - ul(idx)
-                      st(idx) = ul(idx)
-                  end if
-                  if( xfin .le. 0.0 ) then
-                      ! use bottom of this layer as infiltration depth
-                      bhzwid = bszlyd(idx)
-                      ! no more water to be inserted, stop looping
-                      exit
-                  end if
-              end do
-              ! check for excess water at bottom
-              if( xfin .gt. 0.0 ) then
-                  ! add excess to drainage
-                  inf_seep = xfin
-                  xfin = 0.0
-                  ! use bottom of profile as infiltration depth
-                  bhzwid = bszlyd(layrsn)
-              end if
+	      ! check available storage in surface layers
+	      surfcap = 0.0
+	      do idx = 1, nsl
+	        laycap(idx) = ul(idx) - st(idx)
+	        surfcap = surfcap + laycap(idx)
+	      end do
+	      ! Starting at top, infiltrate water into each layer.
+	      do idx = 1, layrsn
+	       ! check for layer being in surface layer and having capacity
+	       if( (idx .le. nsl) .and. (surfcap .gt. 0.0) ) then
+		   ! prorate infiltration water into surface layers
+		   temp = xfin * laycap(idx) / surfcap  * weightsurf   ! weight by available capacity
+                                                               ! skew toward surface
+		   temp = min( temp, xfin )                            ! can't put in more than ya' got
+		   surfcap = surfcap - laycap(idx)                     ! adjust so next layer gets enough
+		   st(idx) = st(idx) + temp                            ! adding the water to the layer
+		   xfin = xfin - temp                                  ! infiltrated amount remaining for next layer
+	       else
+		   ! fill layer to capacity
+		   st(idx) = st(idx) + xfin
+		   xfin = 0.0
+	       end if
+	       if( st(idx) .gt. ul(idx) ) then
+		   ! this is more water than this layer can hold
+		   xfin = xfin + st(idx) - ul(idx)
+		   st(idx) = ul(idx)
+	       end if
+	       if( xfin .le. 0.0 ) then
+		   ! use bottom of this layer as infiltration depth
+		   bhzwid = bszlyd(idx)
+		   ! no more water to be inserted, stop looping
+		   exit
+	       end if
+	      end do
+	      ! check for excess water at bottom
+	      if( xfin .gt. 0.0 ) then
+	        ! add excess to drainage
+	        inf_seep = xfin
+	        xfin = 0.0
+	        ! use bottom of profile as infiltration depth
+	        bhzwid = bszlyd(layrsn)
+	      end if
           end if
-      else
-          ! set return values
-          bhzrun = 0.0
-          bhzinf = 0.0
-          bhzwid = 0.0
+       else
+         ! set return values
+         bhzrun = 0.0
+         bhzinf = 0.0
+         bhzwid = 0.0
 
-          ! set infiltration water amount
-          xfin = 0.0
-          tp(1) = 0.0
-      end if
+         ! set infiltration water amount
+         xfin = 0.0
+         tp(1) = 0.0
+
+         ! rainfall kinetic energy for today unchanged
+         rkecum_update = wp_rkecum
+       end if
+
+       if ((runoff .gt. 0.0) .and. (wepp_hydro .gt. 1)) then
+           ! call flow routing hdrive
+           ! write (*,*) 'runoff=', runoff
+           call hdriveflow(ns, ninf, recum, slen, bmrslp, durexr, dtinf,&
+     &         tf, re, bbffcv, peakro, durrun)
+
+           if (peakro.gt.0.0) then
+               effdrn = ((runoff*mtomm)/peakro) * 60.
+           else
+               effdrn = 0.0
+           endif
+       else
+           peakro = 0.0
+           durrun = 0.0
+           effdrn = 0.0
+       endif
+
+       precipmm = precip * mtomm
+       effintmm = effint * mtomm * 3600
+
+
+       effdrr_min = effdrr / 60.
+
+      !  write flow routing results to wepp_hdrive.out
+      !  precipmm - ok
+      !  bhzrun - ok (runoff)
+      !  peakro - maybe
+      !  effdrn - maybe
+      !  effint - maybe
+      !  effdrr - maybe (effective duration)
+      !
+        if ((wepp_hydro .gt. 1).and.(init_loop.eqv..false.).and.        &
+     &	      (calib_loop.eqv..false.)) then
+            write(luowepphdrive,                                        &
+     &      fmt="(1X,i4,4X,i4,1X,i3,5(3X,f6.1),3X,f8.2)")               &
+     &      cd,cm,cy,precipmm, bhzrun, peakro, effdrn,                  &
+     &      effintmm,  effdrr_min
+        endif
+        
 
       ! check for subsurface irrigation
       if( (bhlocirr .lt. 0.0) .and. (irrig .gt. 0.0) ) then
@@ -474,14 +621,13 @@
               end if
           end do
           ! check for excess water at bottom
-          if( xfin .gt. 0.0 ) then
-              ! add excess to drainage
-              irr_seep = xfin
-              xfin = 0.0
-              ! use bottom of profile as infiltration depth
-              bhzwid = bszlyd(layrsn)
+	  if( xfin .gt. 0.0 ) then
+	      ! add excess to drainage
+	      irr_seep = xfin
+	      xfin = 0.0
+	      ! use bottom of profile as infiltration depth
+	      bhzwid = bszlyd(layrsn)
           end if
-          
       end if
 
       ! check for daily maximum soil layer water content
@@ -662,6 +808,32 @@
               end do
           end if
       end if
+
+!     set return values used by the WEPP erosion code
+!     
+!  
+      wp_runoff = runoff
+      wp_peakro = peakro/(mtomm * hrtosec)
+      wp_effdrn = effdrn*hrtomin
+      wp_effint = effint
+      wp_effdrr	= effdrr*hrtomin
+      
+!     accumulate total amounts for WEPP
+   
+!      if (precip.gt.0) then
+!          wp_totalPrecip = wp_totalPrecip + (precip * mtomm)
+!          wp_precipEvents = wp_precipEvents + 1
+!      endif   
+       
+!      if (runoff.gt.0) then
+!          wp_totalRunoff = wp_totalRunoff + (runoff * mtomm)
+!          wp_runoffEvents = wp_runoffEvents + 1
+!      endif
+      
+      ! update crust fraction value for next day
+      wp_prev_crust_frac = bsfcr
+      ! set cumulative rainfall energy for next day
+      wp_rkecum = rkecum_update
 
       return
       end

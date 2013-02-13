@@ -5,7 +5,7 @@
 
       SUBROUTINE grna( NF, DEPSTO, TR, R, RR, KS, SM,                   &
      &     NS, TF, RCUM, F, FF, RE, RECUM, TP,                          &
-     &     RPRINT, DDEPSTO, RUNOFF, DUREXR, EFFINT, EFFDRR )
+     &     RPRINT, DDEPSTO, RUNOFF, DUREXR, EFFINT, EFFDRR, IT )
 
 !     + + + PURPOSE + + +
 
@@ -66,7 +66,7 @@
 !     + + + PARAMETER DECLARATIONS + + +
 
       INTEGER MXTIME, MXPOND
-      PARAMETER (MXTIME = 1000, MXPOND = 1000)
+      PARAMETER (MXTIME = 1500, MXPOND = 1000)
 
 !     + + + ARGUMENT DECLARATIONS + + +
       INTEGER, intent(in) :: NF
@@ -77,6 +77,7 @@
      &     F(MXTIME), FF(MXTIME), RE(MXTIME), RECUM(MXTIME), TP(MXPOND),&
      &     RPRINT(MXTIME), DDEPSTO(MXTIME),                             &
      &     RUNOFF, DUREXR, EFFINT, EFFDRR
+      INTEGER, intent(out) :: IT
      
 !     + + + ARGUMENT DEFINITIONS + + +
 !     DEPSTO  - Depression Storage (L)
@@ -102,7 +103,8 @@
 !     EFFDRR  - EFFECTIVE RAINFALL DURATION
 
 !     + + + LOCAL VARIABLES + + +
-      INTEGER I, K, POND, IT, NP, NT
+!      INTEGER I, K, POND, IT, NP, NT
+      INTEGER I, K, POND, NP, NT
       REAL RTEMP(MXTIME), DTIME
       REAL DURRE, SUMINT, KSM, TT, TS, CU, CP, FSUM
       REAL PT(MXPOND), PRECUM(MXPOND)

@@ -2,7 +2,7 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine cru(  bszcr,cumpa,csfcla,dcump,bsfcr,bhzsmt,           &
+      subroutine cru( bszcr,cumpa,csfcla,dcump,bsfcr,bhzsmt,            &
      &  bsmlos,csfom,csfcce,csfsan,bsmls0,bszrgh,bszrr,bsflos)
 
 !calculates 4 crust variables:
@@ -42,11 +42,12 @@
       endif
 
 !     calc. apparent precip (eq. S-17 *** sb S-16)
-      if (bsfcr .ge. 1.0) bsfcr = 0.999
-      cumpa = -(alog(1.0 - bsfcr))/0.045
-!     calc. crust cover fraction (eq. S-18, *** sb S-17)
-      bsfcr = 1.0 - exp(- 0.045*(cumpa + dcump))
-!                                    a
+      if( bsfcr .lt. 1.0 ) then
+          cumpa = -(alog(1.0 - bsfcr))/0.045
+          ! calc. crust cover fraction (eq. S-18, *** sb S-17)
+          bsfcr = 1.0 - exp(- 0.045*(cumpa + dcump))
+      end if
+
 !  loose erodible material on crust
 !     set max loose mass (eq S-20, *** sb S-19)
       if (bhzsmt .eq. 0.0) then !if no snow melt

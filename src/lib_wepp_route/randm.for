@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       SUBROUTINE RANDM(X, A, MRND, RNUMB)
       
       use wepp_interface_defs

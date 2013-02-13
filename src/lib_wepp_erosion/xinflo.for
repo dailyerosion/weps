@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine xinflo(xinput,efflen,slplen,a,b,qin,qout,peakro,       &
      &    qostar,ainf,binf,cinf,ainftc,binftc,cinftc,qshear,rspace,     &
      &    nslpts)

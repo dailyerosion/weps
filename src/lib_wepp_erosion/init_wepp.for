@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 !
       SUBROUTINE init_wepp(afterWarmup)
       
