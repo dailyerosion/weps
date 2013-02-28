@@ -35,7 +35,8 @@ SUBROUTINE update_monthly_update_vars(cm, monthly_update, mrot_update)
     REAL    :: gdpt_area        ! area of a grid cell (point) in m^2
 
     INTEGER :: cnt              ! number of simulation grid datapoints
-    REAL    :: sum_salt
+    REAL    :: sum_salt_loss
+    REAL    :: sum_salt_dep
 
     INTEGER :: cnt_eros          ! number of simulation grid datapoints with net erosion
     INTEGER :: cnt_dep           ! number of simulation grid datapoints with net deposition
@@ -78,11 +79,11 @@ SUBROUTINE update_monthly_update_vars(cm, monthly_update, mrot_update)
 ! ------------------------------------------------------------------------------------------------------------------
     ! Determine if we have any net soil loss occurring from any grid cell (erosion)
     ! We assume that we don't have any net suspension loss if we don't have any net salt/creep loss
-    sum_salt = 0.0; cnt_eros = 0
+    sum_salt_loss = 0.0; cnt_eros = 0
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           IF ((egt(i,j) - egtss(i,j)) < -eros_thresh) THEN
-             sum_salt = sum_salt + egt(i,j) - egtss(i,j)
+             sum_salt_loss = sum_salt_loss + (egt(i,j) - egtss(i,j))
              cnt_eros = cnt_eros + 1
           END IF
        END DO
@@ -91,11 +92,11 @@ SUBROUTINE update_monthly_update_vars(cm, monthly_update, mrot_update)
 
    ! Determine if we have any net soil deposition occurring from any grid cell (deposition)
     ! We assume that we don't have any net suspension deposition if we don't have any mry salt/creep deposition
-    sum_salt = 0.0; cnt_dep = 0
+    sum_salt_dep = 0.0; cnt_dep = 0
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           IF ((egt(i,j) - egtss(i,j)) > eros_thresh) THEN
-             sum_salt = sum_salt + egt(i,j) - egtss(i,j)
+             sum_salt_dep = sum_salt_dep + (egt(i,j) - egtss(i,j))
              cnt_dep = cnt_dep + 1
           END IF
        END DO
@@ -136,9 +137,9 @@ SUBROUTINE update_monthly_update_vars(cm, monthly_update, mrot_update)
 
     IF (Have_Erosion) THEN
  
-       monthly_update(Salt_loss2)%val = monthly_update(Salt_loss2)%val + sum_salt/ngdpt
+       monthly_update(Salt_loss2)%val = monthly_update(Salt_loss2)%val + sum_salt_loss/ngdpt
        monthly_update(Salt_loss2)%cnt = monthly_update(Salt_loss2)%cnt + 1
-       monthly_update(Salt_loss2_mass)%val = monthly_update(Salt_loss2_mass)%val + (sum_salt*gdpt_area)
+       monthly_update(Salt_loss2_mass)%val = monthly_update(Salt_loss2_mass)%val + (sum_salt_loss*gdpt_area)
        monthly_update(Salt_loss2_mass)%cnt = monthly_update(Salt_loss2_mass)%cnt + 1
        CALL run_ave (monthly_update(Salt_loss2_area), REAL(cnt_eros)*gdpt_area/m2_to_ha, 1)
        CALL run_ave (monthly_update(Salt_loss2_frac), REAL(cnt_eros)/ngdpt, 1)
@@ -148,9 +149,9 @@ SUBROUTINE update_monthly_update_vars(cm, monthly_update, mrot_update)
             (monthly_update(Salt_loss2_area)%val * m2_to_ha)
        monthly_update(Salt_loss2_rate)%cnt = monthly_update(Salt_loss2_rate)%cnt + 1
 
-       mrot_update(Salt_loss2,cm)%val = mrot_update(Salt_loss2,cm)%val + sum_salt/ngdpt
+       mrot_update(Salt_loss2,cm)%val = mrot_update(Salt_loss2,cm)%val + sum_salt_loss/ngdpt
        mrot_update(Salt_loss2,cm)%cnt = mrot_update(Salt_loss2,cm)%cnt + 1
-       mrot_update(Salt_loss2_mass,cm)%val = mrot_update(Salt_loss2_mass,cm)%val + (sum_salt*gdpt_area)
+       mrot_update(Salt_loss2_mass,cm)%val = mrot_update(Salt_loss2_mass,cm)%val + (sum_salt_loss*gdpt_area)
        mrot_update(Salt_loss2_mass,cm)%cnt = mrot_update(Salt_loss2_mass,cm)%cnt + 1
        CALL run_ave (mrot_update(Salt_loss2_area,cm), REAL(cnt_eros)*gdpt_area/m2_to_ha, 1)
        CALL run_ave (mrot_update(Salt_loss2_frac,cm), REAL(cnt_eros)/ngdpt, 1)
@@ -163,9 +164,9 @@ SUBROUTINE update_monthly_update_vars(cm, monthly_update, mrot_update)
 
 
     IF (Have_Deposition) THEN
-       monthly_update(Salt_dep2)%val = monthly_update(Salt_dep2)%val + sum_salt/ngdpt
+       monthly_update(Salt_dep2)%val = monthly_update(Salt_dep2)%val + sum_salt_dep/ngdpt
        monthly_update(Salt_dep2)%cnt = monthly_update(Salt_dep2)%cnt + 1
-       monthly_update(Salt_dep2_mass)%val = monthly_update(Salt_dep2_mass)%val + (sum_salt*gdpt_area)
+       monthly_update(Salt_dep2_mass)%val = monthly_update(Salt_dep2_mass)%val + (sum_salt_dep*gdpt_area)
        monthly_update(Salt_dep2_mass)%cnt = monthly_update(Salt_dep2_mass)%cnt + 1
        CALL run_ave (monthly_update(Salt_dep2_area), REAL(cnt_dep)*gdpt_area/m2_to_ha, 1)
        CALL run_ave (monthly_update(Salt_dep2_frac), REAL(cnt_dep)/ngdpt, 1)
@@ -175,9 +176,9 @@ SUBROUTINE update_monthly_update_vars(cm, monthly_update, mrot_update)
                    (monthly_update(Salt_dep2_area)%val * m2_to_ha)
        monthly_update(Salt_dep2_rate)%cnt = monthly_update(Salt_dep2_rate)%cnt + 1
 
-       mrot_update(Salt_dep2,cm)%val = mrot_update(Salt_dep2,cm)%val + sum_salt/ngdpt
+       mrot_update(Salt_dep2,cm)%val = mrot_update(Salt_dep2,cm)%val + sum_salt_dep/ngdpt
        mrot_update(Salt_dep2,cm)%cnt = mrot_update(Salt_dep2,cm)%cnt + 1
-       mrot_update(Salt_dep2_mass,cm)%val = mrot_update(Salt_dep2_mass,cm)%val + (sum_salt*gdpt_area)
+       mrot_update(Salt_dep2_mass,cm)%val = mrot_update(Salt_dep2_mass,cm)%val + (sum_salt_dep*gdpt_area)
        mrot_update(Salt_dep2_mass,cm)%cnt = mrot_update(Salt_dep2_mass,cm)%cnt + 1
        CALL run_ave (mrot_update(Salt_dep2_area,cm), REAL(cnt_dep)*gdpt_area/m2_to_ha, 1)
        CALL run_ave (mrot_update(Salt_dep2_frac,cm), REAL(cnt_dep)/ngdpt, 1)

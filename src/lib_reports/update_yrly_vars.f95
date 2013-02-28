@@ -35,7 +35,8 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
     REAL    :: gdpt_area        ! area of a grid cell (point) in m^2
 
     INTEGER :: cnt              ! number of simulation grid datapoints
-    REAL    :: sum_salt
+    REAL    :: sum_salt_loss
+    REAL    :: sum_salt_dep
 
     INTEGER :: cnt_eros          ! number of simulation grid datapoints with net erosion
     INTEGER :: cnt_dep           ! number of simulation grid datapoints with net deposition
@@ -82,11 +83,11 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
 ! ------------------------------------------------------------------------------------------------------------------
     ! Determine if we have any net soil loss occurring from any grid cell (erosion)
     ! We assume that we don't have any net suspension loss if we don't have any net salt/creep loss
-    sum_salt = 0.0; cnt_eros = 0
+    sum_salt_loss = 0.0; cnt_eros = 0
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           IF ((egt(i,j) - egtss(i,j)) < -eros_thresh) THEN
-             sum_salt = sum_salt + egt(i,j) - egtss(i,j)
+             sum_salt_loss = sum_salt_loss + (egt(i,j) - egtss(i,j))
              cnt_eros = cnt_eros + 1
           END IF
        END DO
@@ -95,11 +96,11 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
 
    ! Determine if we have any net soil deposition occurring from any grid cell (deposition)
     ! We assume that we don't have any net suspension deposition if we don't have any mry salt/creep deposition
-    sum_salt = 0.0; cnt_dep = 0
+    sum_salt_dep = 0.0; cnt_dep = 0
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           IF ((egt(i,j) - egtss(i,j)) > eros_thresh) THEN
-             sum_salt = sum_salt + egt(i,j) - egtss(i,j)
+             sum_salt_dep = sum_salt_dep + (egt(i,j) - egtss(i,j))
              cnt_dep = cnt_dep + 1
           END IF
        END DO
@@ -153,10 +154,10 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
 
     IF (Have_Erosion) THEN
 
-       yrly_update(Salt_loss2)%val = yrly_update(Salt_loss2)%val + sum_salt/ngdpt
+       yrly_update(Salt_loss2)%val = yrly_update(Salt_loss2)%val + sum_salt_loss/ngdpt
        yrly_update(Salt_loss2)%cnt = yrly_update(Salt_loss2)%cnt + 1
-       !To get total mass: (sum_salt/cnt)*(cnt*gdpt_area)
-       yrly_update(Salt_loss2_mass)%val = yrly_update(Salt_loss2_mass)%val + (sum_salt*gdpt_area)
+       !To get total mass: (sum_salt_loss/cnt)*(cnt*gdpt_area)
+       yrly_update(Salt_loss2_mass)%val = yrly_update(Salt_loss2_mass)%val + (sum_salt_loss*gdpt_area)
        yrly_update(Salt_loss2_mass)%cnt = yrly_update(Salt_loss2_mass)%cnt + 1
        !Total salt loss area in (ha)
        CALL run_ave (yrly_update(Salt_loss2_area), REAL(cnt_eros)*gdpt_area/m2_to_ha, 1)
@@ -167,9 +168,9 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
                    (yrly_update(Salt_loss2_area)%val * m2_to_ha)
        yrly_update(Salt_loss2_rate)%cnt = yrly_update(Salt_loss2_rate)%cnt + 1
 
-       yrot_update(Salt_loss2)%val = yrot_update(Salt_loss2)%val + sum_salt/ngdpt
+       yrot_update(Salt_loss2)%val = yrot_update(Salt_loss2)%val + sum_salt_loss/ngdpt
        yrot_update(Salt_loss2)%cnt = yrot_update(Salt_loss2)%cnt + 1
-       yrot_update(Salt_loss2_mass)%val = yrot_update(Salt_loss2_mass)%val + (sum_salt*gdpt_area)
+       yrot_update(Salt_loss2_mass)%val = yrot_update(Salt_loss2_mass)%val + (sum_salt_loss*gdpt_area)
        yrot_update(Salt_loss2_mass)%cnt = yrot_update(Salt_loss2_mass)%cnt + 1
        CALL run_ave (yrot_update(Salt_loss2_area), REAL(cnt_eros)*gdpt_area/m2_to_ha, 1)
        CALL run_ave (yrot_update(Salt_loss2_frac), REAL(cnt_eros)/ngdpt, 1)
@@ -180,10 +181,10 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
        yrot_update(Salt_loss2_rate)%cnt = yrot_update(Salt_loss2_rate)%cnt + 1
 
        ! For a year by year report of yearly (and rotation year) averaged variables
-       yr_update(Salt_loss2)%val = yr_update(Salt_loss2)%val + sum_salt/ngdpt
+       yr_update(Salt_loss2)%val = yr_update(Salt_loss2)%val + sum_salt_loss/ngdpt
        yr_update(Salt_loss2)%cnt = yr_update(Salt_loss2)%cnt + 1
-       !To get total mass: (sum_salt/cnt)*(cnt*gdpt_area)
-       yr_update(Salt_loss2_mass)%val = yr_update(Salt_loss2_mass)%val + (sum_salt*gdpt_area)
+       !To get total mass: (sum_salt_loss/cnt)*(cnt*gdpt_area)
+       yr_update(Salt_loss2_mass)%val = yr_update(Salt_loss2_mass)%val + (sum_salt_loss*gdpt_area)
        yr_update(Salt_loss2_mass)%cnt = yr_update(Salt_loss2_mass)%cnt + 1
        !Total salt loss area in (ha)
        CALL run_ave (yr_update(Salt_loss2_area), REAL(cnt_eros)*gdpt_area/m2_to_ha, 1)
@@ -196,10 +197,10 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
     END IF
 
      IF (Have_Deposition) THEN
-       yrly_update(Salt_dep2)%val = yrly_update(Salt_dep2)%val + sum_salt/ngdpt
+       yrly_update(Salt_dep2)%val = yrly_update(Salt_dep2)%val + sum_salt_dep/ngdpt
        yrly_update(Salt_dep2)%cnt = yrly_update(Salt_dep2)%cnt + 1
-       !To get total mass: (sum_salt/cnt)*(cnt*gdpt_area)
-       yrly_update(Salt_dep2_mass)%val = yrly_update(Salt_dep2_mass)%val + (sum_salt*gdpt_area)
+       !To get total mass: (sum_salt_dep/cnt)*(cnt*gdpt_area)
+       yrly_update(Salt_dep2_mass)%val = yrly_update(Salt_dep2_mass)%val + (sum_salt_dep*gdpt_area)
        yrly_update(Salt_dep2_mass)%cnt = yrly_update(Salt_dep2_mass)%cnt + 1
        CALL run_ave (yrly_update(Salt_dep2_area), REAL(cnt_dep)*gdpt_area/m2_to_ha, 1)
        CALL run_ave (yrly_update(Salt_dep2_frac), REAL(cnt_dep)/ngdpt, 1)
@@ -209,9 +210,9 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
                    (yrly_update(Salt_dep2_area)%val * m2_to_ha)
        yrly_update(Salt_dep2_rate)%cnt = yrly_update(Salt_dep2_rate)%cnt + 1
 
-       yrot_update(Salt_dep2)%val = yrot_update(Salt_dep2)%val + sum_salt/ngdpt
+       yrot_update(Salt_dep2)%val = yrot_update(Salt_dep2)%val + sum_salt_dep/ngdpt
        yrot_update(Salt_dep2)%cnt = yrot_update(Salt_dep2)%cnt + 1
-       yrot_update(Salt_dep2_mass)%val = yrot_update(Salt_dep2_mass)%val + (sum_salt*gdpt_area)
+       yrot_update(Salt_dep2_mass)%val = yrot_update(Salt_dep2_mass)%val + (sum_salt_dep*gdpt_area)
        yrot_update(Salt_dep2_mass)%cnt = yrot_update(Salt_dep2_mass)%cnt + 1
        CALL run_ave (yrot_update(Salt_dep2_area), REAL(cnt_dep)*gdpt_area/m2_to_ha, 1)
        CALL run_ave (yrot_update(Salt_dep2_frac), REAL(cnt_dep)/ngdpt, 1)
@@ -222,10 +223,10 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
        yrot_update(Salt_dep2_rate)%cnt = yrot_update(Salt_dep2_rate)%cnt + 1
 
        ! For a year by year report of yearly (and rotation year) averaged variables
-       yr_update(Salt_dep2)%val = yr_update(Salt_dep2)%val + sum_salt/ngdpt
+       yr_update(Salt_dep2)%val = yr_update(Salt_dep2)%val + sum_salt_dep/ngdpt
        yr_update(Salt_dep2)%cnt = yr_update(Salt_dep2)%cnt + 1
-       !To get total mass: (sum_salt/cnt)*(cnt*gdpt_area)
-       yr_update(Salt_dep2_mass)%val = yr_update(Salt_dep2_mass)%val + (sum_salt*gdpt_area)
+       !To get total mass: (sum_salt_dep/cnt)*(cnt*gdpt_area)
+       yr_update(Salt_dep2_mass)%val = yr_update(Salt_dep2_mass)%val + (sum_salt_dep*gdpt_area)
        yr_update(Salt_dep2_mass)%cnt = yr_update(Salt_dep2_mass)%cnt + 1
        CALL run_ave (yr_update(Salt_dep2_area), REAL(cnt_dep)*gdpt_area/m2_to_ha, 1)
        CALL run_ave (yr_update(Salt_dep2_frac), REAL(cnt_dep)/ngdpt, 1)

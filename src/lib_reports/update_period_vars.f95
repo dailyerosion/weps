@@ -230,7 +230,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot)
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           IF ((egt(i,j) - egtss(i,j)) < -eros_thresh) THEN
-             sum_salt_loss = sum_salt_loss + egt(i,j) - egtss(i,j)
+             sum_salt_loss = sum_salt_loss + (egt(i,j) - egtss(i,j))
              cnt_eros = cnt_eros + 1
           END IF
        END DO
@@ -243,7 +243,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot)
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           IF ((egt(i,j) - egtss(i,j)) > eros_thresh) THEN
-             sum_salt_dep = sum_salt_dep + egt(i,j) - egtss(i,j)
+             sum_salt_dep = sum_salt_dep + (egt(i,j) - egtss(i,j))
              cnt_dep = cnt_dep + 1
           END IF
        END DO
