@@ -151,5 +151,16 @@ contains
         if (present(unit)) unit=newunit
     end function newunit
 
+    subroutine makedir(pathplusdirname)
+        character(LEN = *) :: pathplusdirname
+        character(LEN = len_trim(pathplusdirname)+6) :: command
+
+        !character delimiter
+        !CALL getenv('DELIMITER',delimiter)
+
+        command='mkdir '//pathplusdirname
+        CALL system(command)
+    end subroutine makedir
+
 end module file_io_mod
 

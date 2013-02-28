@@ -29,15 +29,20 @@
 !     + + +   LOCAL VARIABLES + + +
       integer idx, jdx, alloc_stat, sum_stat
       character*10 :: decfile ! decomposition detail age pool output file name
-      character*13 :: subr_text(nsubr) ! subregion subdirectory text string
+      character*20 :: subr_text(nsubr) ! subregion subdirectory text string
+      character*20 :: subr_format      ! format string for creating subr_text
 
       ! create subregion directory names
+      write( subr_format, '(i0)' ) nsubr
+      idx = len_trim(subr_format)
+      write( subr_format, '(a8, i0, a5)' ), '(a9, i0.', idx, ', a1)'
+
+      write(*,*) 'subregion name format string', trim(subr_format)
+
       do idx = 1, nsubr
-          subr_text(idx)(1:9) = 'subregion'
-          subr_text(idx)(10:10) = char(48+(idx/1000))    ! thousands place of subregion number
-          subr_text(idx)(11:11) = char(48+(idx-(idx/1000)*1000))    ! hundreds place of subregion number
-          subr_text(idx)(12:12) = char(48+(idx-(idx/100)*100))    ! tens place of subregion number
-          subr_text(idx)(13:13) = char(48+(idx-(idx/10)*10))    ! ones place of subregion number
+          write( subr_text(idx), subr_format) 'subregion', idx, '/'
+          ! create the subdirectory
+          call makedir(trim(rootp) // trim(subr_text(idx)) )
       end do
 
 !     the main output file is opened at all times
@@ -126,9 +131,9 @@
          end if
 
          do idx = 1, nsubr
-            call fopenk (luocrp1(idx), rootp(1:len_trim(rootp)) // subr_text(idx) // 'decomp.out', 'unknown')
-            call fopenk (luobio1(idx), rootp(1:len_trim(rootp)) // subr_text(idx) // 'bio1.btmp', 'unknown')
-            call fopenk (luod_above(idx), rootp(1:len_trim(rootp)) // subr_text(idx) // 'dabove.out', 'unknown')
+            call fopenk (luocrp1(idx), trim(rootp) // trim(subr_text(idx)) // 'decomp.out', 'unknown')
+            call fopenk (luobio1(idx), trim(rootp) // trim(subr_text(idx)) // 'bio1.btmp', 'unknown')
+            call fopenk (luod_above(idx), trim(rootp) // trim(subr_text(idx)) // 'dabove.out', 'unknown')
          end do
       endif
       if ((am0dfl .eq. 2).or.(am0dfl.eq.3)) then
