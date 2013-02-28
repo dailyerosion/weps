@@ -38,7 +38,6 @@
       include 's1sgeo.inc'
       include 'c1gen.inc'
       include 'c1glob.inc'
-      include 'd1glob.inc'
       include 'w1clig.inc'
       include 'w1wind.inc'
       include 'h1et.inc'
@@ -123,7 +122,7 @@
       do 300 l=1,slay
          write(luoddb(isr),2070)                                        &
      &          l,residue(1)%deriv%bg(l)%mbgz,residue(2)%deriv%bg(l)%mbgz,residue(3)%deriv%bg(l)%mbgz, &
-     &            admrtz(l,1,isr),admrtz(l,2,isr),admrtz(l,3,isr)
+     &            residue(1)%deriv%bg(l)%mrtz,residue(2)%deriv%bg(l)%mrtz,residue(3)%deriv%bg(l)%mrtz
   300 continue
 !         write(luoddb(isr),2066)
 !      do 310 l=1,slay

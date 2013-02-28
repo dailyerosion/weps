@@ -3,8 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine hydro ( layrsn, bmrslp,                                &
-     &                   bdrlai, bdrsai, bbzht,                         &
+      subroutine hydro ( layrsn, bmrslp, bbzht,                         &
      &                   bcrlai, bcrsai, bczht, bcdayap,                &
      &                   bcxrow, bc0rg, bbfcancov, bcfliveleaf,         &
      &                   bdmres, bbevapredu, bczrtd, bhfwsf,            &
@@ -35,7 +34,7 @@
      &                   cumtrans, cumdrain,                            &
      &                   initswc, initsnow, initday,                    &
      &                   presswc, pressnow, presday,                    &
-     &                   bhztranspdepth )
+     &                   bhztranspdepth, restot )
 
 !     + + + PURPOSE + + +
 !     This subroutine is the main (supervisory) program for the
@@ -47,11 +46,12 @@
 
       use weps_interface_defs
       use file_io_mod, only: luohydro, luohlayers, luowepphdrive
+      use biomaterial, only: biototal
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn
       real bmrslp
-      real bdrlai, bdrsai, bbzht
+      real bbzht
       real bcrlai, bcrsai, bczht
       integer bcdayap
       real bcxrow
@@ -89,12 +89,11 @@
       real initswc, initsnow, initday
       real presswc, pressnow, presday
       real bhztranspdepth
+      type(biototal), intent(in) :: restot
 
 !     + + +  ARGUMENT DEFINITIONS + + +
 !     layrsn   - Number of soil layers used in simulation
 !     bmrslp   - Average slope of subregion (mm/mm)
-!     bdrlai - residue leaf area index (total)(m2/m2)
-!     bdrsai - residue stem area index (total)(m2/m2)
 !     bbzht  - composite average residue height (m)
 !     bcrlai - crop leaf area index (m2/m2)
 !     bcrsai - crop stem area index (m2/m2)
@@ -206,6 +205,7 @@
 !     bhztranspdepth - depth in soil from which transpiration is extracted (m)
 !                     when crop is furrow planted, this is deeper than root depth
 !                     and is used in place of it when calling transp subroutine
+!     restot - structure containing summary residue pool amounts
 
 !     + + + COMMON BLOCKS + + +
       include 'p1const.inc'
@@ -551,16 +551,16 @@
 
       ! find roughness length of the surface for et wind speed adjustment to 2m
       ! biodrag returned and used below for surface evaporation reduction
-      call sbzo (bsxrgs, bszrgh, bslrr,                                 &
-     &           wzoflg, bdrlai, bdrsai, bbzht,                         &
+      call sbzo (bsxrgs, bszrgh, bslrr, wzoflg,                         &
+     &           restot%rlaitot, restot%rsaitot, bbzht,                 &
      &           bcrlai, bcrsai, bczht,                                 &
      &           bcxrow, bc0rg, loc_zorr, loc_zordg,                    &
      &           loc_zo, loc_zov, awzzo, brcd)
 
       ! find zero plane displacement of location
       call sbzdisp (bszrgh, bcxrow, bc0rg, wzoflg,                      &
-     &              bdrlai, bdrsai, bbzht, bcrlai, bcrsai, bczht,       &
-     &              awzdisp, loc_zd)
+     &      restot%rlaitot, restot%rsaitot, bbzht,                      &
+     &      bcrlai, bcrsai, bczht, awzdisp, loc_zd)
 
       ! set location adjusted meteorological height (mm)
       ! see RZWQM manual pages 69-70

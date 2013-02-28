@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine  hdbug(isr,slay)
+      subroutine  hdbug(isr,slay, restot)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -17,10 +17,20 @@
 !     wind, erosion, hydrology, tillage, soil, crop, decomposition
 !     management
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-
       use weps_interface_defs
       use file_io_mod, only: luohdb
+      use biomaterial, only: biototal
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer isr                   
+      integer slay                   
+      type(biototal), intent(in) :: restot
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     isr       - subregion index.
+!     restot    - structure containing summary residue pool amounts
+
+!     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'
@@ -33,7 +43,6 @@
       include 's1sgeo.inc'
       include 'c1gen.inc'
       include 'c1glob.inc'
-      include 'd1glob.inc'
       include 'w1clig.inc'
       include 'w1wind.inc'
       include 'h1et.inc'
@@ -48,7 +57,7 @@
 
 !     + + + LOCAL VARIABLES + + +
 
-      integer cd, cm, cy, isr, l, slay
+      integer cd, cm, cy, l
 
 
 !     + + + LOCAL DEFINITIONS + + +
@@ -56,7 +65,6 @@
 !   cd        - The current day of simulation month.
 !   cm        - The current month of simulation year.
 !   cy        - The current year of simulation run.
-!   isr       - This variable holds the subregion index.
 !   l         - This variable is an index on soil layers.
 
 !     + + + SUBROUTINES CALLED + + +
@@ -92,7 +100,7 @@
  2038 format (f7.2,9f8.2)
 ! 2045 format ('Subregion Number',i3)
  2050 format ('amrslp(',i2,') acftcv(',i2,') acrlai(',i2,')',           &
-     &        ' aczrtd(',i2,') admf(',i2,') ahfwsf(',i2,')',            &
+     &        ' aczrtd(',i2,') restot%mftot(',i2,') ahfwsf(',i2,')',    &
      &        ' ahzper(',i2,')')
  2051 format (2f10.2,2f10.5,2x,f10.2,f10.2,f12.2)
  2052 format ('ahzrun(',i2,') ahzirr(',i2,') ahzsno(',i2,')',           &
@@ -127,10 +135,8 @@
 !      write(luohdb,2045) isr
 
       write(luohdb,2050) isr, isr, isr, isr, isr, isr, isr
-! admf(isr) is not dimensioned correctly anymore - LEW 04/23/99
-! just commenting it out for now since it is a debug routine
-!      write(luohdb,2051) amrslp(isr), acftcv(isr), acrlai(isr), aczrtd(isr),
-!     &               admf(isr), ahfwsf(isr), ahzper(isr)
+      write(luohdb,2051) amrslp(isr), acftcv(isr), acrlai(isr),         &
+     &               aczrtd(isr), restot%mftot, ahfwsf(isr), ahzper(isr)
       write(luohdb,2052) isr, isr, isr, isr
       write(luohdb,2053) ahzrun(isr), ahzirr(isr), ahzsno(isr),         &
      &               ahzsmt(isr), ahzeta, ahzetp, ahzpta

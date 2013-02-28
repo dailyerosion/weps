@@ -19,7 +19,6 @@
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'
-      include 'd1glob.inc'
       include 's1layr.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +

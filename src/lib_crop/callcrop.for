@@ -2,17 +2,18 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine callcrop(daysim, sr, residue)
+      subroutine callcrop(daysim, sr, residue, restot)
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
       use weps_interface_defs
-      use biomaterial, only: biomatter
+      use biomaterial, only: biomatter, biototal
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer daysim
       integer sr
       type(biomatter), dimension(:), intent(inout) :: residue
+      type(biototal), intent(in) :: restot
 
 ! Includes
       include 'p1werm.inc'
@@ -57,7 +58,7 @@
 !     only continue if crop is growing
       if( am0cgf ) then
 
-         if (am0cdb.eq.1) call cdbug(sr, nslay(sr))
+         if (am0cdb.eq.1) call cdbug(sr, nslay(sr), restot)
 
          call cropgrow(nslay(sr),                                       &
      &   aszlyt(1,sr), aszlyd(1,sr), asdblk(1,sr),                      &
@@ -109,7 +110,7 @@
      &   agmbgstemz(1,sr),                                              &
      &   agzht(sr), agdstm(sr), agxstmrep(sr), aggrainf(sr) )
 
-         if (am0cdb.eq.1) call cdbug(sr, nslay(sr))
+         if (am0cdb.eq.1) call cdbug(sr, nslay(sr), restot)
       end if
 
       ! check for abandoned stems in crop regrowth

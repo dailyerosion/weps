@@ -42,8 +42,6 @@
 ! Werm $INCLUDE:file for decomp variables
       include 'c1db1.inc'
 
-      ! decomposition pools
-      include 'd1glob.inc'
       ! crop pools (flat leaf included for decomp)
       include 'c1glob.inc'
 

@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine  cdbug(isr,slay)
+      subroutine  cdbug(isr, slay, restot)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -17,10 +17,21 @@
 !     wind, erosion, hydrology, tillage, soil, crop, decomposition
 !     management
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-
       use weps_interface_defs
       use file_io_mod, only: luocdb
+      use biomaterial, only: biototal
+
+!     + + +   ARGUMENT DECLARATIONS + + +
+      integer        isr
+      integer        slay
+      type(biototal), intent(in) :: restot
+
+!     + + +   ARGUMENT DEFINITIONS + + +
+!     isr       - the subregion index.
+!     slay      - number of soil layers
+!     restot    - structure containing residue totals
+
+!     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'
@@ -34,7 +45,6 @@
       include 'c1db2.inc'
       include 'c1glob.inc'
       include 'c1info.inc'
-      include 'd1glob.inc'
       include 'w1clig.inc'
       include 'w1wind.inc'
       include 'h1et.inc'
@@ -50,16 +60,13 @@
 !     + + + LOCAL VARIABLES + + +
 
       integer cd, cm, cy
-      integer        isr
       integer        l
-      integer        slay
 
 !     + + + LOCAL DEFINITIONS + + +
 
 !   cd        - The current day of simulation month.
 !   cm        - The current month of simulation year.
 !   cy        - The current year of simulation run.
-!   isr       - This variable holds the subregion index.
 !   l         - This variable is an index on soil layers.
 
 !     + + + SUBROUTINES CALLED + + +
@@ -92,9 +99,9 @@
  2038 format (f7.2,9f8.2)
 ! 2045 format ('Subregion Number',i3)
  2050 format ('amrslp(',i2,') acftcv(',i2,') acrlai(',i2,')',           &
-     &        ' aczrtd(',i2,') admf(',i2,') ahfwsf(',i2,')',            &
+     &        ' aczrtd(',i2,') admftot(',i2,') ahfwsf(',i2,')',         &
      &        ' ac0nam(',i2,')')
-! 2051 format (2f10.2,2f10.5,2x,f10.2,f10.2,3x,a12)
+ 2051 format (2f10.2,2f10.5,2x,f10.2,f10.2,3x,a12)
  2052 format ('actdtm(',i2,') sum-phu(',i2,') acmst(',i2,')',           &
      &        '  acmrt(',i2,')  ahzeta      ahzetp     ',               &
      &        ' ahzpta ')
@@ -126,10 +133,8 @@
 !      write(luocdb,2045) isr
 
       write(luocdb,2050) isr, isr, isr, isr, isr, isr, isr
-! admf(isr) is not dimensioned correctly anymore - LEW 04/23/99
-! just commenting it out for now since it is a debug routine
-!      write(luocdb,2051) amrslp(isr), acftcv(isr), acrlai(isr), aczrtd(isr),
-!     &               admf(isr), ahfwsf(isr), ac0nam(isr)
+      write(luocdb,2051) amrslp(isr), acftcv(isr), acrlai(isr),         &
+     &               aczrtd(isr), restot%mftot, ahfwsf(isr), ac0nam(isr)
       write(luocdb,2052) isr, isr, isr, isr
       write(luocdb,2053)                                                &
      &               actdtm(isr), acthucum(isr), acmst(isr), acmrt(isr),&
