@@ -605,11 +605,11 @@
 
    do idx=1,mnsz
       do jdx=1,mnbpls
-         if (residue(jdx)%deriv%bg(idx)%mbgz .lt. 0.0 .or. residue(jdx)%deriv%bg(idx)%mbgz .gt. tstmax) &
-            write(*,*) 'day ',day,' residue(',jdx,')%deriv%bg(',idx,')%mbgz ', residue(jdx)%deriv%bg(idx)%mbgz
+         if (residue(jdx)%deriv%mbgz(idx) .lt. 0.0 .or. residue(jdx)%deriv%mbgz(idx) .gt. tstmax) &
+            write(*,*) 'day ',day,' residue(',jdx,')%deriv%mbgz(',idx,') ', residue(jdx)%deriv%mbgz(idx)
 !
-         if (residue(jdx)%deriv%bg(idx)%mrtz .lt. 0.0 .or. residue(jdx)%deriv%bg(idx)%mrtz .gt. tstmax) &
-     &  write(*,*) 'day ',day,' residue(',jdx,')%deriv%bg(',idx,')%mrtz ', residue(jdx)%deriv%bg(idx)%mrtz
+         if (residue(jdx)%deriv%mrtz(idx) .lt. 0.0 .or. residue(jdx)%deriv%mrtz(idx) .gt. tstmax) &
+     &  write(*,*) 'day ',day,' residue(',jdx,')%deriv%mrtz(',idx,') ', residue(jdx)%deriv%mrtz(idx)
       end do
    end do
 

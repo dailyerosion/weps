@@ -25,15 +25,16 @@
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     layrsn  - Number of soil layers used in the simulation
-!     bszlyd  - distance from surface to bottom of layer (mm)
+!     bszlyd  - distance from surface to bottom of layer (L)
 !     lay_val - layer based array of values to be averaged or interpolated
 !     ai_flag - flag indicating averaging scheme used
 !           0 - entire layer assumed to have same value
 !           1 - value assumed valid at center of layer, with continuous
 !               transition to next layer center
-!     depthtop - depth in the soil of the top of the segment to be averaged
+!           2 - value is amount in layer (not property) and result is a sum to depth specified
+!     depthtop - depth in the soil of the top of the segment to be averaged (L)
 !     depthbot - depth in the soil of the bottom of the segment to be
-!                averaged or interpolated
+!                averaged or interpolated (L)
 
 !     + + + PARAMETERS + + +
 
@@ -87,6 +88,7 @@
       end if
 
       if( ai_flag .eq. 0 ) then
+          ! average weighted by layer thickness
           if( indextop .eq. indexbot ) then
             ! entirely in the same layer, use layer value
             valbydepth = lay_val(indextop)
@@ -110,6 +112,37 @@
           valbydepth = 0.0
           write(*,*) "valbydepth: ai_flag method 1 not yet implemented"
           stop
+      else if( ai_flag .eq. 2 ) then
+          ! sum of all values in full layers and proportional from partial layers
+          if( indextop .eq. indexbot ) then
+            ! entirely in the same layer, use layer value
+            if( indextop .gt. 1 ) then
+              valbydepth = lay_val(indextop) * (depthbot - depthtop)    &
+     &                   / (bszlyd(indextop) - bszlyd(indextop-1))
+            else
+              valbydepth = lay_val(indextop) * (depthbot - depthtop)    &
+     &                   / bszlyd(indextop)
+            end if
+          else
+            ! crosses one or more layer boundaries
+            ! this is a layer thickness proportion
+            ! first section, layer containing depthtop
+            if( indextop .gt. 1 ) then
+              valbydepth = lay_val(indextop)*(bszlyd(indextop)-depthtop)&
+     &                   / (bszlyd(indextop) - bszlyd(indextop-1))
+            else
+              valbydepth = lay_val(indextop)*(bszlyd(indextop)-depthtop)&
+     &                   / bszlyd(indextop)
+            end if
+            do lay=indextop+1, indexbot-1
+              ! add in layers contained in interval
+              valbydepth = valbydepth + lay_val(lay)
+            end do
+            ! last section, layer containing depthbot
+            valbydepth = valbydepth + lay_val(indexbot)                 &
+     &                 * (depthbot - bszlyd(indexbot-1))                &
+     &                 / (bszlyd(indexbot) - bszlyd(indexbot-1))
+          end if
       end if
 
       return

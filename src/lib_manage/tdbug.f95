@@ -126,8 +126,8 @@
      &       'as0ph  ascmg ascna asfcce asfcec asfesp')
  2066     format(3x,'asfom asfnoh asfpoh asfpsp asfsmb asdagd aseags ', &
      &       'ahrwc aheaep ahrwcw ahrwcf ahrwca ahrwcs')
- 2068     format(3x,'layer residue(1)%deriv%bg(s)%mrtz  residue(2)%deriv%bg(s)%mrtz  residue(3)%deriv%bg(s)%mrtz ',           &
-     &               ' residue(1)%deriv%bg(s)%mbgz  residue(2)%deriv%bg(s)%mbgz  residue(3)%deriv%bg(s)%mbgz') 
+ 2068     format(3x,'layer residue(1)%deriv%mrtz(s)  residue(2)%deriv%mrtz(s)  residue(3)%deriv%mrtz(s) ',           &
+     &               ' residue(1)%deriv%mbgz(s)  residue(2)%deriv%mbgz(s)  residue(3)%deriv%mbgz(s)') 
           write(luotdb,2065)
           do idx = 1,slay
             write(luotdb,2060) idx, asdblk(idx,sr), aszlyt(idx,sr),     &
@@ -146,8 +146,8 @@
           write(luotdb,2068)
           do idx = 1,slay
             write(luotdb,2063)                                          &
-     &        idx, residue(1)%deriv%bg(idx)%mrtz, residue(2)%deriv%bg(idx)%mrtz, residue(3)%deriv%bg(idx)%mrtz,&
-     &        residue(1)%deriv%bg(idx)%mbgz, residue(2)%deriv%bg(idx)%mbgz, residue(3)%deriv%bg(idx)%mbgz
+     &        idx, residue(1)%deriv%mrtz(idx), residue(2)%deriv%mrtz(idx), residue(3)%deriv%mrtz(idx),&
+     &        residue(1)%deriv%mbgz(idx), residue(2)%deriv%mbgz(idx), residue(3)%deriv%mbgz(idx)
           end do 
 
       case (14) ! inversion process (process code 14)
@@ -226,9 +226,9 @@
  2075     format (6(2x,f7.3))
           write(luotdb,2068)
           do idx = 1,slay
-            write(luotdb,2063) idx, residue(1)%deriv%bg(idx)%mrtz, residue(2)%deriv%bg(idx)%mrtz, &
-     &        residue(3)%deriv%bg(idx)%mrtz, residue(1)%deriv%bg(idx)%mbgz, residue(2)%deriv%bg(idx)%mbgz,     &
-     &        residue(3)%deriv%bg(idx)%mbgz
+            write(luotdb,2063) idx, residue(1)%deriv%mrtz(idx), residue(2)%deriv%mrtz(idx), &
+     &        residue(3)%deriv%mrtz(idx), residue(1)%deriv%mbgz(idx), residue(2)%deriv%mbgz(idx),     &
+     &        residue(3)%deriv%mbgz(idx)
           end do 
           write(luotdb,2074)
           write(luotdb,2075) residue(1)%deriv%mf, residue(2)%deriv%mf, residue(3)%deriv%mf,        &

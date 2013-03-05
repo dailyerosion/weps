@@ -6,16 +6,6 @@
 module biomaterial
   implicit none
 
-  ! start c1glob.inc and d1glob.inc
-  ! defines mass of plant parts that are below ground by soil layer
-  type biostate_mass_below_ground_layers
-     real :: stemz          ! buried stem mass by layer (kg/m^2)
-     real :: leafz          ! buried leaf mass by layer (kg/m^2)
-     real :: storez         ! buried (from above ground) storage mass by layer (kg/m^2)
-     real :: rootstorez     ! buried storage root mass by layer (kg/m^2)
-     real :: rootfiberz     ! buried fibrous root mass by layer (kg/m^2)
-  end type biostate_mass_below_ground_layers
-
   ! defines mass of all plant parts
   type biostate_mass
      real :: standstem      ! standing stem mass (kg/m^2)
@@ -26,7 +16,12 @@ module biomaterial
      real :: flatstore      ! flat storage mass (kg/m^2)
      real :: flatrootstore  ! flat storage root mass (kg/m^2)
      real :: flatrootfiber  ! flat fibrous root mass (kg/m^2)
-     type(biostate_mass_below_ground_layers), dimension(:), pointer :: bg
+     ! defines mass of plant parts that are below ground by soil layer
+     real, dimension(:), allocatable :: stemz          ! buried stem mass by layer (kg/m^2)
+     real, dimension(:), allocatable :: leafz          ! buried leaf mass by layer (kg/m^2)
+     real, dimension(:), allocatable :: storez         ! buried (from above ground) storage mass by layer (kg/m^2)
+     real, dimension(:), allocatable :: rootstorez     ! buried storage root mass by layer (kg/m^2)
+     real, dimension(:), allocatable :: rootfiberz     ! buried fibrous root mass by layer (kg/m^2)
   end type biostate_mass
 
   type biostate_geometry
@@ -69,27 +64,13 @@ module biomaterial
      integer :: dayspring   ! day of year in which a winter annual released stored growth
   end type biostate_growth
 
-  type biostate_decomp_below_ground_layers
-     real :: cumddg       ! cumm. decomp days below ground res by pool and layer (days)
-  end type biostate_decomp_below_ground_layers
-
   type biostate_decomp    ! from decomp/decomp.inc
      integer :: resday    ! calendar days after residue initiation
      integer :: resyear   ! index counting each new residue initiation
      real :: cumdds       ! cumulative decomp days for standing res. by pool (days)
      real :: cumddf       ! cummlative decomp days for surface res. by pool (days)
-     type(biostate_decomp_below_ground_layers), dimension(:), pointer :: bg
+     real, dimension(:), allocatable :: cumddg       ! cumm. decomp days below ground res by pool and layer (days)
   end type biostate_decomp
-
-  type bioderived_below_ground_layers
-     real :: mrtz           ! Buried root mass by soil layer (kg/m^2)
-     real :: mbgz           ! Buried mass by soil layer (kg/m^2)
-  end type bioderived_below_ground_layers
-
-  type bioderived_canopy_layers
-     real :: rsaz           ! stem area index by height (1/m)
-     real :: rlaz           ! leaf area index by height (1/m)
-  end type bioderived_canopy_layers
 
   type bioderived
      real :: mbgstem      ! buried residue stem mass (kg/m^2)
@@ -104,11 +85,13 @@ module biomaterial
      real :: mf           ! Flat mass (flatstem + flatleaf + flatstore) (kg/m^2)
      real :: mrt          ! Buried root mass (rootfiber + rootstore)(kg/m^2)
      real :: mbg          ! Buried mass (kg/m^2) Excludes root mass below the surface.
-     type(bioderived_below_ground_layers), dimension(:), pointer :: bg
+     real, dimension(:), allocatable :: mrtz           ! Buried root mass by soil layer (kg/m^2)
+     real, dimension(:), allocatable :: mbgz           ! Buried mass by soil layer (kg/m^2)
 
      real :: rsai         ! Residue stem area index (m^2/m^2)
      real :: rlai         ! Residue leaf area index (m^2/m^2)
-     type(bioderived_canopy_layers), dimension(:), pointer :: can
+     real, dimension(:), allocatable :: rsaz           ! stem area index by height (1/m)
+     real, dimension(:), allocatable :: rlaz           ! leaf area index by height (1/m)
 
      real :: rcd          ! effective Biomass silhouette area (SAI+LAI) (m^2/m^2)
                           ! (combination of leaf area and stem area indices)
@@ -168,13 +151,17 @@ module biomaterial
      real :: mftot        ! Flat mass across pools (flatstem + flatleaf + flatstore) (kg/m^2)
      real :: mbgtot       ! Buried mass across pools (kg/m^2)
      real :: mbgtotto4    ! Buried (to a 4 inch depth) mass across pools (kg/m^2)
+     real :: mbgtotto15   ! Buried (to a 15 cm depth) mass across pools (kg/m^2)
      real :: mrttot       ! Buried root mass across pools (kg/m^2)
      real :: mrttotto4    ! Buried (to a 4 inch depth) root mass across pools (kg/m^2)
-     type(bioderived_below_ground_layers), dimension(:), pointer :: bg
+     real :: mrttotto15   ! Buried (to a 15 cm depth) root mass across pools (kg/m^2)
+     real, dimension(:), allocatable :: mrtz           ! Buried root mass by soil layer (kg/m^2)
+     real, dimension(:), allocatable :: mbgz           ! Buried mass by soil layer (kg/m^2)
 
      real :: rsaitot      ! total of stem area index across pools (m^2/m^2)
      real :: rlaitot      ! total of leaf area index across pools (m^2/m^2)
-     type(bioderived_canopy_layers), dimension(:), pointer :: can
+     real, dimension(:), allocatable :: rsaz           ! stem area index by height (1/m)
+     real, dimension(:), allocatable :: rlaz           ! leaf area index by height (1/m)
 
      real :: rcdtot       ! effective Biomass silhouette area across pools (SAI+LAI) (m^2/m^2)
                           ! (combination of leaf area and stem area indices)
@@ -210,13 +197,6 @@ module biomaterial
 !     abevapredu - composite evaporation reduction from crop and residue materials (ea/ep ratio)
   end type biototal
 
-
-  type decomp_factors_below_ground_layers
-     real :: iddg   ! decomp. day for below ground residue by soil layer (0 to 1)
-     real :: itcg   ! temperature coef. below ground res. by soil layer (0 to 1)
-     real :: iwcg   ! water coef. for below ground res. by soil layer (0 to 1)
-  end type decomp_factors_below_ground_layers
-
   type decomp_factors
      real :: aqua    ! sum of precip, irrigation and snow melt (mm)
      integer :: weti     ! days since anticedent moisture (4 to 0) index
@@ -228,7 +208,9 @@ module biomaterial
      real :: iddf   ! daily decomposition day for surface residue (0 to 1)
      real :: itcf   ! daily temperature coef. for above ground res. (0 to 1)
      real :: iwcf   ! daily water coefficient for surface residues (0 to 1)
-     type(decomp_factors_below_ground_layers), dimension(:), pointer :: bg
+     real, dimension(:), allocatable :: iddg   ! decomp. day for below ground residue by soil layer (0 to 1)
+     real, dimension(:), allocatable :: itcg   ! temperature coef. below ground res. by soil layer (0 to 1)
+     real, dimension(:), allocatable :: iwcg   ! water coef. for below ground res. by soil layer (0 to 1)
   end type decomp_factors
 
 contains
@@ -244,14 +226,30 @@ contains
 
      sum_stat = 0
      ! allocate below and above ground arrays
-     allocate(biomat%mass%bg(nsoillay), stat=alloc_stat)
+     allocate(biomat%mass%stemz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(biomat%decomp%bg(nsoillay), stat=alloc_stat)
+     allocate(biomat%mass%leafz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(biomat%deriv%bg(nsoillay), stat=alloc_stat)
+     allocate(biomat%mass%storez(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(biomat%deriv%can(ncanlay), stat=alloc_stat)
+     allocate(biomat%mass%rootstorez(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
+     allocate(biomat%mass%rootfiberz(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
+     allocate(biomat%decomp%cumddg(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
+     allocate(biomat%deriv%mrtz(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(biomat%deriv%mbgz(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
+     allocate(biomat%deriv%rsaz(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(biomat%deriv%rlaz(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
      if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to allocate memory for biomatter'
         stop 1
@@ -267,14 +265,30 @@ contains
 
      sum_stat = 0
      ! allocate below and above ground arrays
-     deallocate(biomat%mass%bg, stat=dealloc_stat)
+     deallocate(biomat%mass%stemz, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(biomat%decomp%bg, stat=dealloc_stat)
+     deallocate(biomat%mass%leafz, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(biomat%deriv%bg, stat=dealloc_stat)
+     deallocate(biomat%mass%storez, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(biomat%deriv%can, stat=dealloc_stat)
+     deallocate(biomat%mass%rootstorez, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
+     deallocate(biomat%mass%rootfiberz, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+
+     deallocate(biomat%decomp%cumddg, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+
+     deallocate(biomat%deriv%mrtz, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(biomat%deriv%mbgz, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+
+     deallocate(biomat%deriv%rsaz, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(biomat%deriv%rlaz, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+
      if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to deallocate memory for biomatter'
      end if
@@ -291,10 +305,16 @@ contains
 
      sum_stat = 0
      ! allocate below and above ground arrays
-     allocate(biotot%bg(nsoillay), stat=alloc_stat)
+     allocate(biotot%mrtz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(biotot%can(ncanlay), stat=alloc_stat)
+     allocate(biotot%mbgz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
+
+     allocate(biotot%rsaz(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(biotot%rlaz(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
      if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to allocate memory for biototal'
         stop 1
@@ -310,10 +330,16 @@ contains
 
      sum_stat = 0
      ! allocate below and above ground arrays
-     deallocate(biotot%bg, stat=dealloc_stat)
+     deallocate(biotot%mrtz, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(biotot%can, stat=dealloc_stat)
+     deallocate(biotot%mbgz, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
+
+     deallocate(biotot%rsaz, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(biotot%rlaz, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+
      if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to deallocate memory for biomatter'
      end if
@@ -325,10 +351,17 @@ contains
 
      ! local variable
      integer :: alloc_stat  ! allocation status return
+     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
 
-     ! allocate below and above ground arrays
-     allocate(decompfac%bg(nsoillay), stat=alloc_stat)
-     if( alloc_stat .gt. 0 ) then
+     ! allocate below ground arrays
+     allocate(decompfac%iddg(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(decompfac%itcg(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(decompfac%iwcg(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
+     if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to allocate memory for decompfac'
         stop 1
      end if
@@ -339,9 +372,16 @@ contains
 
      ! local variable
      integer :: dealloc_stat  ! allocation status return
+     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
 
      ! allocate below and above ground arrays
-     deallocate(decompfac%bg, stat=dealloc_stat)
+     deallocate(decompfac%iddg, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(decompfac%itcg, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(decompfac%iwcg, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+
      if( dealloc_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to allocate memory for decompfac'
         stop 1

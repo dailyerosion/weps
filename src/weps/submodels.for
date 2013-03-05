@@ -3,8 +3,8 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine submodels (isr, cd, cm, cy, residue, restot, biotot,   &
-     &                      decompfac, mandate)
+      subroutine submodels (isr, cd, cm, cy, residue, restot, croptot,  &
+     &                      biotot, decompfac, mandate)
 
       use weps_interface_defs
       use biomaterial, only: biomatter, biototal, decomp_factors
@@ -17,7 +17,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr, cd, cm, cy
       type(biomatter), dimension(:), intent(inout) :: residue
-      type(biototal), intent(inout) :: restot, biotot
+      type(biototal), intent(inout) :: restot, croptot, biotot
       type(decomp_factors), intent(inout) :: decompfac
       type(opercrop_date), dimension(:), intent(inout) :: mandate
 
@@ -46,7 +46,7 @@
         ! the previous day crop data registers even though growth flag is
         ! turned off.
         if( am0cgf .or. (am0cropupfl.gt.0) ) then
-            call callcrop(daysim, isr, residue, restot)
+            call callcrop(daysim, isr, residue, restot, croptot)
         end if
 
 !        write(*,*) "Start decomp"
@@ -56,7 +56,7 @@
         call updres(isr, residue, restot)
 
 !        write(*,*) "Start sumbio"
-        call sumbio(isr, residue, restot, biotot) ! sum live and dead biomass
+        call sumbio(isr, residue, restot, croptot, biotot) ! sum live and dead biomass
 
       return
       end

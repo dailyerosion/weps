@@ -109,7 +109,7 @@
      &   residue(1)%geometry%dstm, residue(1)%decomp%cumdds, residue(1)%deriv%mst,           &
      &   residue(1)%decomp%cumddf, residue(1)%deriv%mf, residue(1)%deriv%fscv,            &
      &   residue(1)%deriv%ffcv, residue(1)%deriv%rsai,                            &
-     &   residue(1)%deriv%can(1)%rsaz,                                            &
+     &   residue(1)%deriv%rsaz(1),                                            &
      &   residue(2)%geometry%dstm, residue(2)%decomp%cumdds, residue(2)%deriv%mst,           &
      &   residue(2)%decomp%cumddf, residue(2)%deriv%mf, residue(3)%decomp%cumddf,            &
      &   residue(3)%deriv%mf
@@ -120,9 +120,9 @@
          write(luod_below(isr),2005) cd, cm, cy, am0csr
          do 100 isz = 1, nslay(am0csr)
          write (luod_below(isr),2010)                                        &
-     &         isz,residue(1)%decomp%bg(isz)%cumddg,residue(2)%decomp%bg(isz)%cumddg,           &
-     &         residue(1)%deriv%bg(isz)%mbgz,residue(2)%deriv%bg(isz)%mbgz,               &
-     &         residue(1)%deriv%bg(isz)%mrtz,residue(2)%deriv%bg(isz)%mrtz
+     &         isz,residue(1)%decomp%cumddg(isz),residue(2)%decomp%cumddg(isz),           &
+     &         residue(1)%deriv%mbgz(isz),residue(2)%deriv%mbgz(isz),               &
+     &         residue(1)%deriv%mrtz(isz),residue(2)%deriv%mrtz(isz)
   100    continue
       end if
 

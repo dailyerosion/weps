@@ -10,7 +10,7 @@
 ! crop and individual biomass pools (not all pools have the same variables)
 
 
-      subroutine bpools (cd, cm, cy, isr, residue, restot, decompfac)
+      subroutine bpools (cd, cm, cy, isr, residue, restot, croptot, decompfac)
 
       use biomaterial, only: biomatter, biototal, decomp_factors
       use file_io_mod, only: luocrp1, luobio1
@@ -19,6 +19,7 @@
       integer cd, cm, cy, isr
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: restot
+      type(biototal), intent(in) :: croptot
       type(decomp_factors), intent(in) :: decompfac
 
       include 'p1werm.inc'
@@ -166,7 +167,7 @@
            ! Residue Pool #idx
            write(residue(idx)%luo%dec,2355) daysim, &
      &     residue(idx)%decomp%resday, residue(idx)%decomp%resyear, doy, cy, idx, &
-     &     residue(idx)%decomp%cumdds, residue(idx)%decomp%cumddf, residue(idx)%decomp%bg(10)%cumddg, &
+     &     residue(idx)%decomp%cumdds, residue(idx)%decomp%cumddf, residue(idx)%decomp%cumddg(10), &
      &     residue(idx)%deriv%ffcv, residue(idx)%deriv%fscv, residue(idx)%deriv%ftcv, &
      &     residue(idx)%database%covfact, residue(idx)%deriv%rsai, residue(idx)%deriv%rlai, &
      &     residue(idx)%deriv%m, residue(idx)%deriv%mf, residue(idx)%deriv%mst, &

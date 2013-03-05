@@ -10,6 +10,7 @@
       ! or the state variables. The derived variables are commonly used
       ! where residue totals are required.
 
+      use weps_interface_defs
       use biomaterial, only: biomatter, biototal
 
 !     + + +   ARGUMENT DECLARATIONS + + +
@@ -23,8 +24,7 @@
       include 'p1werm.inc'
 
 !     + + + FUNCTION DECLARATIONS + + +
-
-      real biodrag
+!      real biodrag
 
 !     + + + VARIABLE DEFINITIONS + + +
 
@@ -118,22 +118,22 @@
 !     bd0ck  - light extinction coeffficient (fraction)
 
 !     LOCAL VARIABLES
-      integer idx, idy, scilays
-      real partlayrat
+      integer idx, idy
       real bdmrtto4(size(residue)), bdmbgto4(size(residue)), bdmto4(size(residue))
+      real bdmrtto15(size(residue)), bdmbgto15(size(residue))
 
 !     LOCAL VARIABLE DEFINITIONS
 !     idx - indexing variable
 !     idy - indexing variable
-!     scilays - number of layers in scidepth
-!     partlayrat - proportion of last layer in scidepth range
 !     bdmrtto4 - Buried residue root mass (rootfiber + rootstore)(kg/m^2) (in scidepth)
 !     bdmbgto4 - Buried residue mass (kg/m^2) Excludes root mass below the surface. (in scidepth)
 !     bdmto4   - Total residue mass (standing + flat + roots + buried) (kg/m^2) (in scidepth)
    
-      ! parameter to control depth of slice for SCI
+      ! parameter to control depth of slice
       real scidepth
-      parameter( scidepth = 101.6 ) ! mm 101.6 = 4 inches
+      parameter( scidepth = 101.6 ) ! mm 101.6 = 4 inches for SCI
+      real weppdepth
+      parameter( weppdepth = 150.0 ) ! mm 150.0 = 5.9 inches for WEPP
 
       ! accumulate layer values into pool mass totals
       do idy = 1, size(residue)
@@ -142,21 +142,21 @@
           residue(idy)%deriv%mbgstore = 0.0
           residue(idy)%deriv%mbgrootstore = 0.0
           residue(idy)%deriv%mbgrootfiber = 0.0
-          do idx = 1, size(residue(idy)%mass%bg)
-              residue(idy)%deriv%mbgstem = residue(idy)%deriv%mbgstem + residue(idy)%mass%bg(idx)%stemz
-              residue(idy)%deriv%mbgleaf = residue(idy)%deriv%mbgleaf + residue(idy)%mass%bg(idx)%leafz
-              residue(idy)%deriv%mbgstore = residue(idy)%deriv%mbgstore + residue(idy)%mass%bg(idx)%storez
-              residue(idy)%deriv%mbgrootstore = residue(idy)%deriv%mbgrootstore + residue(idy)%mass%bg(idx)%rootstorez
-              residue(idy)%deriv%mbgrootfiber = residue(idy)%deriv%mbgrootfiber + residue(idy)%mass%bg(idx)%rootfiberz
+          do idx = 1, size(residue(idy)%mass%stemz)
+              residue(idy)%deriv%mbgstem = residue(idy)%deriv%mbgstem + residue(idy)%mass%stemz(idx)
+              residue(idy)%deriv%mbgleaf = residue(idy)%deriv%mbgleaf + residue(idy)%mass%leafz(idx)
+              residue(idy)%deriv%mbgstore = residue(idy)%deriv%mbgstore + residue(idy)%mass%storez(idx)
+              residue(idy)%deriv%mbgrootstore = residue(idy)%deriv%mbgrootstore + residue(idy)%mass%rootstorez(idx)
+              residue(idy)%deriv%mbgrootfiber = residue(idy)%deriv%mbgrootfiber + residue(idy)%mass%rootfiberz(idx)
           end do
       end do
 
       ! sum buried root and residue masses for each layer and each pool
       do idy = 1, size(residue)
-           do idx = 1, size(residue(idy)%mass%bg)
-              residue(idy)%deriv%bg(idx)%mrtz = residue(idy)%mass%bg(idx)%rootstorez + residue(idy)%mass%bg(idx)%rootfiberz
-              residue(idy)%deriv%bg(idx)%mbgz = residue(idy)%mass%bg(idx)%stemz + residue(idy)%mass%bg(idx)%leafz &
-     &                        + residue(idy)%mass%bg(idx)%storez
+           do idx = 1, size(residue(idy)%mass%rootfiberz)
+              residue(idy)%deriv%mrtz(idx) = residue(idy)%mass%rootstorez(idx) + residue(idy)%mass%rootfiberz(idx)
+              residue(idy)%deriv%mbgz(idx) = residue(idy)%mass%stemz(idx) + residue(idy)%mass%leafz(idx) &
+     &                        + residue(idy)%mass%storez(idx)
           end do
       end do
 
@@ -164,42 +164,19 @@
       do idy = 1, size(residue)
           residue(idy)%deriv%mrt = 0.0
           residue(idy)%deriv%mbg = 0.0
-          do idx = 1, size(residue(idy)%deriv%bg)
-              residue(idy)%deriv%mrt = residue(idy)%deriv%mrt + residue(idy)%deriv%bg(idx)%mrtz
-              residue(idy)%deriv%mbg = residue(idy)%deriv%mbg + residue(idy)%deriv%bg(idx)%mbgz
+          do idx = 1, size(residue(idy)%deriv%mrtz)
+              residue(idy)%deriv%mrt = residue(idy)%deriv%mrt + residue(idy)%deriv%mrtz(idx)
+              residue(idy)%deriv%mbg = residue(idy)%deriv%mbg + residue(idy)%deriv%mbgz(idx)
           end do
       end do
 
-      ! find the layers for the SCI depth (4 inches)
-      scilays = 0
-      do idx = 1, bnslay
-          if( scidepth .le. bszlyd(idx) ) then
-              scilays = idx
-              exit
-          end if
-      end do
-      if( scilays .eq. 0 ) then
-          ! the soil is thinner than the scidepth
-          scilays = bnslay
-      end if
-      ! calculate partial layer ratio
-      if( scilays .gt. 1 ) then
-          partlayrat = (scidepth - bszlyd(scilays-1))                   &
-     &               / (bszlyd(scilays) - bszlyd(scilays-1))
-      else
-          partlayrat = scidepth / bszlyd(scilays)
-      end if
-
-      ! sum root and below ground from layer values to the SCI depth (4 inches)
       do idy = 1, size(residue)
-          bdmrtto4(idy) = 0.0
-          bdmbgto4(idy) = 0.0
-          do idx = 1, scilays-1
-              bdmrtto4(idy) = bdmrtto4(idy) + residue(idy)%deriv%bg(idx)%mrtz
-              bdmbgto4(idy) = bdmbgto4(idy) + residue(idy)%deriv%bg(idx)%mbgz
-          end do
-          bdmrtto4(idy) = bdmrtto4(idy) + residue(idy)%deriv%bg(scilays)%mrtz*partlayrat
-          bdmbgto4(idy) = bdmbgto4(idy) + residue(idy)%deriv%bg(scilays)%mbgz*partlayrat
+          ! sum root and below ground from layer values to the SCI depth (4 inches)
+          bdmrtto4(idy) = valbydepth(bnslay, bszlyd, residue(idy)%deriv%mrtz, 2, 0.0, scidepth)
+          bdmbgto4(idy) = valbydepth(bnslay, bszlyd, residue(idy)%deriv%mbgz, 2, 0.0, scidepth)
+          ! sum root and below ground from layer values to the WEPP adjustment depth (15 cm)
+          bdmrtto15(idy) = valbydepth(bnslay, bszlyd, residue(idy)%deriv%mrtz, 2, 0.0, weppdepth)
+          bdmbgto15(idy) = valbydepth(bnslay, bszlyd, residue(idy)%deriv%mbgz, 2, 0.0, weppdepth)
       end do
 
       ! sum above ground (stem + leaf + store) by and across pools
@@ -209,8 +186,10 @@
       restot%msttot = 0.0
       restot%mbgtot = 0.0
       restot%mbgtotto4 = 0.0
+      restot%mbgtotto15 = 0.0
       restot%mrttot = 0.0
       restot%mrttotto4 = 0.0
+      restot%mrttotto15 = 0.0
       do idy = 1, size(residue)
           residue(idy)%deriv%mst = residue(idy)%mass%standstem + residue(idy)%mass%standleaf + residue(idy)%mass%standstore
           residue(idy)%deriv%mf = residue(idy)%mass%flatstem + residue(idy)%mass%flatleaf + residue(idy)%mass%flatstore &
@@ -223,12 +202,11 @@
           restot%msttot = restot%msttot + residue(idy)%deriv%mst
           restot%mbgtot = restot%mbgtot + residue(idy)%deriv%mbg
           restot%mbgtotto4 = restot%mbgtotto4 + bdmbgto4(idy)
+          restot%mbgtotto15 = restot%mbgtotto15 + bdmbgto15(idy)
           restot%mrttot = restot%mrttot + residue(idy)%deriv%mrt
           restot%mrttotto4 = restot%mrttotto4 + bdmrtto4(idy)
+          restot%mrttotto15 = restot%mrttotto15 + bdmrtto15(idy)
       end do
-
-!      write(*,*) "scilays, partlayrat, restot%mtot, restot%mtotto4",              &
-!     &            scilays, partlayrat, restot%mtot, restot%mtotto4
 
       restot%dstmtot = 0.0
       restot%rlaitot = 0.0
@@ -258,10 +236,10 @@
 
           ! set stem and leaf area by plant height increments
           ! these are divided equally for a first approximation
-          !mncz = size(residue(idy)%deriv%can)
+          !mncz = size(residue(idy)%deriv%rsaz)
           do idx = 1, mncz
-              residue(idy)%deriv%can(idx)%rsaz = residue(idy)%deriv%rsai / mncz
-              residue(idy)%deriv%can(idx)%rlaz = residue(idy)%deriv%rlai / mncz
+              residue(idy)%deriv%rsaz(idx) = residue(idy)%deriv%rsai / mncz
+              residue(idy)%deriv%rlaz(idx) = residue(idy)%deriv%rlai / mncz
           end do
 
           ! Residue cover calculations.

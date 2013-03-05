@@ -175,6 +175,9 @@ contains
         ! try alternate delimiter character
         !if( npass .eq. 2 ) then
         !    delimiter = '\'
+        !else if( npass .gt. 2 ) then
+        !    write(*,*) 'subdirectory create failed'
+        !    exit(1)
         !end if
 
         tempname = trim(pathplusdirname) ! assign name to internal variable so it can be modified

@@ -105,8 +105,10 @@
       real    ci
 
       type(biomatter), dimension(:), allocatable :: crop
+      type(biototal), dimension(:), allocatable :: croptot
       type(biomatter), dimension(:,:), allocatable :: residue
-      type(biototal), dimension(:), allocatable :: restot, biotot
+      type(biototal), dimension(:), allocatable :: restot
+      type(biototal), dimension(:), allocatable :: biotot
       type(decomp_factors), dimension(:), allocatable :: decompfac
       type(mandate_array), dimension(:), allocatable :: mandatbs
 
@@ -308,6 +310,8 @@
       sum_stat = 0
       allocate(crop(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
+      allocate(croptot(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
       allocate(residue(mnbpls, nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       allocate(decompfac(nsubr), stat=alloc_stat)
@@ -339,6 +343,7 @@
       do isr = 1, nsubr
          ! complete allocation of layers
          crop(isr) = create_biomatter(nslay(isr), mncz)
+         croptot(isr) = create_biototal(nslay(isr), mncz)
          do ipl = 1, mnbpls
             residue(ipl,isr) = create_biomatter(nslay(isr), mncz)
          end do
@@ -380,9 +385,9 @@
 
       do isr = 1, nsubr
           ! this prints header to plot.out file (isr not yet set)
-          call plotdata(isr, restot(isr))  ! print to plot data file
+          call plotdata(isr, restot(isr), croptot(isr))  ! print to plot data file
           ! this prints header to decomp.out file (isr not yet set)
-          call bpools(1,1,1,isr, residue(1:size(residue,1),isr), restot(isr), decompfac(isr))
+          call bpools(1,1,1,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), decompfac(isr))
 
           ! Initialize the management file and rotation counters
           call mfinit(isr, tinfil(isr))
@@ -444,7 +449,7 @@
          call cropinit(isr)
          ! initialize all dependent variables
          call updres(isr, residue(1:size(residue,1), isr), restot(isr))
-         call sumbio(isr, residue(1:size(residue,1), isr), restot(isr), biotot(isr))
+         call sumbio(isr, residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))
          call sci_init(isr)
 
 !       Initialize the water holding capacity variable
@@ -501,14 +506,14 @@
          end if
          do isr=1,nsubr   ! do multiple subregion      
 !         isr = 1 !Note: we are no longer dealing with multiple subregions here
-          call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr),  &
+          call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
      &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
 
-          call plotdata(isr, restot(isr))  ! print to plot data file
+          call plotdata(isr, restot(isr), croptot(isr))  ! print to plot data file
           ! write decomposition biomass pool amounts to files
-          call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), decompfac(isr))
+          call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), decompfac(isr))
 !        write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',                 &
 !     &              yrsim," ",cd,cm,cy," ",am0jd,daysim
 
@@ -582,13 +587,13 @@
 
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
-            call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr),&
+            call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr), croptot(isr),&
      &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
 
-            call plotdata(isr, restot(isr))  ! print to plot data file
+            call plotdata(isr, restot(isr), croptot(isr))  ! print to plot data file
 
             ! write decomposition biomass pool amounts to files
-            call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), decompfac(isr))
+            call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), decompfac(isr))
 
             ! set initialization flag to .false. after first day
             if (am0ifl) am0ifl = .false.
@@ -679,8 +684,8 @@
 !           if (am0jd.eq.ljday) call dbgdmp(daysim, isr, residue(isr))
 
             do isr=1,nsubr   ! do multiple subregion     
-               call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr), &
-                              mandatbs(isr)%mandate)
+               call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
+                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
             end do
 
             if (run_erosion > 0) then   ! Are we simulating erosion in this RUN
@@ -697,13 +702,13 @@
 
             do isr=1,nsubr   ! do multiple subregion     
                if ((run_erosion .eq. 2) .or. (run_erosion .eq. 3)) then
-                  call water_erosion(isr,cd,cm,cy,luowepperod,luoweppsum)
+                  call water_erosion(isr,cd,cm,cy,luowepperod,luoweppsum, restot(isr), croptot(isr))
                end if
 
                call sci_cum(isr, restot(isr))   ! Keep running total for soil conditioning index (SCI)
-               call plotdata(isr, restot(isr))  ! print to plot data file
+               call plotdata(isr, restot(isr), croptot(isr))  ! print to plot data file
                ! write decomposition biomass pool amounts to files
-               call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), decompfac(isr))
+               call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), decompfac(isr))
 
 !           write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',              &
 !    &              yrsim," ",cd,cm,cy," ",am0jd,daysim
@@ -757,7 +762,7 @@
                end if
 
                ! Compute period values
-               call update_period_update_vars(isr, rep_update(isr)%period_update, restot(isr))
+               call update_period_update_vars(isr, rep_update(isr)%period_update, restot(isr), croptot(isr))
                ! print *, pd, "  ",cy,cm,cd,"  ", period_dates(pd(isr))
 
             end do
@@ -824,6 +829,7 @@
       ! destroy layers
       do isr = 1, nsubr
          call destroy_biomatter(crop(isr))
+         call destroy_biototal(croptot(isr))
          do ipl = 1, mnbpls
             call destroy_biomatter(residue(ipl,isr))
          end do
@@ -834,6 +840,8 @@
       !remove main arrays
       sum_stat = 0
       deallocate(crop, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(croptot, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       deallocate(residue, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat

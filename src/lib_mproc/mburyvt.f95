@@ -181,31 +181,31 @@
               if (BTEST(tflg,idy)) then
                   tbury = residue(idy)%mass%flatstem * buryf(residue(idy)%database%rbc) * tillf
                   do lay=1,nlay
-                      residue(idy)%mass%bg(lay)%stemz = residue(idy)%mass%bg(lay)%stemz + tbury*fracbury(lay)
+                      residue(idy)%mass%stemz(lay) = residue(idy)%mass%stemz(lay) + tbury*fracbury(lay)
                   end do
                   residue(idy)%mass%flatstem = residue(idy)%mass%flatstem - tbury
 
                   tbury = residue(idy)%mass%flatleaf * buryf(residue(idy)%database%rbc) * tillf
                   do lay=1,nlay
-                      residue(idy)%mass%bg(lay)%leafz = residue(idy)%mass%bg(lay)%leafz + tbury*fracbury(lay)
+                      residue(idy)%mass%leafz(lay) = residue(idy)%mass%leafz(lay) + tbury*fracbury(lay)
                   end do
                   residue(idy)%mass%flatleaf = residue(idy)%mass%flatleaf - tbury
 
                   tbury = residue(idy)%mass%flatstore * buryf(residue(idy)%database%rbc) * tillf
                   do lay=1,nlay
-                      residue(idy)%mass%bg(lay)%storez = residue(idy)%mass%bg(lay)%storez + tbury*fracbury(lay)
+                      residue(idy)%mass%storez(lay) = residue(idy)%mass%storez(lay) + tbury*fracbury(lay)
                   end do
                   residue(idy)%mass%flatstore = residue(idy)%mass%flatstore - tbury
 
                   tbury = residue(idy)%mass%flatrootstore * buryf(residue(idy)%database%rbc) * tillf
                   do lay=1,nlay
-                      residue(idy)%mass%bg(lay)%rootstorez = residue(idy)%mass%bg(lay)%rootstorez + tbury*fracbury(lay)
+                      residue(idy)%mass%rootstorez(lay) = residue(idy)%mass%rootstorez(lay) + tbury*fracbury(lay)
                   end do
                   residue(idy)%mass%flatrootstore = residue(idy)%mass%flatrootstore - tbury
 
                   tbury = residue(idy)%mass%flatrootfiber * buryf(residue(idy)%database%rbc) * tillf
                   do lay=1,nlay
-                      residue(idy)%mass%bg(lay)%rootfiberz = residue(idy)%mass%bg(lay)%rootfiberz + tbury*fracbury(lay)
+                      residue(idy)%mass%rootfiberz(lay) = residue(idy)%mass%rootfiberz(lay) + tbury*fracbury(lay)
                   end do
                   residue(idy)%mass%flatrootfiber = residue(idy)%mass%flatrootfiber - tbury
               endif

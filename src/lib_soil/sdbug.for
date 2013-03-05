@@ -32,9 +32,9 @@
       include 's1dbc.inc'
       include 's1sgeo.inc'
       include 's1psd.inc'
+      include 'b1glob.inc'
       include 'c1gen.inc'
       include 'c1glob.inc'
-      include 'd1glob.inc'
       include 'w1clig.inc'
       include 'w1wind.inc'
       include 'h1hydro.inc'
@@ -46,18 +46,11 @@
       include 'main/main.inc'
       include 'soil/tsdbug.inc'
 
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer isr, slay
+
 !     + + + LOCAL VARIABLES + + +
-
-      integer cd, cm, cy, i, isr, l, slay
-      real bdmft
-
-!      real dur,
-!     r     laydpth,
-!     r     tp,
-!     r     wdir, wvel,
-!     r     xmav
-
-!      real setbd
+      integer cd, cm, cy, i, l
 
 !     + + + LOCAL DEFINITIONS + + +
 
@@ -67,10 +60,6 @@
 !   daysim    - The surrent day of the simulation run.
 !   isr       - This variable holds the subregion index.
 !   l         - This variable is an index on soil layers.
-!   tisr      - This variable holds the value of the subregion
-!               from the previous call to sdbug.
-!   tday,     - These variables holds the value of the previous day,
-!   tmo, tyr    month, and year from the previous call to sdbug.
 
 !     + + + SUBROUTINES CALLED + + +
 
@@ -101,7 +90,7 @@
      &        ' awtdpt  awadir  awhrmx  amzele ')
  2038 format (f7.2,9f8.2)
  2050 format ('amrslp(',i2,') acftcv(',i2,') acrlai(',i2,')',           &
-     &        ' aczrtd(',i2,') admft(',i2,') ahfwsf(',i2,')',           &
+     &        ' aczrtd(',i2,') abmf(',i2,') ahfwsf(',i2,')',            &
      &        ' ahzper(',i2,')')
  2051 format (2f10.2,2f10.5,2x,f10.2,f10.2,f12.2)
  2052 format ('ahzrun(',i2,') ahzirr(',i2,') ahzsno(',i2,')',           &
@@ -134,16 +123,8 @@
 
       write(luosdb,2050) isr,isr,isr,isr,isr,isr,isr
 
-! We no longer have a global variable that sums all the flat residue
-! from each decomp pool.  Therefore, we are computing it here for now.
-! LEW - 04/23/99
-      bdmft = 0
-      do 20 i=1,mnbpls
-        bdmft = bdmft + admf(i,isr)
-20    continue
-
       write(luosdb,2051) amrslp(isr),acftcv(isr),acrlai(isr),           &
-     &               aczrtd(isr), bdmft,ahfwsf(isr),ahzper(isr)
+     &               aczrtd(isr), abmf(isr), ahfwsf(isr), ahzper(isr)
       write(luosdb,2052) isr,isr,isr,isr,isr,isr,isr
       write(luosdb,2053) ahzrun(isr),ahzirr(isr),ahzsno(isr),           &
      &               ahzsmt(isr), asxrgs(isr),aszrgh(isr),aslrr(isr)

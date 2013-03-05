@@ -30,8 +30,8 @@
       subroutine depos(xb,xe,cdep,a,b,c,phi,theta,ilast,dl,ldlast,      &
      &    xinput,ktrato,detach,load,tc,qostar)
       real, intent(in) :: xb, cdep, phi, theta, ktrato, qostar
-	  real, intent(in) :: a, b, c
-	  real, intent(inout) :: xe, xinput(101), load(101)
+      real, intent(in) :: a, b, c
+      real, intent(inout) :: xe, xinput(101), load(101)
       real, intent(out) :: dl, ldlast, detach(101)
       real, intent(out) :: tc(101)
       integer, intent(inout) :: ilast
@@ -49,8 +49,8 @@
      &     frcly(*), frslt(*), frsnd(*), frorg(*),                      &
      &     fidel(*), tcf1(*),                                           &
      &     sand(*), silt(*), clay(*), orgmat(*)  
-	  real, intent(inout) :: frcflw(*)    
-	  real, intent(out) ::  enrato 
+      real, intent(inout) :: frcflw(*)    
+      real, intent(out) ::  enrato 
       end subroutine enrich
 !--------------------------
       subroutine enrprt(jun,npart,frac,frcflw,dia,spg,frsnd,            &
@@ -73,33 +73,32 @@
      &    dl,ldlast,xdbeg,ndep,xinput,ktrato,load,tc,detach,qostar)
  
       real, intent(in) :: xb, xe, a, b, c, eata, tauc, theta
-	  real, intent(inout) :: xdbeg
+      real, intent(inout) :: xdbeg
       real, intent(in) ::  atc, btc, ctc, phi, qostar
       real, intent(in) :: xinput(101), ktrato
-	  real, intent(inout) :: detach(101)
+      real, intent(inout) :: detach(101)
       integer, intent(inout) ::  ilast
-	  integer, intent(out) :: ndep
-	  real, intent(inout) :: ldlast, tc(101), load(101), dl 
-	  end subroutine erod
+      integer, intent(out) :: ndep
+      real, intent(inout) :: ldlast, tc(101), load(101), dl 
+      end subroutine erod
 !---------------------------
       real function falvel(spg,dia)
-      real, intent(in) :: spg, dia	               	             
+      real, intent(in) :: spg, dia
       end function falvel
 !---------------------------
-      subroutine getFromWeps(isr,canhgt,cancov,sand,silt,clay,orgmat,   &
-     & rtm15,thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh,           &
-     & frctrl, frcsol,rtm, smrm, precip)
-
+      subroutine getfromweps(isr,canhgt,cancov,sand,silt,clay,orgmat,   &
+     & thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh,                        &
+     & frctrl, frcsol, precip)
       integer, intent(in):: isr
-	  real, intent(out):: canhgt,cancov
+      real, intent(out):: canhgt,cancov
       real, intent(out):: sand(*), silt(*), clay(*)
-	  real, intent(out):: orgmat(*)
-	  real, intent(out):: thetdr(*), rrc, rtm15
-	  real, intent(out):: dg(*), st(*), thdp, frdp
-	  real, intent(out):: thetfc(*), por(*), rh
-	  real, intent(out):: frctrl, frcsol
-	  real, intent(out):: rtm(3), smrm(3), precip 
-	  end subroutine getFromWeps
+      real, intent(out):: orgmat(*)
+      real, intent(out):: thetdr(*), rrc
+      real, intent(out):: dg(*), st(*), thdp, frdp
+      real, intent(out):: thetfc(*), por(*), rh
+      real, intent(out):: frctrl, frcsol
+      real, intent(out):: precip
+      end subroutine getfromweps
 !---------------------------------
       SUBROUTINE init_wepp(afterWarmup)
       
@@ -116,20 +115,20 @@
      &    rwflag)
   
       real, intent(out) :: ktrato, shrsol, tcend, strldn, eata, tauc
-	  real, intent(out) :: phi, tcf1(*), theta, fidel(*)
-	  real, intent(out) :: slpend
-	  real, intent(out) ::  ainftc(*), binftc(*),cinftc(*)
+        real, intent(out) :: phi, tcf1(*), theta, fidel(*)
+      real, intent(out) :: slpend
+      real, intent(out) ::  ainftc(*), binftc(*),cinftc(*)
 
-	  real, intent(inout) :: width,avgslp
+      real, intent(inout) :: width,avgslp
 
-	  real, intent(in):: a(*), b(*),qin,qout,qostar
+      real, intent(in):: a(*), b(*),qin,qout,qostar
       real, intent(in):: qsout, qshear, rspace, frcsol, frctrl, rrc           
       real, intent(in):: frac(*), dia(*),spg(*)
-	  real, intent(in):: fall(*), runoff,effdrn, effint, effdrr
-	  real, intent(in):: sand(*), slplen, kiadj, kradj, shcrtadj
-	  real, intent(in) ::efflen
+      real, intent(in):: fall(*), runoff,effdrn, effint, effdrr
+      real, intent(in):: sand(*), slplen, kiadj, kradj, shcrtadj
+      real, intent(in) ::efflen
 
-	  real, intent(inout):: ainf(*),binf(*),cinf(*)
+      real, intent(inout):: ainf(*),binf(*),cinf(*)
   
       integer, intent(in):: npart, nslpts,rwflag  
       
@@ -188,16 +187,16 @@
       real, intent(in):: ainf(*), binf(*), cinf(*)
       real, intent(in) :: ainftc(*), binftc(*), cinftc(*)
       real, intent(in) :: frac(*), frcly(*), frslt(*)
-	  real, intent(in) :: frsnd(*)
+      real, intent(in) :: frsnd(*)
       real, intent(in) :: frorg(*), fall(*)
-	  real, intent(in) :: fidel(*)
+      real, intent(in) :: fidel(*)
       real, intent(inout) :: xinput(101)
-	  real, intent(out) :: enrato
+      real, intent(out) :: enrato
       real, intent(in) :: sand(*), silt(*), clay(*)
-	  real, intent(in) :: orgmat(*)
+      real, intent(in) :: orgmat(*)
       real, intent(in) :: eata, tauc, theta, phi, slplen, tcf1(*)
-	  real, intent(out) ::  load(101), frcflw(*)
-	  real, intent(inout) :: xu(*), xl(*)
+      real, intent(out) ::  load(101), frcflw(*)
+      real, intent(inout) :: xu(*), xl(*)
       integer, intent(in) :: npart, nslpts 
       end subroutine route
 !----------------------------------
@@ -205,7 +204,7 @@
      &    ldnew,xx,eatax,taucx,shr,dcap,ktrato)
     
       real, intent(in) :: atc, btc, ctc, a, b, c, ktrato
-	  real, intent(in) :: eata, tauc, theta, dx, ldold, x
+      real, intent(in) :: eata, tauc, theta, dx, ldold, x
       real, intent(out) :: dcap, ldnew 
       real, intent(inout) ::  xx, eatax, taucx, shr 
       end subroutine runge
@@ -312,46 +311,40 @@
       real, intent(in) :: load(101), tcend, width, rspace, effdrn
       real, intent(in) :: theta, slplen, frcflw(*)
       real, intent(in) :: qout,enrato
-	  real, intent(out) :: dslost(100)
-	  real, intent(out) :: avsole, irdgdx, qsout
-	  real, intent(inout) :: dsmon(100), dsyear(100), dsavg(100)
-	  integer, intent(in) :: npart 
-	  end subroutine sloss
+      real, intent(out) :: dslost(100)
+      real, intent(out) :: avsole, irdgdx, qsout
+      real, intent(inout) :: dsmon(100), dsyear(100), dsavg(100)
+      integer, intent(in) :: npart 
+      end subroutine sloss
 !-----------------------------
       subroutine soil_adj(ki,kr,shcrit,kiadj,kradj,shcrtadj,            &
      & rrc, canhgt,cancov,inrcov,rtm15,rtm,bconsd,daydis,rh,rspace,     &
      & avgslp,smrm,krcrat,tccrat,kicrat,dg,thetdr,st,thdp,frdp,ifrost,  &
      & thetfc,por,tens,cycle)
-
-	  real, intent(in):: canhgt,cancov,inrcov,rtm15,rtm(3)
-	  real, intent(in):: bconsd,rh,rspace,avgslp
-	  real, intent(in):: smrm(3),krcrat,tccrat,rrc,kicrat
-	  real, intent(in):: dg(10), thetdr(10), st(10),thdp,frdp
-	  real, intent(in):: thetfc(10), por(10)
-	  integer, intent(in):: cycle, daydis
-	  integer, intent(inout):: ifrost
-	  real, intent(out):: tens, kiadj, kradj, shcrtadj
-	  real, intent(in):: ki, kr, shcrit	             
-	  end subroutine soil_adj
+       real, intent(in):: canhgt,cancov,inrcov,rtm15,rtm
+       real, intent(in):: bconsd,rh,rspace,avgslp
+       real, intent(in):: smrm,krcrat,tccrat,rrc,kicrat
+       real, intent(in):: dg(10), thetdr(10), st(10),thdp,frdp
+       real, intent(in):: thetfc(10), por(10)
+       integer, intent(in):: cycle, daydis
+       integer, intent(inout):: ifrost
+       real, intent(out):: tens, kiadj, kradj, shcrtadj
+       real, intent(in):: ki, kr, shcrit
+       end subroutine soil_adj
 !--------------------------------
       subroutine trcoeff(trcoef,shrsol,sand,dia,spg,tcf1,npart,frac)
      
       real, intent(in) :: sand(*), dia(*), spg(*),        &
      &   frac(*),shrsol
       integer, intent(in) ::  npart
-	  real, intent(out) :: trcoef
-	  real, intent(inout):: tcf1(*)
-	  end subroutine trcoeff
+      real, intent(out) :: trcoef
+      real, intent(inout):: tcf1(*)
+      end subroutine trcoeff
 !----------------------------------
       subroutine undflo(factor,expon)
    
-      real, intent(inout) :: factor, expon	  	  
+      real, intent(inout) :: factor, expon
       end subroutine undflo
-!----------------------------------
-      SUBROUTINE water_erosion(isr, cd, cm, cy,luowepperod,luoweppsum)
-
-      integer, intent(in):: isr,cd,cm,cy,luowepperod,luoweppsum      
-      end subroutine water_erosion
 !----------------------------------
 
       subroutine write_main_event(sumfile,cd, cm, cy, precp,            &
@@ -519,7 +512,7 @@
      & SC,PEAKRO,DURRUN)
 
       integer, intent(in) :: NF
-	  integer, intent(inout) :: NS
+      integer, intent(inout) :: NS
       real, intent(in) :: RECUM(*), SLEN, DUREXR, DT, TF(*),            &
      & RE(*), SLOPE, SC
       real, intent(out) :: PEAKRO,DURRUN
@@ -578,8 +571,8 @@
       real, intent(out) :: OSINT
       double precision, intent(inout) :: PSI, DPSI, OPSII
       DOUBLE PRECISION, intent(in) ::  TIME   
-	  real, intent(inout) :: X  
-	  end subroutine psiinv
+      real, intent(inout) :: X  
+      end subroutine psiinv
 !------------------------------
       SUBROUTINE PSIS(TIME, UU, TSTAR, T, S, SI, OSINT, NS, A2, II,     &
      &                M, PSI, DPSI)
@@ -590,7 +583,7 @@
       real, intent(in) ::  T(*)
       real, intent(out) :: OSINT
       double precision, intent(in) :: TIME, UU
-      double precision, intent(out) :: DPSI, PSI	
+      double precision, intent(out) :: DPSI, PSI
       end subroutine psis
 !-------------------------------
       subroutine purk(nsl, st, fc, ul, hk, ssc, sep)
@@ -627,13 +620,12 @@
       end subroutine rdat
 !-------------------------------
       SUBROUTINE SINT(TIME, T, TSTAR, II, S, SI, NS, OSINT)
-	  
       DOUBLE PRECISION, intent(in) :: TIME
-	  real, intent(in) :: TSTAR, T(*), S(*), SI(*)
-	  integer, intent(inout) :: II
-	  integer, intent(in) :: NS
-	  real, intent(out) :: OSINT  
-	  end subroutine sint
+      real, intent(in) :: TSTAR, T(*), S(*), SI(*)
+      integer, intent(inout) :: II
+      integer, intent(in) :: NS
+      real, intent(out) :: OSINT  
+      end subroutine sint
 !-----------------------------
       subroutine usdatx( sand, clay, class)
       integer class

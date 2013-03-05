@@ -166,16 +166,16 @@
 ! code changed to use global hydrology variables HHS 1-4-1994
 !
 !      do 30 isz = 1 , nslay(isr)
-!          decompfac%bg(isz)%iwcg = theta(isz)/ thetaf(isz)
-!          if (decompfac%bg(isz)%iwcg .gt. 1.) decompfac%bg(isz)%iwcg = 1.
+!          decompfac%iwcg(isz) = theta(isz)/ thetaf(isz)
+!          if (decompfac%iwcg(isz) .gt. 1.) decompfac%iwcg(isz) = 1.
 !   30 continue
 
       if (dbgflg) write(*,*) 'decomp 3'
 
       do isz = 1 , nslay(isr)
-         decompfac%bg(isz)%iwcg = ahrwc(isz,isr)/ ahrwcf(isz,isr)
+         decompfac%iwcg(isz) = ahrwc(isz,isr)/ ahrwcf(isz,isr)
 !        water factor = water content of soil layer / optimum water content of soil layer
-         if (decompfac%bg(isz)%iwcg .gt. 1.0) decompfac%bg(isz)%iwcg = 1.0
+         if (decompfac%iwcg(isz) .gt. 1.0) decompfac%iwcg(isz) = 1.0
       end do
 
 ! Calculate temperature coefficient    (0. to 1.)
@@ -196,9 +196,9 @@
 
 ! Code changed to use global hydrology soil temp variable
 !              tsavg= (tsmax(isz) + tsmin(isz))/2.
-!              decompfac%bg(isz)%itcg = tc(tsavg)
+!              decompfac%itcg(isz) = tc(tsavg)
 
-         decompfac%bg(isz)%itcg =  tc(ahtsav(isz,isr))
+         decompfac%itcg(isz) =  tc(ahtsav(isz,isr))
       end do
 
 ! Select minimum of temperature or water functions for
@@ -209,7 +209,7 @@
       decompfac%idds = min(decompfac%iwcs,decompfac%itcs) !standing
       decompfac%iddf = min(decompfac%iwcf,decompfac%itcf) !flat
       do isz = 1, nslay(isr)
-         decompfac%bg(isz)%iddg = min(decompfac%bg(isz)%iwcg,decompfac%bg(isz)%itcg) !buried
+         decompfac%iddg(isz) = min(decompfac%iwcg(isz),decompfac%itcg(isz)) !buried
       end do
 
 ! Summation of DECOMPOSITION days for graphing
@@ -223,7 +223,7 @@
          residue(iage)%decomp%cumdds = residue(iage)%decomp%cumdds + decompfac%idds
          residue(iage)%decomp%cumddf = residue(iage)%decomp%cumddf + decompfac%iddf
          do isz = 1, nslay(isr)
-            residue(iage)%decomp%bg(isz)%cumddg = residue(iage)%decomp%bg(isz)%cumddg + decompfac%bg(isz)%iddg
+            residue(iage)%decomp%cumddg(isz) = residue(iage)%decomp%cumddg(isz) + decompfac%iddg(isz)
          end do
       end do
 
@@ -263,17 +263,17 @@
 
         do isz = 1, nslay(isr)
           ! buried surface biomass
-          dec_fac = max(0.0, 1.0-residue(iage)%database%dkrate(3)*decompfac%bg(isz)%iddg)
-          residue(iage)%mass%bg(isz)%stemz = residue(iage)%mass%bg(isz)%stemz * dec_fac
-          dec_fac = max(0.0, 1.0-leaf_fac*residue(iage)%database%dkrate(3)*decompfac%bg(isz)%iddg)
-          residue(iage)%mass%bg(isz)%leafz = residue(iage)%mass%bg(isz)%leafz * dec_fac
-          dec_fac = max(0.0,1.0-store_fac*residue(iage)%database%dkrate(3)*decompfac%bg(isz)%iddg)
-          residue(iage)%mass%bg(isz)%storez = residue(iage)%mass%bg(isz)%storez * dec_fac
+          dec_fac = max(0.0, 1.0-residue(iage)%database%dkrate(3)*decompfac%iddg(isz))
+          residue(iage)%mass%stemz(isz) = residue(iage)%mass%stemz(isz) * dec_fac
+          dec_fac = max(0.0, 1.0-leaf_fac*residue(iage)%database%dkrate(3)*decompfac%iddg(isz))
+          residue(iage)%mass%leafz(isz) = residue(iage)%mass%leafz(isz) * dec_fac
+          dec_fac = max(0.0,1.0-store_fac*residue(iage)%database%dkrate(3)*decompfac%iddg(isz))
+          residue(iage)%mass%storez(isz) = residue(iage)%mass%storez(isz) * dec_fac
 
           ! buried root biomass
-          dec_fac = max(0.0, 1.0 - residue(iage)%database%dkrate(4)*decompfac%bg(isz)%iddg)
-          residue(iage)%mass%bg(isz)%rootstorez = residue(iage)%mass%bg(isz)%rootstorez * dec_fac
-          residue(iage)%mass%bg(isz)%rootfiberz = residue(iage)%mass%bg(isz)%rootfiberz * dec_fac
+          dec_fac = max(0.0, 1.0 - residue(iage)%database%dkrate(4)*decompfac%iddg(isz))
+          residue(iage)%mass%rootstorez(isz) = residue(iage)%mass%rootstorez(isz) * dec_fac
+          residue(iage)%mass%rootfiberz(isz) = residue(iage)%mass%rootfiberz(isz) * dec_fac
         end do
       end do
 

@@ -145,11 +145,11 @@
      &                         + residue(mnbpls-1)%mass%flatrootfiber
       ! below ground by layer
       do lay = 1, nslay
-          residue(mnbpls)%mass%bg(lay)%stemz = residue(mnbpls)%mass%bg(lay)%stemz + residue(mnbpls-1)%mass%bg(lay)%stemz
-          residue(mnbpls)%mass%bg(lay)%leafz = residue(mnbpls)%mass%bg(lay)%leafz + residue(mnbpls-1)%mass%bg(lay)%leafz
-          residue(mnbpls)%mass%bg(lay)%storez = residue(mnbpls)%mass%bg(lay)%storez + residue(mnbpls-1)%mass%bg(lay)%storez
-          residue(mnbpls)%mass%bg(lay)%rootstorez =residue(mnbpls)%mass%bg(lay)%rootstorez+residue(mnbpls-1)%mass%bg(lay)%rootstorez
-          residue(mnbpls)%mass%bg(lay)%rootfiberz =residue(mnbpls)%mass%bg(lay)%rootfiberz+residue(mnbpls-1)%mass%bg(lay)%rootfiberz
+          residue(mnbpls)%mass%stemz(lay) = residue(mnbpls)%mass%stemz(lay) + residue(mnbpls-1)%mass%stemz(lay)
+          residue(mnbpls)%mass%leafz(lay) = residue(mnbpls)%mass%leafz(lay) + residue(mnbpls-1)%mass%leafz(lay)
+          residue(mnbpls)%mass%storez(lay) = residue(mnbpls)%mass%storez(lay) + residue(mnbpls-1)%mass%storez(lay)
+          residue(mnbpls)%mass%rootstorez(lay) = residue(mnbpls)%mass%rootstorez(lay) + residue(mnbpls-1)%mass%rootstorez(lay)
+          residue(mnbpls)%mass%rootfiberz(lay) = residue(mnbpls)%mass%rootfiberz(lay) + residue(mnbpls-1)%mass%rootfiberz(lay)
       end do
 
       ! transfer biomass down one level in pools
@@ -165,11 +165,11 @@
           residue(ip)%mass%flatrootfiber = residue(ip-1)%mass%flatrootfiber
           ! below ground by layer
           do lay = 1, nslay
-              residue(ip)%mass%bg(lay)%stemz = residue(ip-1)%mass%bg(lay)%stemz
-              residue(ip)%mass%bg(lay)%leafz = residue(ip-1)%mass%bg(lay)%leafz
-              residue(ip)%mass%bg(lay)%storez = residue(ip-1)%mass%bg(lay)%storez
-              residue(ip)%mass%bg(lay)%rootstorez = residue(ip-1)%mass%bg(lay)%rootstorez
-              residue(ip)%mass%bg(lay)%rootfiberz = residue(ip-1)%mass%bg(lay)%rootfiberz
+              residue(ip)%mass%stemz(lay) = residue(ip-1)%mass%stemz(lay)
+              residue(ip)%mass%leafz(lay) = residue(ip-1)%mass%leafz(lay)
+              residue(ip)%mass%storez(lay) = residue(ip-1)%mass%storez(lay)
+              residue(ip)%mass%rootstorez(lay) = residue(ip-1)%mass%rootstorez(lay)
+              residue(ip)%mass%rootfiberz(lay) = residue(ip-1)%mass%rootfiberz(lay)
           end do
       end do
 
@@ -185,11 +185,11 @@
       residue(1)%mass%flatrootfiber = bcmflatrootfiber
       ! below ground by layer
       do lay = 1, nslay
-          residue(1)%mass%bg(lay)%stemz = bcmbgstemz(lay)
-          residue(1)%mass%bg(lay)%leafz = bcmbgleafz(lay)
-          residue(1)%mass%bg(lay)%storez = bcmbgstorez(lay)
-          residue(1)%mass%bg(lay)%rootstorez = bcmbgrootstorez(lay)
-          residue(1)%mass%bg(lay)%rootfiberz = bcmbgrootfiberz(lay)
+          residue(1)%mass%stemz(lay) = bcmbgstemz(lay)
+          residue(1)%mass%leafz(lay) = bcmbgleafz(lay)
+          residue(1)%mass%storez(lay) = bcmbgstorez(lay)
+          residue(1)%mass%rootstorez(lay) = bcmbgrootstorez(lay)
+          residue(1)%mass%rootfiberz(lay) = bcmbgrootfiberz(lay)
       end do
 
       ! zero out the incoming biomass
@@ -218,7 +218,7 @@
          residue(ip)%decomp%cumdds = residue(ip-1)%decomp%cumdds
          residue(ip)%decomp%cumddf = residue(ip-1)%decomp%cumddf
          do lay = 1, nslay
-            residue(ip)%decomp%bg(lay)%cumddg = residue(ip-1)%decomp%bg(lay)%cumddg
+            residue(ip)%decomp%cumddg(lay) = residue(ip-1)%decomp%cumddg(lay)
          end do
       end do
       residue(1)%decomp%resday = 0
@@ -226,7 +226,7 @@
       residue(1)%decomp%cumdds = 0.0    ! reset cummdds to zero
       residue(1)%decomp%cumddf = 0.0    ! reset cummddf to zero
       do lay = 1, nslay
-         residue(1)%decomp%bg(lay)%cumddg = 0.0    ! reset cummddg to zero
+         residue(1)%decomp%cumddg(lay) = 0.0    ! reset cummddg to zero
       end do
 
 

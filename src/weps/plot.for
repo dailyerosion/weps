@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine plotdata(sr, restot)
+      subroutine plotdata(sr, restot, croptot)
 
       use weps_interface_defs
       use file_io_mod, only: luoplt
@@ -12,6 +12,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: sr
       type(biototal), intent(in) :: restot
+      type(biototal), intent(in) :: croptot
 
 !       Edit History
 !       04-Mar-99       wjr     created

@@ -9,7 +9,7 @@
      & thetfc,por,tens,cycle)
 
        use wepp_interface_defs
-	  implicit none
+       implicit none
 !
 !      soil_adj()
 ! 
@@ -18,16 +18,16 @@
 ! 
  
 ! + + + argument declarations + + +	
-	  real, intent(in):: canhgt,cancov,inrcov,rtm15,rtm(3)
-	  real, intent(in):: bconsd,rh,rspace,avgslp
-	  real, intent(in):: smrm(3),krcrat,tccrat,rrc,kicrat
-	  real, intent(in):: dg(10), thetdr(10), st(10),thdp,frdp
-	  real, intent(in):: thetfc(10), por(10)
-	  integer, intent(in):: cycle, daydis
-	  integer, intent(inout):: ifrost
-	  real, intent(out):: tens, kiadj, kradj, shcrtadj
-	  real, intent(in):: ki, kr, shcrit
-	  
+       real, intent(in):: canhgt,cancov,inrcov,rtm15,rtm
+       real, intent(in):: bconsd,rh,rspace,avgslp
+       real, intent(in):: smrm,krcrat,tccrat,rrc,kicrat
+       real, intent(in):: dg(10), thetdr(10), st(10),thdp,frdp
+       real, intent(in):: thetfc(10), por(10)
+       integer, intent(in):: cycle, daydis
+       integer, intent(inout):: ifrost
+       real, intent(out):: tens, kiadj, kradj, shcrtadj
+       real, intent(in):: ki, kr, shcrit
+
 !     + + + argument definitions + + +
 
 !   ki - initial interrill detachment parameter baseline interrill erodibility
@@ -40,14 +40,14 @@
 !   canhgt - canopy height
 !   cancov - canopy cover
 !   inrcov - interrill cover
-!   rtm15 - root mass at 15 cm
-!   rtm - on living root mass
+!   rtm15 - live root mass at 15 cm
+!   rtm - non living root mass (kg/m^2)
 !   bconsd - consolidation decay coefficient
 !   daydis - days since previous disturbance
 !   rh - ridge height coefficient
 !   rspace - rill spacing
 !   avgslp - average slope 
-!   smrm - submerged residue mass today
+!   smrm - submerged residue mass today (kg/m^2)
 !   krcrat - ratio of freshly tilled to fully consolidated
 !                      rill erodibility (nondimensional)
 !   tccrat - ratio of freshly tilled to fully consolidated
@@ -186,7 +186,7 @@
         ckialr = exp(-0.56*rtm15)
 !
 !       ------ dead root biomass (WEPP Equation 6.11.1)
-        ckiadr = exp(-0.56*(rtm(1)+rtm(2)+rtm(3)))
+        ckiadr = exp(-0.56*rtm)
 !
 !
 !       ------ sealing and crusting
@@ -248,10 +248,10 @@
 !       (WEPP Eq. 6.14.1, adapted to include 3 types of residue)
 !
 !       ... adjustment of kr to buried residue
-        ckrbgb = exp(-.40*(smrm(1)+smrm(2)+smrm(3)))
+        ckrbgb = exp(-.40*smrm)
 !
 !       ... adjustment of kr to dead root
-        ckradr = exp(-2.2 * (rtm(1)+rtm(2)+rtm(3)))
+        ckradr = exp(-2.2 * rtm)
 !       ... adjustment of kr to live root
         ckralr = exp(-3.5*rtm15)
 !

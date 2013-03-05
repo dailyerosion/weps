@@ -336,15 +336,14 @@
           start_leaf = residue(idy)%mass%standleaf
           start_stem = residue(idy)%mass%standstem
           do idx = 1, nslay
-              start_rootstore(idx) = residue(idy)%mass%bg(idx)%rootstorez
-              start_rootfiber(idx) = residue(idy)%mass%bg(idx)%rootfiberz
+              start_rootstore(idx) = residue(idy)%mass%rootstorez(idx)
+              start_rootfiber(idx) = residue(idy)%mass%rootfiberz(idx)
           end do
           if( BTEST(sel_position,0) ) then
               call rem_stand_pool(                                      &
      &        stemf, leaff, storef, rootstoref, rootfiberf,             &
      &        residue(idy)%mass%standstem, residue(idy)%mass%standleaf, residue(idy)%mass%standstore, &
-     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%rootstorez, &
-     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%rootfiberz, &
+     &        residue(idy)%mass%rootstorez, residue(idy)%mass%rootfiberz, &
      &        nslay, residue(idy)%geometry%hyfg, residue(idy)%geometry%grainf, residue(idy)%geometry%dstm, &
      &        tot_mass_rem, sel_mass_left )
           end if
@@ -362,8 +361,7 @@
               ! root removal already done in standing
               call rem_bg_pool(                                         &
      &        stemf, leaff, storef, rootstoref, rootfiberf,             &
-     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%stemz, residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%leafz, &
-     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%storez, &
+     &        residue(idy)%mass%stemz, residue(idy)%mass%leafz, residue(idy)%mass%storez, &
      &        pool_temp1z, pool_temp2z,                                 &
      &        nslay, residue(idy)%geometry%hyfg, residue(idy)%geometry%grainf, &
      &        tot_mass_rem, sel_mass_left )
@@ -371,10 +369,8 @@
               ! standing not done so do root removal here
               call rem_bg_pool(                                         &
      &        stemf, leaff, storef, rootstoref, rootfiberf,             &
-     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%stemz, residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%leafz, &
-     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%storez, &
-     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%rootstorez, &
-     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%rootfiberz, &
+     &        residue(idy)%mass%stemz, residue(idy)%mass%leafz, residue(idy)%mass%storez, &
+     &        residue(idy)%mass%rootstorez, residue(idy)%mass%rootfiberz, &
      &        nslay, residue(idy)%geometry%hyfg, residue(idy)%geometry%grainf, &
      &        tot_mass_rem, sel_mass_left )
             end if
@@ -384,8 +380,7 @@
      &         start_stem, start_leaf, start_store,                     &
      &         start_rootstore, start_rootfiber,                        &
      &         residue(idy)%mass%standstem, residue(idy)%mass%standleaf, residue(idy)%mass%standstore, &
-     &         residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%rootstorez, &
-     &         residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%rootfiberz, &
+     &         residue(idy)%mass%rootstorez, residue(idy)%mass%rootfiberz, &
      &         residue(idy)%mass%flatstem, residue(idy)%mass%flatleaf, residue(idy)%mass%flatstore, &
      &         residue(idy)%geometry%dstm, nslay)
          end if

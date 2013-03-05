@@ -36,10 +36,8 @@
       write( subr_format, '(i0)' ) nsubr
       idx = len_trim(subr_format)
       write( subr_format, '(a8, i0, a5)' ) '(a9, i0.', idx, ', a1)'
-
-      !write(*,*) 'subregion name format string', trim(subr_format)
-
       do idx = 1, nsubr
+          ! create the name
           write( subr_text(idx), subr_format) 'subregion', idx, '/'
           ! create the subdirectory
           call makedir(trim(rootp)//trim(subr_text(idx)) )

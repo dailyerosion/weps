@@ -48,8 +48,8 @@
       residue%decomp%cumddf = 0.0
 
 !     cumulative ddays and biomass for all layers below ground
-      do idx = 1, size(residue%decomp%bg)
-         residue%decomp%bg(idx)%cumddg = 0.0
+      do idx = 1, size(residue%decomp%cumddg)
+         residue%decomp%cumddg(idx) = 0.0
       end do
 
       residue%mass%standstem = 0.0
@@ -63,13 +63,13 @@
       residue%mass%flatrootstore = 0.0
       residue%mass%flatrootfiber = 0.0
 
-      do idx = 1, size(residue%mass%bg)
-         residue%mass%bg(idx)%stemz = 0.0
-         residue%mass%bg(idx)%leafz = 0.0
-         residue%mass%bg(idx)%storez = 0.0
+      do idx = 1, size(residue%mass%stemz)
+         residue%mass%stemz(idx) = 0.0
+         residue%mass%leafz(idx) = 0.0
+         residue%mass%storez(idx) = 0.0
 
-         residue%mass%bg(idx)%rootstorez = 0.0
-         residue%mass%bg(idx)%rootfiberz = 0.0
+         residue%mass%rootstorez(idx) = 0.0
+         residue%mass%rootfiberz(idx) = 0.0
       end do
 
       residue%geometry%dstm = 0.0
@@ -93,15 +93,15 @@
       residue%deriv%fscv = 0.0
       residue%deriv%ftcv = 0.0
 
-      do idx = 1, size(residue%deriv%bg)
-         residue%deriv%bg(idx)%mbgz = 0.0
-         residue%deriv%bg(idx)%mrtz = 0.0
+      do idx = 1, size(residue%deriv%mbgz)
+         residue%deriv%mbgz(idx) = 0.0
+         residue%deriv%mrtz(idx) = 0.0
       end do
 
       !  canopy layer
-      do idx = 1, size(residue%deriv%can)
-         residue%deriv%can(idx)%rsaz = 0.0
-         residue%deriv%can(idx)%rlaz = 0.0
+      do idx = 1, size(residue%deriv%rsaz)
+         residue%deriv%rsaz(idx) = 0.0
+         residue%deriv%rlaz(idx) = 0.0
       end do
 
 !     set biomass decomposition rates to 0.0 for all pools

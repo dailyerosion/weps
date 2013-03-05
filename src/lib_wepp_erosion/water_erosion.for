@@ -3,12 +3,11 @@
 !$Revision$
 !$HeadURL$
 
-!
-      SUBROUTINE water_erosion(isr, cd, cm, cy,luowepperod,sumfile)
+      SUBROUTINE water_erosion(isr, cd, cm, cy, luowepperod, sumfile,   &
+     &                         restot, croptot)
       
       use wepp_interface_defs
-      
-      implicit none
+      use biomaterial, only: biototal
 
 !----------------------------------------------------------------------
 !     water_erosion()
@@ -26,7 +25,8 @@
 	include 'wepp_erosion.inc'
 
       integer, intent(in):: isr,cd,cm,cy,luowepperod,sumfile
-!
+      type(biototal), intent(in) :: restot, croptot
+
 !     Local Variables
 !
 	  integer j,iyear,noout
@@ -34,7 +34,7 @@
 	  real kiadj,kradj,shcrtadj
 	  real ainf(mxslp),binf(mxslp),cinf(mxslp)
 	  real ainftc(mxslp), binftc(mxslp), cinftc(mxslp)
-	  real canhgt,cancov, rtm15
+	  real canhgt,cancov
 	  real sand(mxnsl), silt(mxnsl), clay(mxnsl), orgmat(mxnsl)
 	  real thetdr(mxnsl), tens, rh, qshear
 	  real rrc,qostar, dg(mxnsl), st(mxnsl), thdp, frdp, phi
@@ -42,7 +42,7 @@
 	  real strldn, slpend, ktrato
 	  real frctrl, frcsol, tcend
 	  real shrsol,load(101)
-	  real avsole, rtm(3), smrm(3)
+	  real avsole, smrm
 	  integer ifrost,ndetach,ndepos
 	  real FRCFLW(MXPART), thetfc(mxnsl), por(mxnsl),prcp
         real dslost(101),dstot(1000),stdist(1000),ysdist(1000)
@@ -67,14 +67,13 @@
 !     kiadj - adjusted ki after factor applied, computed by soil_adj
 !     kradj - adjusted kr after factor applied, computed by soil_adj
 !     shcrtadj - adjusted shcrit after factor applied, computed by soil_adj
-!     canhgt - canopy height(m), computed by getFromWeps
-!     cancov - canopy cover. computed by getFromWeps
-!     rtm15 - root mass at 15 cm, computed by getFromWeps
-!     thetdr - 15-bar soil water content (wilting point), computed by getFromWeps
-!     sand - sand content, computed by getFromWeps
-!     silt - silt content, computed by getFromWeps
-!     clay - clay content, computed by getFromWeps
-!     orgmat - organic matter, computed by getFromWeps
+!     canhgt - canopy height(m), computed by getfromweps
+!     cancov - canopy cover. computed by getfromweps
+!     thetdr - 15-bar soil water content (wilting point), computed by getfromweps
+!     sand - sand content, computed by getfromweps
+!     silt - silt content, computed by getfromweps
+!     clay - clay content, computed by getfromweps
+!     orgmat - organic matter, computed by getfromweps
 !     rrc - random roughness coefficient (m)
 !     qostar - non-dimensional discharge out of strips, computed by xinflo
 !     qshear - peak flow discharge (m^3/s), computed by xinflo
@@ -142,16 +141,16 @@
 !     them now.
 !
 
-      call getFromWeps(isr,canhgt,cancov,sand,silt,clay,orgmat,         &
-     &  rtm15,thetdr,rrc,dg,st,thdp,frdp, thetfc, por, rh,              &
-     &  frctrl, frcsol,rtm,smrm,prcp)
+      call getfromweps(isr,canhgt,cancov,sand,silt,clay,orgmat,         &
+     &  thetdr,rrc,dg,st,thdp,frdp, thetfc, por, rh,                    &
+     &  frctrl, frcsol,prcp)
 
       call soil_adj(wp_ki,wp_kr,wp_shcrit,kiadj,kradj,shcrtadj,rrc,     &
      &   canhgt,                                                        &
-     &   cancov, wp_inrcov,rtm15,rtm,wp_bconsd,wp_daydis,rh,            &
-     &   wp_rspace,                                                     &
-     &   wp_avgslp,smrm,wp_krcrat,wp_tccrat,wp_kicrat,dg,thetdr,st,     &
-     &   thdp,frdp,                                                     &
+     &   cancov, wp_inrcov, croptot%mrttotto15, restot%mrttot,wp_bconsd,&
+     &   wp_daydis,rh, wp_rspace,                                       &
+     &   wp_avgslp,restot%mbgtot,wp_krcrat,wp_tccrat,wp_kicrat,dg,      &
+     &   thetdr,st, thdp,frdp,                                          &
      &   ifrost,                                                        &
      &   thetfc,por,tens,wp_cycle)
       

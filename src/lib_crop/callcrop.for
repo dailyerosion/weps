@@ -2,7 +2,7 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine callcrop(daysim, sr, residue, restot)
+      subroutine callcrop(daysim, sr, residue, restot, croptot)
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
@@ -14,6 +14,7 @@
       integer sr
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: restot
+      type(biototal), intent(inout) :: croptot
 
 ! Includes
       include 'p1werm.inc'
@@ -149,14 +150,14 @@
      &      acmbgstem(sr),                                              &
      &      acmrootstore(sr), acmrootfiber(sr), acxstmrep(sr),          &
      &      acm(sr), acmst(sr), acmf(sr), acmrt(sr), acmrtz(1,sr),      &
-     &      acrcd(sr), aszrgh(sr),                                      &
+     &      acrcd(sr), aszrgh(sr), aszlyd(1,sr),                        &
      &      acrsai(sr), acrlai(sr), acrsaz(1,sr), acrlaz(1,sr),         &
      &      acffcv(sr), acfscv(sr), acftcv(sr), acfcancov(sr),          &
      &      ac0rg(sr), acxrow(sr),                                      &
      &      nslay(sr), ac0ssa(sr), ac0ssb(sr), ac0sla(sr),              &
      &      accovfact(sr), ac0ck(sr), acxstm(sr), acdpop(sr),           &
      &      ahztranspdepth(sr), ahzfurcut(sr),                          &
-     &      ahztransprtmin(sr), ahztransprtmax(sr)  )
+     &      ahztransprtmin(sr), ahztransprtmax(sr), croptot  )
 
       ! dependent variables have been updated
       am0cropupfl = 0

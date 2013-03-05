@@ -43,12 +43,13 @@
       
 !-------------------- CROP Routines --------------------------------
 !------------------------
-      subroutine callcrop(daysim, sr, residue, restot)
+      subroutine callcrop(daysim, sr, residue, restot, croptot)
       use biomaterial, only: biomatter, biototal
       integer daysim
       integer sr
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: restot
+      type(biototal), intent(inout) :: croptot
       end subroutine callcrop
 !----------------------
       subroutine  cdbug(isr, slay, restot)
@@ -1055,6 +1056,12 @@
       real ksat(*), soiltemp(*), potwu, actwu, wsf      
       end subroutine transp
 !------------------------------
+      real function transpdepth ( bczrtd, bhzfurcut,                    &
+     &                            bhztransprtmin, bhztransprtmax )
+      real bczrtd, bhzfurcut
+      real bhztransprtmin, bhztransprtmax
+      end function transpdepth
+!------------------------------
       real function unsatcond_bc(theta, thetar, thetas, ksat, lambda)
 
       real  theta, thetar, thetas, ksat, lambda      
@@ -1092,11 +1099,12 @@
 !------------------------------      
 
 !---------------- MAIN Routines ------------------------------
-      subroutine bpools (cd, cm, cy, isr, residue, restot, decompfac)
+      subroutine bpools (cd, cm, cy, isr, residue, restot, croptot, decompfac)
       use biomaterial, only: biomatter, biototal, decomp_factors
       integer cd, cm, cy, isr
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: restot
+      type(biototal), intent(in) :: croptot
       type(decomp_factors), intent(in) :: decompfac
       end subroutine bpools
 !------------------------------
@@ -1169,10 +1177,11 @@
       type(biomatter), dimension(:,:), intent(out) :: residue
       end subroutine openfils
 !--------------------------------
-      subroutine plotdata(sr, restot)
+      subroutine plotdata(sr, restot, croptot)
       use biomaterial, only: biototal
       integer, intent(in) :: sr
       type(biototal), intent(in) :: restot
+      type(biototal), intent(in) :: croptot
       end subroutine plotdata
 !--------------------------------
       subroutine save_soil(isr)
@@ -1197,20 +1206,21 @@
       integer       isr
       end subroutine spllay_ifc
 !--------------------------------
-      subroutine submodels (isr, cd, cm, cy, residue, restot, biotot, decompfac, mandate)
+      subroutine submodels (isr, cd, cm, cy, residue, restot, croptot, biotot, decompfac, mandate)
       use biomaterial, only: biomatter, biototal, decomp_factors
       use mandate_mod, only: opercrop_date
       integer isr, cd, cm, cy
       type(biomatter), dimension(:), intent(inout) :: residue
-      type(biototal), intent(inout) :: restot, biotot
+      type(biototal), intent(inout) :: restot, croptot, biotot
       type(decomp_factors), intent(inout) :: decompfac
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       end subroutine submodels
 !-------------------------------
-      subroutine sumbio(isr, residue, restot, biotot)
+      subroutine sumbio(isr, residue, restot, croptot, biotot)
       use biomaterial, only: biomatter, biototal
       integer, intent(in) :: isr
-      type(biomatter), dimension(:), intent(inout) :: residue
+      type(biomatter), dimension(:), intent(in) :: residue
+      type(biototal), intent(in) :: croptot
       type(biototal), intent(inout) :: restot, biotot
       end subroutine sumbio
 !-------------------------------
@@ -1235,20 +1245,21 @@
      &      bcmbgstem,                                                  &
      &      bcmrootstore, bcmrootfiber, bcxstmrep,                      &
      &      bcm, bcmst, bcmf, bcmrt, bcmrtz,                            &
-     &      bcrcd, bszrgh,                                              &
+     &      bcrcd, bszrgh, bszlyd,                                      &
      &      bcrsai, bcrlai, bcrsaz, bcrlaz,                             &
      &      bcffcv, bcfscv, bcftcv, bcfcancov,                          &
      &      bc0rg, bcxrow,                                              &
      &      bnslay, bc0ssa, bc0ssb, bc0sla,                             &
      &      bcovfact, bc0ck, bcxstm, bcdpop,                            &
      &      bhztranspdepth, bhzfurcut,                                  &
-     &      bhztransprtmin, bhztransprtmax )
+     &      bhztransprtmin, bhztransprtmax, croptot )
+      use biomaterial, only: biomatter, biototal
       real bcmstandstem, bcmstandleaf, bcmstandstore
       real bcmflatstem, bcmflatleaf, bcmflatstore
       real bcmbgstemz(*)
       real bcmrootstorez(*), bcmrootfiberz(*)
       real bczht, bcdstm, bczrtd
-      real bszrgh
+      real bszrgh, bszlyd(*)
       integer bc0rg
       real bcxrow
       real bcmbgstem, bcmrootstore, bcmrootfiber, bcxstmrep
@@ -1258,6 +1269,7 @@
       real bcffcv, bcfscv, bcftcv, bcfcancov
       real bhztranspdepth, bhzfurcut
       real bhztransprtmin, bhztransprtmax
+      type(biototal), intent(inout) :: croptot
       integer bnslay
       real bc0ssa, bc0ssb, bc0sla
       real bcovfact, bc0ck, bcxstm, bcdpop
@@ -1985,12 +1997,13 @@
     TYPE (pd_var_type), DIMENSION(:,:,:), intent(inout) :: monthly_report
     end SUBROUTINE update_monthly_report_vars
 !------------------------
-    SUBROUTINE update_period_update_vars(sbr, period_update, restot)
+SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot)
     USE pd_var_type_def
     use biomaterial, only: biototal
     INTEGER :: sbr              ! current subregion
     TYPE (pd_var_type), DIMENSION(:), intent(inout) :: period_update
     type(biototal), intent(in) :: restot  ! contains:
+    type(biototal), intent(in) :: croptot  ! contains:
     end subroutine  update_period_update_vars
 !-------------------------
     SUBROUTINE update_period_report_vars(pd,npd,cur_day,cur_month,cur_yr,nrot_years, period_update, period_report)
@@ -2597,8 +2610,10 @@
       real, intent(inout) :: factor, expon
       end subroutine undflo
 !----------------------------------
-      SUBROUTINE water_erosion(isr, cd, cm, cy,luowepperod,luoweppsum)
-      integer, intent(in):: isr,cd,cm,cy,luowepperod,luoweppsum     
+      SUBROUTINE water_erosion(isr, cd, cm, cy, luowepperod, sumfile, restot, croptot)
+      use biomaterial, only: biototal
+      integer, intent(in):: isr,cd,cm,cy,luowepperod,sumfile
+      type(biototal), intent(in) :: restot, croptot
       end subroutine water_erosion
 !----------------------------------
      subroutine weppsum(luoweppplot, luoweppsum, years)

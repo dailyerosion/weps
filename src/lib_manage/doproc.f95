@@ -1488,13 +1488,10 @@
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         ! read buried residue amounts
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    dmassres, zmassres, dmassrot, zmassrot
+        read(line(2:len_trim(line)), *, err=901) dmassres, zmassres, dmassrot, zmassrot
         ! place buried residue in pools by layer
-        call resinit(dmassrot, zmassrot, nslay(sr),                     &
-     &               residue(1)%mass%bg(1:size(residue(1)%mass%bg))%rootfiberz, aszlyt(1,sr))
-        call resinit(dmassres,zmassres,nslay(sr),                       &
-     &               residue(1)%mass%bg(1:size(residue(1)%mass%bg))%stemz, aszlyt(1,sr))
+        call resinit(dmassrot, zmassrot, nslay(sr), residue(1)%mass%rootfiberz, aszlyt(1,sr))
+        call resinit(dmassres,zmassres,nslay(sr), residue(1)%mass%stemz, aszlyt(1,sr))
         ! get additional line of data
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
@@ -1506,8 +1503,7 @@
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         ! read decomposition parameters for type of residue buried
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    residue(1)%database%resevapa, residue(1)%database%resevapa
+        read(line(2:len_trim(line)), *, err=901)  residue(1)%database%resevapa, residue(1)%database%resevapa
         ! give residue the proper name
         residue(1)%bname = cropname
         ! post-process stuff
@@ -1518,7 +1514,7 @@
         residue(1)%decomp%cumdds = 0.0
         residue(1)%decomp%cumddf = 0.0
         do idx=1,nslay(sr)
-          residue(1)%decomp%bg(idx)%cumddg = 0.0
+          residue(1)%decomp%cumddg(idx) = 0.0
         end do
 
         ! zero out uninitialized mass pools
@@ -1529,10 +1525,8 @@
         do idx = 2, mnbpls
             residue(idx)%mass%standstem = 0.0
             residue(idx)%mass%flatstem = 0.0
-            call resinit(dmassrot, zmassrot, nslay(sr),                 &
-     &                   residue(idx)%mass%bg(1:size(residue(idx)%mass%bg))%rootfiberz, aszlyt(1,sr))
-            call resinit(dmassres,zmassres,nslay(sr),                   &
-     &                   residue(idx)%mass%bg(1:size(residue(idx)%mass%bg))%stemz, aszlyt(1,sr))
+            call resinit(dmassrot, zmassrot, nslay(sr), residue(idx)%mass%rootfiberz, aszlyt(1,sr))
+            call resinit(dmassres,zmassres,nslay(sr), residue(idx)%mass%stemz, aszlyt(1,sr))
         end do
 
         do idx = 1, mnbpls
@@ -1542,12 +1536,9 @@
             residue(idx)%mass%flatstore = 0.0
             residue(idx)%mass%flatrootstore = 0.0
             residue(idx)%mass%flatrootfiber = 0.0
-            call resinit(dmassres, zmassres, nslay(sr),                 &
-     &                   residue(idx)%mass%bg(1:size(residue(1)%mass%bg))%leafz, aszlyt(1,sr))
-            call resinit(dmassres, zmassres, nslay(sr),                 &
-     &                   residue(idx)%mass%bg(1:size(residue(1)%mass%bg))%storez, aszlyt(1,sr))
-            call resinit(dmassrot, zmassrot, nslay(sr),                 &
-     &                   residue(idx)%mass%bg(1:size(residue(1)%mass%bg))%rootstorez, aszlyt(1,sr))
+            call resinit(dmassres, zmassres, nslay(sr), residue(idx)%mass%leafz, aszlyt(1,sr))
+            call resinit(dmassres, zmassres, nslay(sr), residue(idx)%mass%storez, aszlyt(1,sr))
+            call resinit(dmassrot, zmassrot, nslay(sr), residue(idx)%mass%rootstorez, aszlyt(1,sr))
             ! set other state variables
             residue(idx)%geometry%xstmrep = residue(idx)%database%xstm
             residue(idx)%geometry%grainf = 1.0

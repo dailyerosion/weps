@@ -4,11 +4,11 @@
 !$HeadURL$
 
       subroutine getfromweps(isr,canhgt,cancov,sand,silt,clay,orgmat,   &
-     & rtm15,thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh,                  &
-     & frctrl, frcsol,rtm, smrm, precip)
+     & thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh,                        &
+     & frctrl, frcsol, precip)
      
 !-------------------------------------------------------------------------------------
-!     getFromWeps()
+!     getfromweps()
 !
 !     This subroutine is called on a daily basis before entering the WEPP erosion code.
 !     WEPP variables are updated based on the WEPS variables they are linked to.
@@ -26,14 +26,11 @@
 	include 'c1glob.inc'
 	include 'b1glob.inc'
       include 's1dbc.inc'
-      include 'd1glob.inc'
-!	  include 'hydro/dvolwparam.inc'
       include 's1sgeo.inc'
       include 's1phys.inc'
       include 's1layr.inc'
       include 'p1unconv.inc'
       include 'hydro/htheta.inc'
-!     include 's1sgeo.inc'
       include 'm1flag.inc'
       include 'h1temp.inc'
       include 'wepp_erosion.inc'
@@ -41,14 +38,14 @@
 	   
 
       integer, intent(in):: isr
-	real, intent(out):: canhgt,cancov
+      real, intent(out):: canhgt,cancov
       real, intent(out):: sand(mxnsl), silt(mxnsl), clay(mxnsl)
-	real, intent(out):: orgmat(mxnsl)
-	real, intent(out):: thetdr(mxnsl), rrc, rtm15
-	real, intent(out):: dg(mxnsl), st(mxnsl), thdp, frdp
-	real, intent(out):: thetfc(mxnsl), por(mxnsl), rh
-	real, intent(out):: frctrl, frcsol
-	real, intent(out):: rtm(3), smrm(3), precip
+      real, intent(out):: orgmat(mxnsl)
+      real, intent(out):: thetdr(mxnsl), rrc
+      real, intent(out):: dg(mxnsl), st(mxnsl), thdp, frdp
+      real, intent(out):: thetfc(mxnsl), por(mxnsl), rh
+      real, intent(out):: frctrl, frcsol
+      real, intent(out):: precip
 	
 !     + + + argument declarations + + +     
 !     isr - This variable holds the subregion index.
@@ -58,7 +55,6 @@
 !     silt() - silt fraction by layer
 !     clay() - clay fraction by layer
 !     orgmat() - organic fraction by layer
-!     rtm15 - root mass at 15 cm
 !     thetdr() - 15-bar soil water content (wilting point)
 !     rrc - random roughness coefficient
 !     dg() - depth of each soil layer, meters
@@ -70,32 +66,19 @@
 !     rh - ridge height (m)
 !     frctrl - total rill friction factor
 !     frcsol - soil grain friction factor
-!     rtm() - non living root mass (kg/m^2)
-!     smrm() - submerged residue mass today (kg/m^2)
 !     precip - daily precipitation amount (m)
 !
 
       real bd(mxnsl), cec(mxnsl), cecc, solcon(mxnsl), coca(mxnsl)
-	real oca, bottom, depth(100), lay_val(100)
+	real oca, bottom
       integer i,isFroze
       
-      real valbydepth
-
 !     canopy height in meters
       canhgt = aczht(isr)
       
 !     canopy cover fraction (crop)       
 	cancov = acfcancov(isr)
  
-!     root mass at 15cm, interpolate root mass at depths use 2 age groups from weps
-      do i=1, nslay(isr)
-         depth(i) = aszlyt(i,isr)
-         lay_val(i) = admrtz(i,1,isr)
-         lay_val(i) = lay_val(i) + admrtz(i,2,isr)
-      end do
-      
-	rtm15 = valbydepth(nslay(isr), depth, lay_val, 0, 150.0, 150.0)
-!
 !     random roughness in WEPS is mm, WEPP is m	
       rrc = aslrr(isr) / 1000.0
 
@@ -123,17 +106,6 @@
 	bottom = 0.0
 	isFroze = 0
 
-!     May not be right, admrt is the buried residue root mass
-!     and rtm is dead root mass from wepp with 3 ages: present
-!     previous and total but weps only has two age groups
-!     admbg - Buried residue mass (kg/m^2) Excludes root mass below the surface
-!     smrm - submerged residue mass today
-      do i=1, 3
-       rtm(i) = admrt(i,isr)
-	 smrm(i) = admbg(i,isr)
-      end do
-
-!
 !     Don't really need to get the sand,silt,clay,orgmat, cec, these would
 !     be constant during the simulation. 
 !

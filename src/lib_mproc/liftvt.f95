@@ -87,27 +87,27 @@
                   ! stem
                   lifttot = 0.0
                   do lay=1,nlay
-                      liftlay(lay) = residue(idy)%mass%bg(lay)%stemz * liftf(residue(idy)%database%rbc) * tillf
+                      liftlay(lay) = residue(idy)%mass%stemz(lay) * liftf(residue(idy)%database%rbc) * tillf
                       lifttot = lifttot + liftlay(lay)
-                      residue(idy)%mass%bg(lay)%stemz = residue(idy)%mass%bg(lay)%stemz - liftlay(lay)
+                      residue(idy)%mass%stemz(lay) = residue(idy)%mass%stemz(lay) - liftlay(lay)
                   end do
                   residue(idy)%mass%flatstem = residue(idy)%mass%flatstem + lifttot
 
                   ! leaf
                   lifttot = 0.0
                   do lay=1,nlay
-                      liftlay(lay) = residue(idy)%mass%bg(lay)%leafz * liftf(residue(idy)%database%rbc) * tillf
+                      liftlay(lay) = residue(idy)%mass%leafz(lay) * liftf(residue(idy)%database%rbc) * tillf
                       lifttot = lifttot + liftlay(lay)
-                      residue(idy)%mass%bg(lay)%leafz = residue(idy)%mass%bg(lay)%leafz - liftlay(lay)
+                      residue(idy)%mass%leafz(lay) = residue(idy)%mass%leafz(lay) - liftlay(lay)
                   end do
                   residue(idy)%mass%flatleaf = residue(idy)%mass%flatleaf + lifttot
 
                   ! store
                   lifttot = 0.0
                   do lay=1,nlay
-                      liftlay(lay) = residue(idy)%mass%bg(lay)%storez * liftf(residue(idy)%database%rbc) * tillf
+                      liftlay(lay) = residue(idy)%mass%storez(lay) * liftf(residue(idy)%database%rbc) * tillf
                       lifttot = lifttot + liftlay(lay)
-                      residue(idy)%mass%bg(lay)%storez = residue(idy)%mass%bg(lay)%storez - liftlay(lay)
+                      residue(idy)%mass%storez(lay) = residue(idy)%mass%storez(lay) - liftlay(lay)
                   end do
                   residue(idy)%mass%flatstore = residue(idy)%mass%flatstore + lifttot
 
@@ -115,9 +115,9 @@
                   if (resurface_roots == 1) then
                   lifttot = 0.0
                   do lay=1,nlay
-                      liftlay(lay) = residue(idy)%mass%bg(lay)%rootstorez * liftf(residue(idy)%database%rbc) * tillf
+                      liftlay(lay) = residue(idy)%mass%rootstorez(lay) * liftf(residue(idy)%database%rbc) * tillf
                       lifttot = lifttot + liftlay(lay)
-                      residue(idy)%mass%bg(lay)%rootstorez = residue(idy)%mass%bg(lay)%rootstorez - liftlay(lay)
+                      residue(idy)%mass%rootstorez(lay) = residue(idy)%mass%rootstorez(lay) - liftlay(lay)
                   end do
                   residue(idy)%mass%flatrootstore = residue(idy)%mass%flatrootstore + lifttot
                   endif
@@ -126,9 +126,9 @@
                   lifttot = 0.0
                   if (resurface_roots == 1) then
                   do lay=1,nlay
-                      liftlay(lay) = residue(idy)%mass%bg(lay)%rootfiberz * liftf(residue(idy)%database%rbc) * tillf
+                      liftlay(lay) = residue(idy)%mass%rootfiberz(lay) * liftf(residue(idy)%database%rbc) * tillf
                       lifttot = lifttot + liftlay(lay)
-                      residue(idy)%mass%bg(lay)%rootfiberz = residue(idy)%mass%bg(lay)%rootfiberz - liftlay(lay)
+                      residue(idy)%mass%rootfiberz(lay) = residue(idy)%mass%rootfiberz(lay) - liftlay(lay)
                   end do
                   residue(idy)%mass%flatrootfiber = residue(idy)%mass%flatrootfiber + lifttot
                   endif

@@ -325,57 +325,57 @@
 
          cmass = 0.0
          do i=1,nlay
-            dum1(i) = density(i)*laythk(i)*residue(j)%mass%bg(i)%stemz + cmass
+            dum1(i) = density(i)*laythk(i)*residue(j)%mass%stemz(i) + cmass
             cmass = dum1(i)
-            dum2(i) = residue(j)%mass%bg(i)%stemz
+            dum2(i) = residue(j)%mass%stemz(i)
          end do
          call mixproc(tillmix, nlay, dum2(1), cmass, mass)
          do i=1,nlay
-            residue(j)%mass%bg(i)%stemz = dum2(i)
+            residue(j)%mass%stemz(i) = dum2(i)
          end do
 
          cmass = 0.0
          do i=1,nlay
-            dum1(i) = density(i)*laythk(i)*residue(j)%mass%bg(i)%leafz + cmass
+            dum1(i) = density(i)*laythk(i)*residue(j)%mass%leafz(i) + cmass
             cmass = dum1(i)
-            dum2(i) = residue(j)%mass%bg(i)%leafz
+            dum2(i) = residue(j)%mass%leafz(i)
          end do
          call mixproc(tillmix, nlay, dum2(1), cmass, mass)
          do i=1,nlay
-            residue(j)%mass%bg(i)%leafz = dum2(i)
+            residue(j)%mass%leafz(i) = dum2(i)
          end do
 
          cmass = 0.0
          do i=1,nlay
-            dum1(i) = density(i)*laythk(i)*residue(j)%mass%bg(i)%storez + cmass
+            dum1(i) = density(i)*laythk(i)*residue(j)%mass%storez(i) + cmass
             cmass = dum1(i)
-            dum2(i) = residue(j)%mass%bg(i)%storez
+            dum2(i) = residue(j)%mass%storez(i)
          end do
          call mixproc(tillmix, nlay, dum2(1), cmass, mass)
          do i=1,nlay
-            residue(j)%mass%bg(i)%storez = dum2(i)
+            residue(j)%mass%storez(i) = dum2(i)
          end do
 
          cmass = 0.0
          do i=1,nlay
-            dum1(i) = density(i)*laythk(i)*residue(j)%mass%bg(i)%rootstorez + cmass
+            dum1(i) = density(i)*laythk(i)*residue(j)%mass%rootstorez(i) + cmass
             cmass = dum1(i)
-            dum2(i) = residue(j)%mass%bg(i)%rootstorez
+            dum2(i) = residue(j)%mass%rootstorez(i)
          end do
          call mixproc(tillmix, nlay, dum2(1), cmass, mass)
          do i=1,nlay
-            residue(j)%mass%bg(i)%rootstorez = dum2(i)
+            residue(j)%mass%rootstorez(i) = dum2(i)
          end do
 
          cmass = 0.0
          do i=1,nlay
-            dum1(i) = density(i)*laythk(i)*residue(j)%mass%bg(i)%rootfiberz + cmass
+            dum1(i) = density(i)*laythk(i)*residue(j)%mass%rootfiberz(i) + cmass
             cmass = dum1(i)
-            dum2(i) = residue(j)%mass%bg(i)%rootfiberz
+            dum2(i) = residue(j)%mass%rootfiberz(i)
          end do
          call mixproc(tillmix, nlay, dum2(1), cmass, mass)
          do i=1,nlay
-            residue(j)%mass%bg(i)%rootfiberz = dum2(i)
+            residue(j)%mass%rootfiberz(i) = dum2(i)
          end do
 
       end do

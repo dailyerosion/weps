@@ -4,7 +4,7 @@
 !$Revision$
 !$HeadURL$
 !
-SUBROUTINE update_period_update_vars(sbr, period_update, restot)
+SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot)
 
     use weps_interface_defs
     USE pd_var_tables
@@ -21,7 +21,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot)
                                 ! adrcdtot(sbr)   total effective silhouette
                                 ! admftot(sbr)    total dead flat mass
                                 ! admsttot(sbr)   total dead standing mass
-
+    type(biototal), intent(in) :: croptot  ! contains:
 
     include "p1werm.inc"        ! needed by other include files
 

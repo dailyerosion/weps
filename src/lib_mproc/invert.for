@@ -175,43 +175,43 @@
       do i=1,mnbpls
 
          do k=1,nlay
-            dum2(k) = residue(i)%mass%bg(k)%stemz
+            dum2(k) = residue(i)%mass%stemz(k)
          end do
          call invproc(nlay,laythk,dum2(1))
          do k=1,nlay
-           residue(i)%mass%bg(k)%stemz = dum2(k)
+           residue(i)%mass%stemz(k) = dum2(k)
          end do
 
          do k=1,nlay
-            dum2(k) = residue(i)%mass%bg(k)%leafz
+            dum2(k) = residue(i)%mass%leafz(k)
          end do
          call invproc(nlay,laythk,dum2(1))
          do k=1,nlay
-           residue(i)%mass%bg(k)%leafz = dum2(k)
+           residue(i)%mass%leafz(k) = dum2(k)
          end do
 
          do k=1,nlay
-            dum2(k) = residue(i)%mass%bg(k)%storez
+            dum2(k) = residue(i)%mass%storez(k)
          end do
          call invproc(nlay,laythk,dum2(1))
          do k=1,nlay
-           residue(i)%mass%bg(k)%storez = dum2(k)
+           residue(i)%mass%storez(k) = dum2(k)
          end do
 
          do k=1,nlay
-            dum2(k) = residue(i)%mass%bg(k)%rootstorez
+            dum2(k) = residue(i)%mass%rootstorez(k)
          end do
          call invproc(nlay,laythk,dum2(1))
          do k=1,nlay
-           residue(i)%mass%bg(k)%rootstorez = dum2(k)
+           residue(i)%mass%rootstorez(k) = dum2(k)
          end do
 
          do k=1,nlay
-            dum2(k) = residue(i)%mass%bg(k)%rootfiberz
+            dum2(k) = residue(i)%mass%rootfiberz(k)
          end do
          call invproc(nlay,laythk,dum2(1))
          do k=1,nlay
-           residue(i)%mass%bg(k)%rootfiberz = dum2(k)
+           residue(i)%mass%rootfiberz(k) = dum2(k)
          end do
 
       end do

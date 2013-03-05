@@ -121,19 +121,19 @@
          write(luoddb(isr),2065)
       do 300 l=1,slay
          write(luoddb(isr),2070)                                        &
-     &          l,residue(1)%deriv%bg(l)%mbgz,residue(2)%deriv%bg(l)%mbgz,residue(3)%deriv%bg(l)%mbgz, &
-     &            residue(1)%deriv%bg(l)%mrtz,residue(2)%deriv%bg(l)%mrtz,residue(3)%deriv%bg(l)%mrtz
+     &          l,residue(1)%deriv%mbgz(l),residue(2)%deriv%mbgz(l),residue(3)%deriv%mbgz(l), &
+     &            residue(1)%deriv%mrtz(l),residue(2)%deriv%mrtz(l),residue(3)%deriv%mrtz(l)
   300 continue
 !         write(luoddb(isr),2066)
 !      do 310 l=1,slay
-!         write(luoddb(isr),2071) l,residue(1)%deriv%bg(l)%mbgz,residue(2)%deriv%bg(l)%mbgz,     &
-!     &                           residue(3)%deriv%bg(l)%mbgz,                       &
-!     &                  residue(1)%deriv%bg(l)%mrtz,residue(2)%deriv%bg(l)%mrtz,residue(3)%deriv%bg(l)%mrtz
+!         write(luoddb(isr),2071) l,residue(1)%deriv%mbgz(l),residue(2)%deriv%mbgz(l),     &
+!     &                           residue(3)%deriv%mbgz(l),                       &
+!     &                  residue(1)%deriv%mrtz(l),residue(2)%deriv%mrtz(l),residue(3)%deriv%mrtz(l)
 !  310 continue
 
          write(luoddb(isr),2067)
       do 320 l=1,slay
-         write(luoddb(isr),2072) l,residue(1)%decomp%bg(l)%cumddg,residue(2)%decomp%bg(l)%cumddg, residue(3)%decomp%bg(l)%cumddg
+         write(luoddb(isr),2072) l,residue(1)%decomp%cumddg(l),residue(2)%decomp%cumddg(l), residue(3)%decomp%cumddg(l)
   320 continue
 
          write(luoddb(isr),2068)

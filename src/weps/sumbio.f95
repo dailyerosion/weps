@@ -3,13 +3,14 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine sumbio(isr, residue, restot, biotot)
+      subroutine sumbio(isr, residue, restot, croptot, biotot)
 
       use biomaterial, only: biomatter, biototal
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr
-      type(biomatter), dimension(:), intent(inout) :: residue
+      type(biomatter), dimension(:), intent(in) :: residue
+      type(biototal), intent(in) :: croptot
       type(biototal), intent(inout) :: restot, biotot
 
 !     Update geometric properties of all biomass pools
@@ -113,11 +114,11 @@
 !     sum the buried biomass by layer
 !     sum the root mass by layer
       do jdx=1,nslay(isr)
-        biotot%bg(jdx)%mbgz = 0.0
-        biotot%bg(jdx)%mrtz = 0.0
+        biotot%mbgz(jdx) = 0.0
+        biotot%mrtz(jdx) = 0.0
         do idx=1,mnbpls
-          biotot%bg(jdx)%mbgz = biotot%bg(jdx)%mbgz + residue(idx)%deriv%bg(jdx)%mbgz
-          biotot%bg(jdx)%mrtz = biotot%bg(jdx)%mrtz + residue(idx)%deriv%bg(jdx)%mrtz
+          biotot%mbgz(jdx) = biotot%mbgz(jdx) + residue(idx)%deriv%mbgz(jdx)
+          biotot%mrtz(jdx) = biotot%mrtz(jdx) + residue(idx)%deriv%mrtz(jdx)
         end do
       end do
 ! *****************************************************************
@@ -140,11 +141,11 @@
       ! pool should have it's own height, and hence divisions. This
       ! should at least stay within the arrays.
       do jdx = 1, mncz
-          biotot%can(jdx)%rsaz = acrsaz(jdx,isr)
-          biotot%can(jdx)%rlaz = acrlaz(jdx,isr)
+          biotot%rsaz(jdx) = acrsaz(jdx,isr)
+          biotot%rlaz(jdx) = acrlaz(jdx,isr)
           do idx=1,mnbpls
-              biotot%can(jdx)%rsaz = biotot%can(jdx)%rsaz + residue(idx)%deriv%can(jdx)%rsaz
-              biotot%can(jdx)%rlaz = biotot%can(jdx)%rlaz + residue(idx)%deriv%can(jdx)%rlaz
+              biotot%rsaz(jdx) = biotot%rsaz(jdx) + residue(idx)%deriv%rsaz(jdx)
+              biotot%rlaz(jdx) = biotot%rlaz(jdx) + residue(idx)%deriv%rlaz(jdx)
           end do
       end do
 

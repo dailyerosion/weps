@@ -2,6 +2,7 @@
 !$Date$
 !$Revision$
 !$HeadURL$
+
       subroutine cropupdate(                                            &
      &      bcmstandstem, bcmstandleaf, bcmstandstore,                  &
      &      bcmflatstem, bcmflatleaf, bcmflatstore,                     &
@@ -11,16 +12,17 @@
      &      bcmbgstem,                                                  &
      &      bcmrootstore, bcmrootfiber, bcxstmrep,                      &
      &      bcm, bcmst, bcmf, bcmrt, bcmrtz,                            &
-     &      bcrcd, bszrgh,                                              &
+     &      bcrcd, bszrgh, bszlyd,                                      &
      &      bcrsai, bcrlai, bcrsaz, bcrlaz,                             &
      &      bcffcv, bcfscv, bcftcv, bcfcancov,                          &
      &      bc0rg, bcxrow,                                              &
      &      bnslay, bc0ssa, bc0ssb, bc0sla,                             &
      &      bcovfact, bc0ck, bcxstm, bcdpop,                            &
      &      bhztranspdepth, bhzfurcut,                                  &
-     &      bhztransprtmin, bhztransprtmax )
+     &      bhztransprtmin, bhztransprtmax, croptot )
 
       use weps_interface_defs
+      use biomaterial, only: biomatter, biototal
 
 !     INCLUDE
       include 'p1const.inc'
@@ -29,9 +31,9 @@
 !     + + + FUNCTION DECLARATIONS + + +
 
 !      real biodrag
-      real transpdepth
+!      real transpdepth
 
-!     + + + VARIABLE DECLARATIONS + + +
+!     + + + ARGUMENT DECLARATIONS + + +
 
       ! state variables
       real bcmstandstem, bcmstandleaf, bcmstandstore
@@ -39,7 +41,7 @@
       real bcmbgstemz(*)
       real bcmrootstorez(*), bcmrootfiberz(*)
       real bczht, bcdstm, bczrtd
-      real bszrgh
+      real bszrgh, bszlyd(*)
       integer bc0rg
       real bcxrow
 
@@ -51,6 +53,7 @@
       real bcffcv, bcfscv, bcftcv, bcfcancov
       real bhztranspdepth, bhzfurcut
       real bhztransprtmin, bhztransprtmax
+      type(biototal), intent(inout) :: croptot
 
       ! database variables
       integer bnslay
@@ -100,6 +103,7 @@
 !     bcrcd  - effective Biomass silhouette area (SAI+LAI) (m^2/m^2)
 !              (combination of leaf area and stem area indices)
 !     bszrgh - ridge height
+!     bszlyd - Depth to bottom of each soil layer(mm)
 !     bc0rg - crop seeding location flag (0 - in furrow, 1 - on ridge)
 !     bcxrow - crop row spacing
 
@@ -131,8 +135,13 @@
 !     bcdpop - Number of plants (with single or multple stems) per unit area (#/m^2)
 
 !     LOCAL VARIABLES
-      integer index
+      integer idx
       real temp
+      ! parameter to control depth of slice
+      real scidepth
+      parameter( scidepth = 101.6 ) ! mm 101.6 = 4 inches for SCI
+      real weppdepth
+      parameter( weppdepth = 150.0 ) ! mm 150.0 = 5.9 inches for WEPP
 
       temp = 0.0
 
@@ -140,10 +149,10 @@
       bcmbgstem = 0.0
       bcmrootstore = 0.0
       bcmrootfiber = 0.0
-      do index = 1, bnslay
-          bcmbgstem = bcmbgstem + bcmbgstemz(index)
-          bcmrootstore = bcmrootstore + bcmrootstorez(index)
-          bcmrootfiber = bcmrootfiber + bcmrootfiberz(index)
+      do idx = 1, bnslay
+          bcmbgstem = bcmbgstem + bcmbgstemz(idx)
+          bcmrootstore = bcmrootstore + bcmrootstorez(idx)
+          bcmrootfiber = bcmrootfiber + bcmrootfiberz(idx)
       end do
 
       bcmst = bcmstandstem + bcmstandleaf + bcmstandstore
@@ -151,9 +160,9 @@
       bcmrt = bcmbgstem + bcmrootstore + bcmrootfiber
       bcm = bcmst + bcmf + bcmrt
 
-      do index = 1, bnslay
-          bcmrtz(index) = bcmbgstemz(index) + bcmrootstorez(index)      &
-     &                  + bcmrootfiberz(index)
+      do idx = 1, bnslay
+          bcmrtz(idx) = bcmbgstemz(idx) + bcmrootstorez(idx)            &
+     &                  + bcmrootfiberz(idx)
       end do
 
       ! calculate new stem area index and representative stem diameter
@@ -167,9 +176,9 @@
 
       ! set stem and leaf area by plant height increments
       ! these are divided equally for a first approximation
-      do index = 1, mncz
-          bcrsaz(index) = bcrsai / mncz
-          bcrlaz(index) = bcrlai / mncz
+      do idx = 1, mncz
+          bcrsaz(idx) = bcrsai / mncz
+          bcrlaz(idx) = bcrlai / mncz
       end do
 
       ! effective silhouette
@@ -186,6 +195,48 @@
       ! transpiration depth as a function of furrow cut depth and root depth
       bhztranspdepth = transpdepth(bczrtd, bhzfurcut,                   &
      &                             bhztransprtmin, bhztransprtmax)
+
+      ! assign values to croptot variables
+      croptot%mrttotto4 =                                               &
+     &              valbydepth(bnslay, bszlyd, bcmrtz, 2, 0.0, scidepth)    ! Buried (to a 4 inch depth) root mass across pools (kg/m^2)
+      croptot%dstmtot = bcdstm      ! total number of stems  per unit area (#/m^2)
+      croptot%zht_ave = bczht      ! Weighted ave height across pools (m)
+      croptot%zmht = bczht         ! Tallest biomass height across pools (m)
+      croptot%mtot = bcm         ! Total mass across pools (standing + flat + roots + buried) (kg/m^2)
+      croptot%mtotto4 = bcmst + bcmf + croptot%mrttotto4      ! Total mass across pools (standing + flat + roots + buried to a 4 inch depth) (kg/m^2)
+      croptot%msttot = bcmst       ! Standing mass across pools (standstem + standleaf + standstore) (kg/m^2)
+      croptot%mftot = bcmf        ! Flat mass across pools (flatstem + flatleaf + flatstore) (kg/m^2)
+      croptot%mbgtot = 0.0       ! Buried mass across pools (kg/m^2)
+      croptot%mbgtotto4 = 0.0    ! Buried (to a 4 inch depth) mass across pools (kg/m^2)
+      croptot%mbgtotto15 = 0.0   ! Buried (to a 15 cm depth) mass across pools (kg/m^2)
+      croptot%mrttot = bcmrt       ! Buried root mass across pools (kg/m^2)
+      croptot%mrttotto15 =                                              &
+     &             valbydepth(bnslay, bszlyd, bcmrtz, 2, 0.0, weppdepth)   ! Buried (to a 15 cm depth) root mass across pools (kg/m^2)
+
+      do idx = 1, bnslay
+          croptot%mrtz(idx) = bcmrtz(idx)           ! Buried root mass by soil layer (kg/m^2)
+          croptot%mbgz(idx) = 0.0           ! Buried mass by soil layer (kg/m^2)
+      end do
+
+      croptot%rsaitot = bcrsai      ! total of stem area index across pools (m^2/m^2)
+      croptot%rlaitot = bcrlai      ! total of leaf area index across pools (m^2/m^2)
+
+      do idx = 1, mncz
+          croptot%rsaz(idx) = bcrsai / mncz           ! stem area index by height (1/m)
+          croptot%rlaz(idx) = bcrlai / mncz           ! leaf area index by height (1/m)
+      end do
+
+      croptot%rcdtot =                                                  &
+     &  biodrag(croptot%rlaitot,croptot%rsaitot,0.0,0.0, 0, 0.0,0.0,0.0)       ! effective Biomass silhouette area across pools (SAI+LAI) (m^2/m^2)
+                          ! (combination of leaf area and stem area indices)
+
+      croptot%ffcvtot = bcffcv      ! biomass cover across pools - flat (m^2/m^2)
+      croptot%fscvtot = bcfscv      ! biomass cover across pools - standing (m^2/m^2)
+      croptot%ftcvtot = bcftcv      ! biomass cover across pools - total (m^2/m^2)
+                          ! (adffcvtot + adfscvtot)
+      croptot%ftcancov = bcfcancov     ! fraction of soil surface covered by canopy across pools (m^2/m^2)
+      croptot%evapredu = 0.0     ! composite evaporation reduction from across pools (ea/ep ratio)
+
 
       return
       end
