@@ -18,9 +18,9 @@
       character        sinfil(mnsub)*512
       character        subfil*512
       character        tinfil(mnsub)*512
-      character        usrid*80
-      character        usrloc*80
-      character        usrnam*80
+      character        usrid*256
+      character        usrloc*256
+      character        usrnam*256
       character        winfil*512
       character        series(mnsub)*80
 !      character        wsum*80
