@@ -26,7 +26,7 @@
 
 !        write(*,*) "Start manage"      !MANAGEment (tillage) submodel
         call manage (isr, cd, cm, cy,iy,lopday,lopmon,lopyr, residue,   &
-     &       mandate)
+     &               biotot, mandate)
 
 !        write(*,*) "Start updres"
         call updres(isr, residue, restot)                 !update decomp residue pools

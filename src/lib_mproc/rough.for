@@ -24,11 +24,11 @@
       include 'p1werm.inc'
 !
       integer roughflg
-	  real    tillf,rrimpl,rr,till_i
+      real    tillf,rrimpl,rr,till_i
       integer tillay
-      real    clayf(mnsz), siltf(mnsz)
-      real    rootmass(mnsz), resmass(mnsz)
-      real    ldepth(mnsz)
+      real    clayf(*), siltf(*)
+      real    rootmass(:), resmass(:)
+      real    ldepth(*)
 !
 !     + + + ARGUMENT DEFINITIONS + + +
 !

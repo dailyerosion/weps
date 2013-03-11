@@ -3,9 +3,8 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   manage                                               &
-     &                      (sr, dd, mm, yyyy, syear,                   &
-     &                       lopdd, lopmm, lopyy, residue, mandate)
+      subroutine manage( sr, dd, mm, yyyy, syear, lopdd, lopmm, lopyy,  &
+     &                   residue, biotot, mandate)
 
 !     + + + PURPOSE + + +
 !     This is the main routine of the MANAGEMENT submodel. The date passed
@@ -23,7 +22,7 @@
 
       use weps_interface_defs
       use file_io_mod, only: luomanage
-      use biomaterial, only: biomatter
+      use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
@@ -40,6 +39,7 @@
       integer sr, dd, mm, yyyy, syear
       integer lopdd, lopmm, lopyy
       type(biomatter), dimension(:), intent(inout) :: residue
+      type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
 
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -118,7 +118,9 @@
       case ('G')
         if(opskip.eq.0) call dogroup(sr)
       case ('P')
-        if(opskip.eq.0) call doproc(sr, mcount(sr), residue, mandate)
+        if(opskip.eq.0) then
+           call doproc(sr, mcount(sr), residue, biotot, mandate)
+        endif
       case ('D')
         call stir_report(sr, .false., ostir, oenergyarea)
         read (line (3:12),'(i2,1x,i2,1x,i4)', err=902) day,month,year

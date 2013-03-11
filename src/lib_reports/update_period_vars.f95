@@ -15,7 +15,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
 
 !   + + + ARGUMENT DECLARATIONS + + +
     INTEGER :: sbr              ! current subregion
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: period_update
+    TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update
     type(biototal), intent(in) :: restot  ! contains:
                                 ! adftcvtot(sbr)  total dead flat cover
                                 ! adrcdtot(sbr)   total effective silhouette
@@ -106,6 +106,8 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
 
     !End of period (eop) variables
 
+  if( sbr .gt. 0 ) then
+
 ! Roughness vars
     period_update(Random_rough)%val = aslrr(sbr)
     period_update(Random_rough)%cnt = period_update(Random_rough)%cnt + 1
@@ -180,6 +182,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
     period_update(Crop_number_stems)%val = acdstm(sbr) 
     period_update(Crop_number_stems)%cnt = period_update(Crop_number_stems)%cnt + 1
 
+  end if
 ! Residue vars
     period_update(Res_flat_cov)%val = restot%ftcvtot
     period_update(Res_flat_cov)%cnt = period_update(Res_flat_cov)%cnt + 1
@@ -212,7 +215,9 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
     period_update(All_stand_sil)%val = biotot%rcdtot
     period_update(All_stand_sil)%cnt = period_update(All_stand_sil)%cnt + 1
 
-    ! Remove live flat crop reproductive mass from reported value
+  if( sbr .gt. 0 ) then
+
+  ! Remove live flat crop reproductive mass from reported value
     period_update(All_flat_mass)%val = biotot%mftot - acmflatstore(sbr)
     period_update(All_flat_mass)%cnt = period_update(All_flat_mass)%cnt + 1
 
@@ -223,6 +228,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
     period_update(All_buried_mass)%val = acmrt(sbr) + restot%mrttot + restot%mbgtot
     period_update(All_buried_mass)%cnt = period_update(All_buried_mass)%cnt + 1
 
+  end if
 ! ------------------------------------------------------------------------------------------------------------------
     ! Determine if we have any net soil loss occurring from any grid cell (erosion)
     ! We assume that we don't have any net suspension loss if we don't have any net salt/creep loss
@@ -402,8 +408,8 @@ SUBROUTINE update_period_report_vars(pd,npd,cur_day,cur_month,cur_yr,nrot_years,
     INTEGER, INTENT (IN) :: cur_month
     INTEGER, INTENT (IN) :: cur_yr
     INTEGER, INTENT (IN) :: nrot_years
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: period_update
-    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: period_report
+    TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update
+    TYPE (pd_var_type), DIMENSION(Min_period_vars:,:), intent(inout) :: period_report
 
     INTEGER :: i    ! local loop variables
     INTEGER :: rot_y    ! local variables

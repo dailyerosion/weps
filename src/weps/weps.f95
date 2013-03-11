@@ -358,6 +358,8 @@
          restot(isr) = create_biototal(nslay(isr), mncz)
          biotot(isr) = create_biototal(nslay(isr), mncz)
          decompfac(isr) = create_decomp_factors(nslay(isr))
+         ! allocate layer and per/day in subregion surface state passed to erosion
+         call create_subregionsurfacestate(nslay(isr), 24, subrsurf(isr))
       end do
 
       ! allocate debug local arrays
@@ -769,7 +771,8 @@
                ! Compute half month values
                call update_hmonth_update_vars(cd, cm, rep_update(isr)%hmonth_update, rep_update(isr)%hmrot_update)
                if ((cd == 14) .or. (cd == lstday(cm,cy))) then  ! end of half month
-                  call update_hmonth_report_vars(cd, cm, yrsim, maxper)
+                  call update_hmonth_report_vars(cd, cm, yrsim, maxper, &
+                       rep_update(isr)%hmonth_update, rep_update(isr)%hmrot_update, rep_report(isr)%hmonth_report)
                end if
 
                ! Compute period values
@@ -782,8 +785,10 @@
             if ( (cd == 14) .or. (cd == lstday(cm,cy)) .or. ( (cd == period_dates(pd(0))%ed) .and. (cm == period_dates(pd(0))%em) &
                 .and. ((mod((cy-1),mandatbs(0)%mperod)+1) == period_dates(pd(0))%ey) ) ) then
                ! end of period
-               call update_period_report_vars( pd(0), nperiods(isr), cd, cm, yrsim, mandatbs(0)%mperod, &
+               do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
+                  call update_period_report_vars( pd(0), nperiods(0), cd, cm, yrsim, mandatbs(0)%mperod, &
                                                rep_update(isr)%period_update, rep_report(isr)%period_report)
+               end do
                ! print *, "eop",pd,"  ",cy,cm,cd,"  ", period_dates(pd(0))
                ! Update the current period index
                if (pd(0) == nperiods(0)) then   ! Keep track of number of periods
@@ -811,7 +816,7 @@
 
       do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
           if (report_debug >= 1) then
-              call print_report_vars(nperiods(isr), mandatbs(isr)%mperod, rep_report(isr), mandatbs(isr)%mandate)
+              call print_report_vars(nperiods(0), mandatbs(isr)%mperod, rep_report(isr), mandatbs(isr)%mandate)
           end if
           if (report_debug >= 2) then
               call print_yr_report_vars(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr)%yr_report)

@@ -12,8 +12,8 @@ SUBROUTINE update_monthly_update_vars(cm, monthly_update, mrot_update)
     IMPLICIT NONE
 
     INTEGER, INTENT (IN) :: cm  ! current month
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: monthly_update
-    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: mrot_update
+    TYPE (pd_var_type), DIMENSION(Min_monthly_vars:), intent(inout) :: monthly_update
+    TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:), intent(inout) :: mrot_update
 
     include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
@@ -329,9 +329,9 @@ SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_u
     INTEGER, INTENT (IN) :: cur_month
     INTEGER, INTENT (IN) :: cur_year
     INTEGER, INTENT (IN) :: nrot_years
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: monthly_update
-    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: mrot_update
-    TYPE (pd_var_type), DIMENSION(:,:,:), intent(inout) :: monthly_report
+    TYPE (pd_var_type), DIMENSION(Min_monthly_vars:), intent(inout) :: monthly_update
+    TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:), intent(inout) :: mrot_update
+    TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:,0:), intent(inout) :: monthly_report
 
     INTEGER :: i        ! local loop variables
     INTEGER :: rot_y    ! local variables

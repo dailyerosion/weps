@@ -1307,11 +1307,12 @@
       integer sr
       end subroutine dooper
 !---------------------------
-      subroutine   doproc (sr, bmrotation, residue, mandate)
-      use biomaterial, only: biomatter
+      subroutine   doproc (sr, bmrotation, residue, biotot, mandate)
+      use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
       integer sr, bmrotation
       type(biomatter), dimension(:), intent(inout) :: residue
+      type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       end subroutine doproc
 !--------------------------
@@ -1326,12 +1327,13 @@
       REAL    :: mass_left
       end subroutine get_calib_yield
 !--------------------------
-      subroutine   manage(sr, dd, mm, yyyy, syear, lopdd, lopmm, lopyy, residue, mandate)
-      use biomaterial, only: biomatter
+      subroutine manage( sr, dd, mm, yyyy, syear, lopdd, lopmm, lopyy, residue, biotot, mandate)
+      use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
       integer sr, dd, mm, yyyy, syear
       integer lopdd, lopmm, lopyy
       type(biomatter), dimension(:), intent(inout) :: residue
+      type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       end subroutine manage
 !-------------------------
@@ -1839,11 +1841,11 @@
      &               rootmass, resmass,                                 &
      &               ldepth ) 
       integer roughflg
-          real    tillf,rrimpl,rr,till_i
+      real    tillf,rrimpl,rr,till_i
       integer tillay
       real    clayf(*), siltf(*)
-      real    rootmass(*), resmass(*)
-      real    ldepth(*)      
+      real    rootmass(:), resmass(:)
+      real    ldepth(*)
       end subroutine rough
 !---------------------
       subroutine thin (                                                 &
@@ -1982,10 +1984,11 @@
 !-----------------------
     SUBROUTINE print_yr_report_vars(nperiods, nrot_yrs, ncycles, yr_report)
     USE pd_var_type_def
+    USE pd_var_tables
     INTEGER, INTENT (IN) :: nperiods
     INTEGER, INTENT (IN) :: nrot_yrs
     INTEGER, INTENT (IN) :: ncycles
-    TYPE (pd_var_type), DIMENSION(:,:), intent(in) :: yr_report
+    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,:), intent(in) :: yr_report
     end subroutine print_yr_report_vars
 !----------------------
       SUBROUTINE run_ave(pd_ave, new_val, cnt) 
@@ -1998,65 +2001,84 @@
 !-----------------------
     SUBROUTINE update_hmonth_update_vars(cd, cm, hmonth_update, hmrot_update)
     USE pd_var_type_def
+    USE pd_var_tables
     INTEGER, INTENT (IN) :: cd  ! current day
     INTEGER, INTENT (IN) :: cm  ! current month
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: hmonth_update
-    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: hmrot_update
+    TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:), intent(inout) :: hmonth_update
+    TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:,:), intent(inout) :: hmrot_update
     end subroutine update_hmonth_update_vars
+!-----------------------
+    SUBROUTINE update_hmonth_report_vars(cur_day, cur_month, cur_yr, nrot_years, hmonth_update, hmrot_update, hmonth_report)
+    USE pd_var_type_def
+    USE pd_var_tables
+    INTEGER, INTENT (IN) :: cur_day  
+    INTEGER, INTENT (IN) :: cur_month  
+    INTEGER, INTENT (IN) :: cur_yr  
+    INTEGER, INTENT (IN) :: nrot_years
+    TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:), intent(inout) :: hmonth_update
+    TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:,:), intent(inout) :: hmrot_update
+    TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:,:,0:), intent(inout) :: hmonth_report
+    end SUBROUTINE update_hmonth_report_vars
 !-----------------------
     SUBROUTINE update_monthly_update_vars(cm, monthly_update, mrot_update)
     USE pd_var_type_def
+    USE pd_var_tables
     INTEGER, INTENT (IN) :: cm  ! current month
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: monthly_update
-    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: mrot_update
+    TYPE (pd_var_type), DIMENSION(Min_monthly_vars:), intent(inout) :: monthly_update
+    TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:), intent(inout) :: mrot_update
     end subroutine  update_monthly_update_vars
 !------------------------
     SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_update, mrot_update, monthly_report)
     USE pd_var_type_def
+    USE pd_var_tables
     INTEGER, INTENT (IN) :: cur_month
     INTEGER, INTENT (IN) :: cur_year
     INTEGER, INTENT (IN) :: nrot_years
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: monthly_update
-    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: mrot_update
-    TYPE (pd_var_type), DIMENSION(:,:,:), intent(inout) :: monthly_report
+    TYPE (pd_var_type), DIMENSION(Min_monthly_vars:), intent(inout) :: monthly_update
+    TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:), intent(inout) :: mrot_update
+    TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:,0:), intent(inout) :: monthly_report
     end SUBROUTINE update_monthly_report_vars
 !------------------------
 SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot)
     USE pd_var_type_def
+    USE pd_var_tables
     use biomaterial, only: biototal
     INTEGER :: sbr              ! current subregion
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: period_update
+    TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update
     type(biototal), intent(in) :: restot  ! contains:
     type(biototal), intent(in) :: croptot  ! contains:
     end subroutine  update_period_update_vars
 !-------------------------
     SUBROUTINE update_period_report_vars(pd,npd,cur_day,cur_month,cur_yr,nrot_years, period_update, period_report)
     USE pd_var_type_def
+    USE pd_var_tables
     INTEGER, INTENT (IN) :: pd, npd
     INTEGER, INTENT (IN) :: cur_day
     INTEGER, INTENT (IN) :: cur_month
     INTEGER, INTENT (IN) :: cur_yr
     INTEGER, INTENT (IN) :: nrot_years
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: period_update
-    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: period_report
+    TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update
+    TYPE (pd_var_type), DIMENSION(Min_period_vars:,:), intent(inout) :: period_report
     end SUBROUTINE update_period_report_vars
 !-------------------------            
     SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
     USE pd_var_type_def
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yrly_update
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yrot_update
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yr_update
+    USE pd_var_tables
+    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrly_update
+    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrot_update
+    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yr_update
     end subroutine update_yrly_update_vars
 !-------------------------            
     SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, yrly_update, yrot_update, yr_update, yrly_report, yr_report)
     USE pd_var_type_def
+    USE pd_var_tables
     INTEGER, INTENT (IN) :: nrot_years
     INTEGER, INTENT (IN) :: cur_year
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yrly_update
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yrot_update
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yr_update
-    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: yrly_report
-    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: yr_report
+    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrly_update
+    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrot_update
+    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yr_update
+    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,:), intent(inout) :: yrly_report
+    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,:), intent(inout) :: yr_report
     end SUBROUTINE update_yrly_report_vars
 !-------------------------            
 !---------------  Soil Routines ------------------------------       

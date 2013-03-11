@@ -28,9 +28,10 @@
 
 !     + + +   LOCAL VARIABLES + + +
       integer idx, jdx, alloc_stat, sum_stat
-      character*10 :: decfile ! decomposition detail age pool output file name
       character*20 :: subr_text(nsubr) ! subregion subdirectory text string
       character*20 :: subr_format      ! format string for creating subr_text
+      character*20 :: dec_text ! decomposition detail age pool output file name text string
+      character*20 :: dec_format ! format string for creating dec_text
 
       ! create subregion directory names
       write( subr_format, '(i0)' ) nsubr
@@ -136,23 +137,19 @@
       endif
       if ((am0dfl .eq. 2).or.(am0dfl.eq.3)) then
         ! open files to match number of biomass pools
-
+        write( dec_format, '(i0)' ) mnbpls
+        idx = len_trim(dec_format)
+        write( dec_format, '(a8, i0, a5)' ) '(a3, i0.', idx, ', a4)'
         ! create age pool output file names, set unit numbers and open files
-        ! assign first three characters to file name
-        decfile(1:3) = 'dec'
-        ! assign last four characters to file name
-        decfile(6:10) = '.btmp'
         do idx = 1, nsubr
 
            do jdx = 1,mnbpls
-             ! assign 4 character of file name to be the number character corresponsing to tens place of idx
-             decfile(4:4) = char(48+(jdx/10))
-             ! assign 5 character of file name to be the number character corresponsing to ones place of idx
-             decfile(5:5) = char(48+(jdx-(jdx/10)*10))
+             ! create the name
+             write( dec_text, dec_format) 'dec', idx, '.btmp'
              ! display created file
-             !write(*,*) 'File name created: ', decfile(jdx)
+             !write(*,*) 'File name created: ', dec_text
              ! assign logical unit number of opening file to array
-             call fopenk (residue(jdx,idx)%luo%dec, rootp(1:len_trim(rootp)) // subr_text(idx) // decfile, 'unknown')
+             call fopenk (residue(jdx,idx)%luo%dec, rootp(1:len_trim(rootp)) // subr_text(idx) // dec_text, 'unknown')
            end do
 
             allocate( luod_below(nsubr), stat=alloc_stat )

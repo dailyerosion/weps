@@ -115,10 +115,11 @@ contains
      end if
   end subroutine destroy_cellsurfacestate
 
+  ! NOTE: defined as subroutine to accomodate sweep usage. Values are assigned to non-array elements before number of layers is known.
   subroutine create_subregionsurfacestate(nslay, nswet, subrsurf)
      integer, intent(in) :: nslay             ! number of soil layers
      integer, intent(in) :: nswet             ! number of surface wetness values
-     type(subregionsurfacestate), intent(inout) :: subrsurf  ! this needs to retain values already in non array entities
+     type(subregionsurfacestate), intent(inout) :: subrsurf  ! this needs to retain values already in non array entities for erodin in sweep
 
      ! local variable
      integer :: alloc_stat  ! allocation status return

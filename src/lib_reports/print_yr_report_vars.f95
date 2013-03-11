@@ -14,7 +14,7 @@ SUBROUTINE print_yr_report_vars(nperiods, nrot_yrs, ncycles, yr_report)
     INTEGER, INTENT (IN) :: nperiods
     INTEGER, INTENT (IN) :: nrot_yrs
     INTEGER, INTENT (IN) :: ncycles
-    TYPE (pd_var_type), DIMENSION(:,:), intent(in) :: yr_report
+    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,:), intent(in) :: yr_report
 
     INTEGER :: i,p,hm,m,y               ! local loop variables
 

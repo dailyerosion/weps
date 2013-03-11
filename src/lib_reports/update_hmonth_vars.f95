@@ -13,8 +13,8 @@ SUBROUTINE update_hmonth_update_vars(cd, cm, hmonth_update, hmrot_update)
 
     INTEGER, INTENT (IN) :: cd  ! current day
     INTEGER, INTENT (IN) :: cm  ! current month
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: hmonth_update
-    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: hmrot_update
+    TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:), intent(inout) :: hmonth_update
+    TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:,:), intent(inout) :: hmrot_update
 
     include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
@@ -75,9 +75,7 @@ END SUBROUTINE update_hmonth_update_vars
 
 SUBROUTINE update_hmonth_report_vars(cur_day, cur_month, cur_yr, nrot_years, hmonth_update, hmrot_update, hmonth_report)
 
-    USE pd_update_vars
-    USE pd_report_vars
-
+    USE pd_var_type_def
     USE pd_var_tables
 
     IMPLICIT NONE
@@ -86,9 +84,9 @@ SUBROUTINE update_hmonth_report_vars(cur_day, cur_month, cur_yr, nrot_years, hmo
     INTEGER, INTENT (IN) :: cur_month  
     INTEGER, INTENT (IN) :: cur_yr  
     INTEGER, INTENT (IN) :: nrot_years
-    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: hmonth_update
-    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: hmrot_update
-       TYPE (pd_var_type), DIMENSION(:,:,:), intent(inout) :: hmonth_report
+    TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:), intent(inout) :: hmonth_update
+    TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:,:), intent(inout) :: hmrot_update
+    TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:,:,0:), intent(inout) :: hmonth_report
 
     INTEGER :: rot_y
 
