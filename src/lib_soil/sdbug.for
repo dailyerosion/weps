@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine  sdbug(isr,slay)
+      subroutine  sdbug(isr,slay, biotot)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -16,10 +16,11 @@
 !     + + + KEY WORDS + + +
 !     wind, erosion, hydrology, tillage, soil, crop, decomposition
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-
       use weps_interface_defs
       use file_io_mod, only: luosdb
+      use biomaterial, only: biototal
+
+!     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
@@ -32,7 +33,6 @@
       include 's1dbc.inc'
       include 's1sgeo.inc'
       include 's1psd.inc'
-      include 'b1glob.inc'
       include 'c1gen.inc'
       include 'c1glob.inc'
       include 'w1clig.inc'
@@ -48,6 +48,7 @@
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr, slay
+      type(biototal), intent(in) :: biotot
 
 !     + + + LOCAL VARIABLES + + +
       integer cd, cm, cy, i, l
@@ -90,7 +91,7 @@
      &        ' awtdpt  awadir  awhrmx  amzele ')
  2038 format (f7.2,9f8.2)
  2050 format ('amrslp(',i2,') acftcv(',i2,') acrlai(',i2,')',           &
-     &        ' aczrtd(',i2,') abmf(',i2,') ahfwsf(',i2,')',            &
+     &        ' aczrtd(',i2,') biotot%mftot(',i2,') ahfwsf(',i2,')',    &
      &        ' ahzper(',i2,')')
  2051 format (2f10.2,2f10.5,2x,f10.2,f10.2,f12.2)
  2052 format ('ahzrun(',i2,') ahzirr(',i2,') ahzsno(',i2,')',           &
@@ -124,7 +125,7 @@
       write(luosdb,2050) isr,isr,isr,isr,isr,isr,isr
 
       write(luosdb,2051) amrslp(isr),acftcv(isr),acrlai(isr),           &
-     &               aczrtd(isr), abmf(isr), ahfwsf(isr), ahzper(isr)
+     &               aczrtd(isr), biotot%mftot, ahfwsf(isr), ahzper(isr)
       write(luosdb,2052) isr,isr,isr,isr,isr,isr,isr
       write(luosdb,2053) ahzrun(isr),ahzirr(isr),ahzsno(isr),           &
      &               ahzsmt(isr), asxrgs(isr),aszrgh(isr),aslrr(isr)

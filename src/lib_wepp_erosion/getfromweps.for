@@ -24,7 +24,6 @@
       include 'p1werm.inc'
 	include 's1dbh.inc'
 	include 'c1glob.inc'
-	include 'b1glob.inc'
       include 's1dbc.inc'
       include 's1sgeo.inc'
       include 's1phys.inc'

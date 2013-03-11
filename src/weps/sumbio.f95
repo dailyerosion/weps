@@ -20,7 +20,6 @@
       include 's1sgeo.inc'
       include 'c1gen.inc'
       include 'c1db1.inc'
-      include 'b1glob.inc'
       include 'c1glob.inc'
       include 'main/main.inc'
 
@@ -184,7 +183,7 @@
 ! ***    *  abffcv(isr), abfscv(isr),abftcv(isr)
 
       ! canopy cover for all biomass (overlaps)
-      biotot%ftcancov=acfcancov(isr)+restot%ftcancov*(1.0-acfcancov(isr))
+      biotot%ftcancov = acfcancov(isr) + restot%ftcancov*(1.0-acfcancov(isr))
 
 !     find composite evaporation supression for total flat residue
       ! set initial value to no residue condition

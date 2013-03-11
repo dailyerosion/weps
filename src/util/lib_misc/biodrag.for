@@ -10,7 +10,7 @@
 
 !     + + + PURPOSE + + +
 !     BIODRAG: combine effects of leaves and stems on drag coef.
-!     Calling subroutine needs b1glob.inc, c1gen.inc s1sgeo.inc
+!     Calling subroutine needs c1gen.inc s1sgeo.inc
 
 !     Leaves are less effective at reducing the wind speed than
 !     stems.  Three effects are simulated: 1. streamlining of leaves,

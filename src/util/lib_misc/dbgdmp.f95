@@ -3,20 +3,21 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine dbgdmp(day,sr, residue)
+      subroutine dbgdmp(day,sr, residue, biotot)
 ! ****************************************************************** wjr
 !     The dumps variables that have gone out of range
 
 !       EDIT HISTORY
 !       01-Mar-99       wjr     original coding
 
-      use biomaterial, only: biomatter
+      use biomaterial, only: biomatter, biototal
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: day
       integer, intent(in) :: sr
       type(biomatter), dimension(:), intent(in) :: residue
-      
+      type(biototal), intent(in) :: biotot
+
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include 'p1werm.inc'
@@ -40,7 +41,6 @@
       include 'c1db2.inc'
       include 'c1db3.inc'
       include 'c1glob.inc'
-      include 'b1glob.inc'
       include 'w1clig.inc'
       include 'w1wind.inc'
       include 'w1pavg.inc'
@@ -220,36 +220,36 @@
       if (dmpflg) write(*,*) 'b1geom'
 !      
 ! wjr,  test values based on definition
-      if (abrsai(sr).lt.0.0.or.abrsai(sr).gt.1.0)                       &
-     &  write(*,*) 'day ',day,' abrsai ', abrsai(sr)
+      if (biotot%rsaitot .lt. 0.0 .or. biotot%rsaitot .gt. 1.0)  &
+     &  write(*,*) 'day ',day,' biotot%rsaitot ', biotot%rsaitot
 !
 ! wjr,  test values based on definition
-      if (abrlai(sr).lt.0.0.or.abrlai(sr).gt.1.0)                       &
-     &  write(*,*) 'day ',day,' abrlai ', abrlai(sr)
+      if (biotot%rlaitot .lt. 0.0 .or. biotot%rlaitot .gt. 1.0) &
+     &  write(*,*) 'day ',day,' biotot%rlaitot ', biotot%rlaitot
 !
       do 20 idx=1,mncz
 !      
 ! wjr,  test values based on definition
-      if (abrsaz(idx, sr).lt.0.0.or.abrsaz(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' abrsaz(',idx,') ', abrsaz(idx, sr)
+      if (biotot%rsaz(idx) .lt. 0.0 .or. biotot%rsaz(idx) .gt. tstmax) &
+     &  write(*,*) 'day ',day,' biotot%rsaz(',idx,') ', biotot%rsaz(idx)
 !
 ! wjr,  test values based on definition
-      if (abrlaz(idx, sr).lt.0.0.or.abrlaz(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' abrlaz(',idx,') ', abrlaz(idx, sr)
+      if (biotot%rlaz(idx) .lt. 0.0 .or. biotot%rlaz(idx) .gt. tstmax) &
+     &  write(*,*) 'day ',day,' biotot%rlaz(',idx,') ', biotot%rlaz(idx)
 !
    20 continue
 !
 ! wjr,  test values based on definition
-      if (abffcv(sr).lt.0.0.or.abffcv(sr).gt.1.0)                       &
-     &  write(*,*) 'day ',day,' abffcv ', abffcv(sr)
+      if (biotot%ffcvtot .lt. 0.0 .or. biotot%ffcvtot .gt. 1.0) &
+     &  write(*,*) 'day ',day,' biotot%ffcvtot ', biotot%ffcvtot
 !
 ! wjr,  test values based on definition
-      if (abfscv(sr).lt.0.0.or.abfscv(sr).gt.1.0)                       &
-     &  write(*,*) 'day ',day,' abfscv ', abfscv(sr)
+      if (biotot%fscvtot .lt. 0.0 .or. biotot%fscvtot .gt. 1.0) &
+     &  write(*,*) 'day ',day,' biotot%fscvtot ', biotot%fscvtot
 !
 ! wjr,  test values based on definition
-      if (abftcv(sr).lt.0.0.or.abftcv(sr).gt.1.0)                       &
-     &  write(*,*) 'day ',day,' abftcv ', abftcv(sr)
+      if (biotot%ftcvtot .lt. 0.0 .or. biotot%ftcvtot .gt. 1.0) &
+     &  write(*,*) 'day ',day,' biotot%ftcvtot ', biotot%ftcvtot
 !
 ! w1clig
 !

@@ -4,7 +4,7 @@
 !$Revision$
 !$HeadURL$
 !
-SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot)
+SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot)
 
     use weps_interface_defs
     USE pd_var_tables
@@ -22,29 +22,29 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot)
                                 ! admftot(sbr)    total dead flat mass
                                 ! admsttot(sbr)   total dead standing mass
     type(biototal), intent(in) :: croptot  ! contains:
+                                ! acfcancov(sbr)  crop canopy cover
+                                ! acftcv(sbr)     crop flat cover
+                                ! acrcd(sbr)      crop effective silhouette
+                                ! acmf(sbr)       crop flat mass
+                                ! acmst(sbr)      crop standing mass
+    type(biototal), intent(in) :: biotot  ! contains:
+                                ! abftcv(sbr)     all flat cover
+                                ! abrcd           all effective silhouette
+                                ! abmf(sbr)       all flat mass
+                                ! abmst(sbr)      all standing mass
 
     include "p1werm.inc"        ! needed by other include files
 
     include "m1geo.inc"         ! sim_area - area of simulation region (m^2)
 
+    include "c1glob.inc"        ! contains
+                                ! acmstandstore(sbr)      crop standing repr mass
+                                ! acmflatstore(sbr)      crop flat repr mass
+
     include "s1sgeo.inc"        ! aslrr(sbr) Allmaras RR values
                                 ! aszrgh(sbr) Ridge height
                                 ! asxrgs(sbr) Ridge spacing
                                 ! asargo(sbr) Ridge dir
-
-    include "c1glob.inc"        ! acfcancov(sbr)  crop canopy cover
-                                ! acftcv(sbr)     crop flat cover
-                                ! acrcd(sbr)      crop effective silhouette
-                                ! acmf(sbr)       crop flat mass
-                                ! acmst(sbr)      crop standing mass
-                                ! acmstandstore(sbr)      crop standing repr mass
-                                ! acmflatstore(sbr)      crop flat repr mass
-
-
-    include "b1glob.inc"        ! abftcv(sbr)     all flat cover
-                                ! abrcd           all effective silhouette
-                                ! abmf(sbr)       all flat mass
-                                ! abmst(sbr)      all standing mass
 
     include "erosion/m2geo.inc" ! imax, jmax, ix, iy of simulation grid
     include "erosion/e2erod.inc"! egt, egtcs, egtss, egt10
@@ -206,18 +206,18 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot)
     period_update(Res_number_stems)%cnt = period_update(Res_number_stems)%cnt + 1
 
 ! Biomass vars
-    period_update(All_flat_cov)%val = abftcv(sbr)
+    period_update(All_flat_cov)%val = biotot%ftcvtot
     period_update(All_flat_cov)%cnt = period_update(All_flat_cov)%cnt + 1
 
-    period_update(All_stand_sil)%val = abrcd(sbr)
+    period_update(All_stand_sil)%val = biotot%rcdtot
     period_update(All_stand_sil)%cnt = period_update(All_stand_sil)%cnt + 1
 
     ! Remove live flat crop reproductive mass from reported value
-    period_update(All_flat_mass)%val = abmf(sbr) - acmflatstore(sbr)
+    period_update(All_flat_mass)%val = biotot%mftot - acmflatstore(sbr)
     period_update(All_flat_mass)%cnt = period_update(All_flat_mass)%cnt + 1
 
     ! Remove live standing crop reproductive mass from reported value
-    period_update(All_stand_mass)%val = abmst(sbr) - acmstandstore(sbr)
+    period_update(All_stand_mass)%val = biotot%msttot - acmstandstore(sbr)
     period_update(All_stand_mass)%cnt = period_update(All_stand_mass)%cnt + 1
 
     period_update(All_buried_mass)%val = acmrt(sbr) + restot%mrttot + restot%mbgtot

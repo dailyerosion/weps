@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine plotdata(sr, restot, croptot)
+      subroutine plotdata(sr, restot, croptot, biotot)
 
       use weps_interface_defs
       use file_io_mod, only: luoplt
@@ -13,6 +13,7 @@
       integer, intent(in) :: sr
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
+      type(biototal), intent(in) :: biotot
 
 !       Edit History
 !       04-Mar-99       wjr     created
@@ -21,7 +22,6 @@
 ! ***      include 'm1sim.inc'
       include 'm1flag.inc'
       include 'c1glob.inc'
-      include 'b1glob.inc'
       include 'h1db1.inc'
       include 's1layr.inc'
       include 's1phys.inc'
@@ -147,7 +147,7 @@
      &                    aszrgh(sr), asargo(sr), aslrr(sr),            &
      &                    aslagm(1,sr), aseags(1,sr), asfcr(sr),        &
      &                    asmlos(sr), asflos(sr), asdblk(1,sr),         &
-     &                    abffcv(sr), abfscv(sr),                       &
+     &                    biotot%ffcvtot, biotot%fscvtot,               &
      &                    acrlai(sr), acrsai(sr),                       &
      &                    acmst(sr), acfcancov(sr)
 

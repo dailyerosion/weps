@@ -466,7 +466,7 @@
                call timer(TIMEROS,TIMSTOP)
                call timer(TIMSBEROD,TIMSTART)
 
-               call sberod (time,SURF_UPD_FLG)
+               call sberod (time,SURF_UPD_FLG, subrsurf)
 
                call timer(TIMSBEROD,TIMSTOP)
                call timer(TIMEROS,TIMSTART)

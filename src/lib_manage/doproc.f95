@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   doproc (sr, bmrotation, residue, mandate)
+      subroutine   doproc (sr, bmrotation, residue, biotot, mandate)
 
 !     + + + PURPOSE + + +
 !     Doproc is called when a processline is found in the management file
@@ -17,7 +17,7 @@
 
       use weps_interface_defs
       use file_io_mod, only: luomanage, luotdb
-      use biomaterial, only: biomatter
+      use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
@@ -34,7 +34,6 @@
       include 's1surf.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
-      include 'b1glob.inc'
       include 'c1gen.inc'
       include 'c1db1.inc'
       include 'c1db2.inc'
@@ -56,6 +55,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
       type(biomatter), dimension(:), intent(inout) :: residue
+      type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
 
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -363,7 +363,7 @@
         ! the best estimate is the number from sumbio from the previous day.
         call rough(roughflg,rrimpl,ti,fracarea,aslrr(sr),               &
      &             tlayer, asfcla(1,sr), asfsil(1,sr),                  &
-     &             abmbgz(1,sr), abmrtz(1,sr),                          &
+     &             biotot%mbgz, biotot%mrtz,                            &
      &             aszlyd(1,sr))
 
 !     post-process stuff

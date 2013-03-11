@@ -10,7 +10,7 @@
 ! crop and individual biomass pools (not all pools have the same variables)
 
 
-      subroutine bpools (cd, cm, cy, isr, residue, restot, croptot, decompfac)
+      subroutine bpools (cd, cm, cy, isr, residue, restot, croptot, biotot, decompfac)
 
       use biomaterial, only: biomatter, biototal, decomp_factors
       use file_io_mod, only: luocrp1, luobio1
@@ -20,11 +20,11 @@
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
+      type(biototal), intent(in) :: biotot
       type(decomp_factors), intent(in) :: decompfac
 
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'b1glob.inc'
       include 'c1glob.inc'
       include 'c1db1.inc'
       include 'main/main.inc'   ! daysim
@@ -129,11 +129,11 @@
 
           ! All Residue Pools Combined
           write(luobio1(isr),2345) daysim, doy, cy,                     &
-     &    abffcv(isr), abfscv(isr), abftcv(isr),                        &
-     &    0.0, abrsai(isr), abrlai(isr),                                &
-     &    abm(isr), abmf(isr), abmst(isr),                              &
-     &    abmrt(isr), abmbg(isr),                                       &
-     &    abdstm(isr), abzht(isr), 0.0, 0.0
+          biotot%ffcvtot, biotot%fscvtot, biotot%ftcvtot, &
+          0.0, biotot%rsaitot, biotot%rlaitot, &
+          biotot%mtot, biotot%mftot, biotot%msttot, &
+          biotot%mrttot, biotot%mbgtot, &
+          biotot%dstmtot, biotot%zht_ave, 0.0, 0.0
         endif
       endif
 

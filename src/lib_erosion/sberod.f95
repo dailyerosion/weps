@@ -5,7 +5,7 @@
 !**********************************************************************
 !     subroutine sberod
 !**********************************************************************
-      subroutine sberod (time,flg)
+      subroutine sberod (time,flg, subrsurf)
 
 !     To calc loss/dep of saltation/creep, susp. and PM-10 at cells
 !     To call sbqout to calc. qo, qsso, q10o for each cell
@@ -14,24 +14,20 @@
 !         depletes upwind and increases downwind
 
       use weps_interface_defs
+      use erosion_data_struct_defs
 
 !     +++ ARGUMENT DECLARATIONS +++
-
       real      time
       integer   flg    !Surface update flag (1=on, 0=off)
-!
+      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
+
 !     +++ ARGUMENT DEFINITIONS +++
 !     time     = time interval (seconds)
 
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include  'p1werm.inc'
-      include  's1agg.inc'
-      include  's1sgeo.inc'
-      include  's1surf.inc'
-      include  's1dbh.inc'
       include  'm1sim.inc'
-      include  'h1db1.inc'
       include  'timer.inc'
       include  'w1clig.inc'
 !
@@ -142,19 +138,19 @@
       call timer(TIMSBEROD,TIMSTOP)
       call timer(TIMSBQOUT,TIMSTART)
 
-       call sbqout (flg,                                                &
-     & wus(i,j), wust(i,j), wusp(i,j), sf10(i,j), sf84(i,j),            &
-     & sf200(i,j), szcr(i,j), sfcr(i,j), sflos(i,j), smlos(i,j),        &
-     & szrgh(i,j), asxrgs(icsr), sxprg(icsr), slrr(i,j),                &
-     & asfcla(1,icsr), asfsan(1,icsr),                                  &
-     & asfvfs(1,icsr),svroc(i,j), abrsai(icsr), abzht(icsr),            &  !edit ljh 1-22-05  
-     & abffcv(icsr), time,                                              &
-     & acanag(icsr), acancr(icsr),asf10an(icsr),                        &
-     & asf10en(icsr), asf10bk(icsr),                                    &
-     & lx, qi, qssi, q10i, i, j, imax, jmax,                            &
-     & smaglos(i,j), dmlos(i,j), sf84mn(i,j), sf84ic, sf10ic,           &  !edit ljh 1-22-05
-     & asvroc(1,icsr), smaglosmx(i,j),                                  &
-     & qo, qsso, q10o )
+       call sbqout (flg, &
+       wus(i,j), wust(i,j), wusp(i,j), sf10(i,j), sf84(i,j), &
+       sf200(i,j), szcr(i,j), sfcr(i,j), sflos(i,j), smlos(i,j), &
+       szrgh(i,j), subrsurf(icsr)%asxrgs, subrsurf(icsr)%sxprg, slrr(i,j), &
+       subrsurf(icsr)%bsl(1)%asfcla, subrsurf(icsr)%bsl(1)%asfsan, &
+       subrsurf(icsr)%bsl(1)%asfvfs,svroc(i,j), subrsurf(icsr)%abrsai, subrsurf(icsr)%abzht, &  !edit ljh 1-22-05  
+       subrsurf(icsr)%abffcv, time, &
+       subrsurf(icsr)%acanag, subrsurf(icsr)%acancr, subrsurf(icsr)%asf10an, &
+       subrsurf(icsr)%asf10en, subrsurf(icsr)%asf10bk, &
+       lx, qi, qssi, q10i, i, j, imax, jmax, &
+       smaglos(i,j), dmlos(i,j), sf84mn(i,j), sf84ic, sf10ic, &  !edit ljh 1-22-05
+       subrsurf(icsr)%bsl(1)%asvroc, smaglosmx(i,j), &
+       qo, qsso, q10o )
 
       call timer(TIMSBQOUT,TIMSTOP)
       call timer(TIMSBEROD,TIMSTART)
@@ -280,16 +276,9 @@
 
 !^^^ end tmp out
 
-
-
   100 continue
-!
 
-!
   110 continue
-!
-!     temp code for output c
-  210 continue
 
       return
       end

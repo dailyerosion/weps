@@ -479,9 +479,11 @@
       real           ws, hhr      
       end subroutine sbemit
 !----------------------------
-      subroutine sberod (time,flg)
+      subroutine sberod (time,flg, subrsurf)
+      use erosion_data_struct_defs
       real      time
       integer   flg    !Surface update flag (1=on, 0=off)
+      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
       end subroutine sberod
 !----------------------------
       subroutine sbgrid()
@@ -1109,12 +1111,13 @@
 !------------------------------      
 
 !---------------- MAIN Routines ------------------------------
-      subroutine bpools (cd, cm, cy, isr, residue, restot, croptot, decompfac)
+      subroutine bpools (cd, cm, cy, isr, residue, restot, croptot, biotot, decompfac)
       use biomaterial, only: biomatter, biototal, decomp_factors
       integer cd, cm, cy, isr
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
+      type(biototal), intent(in) :: biotot
       type(decomp_factors), intent(in) :: decompfac
       end subroutine bpools
 !------------------------------
@@ -1197,11 +1200,12 @@
       type(biomatter), dimension(:,:), intent(out) :: residue
       end subroutine openfils
 !--------------------------------
-      subroutine plotdata(sr, restot, croptot)
+      subroutine plotdata(sr, restot, croptot, biotot)
       use biomaterial, only: biototal
       integer, intent(in) :: sr
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
+      type(biototal), intent(in) :: biotot
       end subroutine plotdata
 !--------------------------------
       subroutine save_soil(isr)
@@ -2081,8 +2085,11 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot)
       real cslagx, se0, se1
       end subroutine asd
 !-------------         
-      subroutine callsoil(daysim, isr)
-      integer daysim,isr
+      subroutine callsoil(daysim, isr, biotot)
+      use biomaterial, only: biototal
+      integer daysim
+      integer isr                   
+      type(biototal), intent(in) :: biotot
       end subroutine callsoil 
 !-------------
       subroutine cru(bszcr,cumpa,csfcla,dcump,bsfcr,bhzsmt,             &
@@ -2119,8 +2126,10 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot)
       real cumpa, dcump, bsvroc(*)  
       end subroutine rid
 !------------------
-      subroutine  sdbug(isr,slay)
-      integer isr,slay
+      subroutine  sdbug(isr,slay, biotot)
+      use biomaterial, only: biototal
+      integer isr, slay
+      type(biototal), intent(in) :: biotot
       end subroutine sdbug
 !------------------
       subroutine sinit (daysim,                                         &
@@ -2678,11 +2687,12 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot)
       real    bcxrow, bczht, bszrgh
       end function biodrag
 !------------------------------------
-      subroutine dbgdmp(day,sr, residue)
-      use biomaterial, only: biomatter
+      subroutine dbgdmp(day,sr, residue, biotot)
+      use biomaterial, only: biomatter, biototal
       integer, intent(in) :: day
       integer, intent(in) :: sr
       type(biomatter), dimension(:), intent(in) :: residue
+      type(biototal), intent(in) :: biotot
       end subroutine dbgdmp
 !------------------------------------
       subroutine distriblay( nlay, bszlyd, bszlyt, layval, insertval, begind, endd )

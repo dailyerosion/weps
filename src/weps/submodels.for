@@ -37,7 +37,7 @@
         ! will affect soil.
 
 !        write(*,*) "Start callsoil"
-        call callsoil(daysim, isr)       !SOIL submodel
+        call callsoil(daysim, isr, biotot)       !SOIL submodel
 
 !        write(*,*) "Start callcrop"     !CROP submodel
         ! Crop growth flag indicates growing crop

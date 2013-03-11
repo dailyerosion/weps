@@ -213,7 +213,7 @@
 
 !     +++ BIOMASS +++
 
-!     b1glob.inc & b1geom.inc
+!     b1geom.inc
 
 !       Biomass height
 !        line = getline(i_unit)

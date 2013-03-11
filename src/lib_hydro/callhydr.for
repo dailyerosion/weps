@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine callhydr(daysim, isr, restot)
+      subroutine callhydr(daysim, isr, restot, biotot)
 
 ! ***************************************************************** wjr
 ! Wrapper to call hydro
@@ -15,13 +15,13 @@
       integer daysim
       integer isr                   
       type(biototal), intent(in) :: restot
+      type(biototal), intent(in) :: biotot
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     restot          - structure array containing summary residue pool amounts for all subregions
 
 ! Includes
       include 'p1werm.inc'
-      include 'b1glob.inc'
       include 'c1glob.inc'
       include 'c1gen.inc'
       include 'm1sim.inc'
@@ -47,10 +47,10 @@
 
       if (am0hdb .eq. 1) call hdbug(isr, nslay(isr), restot)
 
-      call hydro( nslay(isr), amrslp(isr), abzht(isr),                  &
+      call hydro( nslay(isr), amrslp(isr), biotot%zht_ave,              &
      &            acrlai(isr), acrsai(isr), aczht(isr), acdayap(isr),   &
-     &        acxrow(isr), ac0rg(isr), abfcancov(isr), acfliveleaf(isr),&
-     &            abmf(isr), abevapredu(isr), aczrtd(isr), ahfwsf(isr), &
+     &       acxrow(isr), ac0rg(isr), biotot%ftcancov, acfliveleaf(isr),&
+     &         biotot%mftot, biotot%evapredu, aczrtd(isr), ahfwsf(isr), &
      &            aszlyd(1, isr), asdblk(1, isr), asdblk0(1,isr),       &
      &            asdpart(1, isr), asdwblk(1, isr), ahrwc(1, isr),      &
      &            ahrwcdmx(1, isr), ahrwcs(1, isr), ahrwcf(1, isr),     &
@@ -58,7 +58,7 @@
      &            ah0cb(1,isr), aheaep(1,isr), ahfredsat(1,isr),        &
      &            asfsan(1,isr), asfsil(1,isr), asfcla(1,isr),          &
      &            asvroc(1,isr), asfom(1,isr), asfcec(1,isr),           &
-     &            ahtsav(1,isr), abdstm(isr), abffcv(isr),              &
+     &            ahtsav(1,isr), biotot%dstmtot, biotot%ffcvtot,        &
      &            asxrgs(isr), aszrgh(isr), asfcr(isr),                 &
      &            aslrro(isr), aslrr(isr), amzele,                      &
      &            ah0cng(isr), ah0cnp(isr), ahzper(isr),                &
