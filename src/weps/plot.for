@@ -3,18 +3,20 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine plotdata(sr, restot, croptot, biotot)
+      subroutine plotdata(sr, restot, croptot, biotot, noerod)
 
       use weps_interface_defs
       use file_io_mod, only: luoplt
       use biomaterial, only: biototal
+      use erosion_data_struct_defs, only: threshold
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: sr
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
-
+      type(threshold), intent(in) :: noerod
+ 
 !       Edit History
 !       04-Mar-99       wjr     created
 
@@ -34,7 +36,6 @@
       include 'm1subr.inc'
       include 'erosion/m2geo.inc'
       include 'erosion/e2erod.inc'
-      include 'erosion/threshold.inc'
       include 'manage/oper.inc'
       include 'main/main.inc'
       include 'main/plot.inc'
@@ -160,35 +161,35 @@
 
         ! additional friction velocity and threshold outputs
         write (luoplt, 2085, ADVANCE="NO")                              &
-     &       ne_erosion(sr), ne_snowdepth(sr),                          &
-     &       ne_wus_anemom(sr), ne_wus_random(sr), ne_wus_ridge(sr),    &
-     &       ne_wus_biodrag(sr), ne_wus(sr), ne_bare(sr),               &
-     &       ne_flat_cov(sr), ne_surf_wet(sr), ne_ag_den(sr),           &
-     &       ne_wust(sr)
+     &       noerod%erosion, noerod%snowdepth,                          &
+     &       noerod%wus_anemom, noerod%wus_random, noerod%wus_ridge,    &
+     &       noerod%wus_biodrag, noerod%wus, noerod%bare,               &
+     &       noerod%flat_cov, noerod%surf_wet, noerod%ag_den,           &
+     &       noerod%wust
 
-        if( ne_wus(sr) .gt. 0.0 ) then
+        if( noerod%wus .gt. 0.0 ) then
           ! ratios of friction velocity outputs
           write (luoplt, 2086, ADVANCE="NO")                            &
-     &       ne_wus_anemom(sr)/ne_wus(sr), ne_wus_random(sr)/ne_wus(sr),&
-     &       ne_wus_ridge(sr)/ne_wus(sr), ne_wus_biodrag(sr)/ne_wus(sr)
+     &       noerod%wus_anemom/noerod%wus, noerod%wus_random/noerod%wus,&
+     &       noerod%wus_ridge/noerod%wus, noerod%wus_biodrag/noerod%wus
         else
           ! zero denominator, write zero values
           write (luoplt, 2086, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
         end if
 
-        if( ne_wust(sr) .gt. 0.0 ) then
+        if( noerod%wust .gt. 0.0 ) then
           ! ratios of friction velocity threshold outputs
           write (luoplt, 2086, ADVANCE="NO")                            &
-     &       ne_bare(sr)/ne_wust(sr), ne_flat_cov(sr)/ne_wust(sr),      &
-     &       ne_surf_wet(sr)/ne_wust(sr), ne_ag_den(sr)/ne_wust(sr)
+     &       noerod%bare/noerod%wust, noerod%flat_cov/noerod%wust,      &
+     &       noerod%surf_wet/noerod%wust, noerod%ag_den/noerod%wust
         else
           ! zero denominator, write zero values
           write (luoplt, 2086, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
         end if
 
         ! soil related threshold values
-        write (luoplt, 2086, ADVANCE="NO") ne_sfd84(sr), ne_asvroc(sr), &
-     &    ne_wzzo(sr), ne_sfcv(sr)
+        write (luoplt, 2086, ADVANCE="NO") noerod%sfd84, noerod%asvroc, &
+     &    noerod%wzzo, noerod%sfcv
 
 
         write (luoplt, 2090, ADVANCE="NO") operat

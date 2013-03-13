@@ -3,8 +3,8 @@
 !$Revision$
 !$HeadURL$
 !**********************************************************************
-      subroutine erodinit
-!
+      subroutine erodinit( noerod )
+
 !     +++ PURPOSE +++
 !
 !     Controls calls to subroutines that:
@@ -23,6 +23,7 @@
       use Polygons_Mod
       use pnpoly_mod
       use subregions_mod
+      use erosion_data_struct_defs
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
@@ -31,9 +32,11 @@
       include  'm1subr.inc'
       include  'erosion/m2geo.inc'
       include  'erosion/e2grid.inc'  !needed for initialization of csr(*,*)
-      include  'erosion/threshold.inc'
       include  's1surf.inc'
       
+!     +++ ARGUMENT DECLARATIONS +++
+      type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
+
 !     +++ SUBROUTINES CALLED +++
 !     sbgrid
 !     sbigrd
@@ -108,29 +111,29 @@
 
       do sr = 1, nsubr
            ! initalize erosion threshold trigger variables
-           ne_erosion(sr) = 0
-           ne_snowdepth(sr) = 0
+           noerod(sr)%erosion = 0
+           noerod(sr)%snowdepth = 0
 
-           ne_wus_anemom(sr) = 0
-           ne_wus_random(sr) = 0
-           ne_wus_ridge(sr) = 0
-           ne_wus_biodrag(sr) = 0
-           ne_wus(sr) = 0
+           noerod(sr)%wus_anemom = 0
+           noerod(sr)%wus_random = 0
+           noerod(sr)%wus_ridge = 0
+           noerod(sr)%wus_biodrag = 0
+           noerod(sr)%wus = 0
 
-           ne_bare(sr) = 0
-           ne_flat_cov(sr) = 0
-           ne_surf_wet(sr) = 0
-           ne_ag_den(sr) = 0
-           ne_wust(sr) = 0
+           noerod(sr)%bare = 0
+           noerod(sr)%flat_cov = 0
+           noerod(sr)%surf_wet = 0
+           noerod(sr)%ag_den = 0
+           noerod(sr)%wust = 0
 
-           ne_sfd84(sr) = 0
-           ne_asvroc(sr) = 0
-           ne_wzzo(sr) = 0
-           ne_sfcv(sr) = 0
+           noerod(sr)%sfd84 = 0
+           noerod(sr)%asvroc = 0
+           noerod(sr)%wzzo = 0
+           noerod(sr)%sfcv = 0
 
            ! initialize surface condition reporting values
-           acanag(sr) = 0
-           acancr(sr) = 0
+           acanag = 0
+           acancr = 0
       end do
 
       return

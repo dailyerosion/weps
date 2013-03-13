@@ -432,13 +432,16 @@
       integer  o_unit, o_E_unit
       end subroutine daily_erodout
 !---------------------------
-      subroutine erodinit()  
+      subroutine erodinit( noerod )
+      use erosion_data_struct_defs
+      type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
       end subroutine erodinit
 !---------------------------
-      subroutine erosion (min_erosion_awu, subrsurf)
+      subroutine erosion (min_erosion_awu, subrsurf, noerod)
       use erosion_data_struct_defs
-      real min_erosion_awu
-      type(subregionsurfacestate), dimension(:) :: subrsurf
+      real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
+      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
       end subroutine erosion
 !---------------------------
       subroutine saeinp( subrsurf )
@@ -1200,12 +1203,14 @@
       type(biomatter), dimension(:,:), intent(out) :: residue
       end subroutine openfils
 !--------------------------------
-      subroutine plotdata(sr, restot, croptot, biotot)
+      subroutine plotdata(sr, restot, croptot, biotot, noerod)
       use biomaterial, only: biototal
+      use erosion_data_struct_defs, only: threshold
       integer, intent(in) :: sr
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
+      type(threshold), intent(in) :: noerod
       end subroutine plotdata
 !--------------------------------
       subroutine save_soil(isr)

@@ -113,6 +113,7 @@
       type(mandate_array), dimension(:), allocatable :: mandatbs
 
       type(subregionsurfacestate), dimension(:), allocatable :: subrsurf   ! subregion surface state needed by erosion
+      type(threshold), dimension(:), allocatable :: noerod                 ! report values to show which factors prevented erosion
 
       type(reporting_report), dimension(:), target, allocatable :: rep_report
       type(reporting_update), dimension(:), target, allocatable :: rep_update
@@ -331,6 +332,8 @@
       ! erosion submodel arrays
       allocate(subrsurf(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
+      allocate(noerod(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
 
       ! report cummulation arrays
       allocate(rep_report(0:nsubr), stat=alloc_stat)
@@ -394,7 +397,7 @@
 
       do isr = 1, nsubr
           ! this prints header to plot.out file (isr not yet set)
-          call plotdata(isr, restot(isr), croptot(isr), biotot(isr))  ! print to plot data file
+          call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr) )  ! print to plot data file
           ! this prints header to decomp.out file (isr not yet set)
           call bpools(1,1,1,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
 
@@ -442,7 +445,7 @@
       end do
 
       call asdini()
-      call erodinit
+      call erodinit( noerod )
       am0gdf = .true.
 
 !     Likely that we will put all management data into memory
@@ -520,7 +523,7 @@
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
 
-          call plotdata(isr, restot(isr), croptot(isr), biotot(isr))  ! print to plot data file
+          call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr) )  ! print to plot data file
           ! write decomposition biomass pool amounts to files
           call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
 !        write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',                 &
@@ -599,7 +602,7 @@
             call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr), croptot(isr),&
      &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
 
-            call plotdata(isr, restot(isr), croptot(isr), biotot(isr))  ! print to plot data file
+            call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr) )  ! print to plot data file
 
             ! write decomposition biomass pool amounts to files
             call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
@@ -706,7 +709,7 @@
                   ! write(*,*) "Start calcwu"
                   call calcwu
                   ! write(*,*) "Start erosion"
-                  call erosion (5.0, subrsurf)
+                  call erosion (5.0, subrsurf, noerod)
                   if (btest(am0efl,0) .or. btest(am0efl,1)) then
                      call daily_erodout (luo_egrd,luo_erod)
                   endif
@@ -719,7 +722,7 @@
                end if
 
                call sci_cum(isr, restot(isr))   ! Keep running total for soil conditioning index (SCI)
-               call plotdata(isr, restot(isr), croptot(isr), biotot(isr))  ! print to plot data file
+               call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr) )  ! print to plot data file
                ! write decomposition biomass pool amounts to files
                call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
 

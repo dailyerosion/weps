@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine erosion (min_erosion_awu, subrsurf)
+      subroutine erosion (min_erosion_awu, subrsurf, noerod)
 
 !     +++ PURPOSE +++
 !     subroutine erosion is the control subroutine and calls other
@@ -21,6 +21,7 @@
 !     +++ ARGUMENT DECLARATIONS +++
       real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
       type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
 
 !     +++ ARGUMENT DEFINITIONS +++
 
@@ -51,7 +52,6 @@
       include 'erosion/s2sgeo.inc'
       include 'erosion/s2agg.inc'
       include 'erosion/s2surf.inc'
-      include 'erosion/threshold.inc'
 
 !     +++ LOCAL VARIABLES +++
       integer i,j,wustfl, icsr
@@ -167,7 +167,7 @@
        ! If snow depth > 20 mm in all subregions, then no erosion
        if (subrsurf(icsr)%ahzsnd .le. SNODEP) then
         ! Have insufficient snow depth
-        ne_snowdepth(icsr) = 0
+        noerod(icsr)%snowdepth = 0
 
         ! calc if daily max friction vel. exceeds threshold in any 
         ! subregions without hill and barrier effects
@@ -240,49 +240,49 @@
              ! set new maximum
              rusust = wus/wust
              ! set reporting values for the new maximum (this is as close to erosion as we will get)
-             ne_wus_anemom(icsr) = wus_anemom
-             ne_wus_random(icsr) = wus_random
-             ne_wus_ridge(icsr) = wus_ridge
-             ne_wus_biodrag(icsr) = wus_biodrag
-             ne_wus(icsr) = wus
-             ne_bare(icsr) = wubsts
-             ne_flat_cov(icsr) = wucsts
-             ne_surf_wet(icsr) = wucwts
-             ne_ag_den(icsr) = wucdts
-             ne_wust(icsr) = wust
-             ne_sfd84(icsr) = subrsurf(icsr)%sfd84
-             ne_asvroc(icsr) = subrsurf(icsr)%bsl(1)%asvroc
-             ne_wzzo(icsr) = wzzo
-             ne_sfcv(icsr) = sfcv
+             noerod(icsr)%wus_anemom = wus_anemom
+             noerod(icsr)%wus_random = wus_random
+             noerod(icsr)%wus_ridge = wus_ridge
+             noerod(icsr)%wus_biodrag = wus_biodrag
+             noerod(icsr)%wus = wus
+             noerod(icsr)%bare = wubsts
+             noerod(icsr)%flat_cov = wucsts
+             noerod(icsr)%surf_wet = wucwts
+             noerod(icsr)%ag_den = wucdts
+             noerod(icsr)%wust = wust
+             noerod(icsr)%sfd84 = subrsurf(icsr)%sfd84
+             noerod(icsr)%asvroc = subrsurf(icsr)%bsl(1)%asvroc
+             noerod(icsr)%wzzo = wzzo
+             noerod(icsr)%sfcv = sfcv
            end if
         end do
 
-        if( (ne_wus(icsr)/ne_wust(icsr) ) .le. 1.0 ) then
+        if( (noerod(icsr)%wus/noerod(icsr)%wust) .le. 1.0 ) then
            ! non-erodable subregion, set plot.out flag
-           ne_erosion(icsr) = 0
+           noerod(icsr)%erosion = 0
         else
            ! erodable subregion, set plot.out flag
-           ne_erosion(icsr) = 1
+           noerod(icsr)%erosion = 1
         endif
 
        else
         ! snow prevented erosion in this subregion
-        ne_erosion(icsr) = 0
-        ne_snowdepth(icsr) = 1
-        ne_wus_anemom(icsr) = 0
-        ne_wus_random(icsr) = 0
-        ne_wus_ridge(icsr) = 0
-        ne_wus_biodrag(icsr) = 0
-        ne_wus(icsr) = 0
-        ne_bare(icsr) = 1
-        ne_flat_cov(icsr) = 1
-        ne_surf_wet(icsr) = 1
-        ne_ag_den(icsr) = 1
-        ne_wust(icsr) = 1
-        ne_sfd84(icsr) = 0
-        ne_asvroc(icsr) = 0
-        ne_wzzo(icsr) = 0
-        ne_sfcv(icsr) = 0
+        noerod(icsr)%erosion = 0
+        noerod(icsr)%snowdepth = 1
+        noerod(icsr)%wus_anemom = 0
+        noerod(icsr)%wus_random = 0
+        noerod(icsr)%wus_ridge = 0
+        noerod(icsr)%wus_biodrag = 0
+        noerod(icsr)%wus = 0
+        noerod(icsr)%bare = 1
+        noerod(icsr)%flat_cov = 1
+        noerod(icsr)%surf_wet = 1
+        noerod(icsr)%ag_den = 1
+        noerod(icsr)%wust = 1
+        noerod(icsr)%sfd84 = 0
+        noerod(icsr)%asvroc = 0
+        noerod(icsr)%wzzo = 0
+        noerod(icsr)%sfcv = 0
        endif
    20 continue
 

@@ -76,6 +76,29 @@ module erosion_data_struct_defs
 
   end type subregionsurfacestate
 
+  type threshold
+     integer :: erosion   ! flag, 0 - erosion was not entered, 1 - erosion was entered
+     integer :: snowdepth ! flag, 0 - snow depth too low to prevent erosion, 1 - snow depth deeper than threshold, prevents erosion
+
+     real :: wus_anemom   ! anemometer located friction velocity for critical no erosion condition
+     real :: wus_random   ! site surface random roughness adjusted friction velocity for critical no erosion condition
+     real :: wus_ridge    ! site surface oriented roughness adjusted friction velocity for critical no erosion condition
+     real :: wus_biodrag  ! site biodrag adjusted friction velocity for critical no erosion condition
+     real :: wus          ! friction velocity for critical no erosion condition (biodrag added in)
+
+     real :: bare      ! bare friction veolocity greater
+     real :: flat_cov  ! flat cover increases threshold
+     real :: surf_wet  ! surface wetness increases threshold
+     real :: ag_den    ! ag density increases threshold
+     real :: wust      ! resultant threshold friction velocity
+
+     real :: sfd84   ! fraction of the surface material less than 0.84 mm in diameter
+     real :: asvroc  ! fraction of the surface matherial greater than 2 mm in diameter
+     real :: wzzo    ! aerodynamic roughness length of the soil surface below canopy (mm)
+     real :: sfcv    ! fraction of soil surface which is non emitting
+
+  end type threshold
+
 contains
 
   function create_cellsurfacestate(xdim, ydim) result(cellstate)
