@@ -29,6 +29,11 @@ module erosion_data_struct_defs
      real :: sxprg        ! ridge spacing parallel the wind direction(mm)
      real :: slrr         ! soil random roughness (mm)
      real :: w0br(8)      ! barrier wind reduction factor for the grid cell from each of 8 cardinal directions
+     ! real :: w0hill(8)    ! ratio of hill to open, flat, field friction velocity as influenced by hills.
+     real :: egt          ! Total soil loss at a grid point accumulated for a time period (kg/m^2)
+     real :: egtcs        ! Total creep and saltation soil loss at grid point accumulated for a time period (kg/m^2)
+     real :: egtss        ! Total suspension soil loss at grid point accumulated for a time period (kg/m^2)
+     real :: egt10        ! Total < 10 micron soil loss at grid point accumulated for a time period (kg/m^2)
   end type cellsurfacestate
 
   type by_soil_layer

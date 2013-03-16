@@ -11,7 +11,6 @@
 !     +++ purpose +++
 !     Input subregion values of variables from other submodels
 !     to the grid points of the erosion submodel which erosion changes
-!     Initialize output grid array
 !     Calc. soil fraction of 4 dia. from asd, & rr shelter angles
 
       use weps_interface_defs
@@ -30,7 +29,6 @@
 !     + + +  LOCAL COMMON BLOCKS + + +
       include 'erosion/p1erode.inc'
       include 'erosion/m2geo.inc'
-      include 'erosion/e2erod.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer  icsr, i, j
@@ -100,15 +98,10 @@
       cellstate(i,j)%smaglos = 0.0
       cellstate(i,j)%smaglosmx = 0.0
       cellstate(i,j)%sf84mn = 0.0
-!
-!     initialize output array- now in sbigrd
-!      egt(i,j)    = 0
-!      egtss(i,j)  = 0
-!      egt10(i,j)  = 0
-!
+
    10 continue
    20 continue
-!
+
       return
       end
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

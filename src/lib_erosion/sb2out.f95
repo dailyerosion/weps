@@ -39,7 +39,6 @@
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'erosion/w2wind.inc'
       include 'erosion/m2geo.inc'
-      include 'erosion/e2erod.inc'
       include 'erosion/e3grid.inc'
 !
 !     + + + LOCAL VARIABLES + + +
@@ -99,7 +98,7 @@
      & 'Cumulative Total Soil Loss',                                    &
      & 'soil loss', '(kg/m^2)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (egt(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%egt, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
 
@@ -108,7 +107,7 @@
      & 'Cumulative Saltation/Creep Soil Loss',                          &
      & 'salt/creep soil loss', '(kg/m^2)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)")(egt(i,j)-egtss(i,j),i=1,imax-1)
+        write (o_unit, fmt="(500f12.4)")(cellstate(i,j)%egt-cellstate(i,j)%egtss,i=1,imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
 
@@ -117,7 +116,7 @@
      & 'Cumulative Suspension Soil Loss',                               &
      & 'suspension soil loss', '(kg/m^2)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (egtss(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%egtss, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
@@ -125,7 +124,7 @@
      & 'Cumulative PM10 Soil Loss',                                     &
      & 'PM10 soil loss', '(kg/m^2)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.6)") (egt10(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.6)") (cellstate(i,j)%egt10, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
 
@@ -266,7 +265,7 @@
        do 5  i = 1,(imax-1)
        !average over y-direction
        do 4  j = 1, (jmax-1)
-          egavg(i) = egavg(i) + egt(i,j)/(jmax-1)
+          egavg(i) = egavg(i) + cellstate(i,j)%egt/(jmax-1)
     4  continue
     5  continue
        !average over x-direction

@@ -35,7 +35,6 @@
 !     + + + LOCAL COMMON BLOCKS + + +
       include  'erosion/m2geo.inc'
       include  'erosion/e3grid.inc'
-      include  'erosion/e2erod.inc'
       include  'erosion/w2wind.inc'
 !
 !     +++ PARAMETERS +++
@@ -157,9 +156,9 @@
         eg =   -time*(qo - qi)/lx
         egss = -time*(qsso - qssi)/lx
         eg10 = -time*(q10o - q10i)/lx
-        egt(i,j)   = egt (i,j) + eg + egss
-        egtss(i,j) = egtss(i,j) + egss
-        egt10(i,j) = egt10(i,j) + eg10
+        cellstate(i,j)%egt   = cellstate(i,j)%egt + eg + egss
+        cellstate(i,j)%egtss = cellstate(i,j)%egtss + egss
+        cellstate(i,j)%egt10 = cellstate(i,j)%egt10 + eg10
 !
 !*       update discharge scalars
         aa = abs(-ix*cos_awa)
@@ -197,20 +196,20 @@
 !
        if (i .eq. i2) then
          if (qx(i,j) .gt. 1.0e-10) then
-           egt(i2+i3, j) = egt(i2+i3,j) + time*qx(i2, j)
+           cellstate(i2+i3,j)%egt = cellstate(i2+i3,j)%egt + time*qx(i2, j)
          endif
          if (qssx(i,j) .gt. 1.0e-10) then
-           egtss(i2+i3,j) = egtss(i2+i3,j) + time*qssx(i2, j)
-           egt10(i2+i3, j) = egt10(i2+i3,j) + time*q10x(i2, j)
+           cellstate(i2+i3,j)%egtss = cellstate(i2+i3,j)%egtss + time*qssx(i2, j)
+           cellstate(i2+i3,j)%egt10 = cellstate(i2+i3,j)%egt10 + time*q10x(i2, j)
          endif
        endif
        if (j .eq. i5) then
          if (qy(i,j) .gt. 1.0e-10) then
-           egt(i, i5+i6) = egt(i,i5+i6) + time*qy(i,i5)
+           cellstate(i,i5+i6)%egt = cellstate(i,i5+i6)%egt + time*qy(i,i5)
          endif
          if (qssy(i,j) .gt. 1.0e-10) then
-           egtss(i,i5+i6) = egtss(i,i5+i6) + time*qssy(i,i5)
-           egt10(i,i5+i6) = egt10(i,i5+i6) + time*q10y(i,i5)
+           cellstate(i,i5+i6)%egtss = cellstate(i,i5+i6)%egtss + time*qssy(i,i5)
+           cellstate(i,i5+i6)%egt10 = cellstate(i,i5+i6)%egt10 + time*q10y(i,i5)
          endif
        endif
 !

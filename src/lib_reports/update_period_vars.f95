@@ -1,53 +1,53 @@
-!
 !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
-!
-SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot)
+
+SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot, cellstate)
 
     use weps_interface_defs
     USE pd_var_tables
     USE pd_var_type_def
     use biomaterial, only: biototal
+    use erosion_data_struct_defs, only: cellsurfacestate
 
     IMPLICIT NONE
 
 !   + + + ARGUMENT DECLARATIONS + + +
-    INTEGER :: sbr              ! current subregion
+    INTEGER :: isr              ! current subregion
     TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update
     type(biototal), intent(in) :: restot  ! contains:
-                                ! adftcvtot(sbr)  total dead flat cover
-                                ! adrcdtot(sbr)   total effective silhouette
-                                ! admftot(sbr)    total dead flat mass
-                                ! admsttot(sbr)   total dead standing mass
+                                ! adftcvtot(isr)  total dead flat cover
+                                ! adrcdtot(isr)   total effective silhouette
+                                ! admftot(isr)    total dead flat mass
+                                ! admsttot(isr)   total dead standing mass
     type(biototal), intent(in) :: croptot  ! contains:
-                                ! acfcancov(sbr)  crop canopy cover
-                                ! acftcv(sbr)     crop flat cover
-                                ! acrcd(sbr)      crop effective silhouette
-                                ! acmf(sbr)       crop flat mass
-                                ! acmst(sbr)      crop standing mass
+                                ! acfcancov(isr)  crop canopy cover
+                                ! acftcv(isr)     crop flat cover
+                                ! acrcd(isr)      crop effective silhouette
+                                ! acmf(isr)       crop flat mass
+                                ! acmst(isr)      crop standing mass
     type(biototal), intent(in) :: biotot  ! contains:
-                                ! abftcv(sbr)     all flat cover
+                                ! abftcv(isr)     all flat cover
                                 ! abrcd           all effective silhouette
-                                ! abmf(sbr)       all flat mass
-                                ! abmst(sbr)      all standing mass
+                                ! abmf(isr)       all flat mass
+                                ! abmst(isr)      all standing mass
+    type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate  ! egt, egtcs, egtss, egt10
 
     include "p1werm.inc"        ! needed by other include files
 
     include "m1geo.inc"         ! sim_area - area of simulation region (m^2)
 
     include "c1glob.inc"        ! contains
-                                ! acmstandstore(sbr)      crop standing repr mass
-                                ! acmflatstore(sbr)      crop flat repr mass
+                                ! acmstandstore(isr)      crop standing repr mass
+                                ! acmflatstore(isr)      crop flat repr mass
 
-    include "s1sgeo.inc"        ! aslrr(sbr) Allmaras RR values
-                                ! aszrgh(sbr) Ridge height
-                                ! asxrgs(sbr) Ridge spacing
-                                ! asargo(sbr) Ridge dir
+    include "s1sgeo.inc"        ! aslrr(isr) Allmaras RR values
+                                ! aszrgh(isr) Ridge height
+                                ! asxrgs(isr) Ridge spacing
+                                ! asargo(isr) Ridge dir
 
     include "erosion/m2geo.inc" ! imax, jmax, ix, iy of simulation grid
-    include "erosion/e2erod.inc"! egt, egtcs, egtss, egt10
 
     include "s1agg.inc"         ! aslagm, as0ags, aslagn, aslagx (ASD parms)
                                 ! aseags (agg stability), asdagd (agg density)
@@ -99,60 +99,58 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
     Have_Erosion    = .FALSE.   ! Initialize for each invocation of routine
     Have_Deposition = .FALSE.   ! Initialize for each invocation of routine
 
-    ngdpt = (imax-1) * (jmax-1)  !Number of grid cells
-    gdpt_area = sim_area/ngdpt   !Area of single grid cell
-
+    gdpt_area = sim_area/( (imax-1)*(jmax-1) )   !Area of single grid cell
 
     !End of period (eop) variables
 
-  if( sbr .gt. 0 ) then
+  if( isr .gt. 0 ) then
 
 ! Roughness vars
-    period_update(Random_rough)%val = aslrr(sbr)
+    period_update(Random_rough)%val = aslrr(isr)
     period_update(Random_rough)%cnt = period_update(Random_rough)%cnt + 1
 
-    period_update(Ridge_ht)%val = aszrgh(sbr)
+    period_update(Ridge_ht)%val = aszrgh(isr)
     period_update(Ridge_ht)%cnt = period_update(Ridge_ht)%cnt + 1
 
-    period_update(Ridge_sp)%val = asxrgs(sbr)
+    period_update(Ridge_sp)%val = asxrgs(isr)
     period_update(Ridge_sp)%cnt = period_update(Ridge_sp)%cnt + 1
 
-    period_update(Ridge_dir)%val = asargo(sbr)
+    period_update(Ridge_dir)%val = asargo(isr)
     period_update(Ridge_dir)%cnt = period_update(Ridge_dir)%cnt + 1
 
-    call sbsfdi(aslagm(1,sbr), as0ags(1,sbr), aslagn(1,sbr),                &
-         aslagx(1,sbr),0.84,ef84)
+    call sbsfdi(aslagm(1,isr), as0ags(1,isr), aslagn(1,isr),                &
+         aslagx(1,isr),0.84,ef84)
     period_update(Surface_Ag_84)%val = ef84
     period_update(Surface_Ag_84)%cnt = period_update(Surface_Ag_84)%cnt + 1
 
-    period_update(Surface_Ag_AS)%val = aseags(1,sbr)  !Ag Stability (J/m^2)
+    period_update(Surface_Ag_AS)%val = aseags(1,isr)  !Ag Stability (J/m^2)
     period_update(Surface_Ag_AS)%cnt = period_update(Surface_Ag_AS)%cnt + 1
 
-    period_update(Surface_Ag_DN)%val = asdagd(1,sbr)  !Ag Density (Mg/m^3)
+    period_update(Surface_Ag_DN)%val = asdagd(1,isr)  !Ag Density (Mg/m^3)
     period_update(Surface_Ag_DN)%cnt = period_update(Surface_Ag_DN)%cnt + 1
 
-    period_update(Surface_Ag_CA)%val = acanag(sbr)  !Ag Coeff. of abrasion (1/m)
+    period_update(Surface_Ag_CA)%val = acanag(isr)  !Ag Coeff. of abrasion (1/m)
     period_update(Surface_Ag_CA)%cnt = period_update(Surface_Ag_CA)%cnt + 1
 
-    period_update(Surface_Cr)%val = asfcr(sbr)  !Surface Crust fraction
+    period_update(Surface_Cr)%val = asfcr(isr)  !Surface Crust fraction
     period_update(Surface_Cr)%cnt = period_update(Surface_Cr)%cnt + 1
 
-    period_update(Surface_Cr_AS)%val = asecr(sbr)  !Surface Crust stability (J/m^2)
+    period_update(Surface_Cr_AS)%val = asecr(isr)  !Surface Crust stability (J/m^2)
     period_update(Surface_Cr_AS)%cnt = period_update(Surface_Cr_AS)%cnt + 1
 
-    period_update(Surface_Cr_LM)%val = asmlos(sbr)  !Surface Crust loose material (Mg/m^2)
+    period_update(Surface_Cr_LM)%val = asmlos(isr)  !Surface Crust loose material (Mg/m^2)
     period_update(Surface_Cr_LM)%cnt = period_update(Surface_Cr_LM)%cnt + 1
 
-    period_update(Surface_Cr_TH)%val = aszcr(sbr)  !Surface Crust thickness (mm)
+    period_update(Surface_Cr_TH)%val = aszcr(isr)  !Surface Crust thickness (mm)
     period_update(Surface_Cr_TH)%cnt = period_update(Surface_Cr_TH)%cnt + 1
 
-    period_update(Surface_Cr_DN)%val = asdcr(sbr)  !Surface Crust density (Mg/m^3)
+    period_update(Surface_Cr_DN)%val = asdcr(isr)  !Surface Crust density (Mg/m^3)
     period_update(Surface_Cr_DN)%cnt = period_update(Surface_Cr_DN)%cnt + 1
 
-    period_update(Surface_Cr_LF)%val = asflos(sbr)  !Surface Crust - fraction of loose material (m^2/m^2)
+    period_update(Surface_Cr_LF)%val = asflos(isr)  !Surface Crust - fraction of loose material (m^2/m^2)
     period_update(Surface_Cr_LF)%cnt = period_update(Surface_Cr_LF)%cnt + 1
 
-    period_update(Surface_Cr_CA)%val = acancr(sbr)  !Surface Crust Coeff. of abrasion (1/m)
+    period_update(Surface_Cr_CA)%val = acancr(isr)  !Surface Crust Coeff. of abrasion (1/m)
     period_update(Surface_Cr_CA)%cnt = period_update(Surface_Cr_CA)%cnt + 1
 
 ! Crop vars
@@ -169,7 +167,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
    !Note that we are also subtracting the "store" portion
    !which contains the reproductive (seed and fruit) components
     ! Remove live standing and flat crop reproductive mass from reported value
-    period_update(Crop_stand_mass)%val = croptot%msttot + croptot%mftot - acmstandstore(sbr) - acmflatstore(sbr)
+    period_update(Crop_stand_mass)%val = croptot%msttot + croptot%mftot - acmstandstore(isr) - acmflatstore(isr)
     period_update(Crop_stand_mass)%cnt = period_update(Crop_stand_mass)%cnt + 1
 
     period_update(Crop_root_mass)%val = croptot%mrttot
@@ -214,14 +212,14 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
     period_update(All_stand_sil)%val = biotot%rcdtot
     period_update(All_stand_sil)%cnt = period_update(All_stand_sil)%cnt + 1
 
-  if( sbr .gt. 0 ) then
+  if( isr .gt. 0 ) then
 
   ! Remove live flat crop reproductive mass from reported value
-    period_update(All_flat_mass)%val = biotot%mftot - acmflatstore(sbr)
+    period_update(All_flat_mass)%val = biotot%mftot - acmflatstore(isr)
     period_update(All_flat_mass)%cnt = period_update(All_flat_mass)%cnt + 1
 
     ! Remove live standing crop reproductive mass from reported value
-    period_update(All_stand_mass)%val = biotot%msttot - acmstandstore(sbr)
+    period_update(All_stand_mass)%val = biotot%msttot - acmstandstore(isr)
     period_update(All_stand_mass)%cnt = period_update(All_stand_mass)%cnt + 1
 
     period_update(All_buried_mass)%val = croptot%mrttot + restot%mrttot + restot%mbgtot
@@ -231,13 +229,17 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
 ! ------------------------------------------------------------------------------------------------------------------
     ! Determine if we have any net soil loss occurring from any grid cell (erosion)
     ! We assume that we don't have any net suspension loss if we don't have any net salt/creep loss
+    ngdpt = 0   ! count number of grid points in this subregion (if zero, it is not used)
     sum_salt_loss = 0.0; cnt_eros = 0
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
-          IF ((egt(i,j) - egtss(i,j)) < -eros_thresh) THEN
-             sum_salt_loss = sum_salt_loss + (egt(i,j) - egtss(i,j))
-             cnt_eros = cnt_eros + 1
-          END IF
+          if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
+             IF ((cellstate(i,j)%egt - cellstate(i,j)%egtss) < -eros_thresh) THEN
+                sum_salt_loss = sum_salt_loss + (cellstate(i,j)%egt - cellstate(i,j)%egtss)
+                cnt_eros = cnt_eros + 1
+             END IF
+             ngdpt = ngdpt + 1
+          end if
        END DO
     END DO
     IF (cnt_eros /= 0) Have_Erosion = .TRUE.  !We have erosion occurring, set flag for use later
@@ -247,10 +249,12 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
     sum_salt_dep = 0.0; cnt_dep = 0
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
-          IF ((egt(i,j) - egtss(i,j)) > eros_thresh) THEN
-             sum_salt_dep = sum_salt_dep + (egt(i,j) - egtss(i,j))
-             cnt_dep = cnt_dep + 1
-          END IF
+          if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
+             IF ((cellstate(i,j)%egt - cellstate(i,j)%egtss) > eros_thresh) THEN
+                sum_salt_dep = sum_salt_dep + (cellstate(i,j)%egt - cellstate(i,j)%egtss)
+                cnt_dep = cnt_dep + 1
+             END IF
+          end if
        END DO
     END DO
     IF (cnt_dep /= 0) Have_Deposition = .TRUE.  !We have deposition occurring, set flag for use later
@@ -259,10 +263,12 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
 !variables summed for period
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
-          period_update(Eros_loss)%val = period_update(Eros_loss)%val + egt(i,j)/ngdpt
-          period_update(Salt_loss)%val = period_update(Salt_loss)%val + (egt(i,j) - egtss(i,j))/ngdpt
-          period_update(Susp_loss)%val = period_update(Susp_loss)%val + egtss(i,j)/ngdpt
-          period_update(PM10_loss)%val = period_update(PM10_loss)%val + egt10(i,j)/ngdpt
+          if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
+             period_update(Eros_loss)%val = period_update(Eros_loss)%val + cellstate(i,j)%egt/ngdpt
+             period_update(Salt_loss)%val = period_update(Salt_loss)%val + (cellstate(i,j)%egt - cellstate(i,j)%egtss)/ngdpt
+             period_update(Susp_loss)%val = period_update(Susp_loss)%val + cellstate(i,j)%egtss/ngdpt
+             period_update(PM10_loss)%val = period_update(PM10_loss)%val + cellstate(i,j)%egt10/ngdpt
+          end if
        END DO
     END DO
     period_update(Eros_loss)%cnt = period_update(Eros_loss)%cnt + 1
@@ -278,12 +284,12 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
 ! Sum boundary losses  (ave value per boundary grid point)
     DO i = 0, imax 
       ! Note that egt contains creep+saltation not total soil loss on boundary
-      period_update(Salt_1)%val = period_update(Salt_1)%val + egt(i,0)/(imax-1)
-      period_update(Salt_3)%val = period_update(Salt_3)%val + egt(i,jmax)/(imax-1)
-      period_update(Susp_1)%val = period_update(Susp_1)%val + egtss(i,0)/(imax-1)
-      period_update(Susp_3)%val = period_update(Susp_3)%val + egtss(i,jmax)/(imax-1)
-      period_update(PM10_1)%val = period_update(PM10_1)%val + egt10(i,0)/(imax-1)
-      period_update(PM10_3)%val = period_update(PM10_3)%val + egt10(i,jmax)/(imax-1)
+      period_update(Salt_1)%val = period_update(Salt_1)%val + cellstate(i,0)%egt/(imax-1)
+      period_update(Salt_3)%val = period_update(Salt_3)%val + cellstate(i,jmax)%egt/(imax-1)
+      period_update(Susp_1)%val = period_update(Susp_1)%val + cellstate(i,0)%egtss/(imax-1)
+      period_update(Susp_3)%val = period_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
+      period_update(PM10_1)%val = period_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
+      period_update(PM10_3)%val = period_update(PM10_3)%val + cellstate(i,jmax)%egt10/(imax-1)
     END DO
     period_update(Salt_1)%cnt = period_update(Salt_1)%cnt + 1
     period_update(Salt_3)%cnt = period_update(Salt_3)%cnt + 1
@@ -294,12 +300,12 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
 
     DO j = 0, jmax 
       ! Note that egt contains creep+saltation not total soil loss on boundary
-      period_update(Salt_2)%val = period_update(Salt_2)%val + egt(0,j)/(jmax-1)
-      period_update(Salt_4)%val = period_update(Salt_4)%val + egt(imax,j)/(jmax-1)
-      period_update(Susp_2)%val = period_update(Susp_2)%val + egtss(0,j)/(jmax-1)
-      period_update(Susp_4)%val = period_update(Susp_4)%val + egtss(imax,j)/(jmax-1)
-      period_update(PM10_2)%val = period_update(PM10_2)%val + egt10(0,j)/(jmax-1)
-      period_update(PM10_4)%val = period_update(PM10_4)%val + egt10(imax,j)/(jmax-1)
+      period_update(Salt_2)%val = period_update(Salt_2)%val + cellstate(0,j)%egt/(jmax-1)
+      period_update(Salt_4)%val = period_update(Salt_4)%val + cellstate(imax,j)%egt/(jmax-1)
+      period_update(Susp_2)%val = period_update(Susp_2)%val + cellstate(0,j)%egtss/(jmax-1)
+      period_update(Susp_4)%val = period_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
+      period_update(PM10_2)%val = period_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)
+      period_update(PM10_4)%val = period_update(PM10_4)%val + cellstate(imax,j)%egt10/(jmax-1)
     END DO
     period_update(Salt_2)%cnt = period_update(Salt_2)%cnt + 1
     period_update(Salt_4)%cnt = period_update(Salt_4)%cnt + 1
@@ -366,16 +372,18 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
     cnt_sheltered = 0
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
-          IF ( ABS((egt(i,j) - egtss(i,j))) <= eros_thresh) THEN  !Sheltered/TC
-!print*, 'egt(i,j)-egtss(i,j): ',ABS(egt(i,j)-egtss(i,j)), 'egtss: ',ABS(egtss(i,j))
+          if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
+             IF ( ABS((cellstate(i,j)%egt - cellstate(i,j)%egtss)) <= eros_thresh) THEN  !Sheltered/TC
+!print*, 'cellstate(i,j)%egt-cellstate(i,j)%egtss: ',ABS(cellstate(i,j)%egt-cellstate(i,j)%egtss), 'egtss: ',ABS(cellstate(i,j)%egtss)
 
-             IF ( ABS(egtss(i,j)) <= susp_thresh) THEN  ! Sheltered area
-                cnt_sheltered = cnt_sheltered + 1
-             ELSE                                       ! At TC
-                cnt_transp = cnt_transp + 1
-             END IF
+                IF ( ABS(cellstate(i,j)%egtss) <= susp_thresh) THEN  ! Sheltered area
+                   cnt_sheltered = cnt_sheltered + 1
+                ELSE                                       ! At TC
+                   cnt_transp = cnt_transp + 1
+                END IF
 !print*, 'cnt sheltered/transp: ', cnt_sheltered, cnt_transp
-          END IF
+             END IF
+          end if
        END DO
     END DO
 

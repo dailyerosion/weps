@@ -1,19 +1,21 @@
-!
 !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
-!
-SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
+
+SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cellstate)
 
     USE pd_var_type_def
     USE pd_var_tables
+    use erosion_data_struct_defs, only: cellsurfacestate
 
     IMPLICIT NONE
 
+    INTEGER :: isr              ! current subregion
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrly_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrot_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yr_update
+    type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate  ! egt, egtcs, egtss, egt10
 
     include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
@@ -27,14 +29,12 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
     include "h1db1.inc"         ! ahzsnd(s) snow depth in mm
 
     include "erosion/m2geo.inc" ! imax, jmax, ix, jy of simulation grid
-    include "erosion/e2erod.inc"! egt, egtcs, egtss, egt10
 
     INTEGER :: s                ! local variable (subregion)
     INTEGER :: i,j              ! local loop variables
     INTEGER :: ngdpt            ! number of simulation grid datapoints
     REAL    :: gdpt_area        ! area of a grid cell (point) in m^2
 
-    INTEGER :: cnt              ! number of simulation grid datapoints
     REAL    :: sum_salt_loss
     REAL    :: sum_salt_dep
 
@@ -67,9 +67,7 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
     Have_Erosion    = .FALSE.   ! Initialize for each invocation of routine
     Have_Deposition = .FALSE.   ! Initialize for each invocation of routine
 
-    ngdpt = (imax-1) * (jmax-1)  !Number of grid cells
-    gdpt_area = sim_area/ngdpt   !Area of single grid cell
-
+    gdpt_area = sim_area/( (imax-1) * (jmax-1) )   !Area of single grid cell
 
     !variables summed for period
     yrly_update(Precipi)%val = yrly_update(Precipi)%val + awzdpt
@@ -83,13 +81,17 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
 ! ------------------------------------------------------------------------------------------------------------------
     ! Determine if we have any net soil loss occurring from any grid cell (erosion)
     ! We assume that we don't have any net suspension loss if we don't have any net salt/creep loss
+    ngdpt = 0   ! count number of grid points in this subregion (if zero, it is not used)
     sum_salt_loss = 0.0; cnt_eros = 0
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
-          IF ((egt(i,j) - egtss(i,j)) < -eros_thresh) THEN
-             sum_salt_loss = sum_salt_loss + (egt(i,j) - egtss(i,j))
-             cnt_eros = cnt_eros + 1
-          END IF
+          if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
+             IF ((cellstate(i,j)%egt - cellstate(i,j)%egtss) < -eros_thresh) THEN
+                sum_salt_loss = sum_salt_loss + (cellstate(i,j)%egt - cellstate(i,j)%egtss)
+                cnt_eros = cnt_eros + 1
+             END IF
+             ngdpt = ngdpt + 1
+          end if
        END DO
     END DO
     IF (cnt_eros /= 0) Have_Erosion = .TRUE.  !We have erosion occurring, set flag for use later
@@ -99,10 +101,12 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
     sum_salt_dep = 0.0; cnt_dep = 0
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
-          IF ((egt(i,j) - egtss(i,j)) > eros_thresh) THEN
-             sum_salt_dep = sum_salt_dep + (egt(i,j) - egtss(i,j))
-             cnt_dep = cnt_dep + 1
-          END IF
+          if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
+             IF ((cellstate(i,j)%egt - cellstate(i,j)%egtss) > eros_thresh) THEN
+                sum_salt_dep = sum_salt_dep + (cellstate(i,j)%egt - cellstate(i,j)%egtss)
+                cnt_dep = cnt_dep + 1
+             END IF
+          end if
        END DO
     END DO
     IF (cnt_dep /= 0) Have_Deposition = .TRUE.  !We have deposition occurring, set flag for use later
@@ -110,21 +114,23 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
 
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
-          yrly_update(Eros_loss)%val = yrly_update(Eros_loss)%val + egt(i,j)/ngdpt
-          yrly_update(Salt_loss)%val = yrly_update(Salt_loss)%val + (egt(i,j) - egtss(i,j))/ngdpt
-          yrly_update(Susp_loss)%val = yrly_update(Susp_loss)%val + egtss(i,j)/ngdpt
-          yrly_update(PM10_loss)%val = yrly_update(PM10_loss)%val + egt10(i,j)/ngdpt
+          if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
+             yrly_update(Eros_loss)%val = yrly_update(Eros_loss)%val + cellstate(i,j)%egt/ngdpt
+             yrly_update(Salt_loss)%val = yrly_update(Salt_loss)%val + (cellstate(i,j)%egt - cellstate(i,j)%egtss)/ngdpt
+             yrly_update(Susp_loss)%val = yrly_update(Susp_loss)%val + cellstate(i,j)%egtss/ngdpt
+             yrly_update(PM10_loss)%val = yrly_update(PM10_loss)%val + cellstate(i,j)%egt10/ngdpt
 
-          yrot_update(Eros_loss)%val = yrot_update(Eros_loss)%val + egt(i,j)/ngdpt
-          yrot_update(Salt_loss)%val = yrot_update(Salt_loss)%val + (egt(i,j) - egtss(i,j))/ngdpt
-          yrot_update(Susp_loss)%val = yrot_update(Susp_loss)%val + egtss(i,j)/ngdpt
-          yrot_update(PM10_loss)%val = yrot_update(PM10_loss)%val + egt10(i,j)/ngdpt
+             yrot_update(Eros_loss)%val = yrot_update(Eros_loss)%val + cellstate(i,j)%egt/ngdpt
+             yrot_update(Salt_loss)%val = yrot_update(Salt_loss)%val + (cellstate(i,j)%egt - cellstate(i,j)%egtss)/ngdpt
+             yrot_update(Susp_loss)%val = yrot_update(Susp_loss)%val + cellstate(i,j)%egtss/ngdpt
+             yrot_update(PM10_loss)%val = yrot_update(PM10_loss)%val + cellstate(i,j)%egt10/ngdpt
 
-          ! For a year by year report of yearly (and rotation year) averaged variables
-          yr_update(Eros_loss)%val = yr_update(Eros_loss)%val + egt(i,j)/ngdpt
-          yr_update(Salt_loss)%val = yr_update(Salt_loss)%val + (egt(i,j) - egtss(i,j))/ngdpt
-          yr_update(Susp_loss)%val = yr_update(Susp_loss)%val + egtss(i,j)/ngdpt
-          yr_update(PM10_loss)%val = yr_update(PM10_loss)%val + egt10(i,j)/ngdpt
+             ! For a year by year report of yearly (and rotation year) averaged variables
+             yr_update(Eros_loss)%val = yr_update(Eros_loss)%val + cellstate(i,j)%egt/ngdpt
+             yr_update(Salt_loss)%val = yr_update(Salt_loss)%val + (cellstate(i,j)%egt - cellstate(i,j)%egtss)/ngdpt
+             yr_update(Susp_loss)%val = yr_update(Susp_loss)%val + cellstate(i,j)%egtss/ngdpt
+             yr_update(PM10_loss)%val = yr_update(PM10_loss)%val + cellstate(i,j)%egt10/ngdpt
+          end if
        END DO
     END DO
     yrly_update(Eros_loss)%cnt = yrly_update(Eros_loss)%cnt + 1
@@ -252,8 +258,8 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
     cnt_sheltered = 0
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
-          IF ( ABS((egt(i,j) - egtss(i,j))) <= eros_thresh) THEN  !Sheltered/TC
-             IF ( ABS(egtss(i,j)) <= susp_thresh) THEN  ! Sheltered area
+          IF ( ABS((cellstate(i,j)%egt - cellstate(i,j)%egtss)) <= eros_thresh) THEN  !Sheltered/TC
+             IF ( ABS(cellstate(i,j)%egtss) <= susp_thresh) THEN  ! Sheltered area
                 cnt_sheltered = cnt_sheltered + 1
              ELSE                                       ! At TC
                 cnt_transp = cnt_transp + 1
@@ -284,27 +290,27 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
 ! Sum boundary losses  (ave value per boundary grid point)
   DO i = 0, imax 
     ! Note that egt contains creep+saltation not total soil loss on boundary
-    yrly_update(Salt_1)%val = yrly_update(Salt_1)%val + egt(i,0)/(imax-1)
-    yrly_update(Salt_3)%val = yrly_update(Salt_3)%val + egt(i,jmax)/(imax-1)
-    yrly_update(Susp_1)%val = yrly_update(Susp_1)%val + egtss(i,0)/(imax-1)
-    yrly_update(Susp_3)%val = yrly_update(Susp_3)%val + egtss(i,jmax)/(imax-1)
-    yrly_update(PM10_1)%val = yrly_update(PM10_1)%val + egt10(i,0)/(imax-1)
-    yrly_update(PM10_3)%val = yrly_update(PM10_3)%val + egt10(i,jmax)/(imax-1)
+    yrly_update(Salt_1)%val = yrly_update(Salt_1)%val + cellstate(i,0)%egt/(imax-1)
+    yrly_update(Salt_3)%val = yrly_update(Salt_3)%val + cellstate(i,jmax)%egt/(imax-1)
+    yrly_update(Susp_1)%val = yrly_update(Susp_1)%val + cellstate(i,0)%egtss/(imax-1)
+    yrly_update(Susp_3)%val = yrly_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
+    yrly_update(PM10_1)%val = yrly_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
+    yrly_update(PM10_3)%val = yrly_update(PM10_3)%val + cellstate(i,jmax)%egt10/(imax-1)
 
-    yrot_update(Salt_1)%val = yrot_update(Salt_1)%val + egt(i,0)/(imax-1)
-    yrot_update(Salt_3)%val = yrot_update(Salt_3)%val + egt(i,jmax)/(imax-1)
-    yrot_update(Susp_1)%val = yrot_update(Susp_1)%val + egtss(i,0)/(imax-1)
-    yrot_update(Susp_3)%val = yrot_update(Susp_3)%val + egtss(i,jmax)/(imax-1)
-    yrot_update(PM10_1)%val = yrot_update(PM10_1)%val + egt10(i,0)/(imax-1)
-    yrot_update(PM10_3)%val = yrot_update(PM10_3)%val + egt10(i,jmax)/(imax-1)
+    yrot_update(Salt_1)%val = yrot_update(Salt_1)%val + cellstate(i,0)%egt/(imax-1)
+    yrot_update(Salt_3)%val = yrot_update(Salt_3)%val + cellstate(i,jmax)%egt/(imax-1)
+    yrot_update(Susp_1)%val = yrot_update(Susp_1)%val + cellstate(i,0)%egtss/(imax-1)
+    yrot_update(Susp_3)%val = yrot_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
+    yrot_update(PM10_1)%val = yrot_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
+    yrot_update(PM10_3)%val = yrot_update(PM10_3)%val + cellstate(i,jmax)%egt10/(imax-1)
 
     ! For a year by year report of yearly (and rotation year) averaged variables
-    yr_update(Salt_1)%val = yr_update(Salt_1)%val + egt(i,0)/(imax-1)
-    yr_update(Salt_3)%val = yr_update(Salt_3)%val + egt(i,jmax)/(imax-1)
-    yr_update(Susp_1)%val = yr_update(Susp_1)%val + egtss(i,0)/(imax-1)
-    yr_update(Susp_3)%val = yr_update(Susp_3)%val + egtss(i,jmax)/(imax-1)
-    yr_update(PM10_1)%val = yr_update(PM10_1)%val + egt10(i,0)/(imax-1)
-    yr_update(PM10_3)%val = yr_update(PM10_3)%val + egt10(i,jmax)/(imax-1)
+    yr_update(Salt_1)%val = yr_update(Salt_1)%val + cellstate(i,0)%egt/(imax-1)
+    yr_update(Salt_3)%val = yr_update(Salt_3)%val + cellstate(i,jmax)%egt/(imax-1)
+    yr_update(Susp_1)%val = yr_update(Susp_1)%val + cellstate(i,0)%egtss/(imax-1)
+    yr_update(Susp_3)%val = yr_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
+    yr_update(PM10_1)%val = yr_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
+    yr_update(PM10_3)%val = yr_update(PM10_3)%val + cellstate(i,jmax)%egt10/(imax-1)
   END DO
   yrly_update(Salt_1)%cnt = yrly_update(Salt_1)%cnt + 1
   yrly_update(Salt_3)%cnt = yrly_update(Salt_3)%cnt + 1
@@ -330,27 +336,27 @@ SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
 
   DO j = 0, jmax 
     ! Note that egt contains creep+saltation not total soil loss on boundary
-    yrly_update(Salt_2)%val = yrly_update(Salt_2)%val + egt(0,j)/(jmax-1)
-    yrly_update(Salt_4)%val = yrly_update(Salt_4)%val + egt(imax,j)/(jmax-1)
-    yrly_update(Susp_2)%val = yrly_update(Susp_2)%val + egtss(0,j)/(jmax-1)
-    yrly_update(Susp_4)%val = yrly_update(Susp_4)%val + egtss(imax,j)/(jmax-1)
-    yrly_update(PM10_2)%val = yrly_update(PM10_2)%val + egt10(0,j)/(jmax-1)
-    yrly_update(PM10_4)%val = yrly_update(PM10_4)%val + egt10(imax,j)/(jmax-1)
+    yrly_update(Salt_2)%val = yrly_update(Salt_2)%val + cellstate(0,j)%egt/(jmax-1)
+    yrly_update(Salt_4)%val = yrly_update(Salt_4)%val + cellstate(imax,j)%egt/(jmax-1)
+    yrly_update(Susp_2)%val = yrly_update(Susp_2)%val + cellstate(0,j)%egtss/(jmax-1)
+    yrly_update(Susp_4)%val = yrly_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
+    yrly_update(PM10_2)%val = yrly_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)
+    yrly_update(PM10_4)%val = yrly_update(PM10_4)%val + cellstate(imax,j)%egt10/(jmax-1)
 
-    yrot_update(Salt_2)%val = yrot_update(Salt_2)%val + egt(0,j)/(jmax-1)
-    yrot_update(Salt_4)%val = yrot_update(Salt_4)%val + egt(imax,j)/(jmax-1)
-    yrot_update(Susp_2)%val = yrot_update(Susp_2)%val + egtss(0,j)/(jmax-1)
-    yrot_update(Susp_4)%val = yrot_update(Susp_4)%val + egtss(imax,j)/(jmax-1)
-    yrot_update(PM10_2)%val = yrot_update(PM10_2)%val + egt10(0,j)/(jmax-1)
-    yrot_update(PM10_4)%val = yrot_update(PM10_4)%val + egt10(imax,j)/(jmax-1)
+    yrot_update(Salt_2)%val = yrot_update(Salt_2)%val + cellstate(0,j)%egt/(jmax-1)
+    yrot_update(Salt_4)%val = yrot_update(Salt_4)%val + cellstate(imax,j)%egt/(jmax-1)
+    yrot_update(Susp_2)%val = yrot_update(Susp_2)%val + cellstate(0,j)%egtss/(jmax-1)
+    yrot_update(Susp_4)%val = yrot_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
+    yrot_update(PM10_2)%val = yrot_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)
+    yrot_update(PM10_4)%val = yrot_update(PM10_4)%val + cellstate(imax,j)%egt10/(jmax-1)
 
     ! For a year by year report of yearly (and rotation year) averaged variables
-    yr_update(Salt_2)%val = yr_update(Salt_2)%val + egt(0,j)/(jmax-1)
-    yr_update(Salt_4)%val = yr_update(Salt_4)%val + egt(imax,j)/(jmax-1)
-    yr_update(Susp_2)%val = yr_update(Susp_2)%val + egtss(0,j)/(jmax-1)
-    yr_update(Susp_4)%val = yr_update(Susp_4)%val + egtss(imax,j)/(jmax-1)
-    yr_update(PM10_2)%val = yr_update(PM10_2)%val + egt10(0,j)/(jmax-1)
-    yr_update(PM10_4)%val = yr_update(PM10_4)%val + egt10(imax,j)/(jmax-1)
+    yr_update(Salt_2)%val = yr_update(Salt_2)%val + cellstate(0,j)%egt/(jmax-1)
+    yr_update(Salt_4)%val = yr_update(Salt_4)%val + cellstate(imax,j)%egt/(jmax-1)
+    yr_update(Susp_2)%val = yr_update(Susp_2)%val + cellstate(0,j)%egtss/(jmax-1)
+    yr_update(Susp_4)%val = yr_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
+    yr_update(PM10_2)%val = yr_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)
+    yr_update(PM10_4)%val = yr_update(PM10_4)%val + cellstate(imax,j)%egt10/(jmax-1)
   END DO
   yrly_update(Salt_2)%cnt = yrly_update(Salt_2)%cnt + 1
   yrly_update(Salt_4)%cnt = yrly_update(Salt_4)%cnt + 1

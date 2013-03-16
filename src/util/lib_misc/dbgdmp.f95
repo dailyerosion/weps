@@ -53,7 +53,6 @@
       include 'main/main.inc'
       include 'manage/man.inc'
       include 'erosion/m2geo.inc'
-      include 'erosion/e2erod.inc'
 
       integer  idx,jdx
 !

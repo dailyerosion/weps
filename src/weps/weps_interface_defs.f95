@@ -428,8 +428,10 @@
       subroutine calcwu()
       end subroutine calcwu
 !---------------------------
-      subroutine daily_erodout (o_unit, o_E_unit)   
-      integer  o_unit, o_E_unit
+      subroutine daily_erodout( o_unit, o_E_unit, cellstate )
+      use erosion_data_struct_defs, only: cellsurfacestate
+      integer o_unit, o_E_unit
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine daily_erodout
 !---------------------------
       subroutine erodinit( noerod, cellstate )
@@ -483,10 +485,11 @@
       real prev_dir                           
       end subroutine sbdirini
 !-----------------------------
-      subroutine sbemit (ounit, ws, hhr)
-
+      subroutine sbemit (ounit, ws, hhr, cellstate)
+      use erosion_data_struct_defs
       integer        ounit   !Unit number for detail grid erosion
-      real           ws, hhr      
+      real           ws, hhr
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine sbemit
 !----------------------------
       subroutine sberod (time,flg, subrsurf, cellstate)
@@ -500,7 +503,9 @@
       subroutine sbgrid()
       end subroutine sbgrid
 !----------------------------
-      subroutine sbigrd()   
+      subroutine sbigrd( cellstate )
+      use erosion_data_struct_defs, only: cellsurfacestate
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine sbigrd   
 !----------------------------
       subroutine sbinit( subrsurf, cellstate )
@@ -1134,7 +1139,9 @@
       type(decomp_factors), intent(in) :: decompfac
       end subroutine bpools
 !------------------------------
-      subroutine clear_erosion()
+      subroutine clear_erosion( cellstate )
+      use erosion_data_struct_defs, only: cellsurfacestate
+      type(cellsurfacestate), dimension(0:,0:), intent(inout)::cellstate     ! initialized grid cell state values
       end subroutine clear_erosion
 !------------------------------
       subroutine cliginit()
@@ -1213,14 +1220,16 @@
       type(biomatter), dimension(:,:), intent(out) :: residue
       end subroutine openfils
 !--------------------------------
-      subroutine plotdata(sr, restot, croptot, biotot, noerod)
+      subroutine plotdata(sr, restot, croptot, biotot, noerod, cellstate)
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: threshold
+      use erosion_data_struct_defs, only: cellsurfacestate
       integer, intent(in) :: sr
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(threshold), intent(in) :: noerod
+      type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
       end subroutine plotdata
 !--------------------------------
       subroutine save_soil(isr)
@@ -2042,15 +2051,18 @@
     TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:,:,0:), intent(inout) :: hmonth_report
     end SUBROUTINE update_hmonth_report_vars
 !-----------------------
-    SUBROUTINE update_monthly_update_vars(cm, monthly_update, mrot_update)
+    SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cellstate)
     USE pd_var_type_def
     USE pd_var_tables
+    use erosion_data_struct_defs, only: cellsurfacestate
+    INTEGER :: isr              ! current subregion
     INTEGER, INTENT (IN) :: cm  ! current month
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:), intent(inout) :: monthly_update
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:), intent(inout) :: mrot_update
+    type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
     end subroutine  update_monthly_update_vars
 !------------------------
-    SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_update, mrot_update, monthly_report)
+SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_update, mrot_update, monthly_report)
     USE pd_var_type_def
     USE pd_var_tables
     INTEGER, INTENT (IN) :: cur_month
@@ -2061,14 +2073,17 @@
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:,0:), intent(inout) :: monthly_report
     end SUBROUTINE update_monthly_report_vars
 !------------------------
-SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot)
-    USE pd_var_type_def
+SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot, cellstate)
     USE pd_var_tables
+    USE pd_var_type_def
     use biomaterial, only: biototal
+    use erosion_data_struct_defs, only: cellsurfacestate
     INTEGER :: sbr              ! current subregion
     TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update
     type(biototal), intent(in) :: restot  ! contains:
     type(biototal), intent(in) :: croptot  ! contains:
+    type(biototal), intent(in) :: biotot  ! contains:
+    type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate  ! egt, egtcs, egtss, egt10
     end subroutine  update_period_update_vars
 !-------------------------
 SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update, period_report)
@@ -2081,12 +2096,15 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
     TYPE (pd_var_type), DIMENSION(Min_period_vars:,:), intent(inout) :: period_report
     end SUBROUTINE update_period_report_vars
 !-------------------------            
-    SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
+SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cellstate)
     USE pd_var_type_def
     USE pd_var_tables
+    use erosion_data_struct_defs, only: cellsurfacestate
+    INTEGER :: isr              ! current subregion
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrly_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrot_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yr_update
+    type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate  ! egt, egtcs, egtss, egt10
     end subroutine update_yrly_update_vars
 !-------------------------            
     SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, yrly_update, yrot_update, yr_update, yrly_report, yr_report)

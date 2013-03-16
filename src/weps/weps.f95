@@ -78,7 +78,6 @@
       include 'manage/oper.inc'
       include 'erosion/p1erode.inc' !Needs the SURF_UPD_FLG variable
       include 'erosion/m2geo.inc'   !Need tsterode cmdline arg vars(xgdpt,ygdpt)
-      include 'erosion/e2erod.inc'
     
 !     + + + LOCAL VARIABLES + + +
       logical first
@@ -397,7 +396,7 @@
 
       do isr = 1, nsubr
           ! this prints header to plot.out file (isr not yet set)
-          call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr) )  ! print to plot data file
+          call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
           ! this prints header to decomp.out file (isr not yet set)
           call bpools(1,1,1,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
 
@@ -545,7 +544,7 @@
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
 
-          call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr) )  ! print to plot data file
+          call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
           ! write decomposition biomass pool amounts to files
           call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
 !        write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',                 &
@@ -624,7 +623,7 @@
             call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr), croptot(isr),&
      &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
 
-            call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr) )  ! print to plot data file
+            call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
 
             ! write decomposition biomass pool amounts to files
             call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
@@ -733,7 +732,7 @@
                   ! write(*,*) "Start erosion"
                   call erosion( 5.0, subrsurf, noerod, cellstate )
                   if (btest(am0efl,0) .or. btest(am0efl,1)) then
-                     call daily_erodout (luo_egrd,luo_erod)
+                     call daily_erodout( luo_egrd,luo_erod, cellstate )
                   endif
                end if
             end if
@@ -744,7 +743,7 @@
                end if
 
                call sci_cum( isr, restot(isr), cellstate )   ! Keep running total for soil conditioning index (SCI)
-               call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr) )  ! print to plot data file
+               call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
                ! write decomposition biomass pool amounts to files
                call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
 
@@ -780,14 +779,15 @@
 
             do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
                ! Compute yrly values
-               call update_yrly_update_vars(rep_update(isr)%yrly_update, rep_update(isr)%yrot_update, rep_update(isr)%yr_update)
+               call update_yrly_update_vars( isr, rep_update(isr)%yrly_update, rep_update(isr)%yrot_update, &
+                                             rep_update(isr)%yr_update, cellstate )
                if ( (cm == 12) .and. (cd == 31) ) then          ! end of current year
                   call update_yrly_report_vars(yrsim, maxper, rep_update(isr)%yrly_update, rep_update(isr)%yrot_update, &
                                                rep_update(isr)%yr_update, rep_report(isr)%yrly_report, rep_report(isr)%yr_report)
                end if
 
                ! Compute monthly values
-               call update_monthly_update_vars(cm, rep_update(isr)%monthly_update, rep_update(isr)%mrot_update)
+               call update_monthly_update_vars(isr, cm, rep_update(isr)%monthly_update, rep_update(isr)%mrot_update, cellstate)
                if (cd == lstday(cm,cy)) then                    ! end of current month
                   call update_monthly_report_vars(cm, yrsim, maxper, &
                        rep_update(isr)%monthly_update, rep_update(isr)%mrot_update, rep_report(isr)%monthly_report)
@@ -801,7 +801,7 @@
                end if
 
                ! Compute period values
-               call update_period_update_vars(isr, rep_update(isr)%period_update, restot(isr), croptot(isr))
+               call update_period_update_vars(isr, rep_update(isr)%period_update, restot(isr), croptot(isr), biotot(isr), cellstate)
                ! print *, pd, "  ",cy,cm,cd,"  ", period_dates(pd(isr))
 
             end do
@@ -831,7 +831,7 @@
                end if
             endif
 
-           call clear_erosion()
+           call clear_erosion( cellstate )
 
          end do   ! end of "reporting" loop
          report_loop = .false.

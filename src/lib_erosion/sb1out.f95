@@ -33,15 +33,13 @@
 
       include 'p1werm.inc'
       include 'w1clig.inc'
-!
+
 !     + + + LOCAL COMMON BLOCKS + + +
-!
       include 'p1const.inc'
       include 'm1sim.inc'
       include 'm1geo.inc'
       include 'erosion/w2wind.inc'
       include 'erosion/m2geo.inc'
-      include 'erosion/e2erod.inc'
       include 'erosion/e3grid.inc'
 !
 !     + + + LOCAL VARIABLES + + +

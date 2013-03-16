@@ -562,8 +562,7 @@
 
       !tsterode will generate the final grid values and the summarized erosion totals
       if (btest(am0efl,0).or.btest(am0efl,1).or.btest(am0efl,3)) then
-       call erodout (o_egrd_unit, o_erod_unit, o_sgrd_unit,             &
-     &               input_filename, hagen_plot_flag)
+       call erodout (o_egrd_unit, o_erod_unit, o_sgrd_unit, input_filename, hagen_plot_flag, cellstate)
       endif
 
       if (i_unit .ne. 5) then

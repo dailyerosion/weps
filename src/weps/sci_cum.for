@@ -20,7 +20,6 @@
 !     + + + INCLUDE + + +
       include 'p1werm.inc'
       include 'command.inc'
-      include 'erosion/e2erod.inc'
       include 'erosion/m2geo.inc'
       include 'main/sci_report_val.inc'
 
@@ -40,8 +39,8 @@
       ngdpt = 0
       do idx = 1, imax-1
           do jdy = 1, jmax-1
-              if( cellstate(idx,jdy)%csr .eq. isr ) then
-                  total = total + egt(idx,jdy)
+              if( isr .eq. cellstate(idx,jdy)%csr ) then
+                  total = total + cellstate(idx,jdy)%egt
                   ngdpt = ngdpt + 1
               end if
            end do

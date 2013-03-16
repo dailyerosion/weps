@@ -107,7 +107,6 @@
 !     sbwust
 !     sbinit
 !     sbdirini
-!     sbigrd
 !     sbwind
 !     sberod
 !     sbsfdi
@@ -499,7 +498,7 @@
          if (btest(am0efl,2)) then
             ! write(0,*) 'i is:', i, 'hr is:', hr
             ! Note that we use "hr" not "hrs" here so we report the end of the "ntstep" hr period
-            call sbemit (luo_emit, awu(i), hr)  !Should only write data here
+            call sbemit (luo_emit, awu(i), hr, cellstate)  !Should only write data here
          endif
 
    41 continue

@@ -83,7 +83,7 @@
         end do
 
          ! set grid cell output arrays to zero
-         call sbigrd
+         call sbigrd( cellstate )
 
          ! check for hills - sbhill not implemented
 !        if (nhill .gt. 0) then
