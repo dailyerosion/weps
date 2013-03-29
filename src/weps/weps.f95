@@ -77,7 +77,6 @@
       include 'main/main.inc'
       include 'manage/man.inc'
       include 'manage/oper.inc'
-      include 'erosion/p1erode.inc' !Needs the SURF_UPD_FLG variable
     
 !     + + + LOCAL VARIABLES + + +
       logical first
@@ -102,13 +101,15 @@
       integer ci_flag, ci_year
       real    ci
 
-      type(biomatter), dimension(:), allocatable :: crop
-      type(biototal), dimension(:), allocatable :: croptot
-      type(biomatter), dimension(:,:), allocatable :: residue
-      type(biototal), dimension(:), allocatable :: restot
-      type(biototal), dimension(:), allocatable :: biotot
-      type(decomp_factors), dimension(:), allocatable :: decompfac
-      type(mandate_array), dimension(:), allocatable :: mandatbs
+      integer :: SURF_UPD_FLG              ! erosion surface updating (0 - disabled, 1 - enabled)
+
+      type(biomatter), dimension(:), allocatable :: crop            ! structure with crop state and parameters
+      type(biototal), dimension(:), allocatable :: croptot          ! structure with totalized values of crop state
+      type(biomatter), dimension(:,:), allocatable :: residue       ! structure with residue state and parameters
+      type(biototal), dimension(:), allocatable :: restot           ! structure with totalized values of residue state
+      type(biototal), dimension(:), allocatable :: biotot           ! structure with totalized values of all biomass state
+      type(decomp_factors), dimension(:), allocatable :: decompfac  ! structure with decompisition factors
+      type(mandate_array), dimension(:), allocatable :: mandatbs    ! structure with management dates, operation names and crops
 
       type(subregionsurfacestate), dimension(:), allocatable :: subrsurf   ! subregion surface state needed by erosion
       type(threshold), dimension(:), allocatable :: noerod                 ! report values to show which factors prevented erosion
@@ -730,7 +731,7 @@
                   ! write(*,*) "Start calcwu"
                   call calcwu
                   ! write(*,*) "Start erosion"
-                  call erosion( 5.0, subrsurf, noerod, cellstate )
+                  call erosion( 5.0, SURF_UPD_FLG, subrsurf, noerod, cellstate )
                   if (btest(am0efl,0) .or. btest(am0efl,1)) then
                      call daily_erodout( luo_egrd,luo_erod, cellstate )
                   endif

@@ -13,22 +13,12 @@
       real  WZZO_MIN
       real  WZZO_MAX
 
-!     This variable determines the whether surface updating from erosion
-!     is enabled or not
-
-      integer SURF_UPD_FLG
-
 !     + + + VARIABLE DECLARATIONS + + +
 
       parameter (SLRR_MIN = 1.5)  !minimum RR value (mm)
       parameter (SLRR_MAX = 100.0)!maximum RR value (mm)
       parameter (WZZO_MIN = 0.5)  !minimum wwzo value (mm)
       parameter (WZZO_MAX = 30.0) !maximum wwzo value (mm)
-
-
-      common /p1erode/ SURF_UPD_FLG
-
-      save :: /p1erode/
 
 !     + + + VARIABLE DEFINITIONS + + +
 

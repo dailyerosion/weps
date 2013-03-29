@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine erosion( min_erosion_awu, subrsurf, noerod, cellstate )
+      subroutine erosion( min_erosion_awu, SURF_UPD_FLG, subrsurf, noerod, cellstate )
 
 !     +++ PURPOSE +++
 !     subroutine erosion is the control subroutine and calls other
@@ -20,14 +20,12 @@
 
 !     +++ ARGUMENT DECLARATIONS +++
       real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
+      integer :: SURF_UPD_FLG    ! erosion surface updating (0 - disabled, 1 - enabled)
       type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
       type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
 
-!     +++ ARGUMENT DEFINITIONS +++
-
 !     +++ PARAMETER +++
-
       real SNODEP                !Minimum snow depth to prevent erosion
       parameter (SNODEP = 20.0)  !No erosion when snow depth >= 20mm
       real  PID180
@@ -43,9 +41,6 @@
       include  'timer.inc'
       include  'command.inc'
       include  'main/main.inc'
-
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'erosion/p1erode.inc'  !Needs the SURF_UPD_FLG variable
 
 !     +++ LOCAL VARIABLES +++
       integer i,j,wustfl, icsr
@@ -463,7 +458,7 @@
                call timer(TIMEROS,TIMSTOP)
                call timer(TIMSBEROD,TIMSTART)
 
-               call sberod (time,SURF_UPD_FLG, subrsurf, cellstate)
+               call sberod (time, SURF_UPD_FLG, subrsurf, cellstate)
 
                call timer(TIMSBEROD,TIMSTOP)
                call timer(TIMEROS,TIMSTART)

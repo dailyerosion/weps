@@ -10,24 +10,25 @@
      &                 bcrlai, bcrsai, bczht,                           &
      &                 bcxrow, bc0rg, wzorg, wzorr,                     &
      &                 wzzo, wzzov, awzzo, brcd)
-!
+
 !     +++ PURPOSE +++
-!
 !     Calc. aerodynamic roughness parm., wzzo, with no standing biomass
 !           wzzo is used by sbwust
-!
+
 !     Calc. aerodynamic roughness parm. as wzzov, if standing biomass
 !              else let wzzov = wzzo
 !         wzzov is used by sbwus
 !     Calc. biomass drag coef.(brcd) in function biodrag
 !            brcd is also used by sbwus
-!
+
 !     set anem aero. roughness and field roughness equal when anem. at
 !         the field site, ie. wzoflg = 1
 !     to calculate aerodynamic roughness
 !     of vegetation canopy. Ref. Trans ASAE 31(3):769-775
 !     Armbrust and Bilbro, 1995
-!
+
+      use p1erode_def, only: WZZO_MIN, WZZO_MAX
+
 !     +++ ARGUMENT DECLATION +++
       real sxprg, szrgh, slrr
       integer wzoflg
@@ -36,8 +37,6 @@
       integer bc0rg
       real wzorg, wzorr, wzzo, wzzov, awzzo, brcd
      
-
-!
 !     +++ ARGUMENT DEFINITIONS +++
 !     sxprg  - row/dike spacing parallel the wind (mm)
 !     szrgh  - ridge height (mm)
@@ -59,19 +58,18 @@
 !     wzzov  - aerodynamic roughness length of canopy (mm)
 !     awzzo  - aerodynamic roughness at anemom. site (mm)
 !     brcd   - biomass drag coefficient
-!
+
 !     +++ FUNCTIONS CALLED
       real biodrag
 
 !     +++ LOCAL VARIABLES +++
       real  hl, bht
-!
+
 !     +++ LOCAL VARIABLE DEFINITIONS +++
 !     h1    - ratio of ridge height to parallel ridge spacing
 !     bht   - biomass height (mm)
-!
+
 !     +++ INCLUDE FILES+++
-      include 'erosion/p1erode.inc' !specify min/max aerodynamic roughness values
       include 'p1unconv.inc'
 
 !     +++ PARAMETERS +++

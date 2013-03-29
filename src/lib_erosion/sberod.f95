@@ -5,7 +5,7 @@
 !**********************************************************************
 !     subroutine sberod
 !**********************************************************************
-      subroutine sberod (time,flg, subrsurf, cellstate)
+      subroutine sberod (time, SURF_UPD_FLG, subrsurf, cellstate)
 
 !     To calc loss/dep of saltation/creep, susp. and PM-10 at cells
 !     To call sbqout to calc. qo, qsso, q10o for each cell
@@ -19,7 +19,7 @@
 
 !     +++ ARGUMENT DECLARATIONS +++
       real      time
-      integer   flg    !Surface update flag (1=on, 0=off)
+      integer   SURF_UPD_FLG    !Surface update flag (1=on, 0=off)
       type(subregionsurfacestate), dimension(:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
@@ -125,7 +125,7 @@
       call timer(TIMSBEROD,TIMSTOP)
       call timer(TIMSBQOUT,TIMSTART)
 
-       call sbqout (flg, &
+       call sbqout (SURF_UPD_FLG, &
        cellstate(i,j)%wus, cellstate(i,j)%wust, cellstate(i,j)%wusp, cellstate(i,j)%sf10, cellstate(i,j)%sf84, &
        cellstate(i,j)%sf200, cellstate(i,j)%szcr, cellstate(i,j)%sfcr, cellstate(i,j)%sflos, cellstate(i,j)%smlos, &
        cellstate(i,j)%szrgh, subrsurf(icsr)%asxrgs, subrsurf(icsr)%sxprg, cellstate(i,j)%slrr, &
@@ -134,8 +134,8 @@
        subrsurf(icsr)%abffcv, time, &
        subrsurf(icsr)%acanag, subrsurf(icsr)%acancr, subrsurf(icsr)%asf10an, &
        subrsurf(icsr)%asf10en, subrsurf(icsr)%asf10bk, &
-       lx, qi, qssi, q10i, i, j, imax, jmax, &
-       cellstate(i,j)%smaglos, cellstate(i,j)%dmlos, cellstate(i,j)%sf84mn, subrsurf(icsr)%sf84ic, subrsurf(icsr)%sf10ic, &  !edit ljh 1-22-05
+       lx, qi, qssi, q10i, &
+       cellstate(i,j)%dmlos, cellstate(i,j)%sf84mn, subrsurf(icsr)%sf84ic, subrsurf(icsr)%sf10ic, &  !edit ljh 1-22-05
        subrsurf(icsr)%bsl(1)%asvroc, cellstate(i,j)%smaglosmx, &
        qo, qsso, q10o )
 

@@ -39,14 +39,7 @@
 
       include 'util/misc/f2kcli.inc' !declarations for f2k commandline functions
       include 'command.inc'
-!
-!
-!     + + + LOCAL COMMON BLOCKS
 
-      include 'erosion/p1erode.inc'  !obtain access to SURF_UPD_FLG variable
-!
-!     ++++ ARGUMENT DEFINITIONS +++
-!
 !     +++ SUBROUTINES CALLED+++
 !     erodin
 !     erodinit
@@ -117,6 +110,7 @@
       real min_erosion_awu       !Minimum erosiove wind speed (m/s)
                                  !to evaluate for erosion loss
 
+      integer :: SURF_UPD_FLG              ! erosion surface updating (0 - disabled, 1 - enabled)
 
       integer :: dt(8)
       character(len=3) :: mstring
@@ -558,7 +552,7 @@
 
 !     write (*,*) 'call to erosion '
 !     start erosion
-      call erosion( min_erosion_awu, subrsurf, noerod, cellstate )
+      call erosion( min_erosion_awu, SURF_UPD_FLG, subrsurf, noerod, cellstate )
 
       !tsterode will generate the final grid values and the summarized erosion totals
       if (btest(am0efl,0).or.btest(am0efl,1).or.btest(am0efl,3)) then

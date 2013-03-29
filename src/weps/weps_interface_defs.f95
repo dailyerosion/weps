@@ -425,6 +425,16 @@
       type(biomatter), dimension(:), intent(in) :: residue
       end subroutine decout
 !---------------- EROSION Routines ---------------------------
+      subroutine erosion( min_erosion_awu, SURF_UPD_FLG, subrsurf, noerod, cellstate )
+      use file_io_mod, only: luo_sgrd, luo_emit
+      use erosion_data_struct_defs
+      real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
+      integer :: SURF_UPD_FLG    ! erosion surface updating (0 - disabled, 1 - enabled)
+      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
+      type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
+      end subroutine erosion
+!---------------------------
       subroutine calcwu()
       end subroutine calcwu
 !---------------------------
@@ -439,14 +449,6 @@
       type(threshold), dimension(:), intent(inout) :: noerod                 ! report values to show which factors prevented erosion
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine erodinit
-!---------------------------
-      subroutine erosion( min_erosion_awu, subrsurf, noerod, cellstate )
-      use erosion_data_struct_defs
-      real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
-      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
-      type(threshold), dimension(:), intent(out) :: noerod   ! report values to show which factors prevented erosion
-      type(cellsurfacestate), dimension(0:,0:) :: cellstate
-      end subroutine erosion
 !---------------------------
       subroutine saeinp( subrsurf )
       use erosion_data_struct_defs, only: subregionsurfacestate
@@ -523,27 +525,25 @@
       end subroutine sbpm10
 !----------------------------
       subroutine sbqout                                                 &
-     & (flg, wus, wust, wusp, sf10, sf84,                               &
+     & (SURF_UPD_FLG, wus, wust, wusp, sf10, sf84,                      &
      & sf200, szcr, sfcr, sflos, smlos,                                 &
      & szrgh, sxrgs, sxprg, slrr,                                       &
      & sfcla, sfsan,                                                    &
      & sfvfs, svroc, brsai, bzht,                                       &
      & bffcv, time,                                                     &
      & canag, cancr, sf10an, sf10en, sf10bk,                            &
-     & lx, qi, qssi, q10i, i, j, imax, jmax,                            &
-     & smaglos, dmlos, sf84mn, sf84ic, sf10ic, asvroc,smaglosmx,        &
+     & lx, qi, qssi, q10i,                                              &
+     & dmlos, sf84mn, sf84ic, sf10ic, asvroc,smaglosmx,                 &
      & qo, qsso, q10o )
-
-      integer   flg    !Surface update flag (1=on, 0=off)
-      real wus, wust, wusp, sf1, sf10, sf84
+      integer :: SURF_UPD_FLG    !Surface update flag (1=on, 0=off)
+      real wus, wust, wusp, sf10, sf84
       real sf200, szcr, sfcr, sflos, smlos
       real szrgh, sxrgs, sxprg, slrr
       real sfcla, sfsan,sfvfs
       real svroc, brsai, bzht, bffcv, time
       real canag, cancr, sf10an, sf10en, sf10bk
       real lx, qi, qssi, q10i, qo, qsso, q10o
-      real smaglos, dmlos, sf84mn, sf84ic, sf10ic, asvroc, smaglosmx
-      integer i, j, imax, jmax   
+      real dmlos, sf84mn, sf84ic, sf10ic, asvroc, smaglosmx
       end subroutine sbqout
 !-----------------------------
       subroutine sbsfdi (slagm, s0ags, slagn, slagx, sldi, sfdi)
@@ -1138,11 +1138,6 @@
       type(biototal), intent(in) :: biotot
       type(decomp_factors), intent(in) :: decompfac
       end subroutine bpools
-!------------------------------
-      subroutine clear_erosion( cellstate )
-      use erosion_data_struct_defs, only: cellsurfacestate
-      type(cellsurfacestate), dimension(0:,0:), intent(inout)::cellstate     ! initialized grid cell state values
-      end subroutine clear_erosion
 !------------------------------
       subroutine cliginit()
       end subroutine cliginit

@@ -16,19 +16,16 @@
       use weps_interface_defs
       use erosion_data_struct_defs
       use grid_geo_def, only: imax, jmax
+      use p1erode_def, only: SLRR_MIN, SLRR_MAX
 
 !     + + + ARGUEMENT DECLARATIONS + + +
       type(subregionsurfacestate), dimension(:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
 
 !     + + + GLOBAL COMMON BLOCKS + + +
-
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 'w1clig.inc'
-!
-!     + + +  LOCAL COMMON BLOCKS + + +
-      include 'erosion/p1erode.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer  icsr, i, j

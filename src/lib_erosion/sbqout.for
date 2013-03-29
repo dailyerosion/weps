@@ -2,27 +2,27 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-!**********************************************************************
-!     subroutine sbqout    ver 9/2/98 file name sbqout.for
-!**********************************************************************
+
       subroutine sbqout                                                 &
-     & (flg, wus, wust, wusp, sf10, sf84,                               &
+     & (SURF_UPD_FLG, wus, wust, wusp, sf10, sf84,                      &
      & sf200, szcr, sfcr, sflos, smlos,                                 &
      & szrgh, sxrgs, sxprg, slrr,                                       &
      & sfcla, sfsan,                                                    &
      & sfvfs, svroc, brsai, bzht,                                       &
      & bffcv, time,                                                     &
      & canag, cancr, sf10an, sf10en, sf10bk,                            &
-     & lx, qi, qssi, q10i, i, j, imax, jmax,                            &
-     & smaglos, dmlos, sf84mn, sf84ic, sf10ic, asvroc,smaglosmx,        &
+     & lx, qi, qssi, q10i,                                              &
+     & dmlos, sf84mn, sf84ic, sf10ic, asvroc,smaglosmx,                 &
      & qo, qsso, q10o )
-!
+
 !     +++ PURPOSE +++
 !     calculate the saltation/creep, suspension, and PM-10 discharge
 !     from each control volume
-!
+
+      use p1erode_def, only: SLRR_MIN
+
 !     +++ ARGUMENT DECLARATIONS +++
-      integer   flg    !Surface update flag (1=on, 0=off)
+      integer :: SURF_UPD_FLG    !Surface update flag (1=on, 0=off)
       real wus, wust, wusp, sf10, sf84
       real sf200, szcr, sfcr, sflos, smlos
       real szrgh, sxrgs, sxprg, slrr
@@ -30,10 +30,7 @@
       real svroc, brsai, bzht, bffcv, time
       real canag, cancr, sf10an, sf10en, sf10bk
       real lx, qi, qssi, q10i, qo, qsso, q10o
-      real smaglos, dmlos, sf84mn, sf84ic, sf10ic, asvroc, smaglosmx
-      integer i, j, imax, jmax
-
-      include 'erosion/p1erode.inc' !Parameters defining scope of erosion submodel
+      real dmlos, sf84mn, sf84ic, sf10ic, asvroc, smaglosmx
 
 !     +++ ARGUMENT DEFINITIONS +++
 !     wus    =       friction velocity (m/s)
@@ -87,9 +84,8 @@
 !     ctf   = ridge trapping fraction
 !     cdp   = deposition coef. for saltation
 !     c10dp = deposition coef. for pm10
-!
+
 !     +++ LOCAL VARIABLES +++
-!
       real fracd
       real cen, ceno, renb, renv, qen, qcp, ci
       real sfa12, sfcv, sargc, sarrc, sfsn
@@ -99,8 +95,6 @@
       real cm, tmp, srrg, dmtlos, fdm
       real szc, sz, crlos
       real szv, qitmp, dmt, smasstot
-!      real lnslp
-!      integer m, n
 
 !     +++ LOCAL VARIABLE DEFINITIONS +++
 !     fracd  =  dynamic threshold adjustment - added per LH's suggestions
@@ -134,7 +128,6 @@
 !     dmtlos =  soil loss/dep. for each time-step (+ = deposition)
 !     fdm    =  increase of dmtlos mass to agg. reservoir when loss
 !               exceeds smlos from crust
-!     lnslp  =  ln of smaglos_sf84 slope, intermediate variable
 !     smasstot = total soil reservior mass (kg/m^2)
 !     +++ END SPECIFICATIONS +++
 !
@@ -284,16 +277,11 @@
 !        calculate atanh
 
       qo = (s/(2.*c))*(-tanh(t1) + b/s)
-!
+
 !     assemble composite params. for suspension
       f = sfssen*cen*qen*(1.0 - 0.1*brsai)    !edit 8-29-05 for suspension interception
 !     added last term to intercept some ss LH edit  6-11-01, changed 8-29-05
       g = (sfssan*fancan - sfssen*cen + cbk + cm)*(1 - 0.1*brsai)
-!
-! ^^^ tmp out
-!     set counter
-!      m = (imax-1)/8
-!      m = max(1,m)
 
 !^^^ tmp output
 !      if (wus .gt. 1.1) then
@@ -311,7 +299,7 @@
 !        endif
 !      endif
 ! ^^^ end tmp out
-!
+
 !     trap to prevent over range of exp
       if ((s*lx) .gt. 40.0) then
            s = 40.0/lx
@@ -340,7 +328,7 @@
 
       !now added as a commandline argument to tsterode - LEW
 !     execute this section if flag is set
-   90  if (flg .eq. 1) then
+   90  if (SURF_UPD_FLG .eq. 1) then
 !
 !     calc change in loose surface soil for time step (+ = surface gain)
 !        terms: - total loss,  + created by abrasion
@@ -509,8 +497,9 @@
          slrr = max(slrr, SLRR_MIN)
 !
       endif
-  100 continue
+
       qi = qitmp
+
       return
       end
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

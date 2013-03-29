@@ -15,6 +15,7 @@
       use Polygons_Mod
       use subregions_mod, only: subr_poly
       use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate
+      use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer i_unit, o_unit, cmdebugflag, already_read_inputs
@@ -40,10 +41,8 @@
       include 'm1geo.inc'
       include 'w1wind.inc'
       include 'w1pavg.inc'
-!
+
 !     + + + LOCAL COMMON BLOCKS + + +
-!
-      include 'erosion/p1erode.inc'
       integer debugflg
       common /flags/ debugflg
 !
