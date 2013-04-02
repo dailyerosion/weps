@@ -33,14 +33,13 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'c1gen.inc'
-      include 'p1const.inc'
-      include 'm1sim.inc'
-      include 'm1flag.inc'
-      include 'm1subr.inc'
-      include 'm1geo.inc'
-      include 'w1wind.inc'
-      include 'w1pavg.inc'
+      include 'p1const.inc'  ! anemht, awzzo, wzoflg
+      include 'm1sim.inc'    ! ntstep
+      include 'm1flag.inc'   ! am0efl, am0eif
+      include 'm1subr.inc'   ! nsubr
+      include 'm1geo.inc'    ! amasim, nacctr, nbr, amxsim, amxar, amxbr, amzbr, ampbr, amxbrw
+      include 'w1wind.inc'   ! awadir, awu
+      include 'w1pavg.inc'   ! awdair
 
 !     + + + LOCAL COMMON BLOCKS + + +
       integer debugflg

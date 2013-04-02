@@ -30,10 +30,7 @@
 !
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1geo.inc'
-      include 'm1subr.inc'
-      include 's1sgeo.inc'
-      include 'w1wind.inc'
+      include 'm1geo.inc'  ! amasim
 
 !     + + + END SPECIFICATION + + +
 

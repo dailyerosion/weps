@@ -29,12 +29,12 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1geo.inc'
-      include 'p1const.inc'
+      include 'm1geo.inc'   ! amasim, nbr, amxsim, amxbr, amzbr, ampbr
+      include 'p1const.inc' ! pi
 
 !     + + + ARGUMENT DECLARATIONS + + +
 ! ^^^ used only in test version
-!      real wlen(0:mngdpt, 0:mngdpt, 8)
+!      real wlen(0:imax, 0:jmax, 8)
 
 !     + + + ARGUMENT DEFINITIONS  + + +
 !     wlen = windward(-) and leeward(+) distances from barrier

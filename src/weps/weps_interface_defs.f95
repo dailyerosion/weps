@@ -450,11 +450,6 @@
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine erodinit
 !---------------------------
-      subroutine saeinp( subrsurf )
-      use erosion_data_struct_defs, only: subregionsurfacestate
-      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
-      end subroutine saeinp
-!---------------------------
       subroutine sb1out( jj, nn, hr, ws, wdir, o_unit, subrsurf, cellstate )
       use erosion_data_struct_defs
       real ws, wdir, hr

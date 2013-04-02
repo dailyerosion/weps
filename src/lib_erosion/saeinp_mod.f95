@@ -3,6 +3,22 @@
 !$Revision$
 !$HeadURL$
 
+module saeinp_mod
+
+!     This module is for the creation of sinfle or multiple stand alone erosion input files,
+!     depending on the command line switches given
+
+  type make_saeinp
+     integer :: jday      ! the present day in julian days for output
+     integer :: simday    ! the present day in simulation days for creation of file
+     integer :: maxday    ! maximum simday number
+     character*256 :: fullpath  ! the root path plus subdirectory if indicated by multiple files
+  end type make_saeinp
+
+  type(make_saeinp) :: mksaeinp
+
+  contains
+
       subroutine saeinp( subrsurf )
 
 !     +++ PURPOSE +++
@@ -10,7 +26,7 @@
 
 !     + + + Modules Used + + +
       use weps_interface_defs
-      use file_io_mod, only: fopenk
+      use file_io_mod, only: fopenk, makenamnum
       use subregions_mod
       use erosion_data_struct_defs, only: subregionsurfacestate
 
@@ -19,18 +35,18 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
-      include  'p1const.inc'
-      include  'm1geo.inc'
-      include  'w1wind.inc'
-      include  'w1pavg.inc'
-      include  'm1sim.inc'
-      include  'wpath.inc'
+      include  'p1const.inc' ! anemht, awzzo, wzoflg
+      include  'm1geo.inc'   ! amasim, nacctr, nbr, amxsim, amxar, amxbr, amzbr, ampbr, amxbrw
+      include  'w1wind.inc'  ! awadir, awu
+      include  'w1pavg.inc'  ! awdair
+      include  'm1sim.inc'   ! ntstep
 
 !     +++ LOCAL VARIABLES +++
       integer k,l, sr, ip
       integer b
       integer day, mon, yr
       integer :: luo_saeinp      ! output unit number
+      
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     sr - index used in subregion loop
@@ -38,8 +54,11 @@
 
 !     +++ END SPECIFICATIONS +++
 
-      call fopenk (luo_saeinp, trim(rootp) //'saeros.in','unknown')
-      call caldat (am0jd,day,mon,yr)
+      call fopenk (luo_saeinp, trim(mksaeinp%fullpath) // makenamnum( 'saeros', mksaeinp%simday, mksaeinp%maxday, '.in'),'unknown')
+      call caldat (mksaeinp%jday,day,mon,yr)
+
+      write(*,'(4(a,i0))') 'Made stand alone erosion input file D/M/Y: ', day,'/', mon,'/', yr,' simulation day: ', mksaeinp%simday
+
       write(luo_saeinp,2101) day, mon, yr
  2101 format('# day mon yr',2(1x,i2),2x,i4)
 
@@ -453,4 +472,6 @@
 
       return
       end
-!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+end module saeinp_mod
+

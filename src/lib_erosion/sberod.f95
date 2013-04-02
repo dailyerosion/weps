@@ -27,11 +27,7 @@
 !     time     = time interval (seconds)
 
 !     + + + GLOBAL COMMON BLOCKS + + +
-
-      include  'p1werm.inc'
-      include  'm1sim.inc'
-      include  'timer.inc'
-      include  'w1clig.inc'
+      include  'timer.inc'  ! TIMSBEROD, TIMSBQOUT, TIMSTART, TIMSTOP
 
 !     +++ LOCAL VARIABLES +++
       integer i, j, icsr
@@ -39,10 +35,10 @@
       real lx,aa,bb,dd,la,lb,ld,ly
 
       real  qi, qssi, q10i, qo, qsso, q10o, eg, egss, eg10
-      real qx(0:mngdpt, 0:mngdpt)
-      real qy(0:mngdpt, 0:mngdpt)
-      real qssx(0:mngdpt, 0:mngdpt), qssy(0:mngdpt, 0:mngdpt)
-      real q10x(0:mngdpt, 0:mngdpt), q10y(0:mngdpt, 0:mngdpt)
+      real qx(0:imax, 0:jmax)
+      real qy(0:imax, 0:jmax)
+      real qssx(0:imax, 0:jmax), qssy(0:imax, 0:jmax)
+      real q10x(0:imax, 0:jmax), q10y(0:imax, 0:jmax)
 
 !     +++ LOCAL VARIABLE DEFINITIONS +++
 !     i, j    =

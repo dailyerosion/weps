@@ -16,29 +16,27 @@
       use file_io_mod, only: fopenk
       use erosion_data_struct_defs
       use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt
+      use saeinp_mod, only: mksaeinp
 
 !     +++  PURPOSE +++
-!
+
 !     To start a standalone version of the EROSION submodel
-!
+
 !     It calls ERODEIN to read an input file (stdin),
 !     calls ERODINIT to initialize grid,
 !     runs the EROSION submodel code, and
 !     calls ERODOUT to print the generated output (stdout).
-!
-!     +++ ARGUMENT DECLARATIONS +++
-!
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'p1const.inc'
-      include 'm1sim.inc'
-      include 'm1geo.inc'
-      include 'm1subr.inc'
-      include 'm1flag.inc'
-      include 'w1clig.inc'        !Requires yrly average precip.....
 
-      include 'util/misc/f2kcli.inc' !declarations for f2k commandline functions
-      include 'command.inc'
+!     + + + GLOBAL COMMON BLOCKS + + +
+      include 'p1werm.inc'  ! mnsub, mnbpt, mnbr, mnarpt, mnar, mnspt, mngdpt
+      include 'p1const.inc' ! SEC_PER_DAY
+      include 'm1sim.inc'   ! am0jd, erod_interval, ntstep
+      include 'm1geo.inc'   ! amxsim
+      include 'm1subr.inc'  ! nsubr
+      include 'm1flag.inc'  ! am0eif, am0efl
+      include 'w1clig.inc'  ! awzypt, Requires yrly average precip.....
+
+!      include 'util/misc/f2kcli.inc' !declarations for f2k commandline functions
 
 !     +++ SUBROUTINES CALLED+++
 !     erodin
@@ -53,7 +51,6 @@
 
       integer :: alloc_stat, sum_stat
 
-!      integer        julday    !utility date function
       character*1024 exe_filepath
       character*1024 input_filepath
       integer i_unit
@@ -150,8 +147,8 @@
       call anemometer_init
 
       awzypt = 300.0      !Requires yrly average precip. (Hagen's best estimate for us to use)
-      saeinp_daysim = 0 !initialize WEPS variables
-      saeinp_jday = 0   !not used in the standalone submodel
+
+      mksaeinp%simday = 0 ! 0 means saeinp will not be used to create file.
 
       min_erosion_awu = 5.0  !default minimum erosive wind speed
 

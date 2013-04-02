@@ -43,7 +43,8 @@
 !
 !     + + + LOCAL VARIABLES + + +
 !
-      integer i,j, nline
+!      integer i
+      integer j, nline
       logical used
       character*500 line, plotdat(500)
       integer luo1    ! output file unit number

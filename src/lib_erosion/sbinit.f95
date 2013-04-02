@@ -24,8 +24,8 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1subr.inc'
-      include 'w1clig.inc'
+      include 'm1subr.inc'  ! nsubr
+      include 'w1clig.inc'  ! awzypt
 
 !     + + + LOCAL VARIABLES + + +
       integer  icsr, i, j

@@ -24,7 +24,7 @@
       include 'wpath.inc'
       include 'm1flag.inc'
 
-      include 'util/misc/f2kcli.inc'  !declarations for f2k commandline functions
+!      include 'util/misc/f2kcli.inc'  !declarations for f2k commandline functions
       include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL COMMON BLOCKS + + +
@@ -86,6 +86,7 @@
       report_debug = 0    !default report debug printing (0=off, 1=on)
       saeinp_daysim = 0   !0 value skips creation of a stand alone erosion input file.
       saeinp_jday = 0     !0 value skips creation of a stand alone erosion input file.
+      saeinp_all = 0      !0 value skips creation of stand alone erosion input files unless specific day set.
       init_cycle = 1      !default is to do one initialization cycle before reporting
       run_erosion = 1     !default is to run erosion submodel (0=no_erosion_submodel,1=WEPS,2=WEPP,3=WEPS+WEPP)
       calibrate_crops = 0 !default is to NOT run in crop calibration mode
@@ -171,9 +172,14 @@
               write(*,*)                                                &
      &'-E  Simulate \"erosion\" in WEPS run'
               write(*,*) '    0 = Do not run any erosion submodel'
-              write(*,*) '    1 = Run the erosion submodel (default)'
+              write(*,*) '    1 = Run WEPS erosion submodel (default)'
               write(*,*) '    2 = Run only WEPP erosion submodel'
 	      write(*,*) '    3 = Run WEPS and WEPP erosion submodels'
+
+              write(*,*)                                                &
+     &'-e  Create stand alone erosion output files, all erosion events'
+              write(*,*) '    0 = Create -O, -o spec. output (default)'
+              write(*,*) '    1 = Create SWEEP input files'
 
               write(*,*)                                                &
      &'-g  Application of growth stress functions'
@@ -309,7 +315,8 @@
               write(*,*) ''
               write(*,*) 'Default options are set to:'
  2600         format(' -c',i1,                                          &
-     &               ' -C',i1,' -E',i1,' -f',f4.2,                      &
+     &               ' -C',i1,' -E',i1,' -e',i1,                        &
+     &               ' -f',f4.2,                                        &
      &               ' -g',i1,' -G',f4.2,' -I',i1,                      &
      &               ' -L',i1,' -l',i2,' -O(no file)',' -o(no file)',   &
      &               ' -p',i1,' -P',a,                                  &
@@ -319,7 +326,8 @@
      &               ' -X',f4.1,' -Y',i1' -Z',i1)
 
               write(0,2600) soil_cond,                                  &
-     &          calibrate_crops, run_erosion, frac_frst_mass_lost,      &
+     &          calibrate_crops, run_erosion, saeinp_all,               &
+     &          frac_frst_mass_lost,                                    &
      &          growth_stress, water_stress_max, init_cycle,            &
      &          layer_scale, layer_infla,                               &
      &          puddle_warm, trim(rootp),                               &
@@ -353,11 +361,21 @@
           !specify run_erosion flag
           else if(argv(2:2) .eq. 'E') then
             read(argv(3:),*) cmd_iarg
-            if( (cmd_iarg .lt. 0) .or. (cmd_iarg .gt. 1) ) then
+            if( (cmd_iarg .lt. 0) .or. (cmd_iarg .gt. 3) ) then
               write(*,*)                                                &
      &           'Ignoring invalid run_erosion option: ', trim(argv)
             else
               run_erosion = cmd_iarg
+            endif
+
+          !specify stand alone input files for every erosion event flag
+          else if(argv(2:2) .eq. 'e') then
+            read(argv(3:),*) cmd_iarg
+            if( (cmd_iarg .lt. 0) .or. (cmd_iarg .gt. 1) ) then
+              write(*,*)                                                &
+     &           'Ignoring invalid saeinp_all option: ', trim(argv)
+            else
+              saeinp_all = cmd_iarg
             endif
 
           !specify young leaf freeze damaged mass loss fraction

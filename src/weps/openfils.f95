@@ -28,18 +28,13 @@
 
 !     + + +   LOCAL VARIABLES + + +
       integer idx, jdx, alloc_stat, sum_stat
-      character*20 :: subr_text(nsubr) ! subregion subdirectory text string
-      character*20 :: subr_format      ! format string for creating subr_text
-      character*20 :: dec_text ! decomposition detail age pool output file name text string
-      character*20 :: dec_format ! format string for creating dec_text
+      character*30 :: subr_text(nsubr) ! subregion subdirectory text string
+      character*30 :: dec_text ! decomposition detail age pool output file name text string
 
       ! create subregion directory names
-      write( subr_format, '(i0)' ) nsubr
-      idx = len_trim(subr_format)
-      write( subr_format, '(a8, i0, a5)' ) '(a9, i0.', idx, ', a1)'
       do idx = 1, nsubr
           ! create the name
-          write( subr_text(idx), subr_format) 'subregion', idx, '/'
+          subr_text(idx) = makenamnum( 'subregion', idx, nsubr, '/' )
           ! create the subdirectory
           call makedir(trim(rootp)//trim(subr_text(idx)) )
       end do
@@ -143,18 +138,15 @@
            write(*,*) 'ERROR: unable to allocate luod_below array'
         end if
          
-        ! open files to match number of biomass pools
-        write( dec_format, '(i0)' ) mnbpls
-        idx = len_trim(dec_format)
-        write( dec_format, '(a8, i0, a5)' ) '(a3, i0.', idx, ', a5)'
-        ! create age pool output file names, set unit numbers and open files
         do idx = 1, nsubr
            ! open dbelow.out in each subregion
            call fopenk (luod_below(idx), trim(rootp) // trim(subr_text(idx)) // 'dbelow.out', 'unknown')
 
+           ! open files to match number of biomass pools
+           ! create age pool output file names, set unit numbers and open files
            do jdx = 1,mnbpls
              ! create the name
-             write( dec_text, dec_format) 'dec', jdx, '.btmp'
+             dec_text = makenamnum( 'dec', jdx, mnbpls, '.btmp' )
              ! display created file
              !write(*,*) 'File name created: ', dec_text
              ! assign logical unit number of opening file to array

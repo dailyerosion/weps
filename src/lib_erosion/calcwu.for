@@ -23,16 +23,14 @@
 
       use weps_interface_defs
       use file_io_mod, only: luiwsd, luo_subday
-      include 'p1unconv.inc'
-      include 'p1const.inc'
       include 'p1werm.inc'
-      include 'wpath.inc'
-      include 'm1sim.inc'
-      include 'm1flag.inc'
-      include 'w1wind.inc'
+      include 'p1const.inc'  ! pi
+      include 'm1sim.inc'    ! am0jd, ntstep
+      include 'm1flag.inc'   ! am0efl, wind_gen_fmt_flag
+      include 'w1wind.inc'   ! awadir, awu
 
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
+      include 'main/main.inc'  ! subfil, subflg
 
 !     + + + LOCAL VARIABLES + + +
       character line*80

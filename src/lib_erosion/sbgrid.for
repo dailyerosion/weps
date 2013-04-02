@@ -30,8 +30,7 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include  'p1werm.inc'
-      include  'm1geo.inc'
-      include  'm1subr.inc'
+      include  'm1geo.inc'  ! nbr, amzbr, amxsim
 
 !     +++ LOCAL VARIABLES +++
       integer  ngdpt
@@ -109,4 +108,4 @@
 
       return
       end
-!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+

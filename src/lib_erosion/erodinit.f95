@@ -28,10 +28,10 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
-      include  'm1flag.inc'
-      include  'm1geo.inc'
-      include  'm1subr.inc'
-      include  's1surf.inc'
+      include  'm1flag.inc'  ! am0eif
+      include  'm1geo.inc'   ! nbr
+      include  'm1subr.inc'  ! nsubr
+      include  's1surf.inc'  ! acanag, acancr
       
 !     +++ ARGUMENT DECLARATIONS +++
       type(threshold), dimension(:), intent(inout) :: noerod                 ! report values to show which factors prevented erosion

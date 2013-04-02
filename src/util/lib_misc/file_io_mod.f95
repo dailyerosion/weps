@@ -202,5 +202,34 @@ contains
         !goto 10
     end subroutine makedir
 
+    function makenamnum( prename, innumber, maxnumber, postname ) result(namnum)
+        character(LEN = *), intent(in) :: prename
+        integer, intent(in) :: innumber
+        integer, intent(in) :: maxnumber
+        character(LEN = *), intent(in) :: postname
+
+        character*30 :: namnum         ! the name/number combination created
+        character*20 :: namnum_format  ! format string for creating the name/number combination
+        integer :: numlen              ! maximum length of the number part of the name
+        integer :: prelen              ! length of the prefix name portion
+        integer :: postlen             ! length of the postfix name portion
+
+        write( namnum_format, '(i0)' ) maxnumber
+        numlen = len_trim(namnum_format)
+        prelen = len_trim(prename)
+        postlen = len_trim(postname)
+
+        if( prelen + numlen + postlen .gt. 30 ) then
+            write(*,*) 'Name plus number combination is too long. Cannot create.'
+            write(*,*) 'Name: ', prename, ' Number: ', innumber, 'Extension: ', postname
+            stop 1
+        end if
+        write( namnum_format, '(a2, i0, a5, i0, a3, i0, a1)' ) '(a', prelen, ', i0.', numlen, ', a', postlen, ')'
+
+        ! create the name
+        write( namnum, namnum_format) trim(prename), innumber, trim(postname)
+
+    end function makenamnum
+
 end module file_io_mod
 

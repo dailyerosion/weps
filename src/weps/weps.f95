@@ -40,12 +40,13 @@
       USE pd_var_tables
       use Polygons_Mod, only: destroy_polygon
       use subregions_mod, only: subr_poly
-      use file_io_mod, only: luo_egrd, luo_erod, luomandate, luod_above, luod_below, luowepperod, luoweppplot, luoweppsum
+      use file_io_mod, only: luo_egrd, luo_erod, luomandate, luod_above, luod_below, luowepperod, luoweppplot, luoweppsum, makedir
       use biomaterial
       use debug_mod
       use mandate_mod
       use erosion_data_struct_defs
       use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt
+      use saeinp_mod, only: mksaeinp
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -690,6 +691,14 @@
          am0sif = .false.  ! Done with all initialization and calibration phases
          ci_year = 0  ! nothing has yet been printed into ci.out
 
+         mksaeinp%maxday = ljday - ijday + 1  ! set maximum daysim possible for saeinp file name extension
+         if( saeinp_all .gt. 0 ) then
+            mksaeinp%fullpath = trim(rootp)//'saeinp_files/'
+            call makedir(mksaeinp%fullpath)
+         else
+            mksaeinp%fullpath = trim(rootp)
+         end if
+
          ! begin report simulation phase
          write(6,*) "Starting report phase"
          report_loop = .true.  ! Signifies that we are in the "report" loop
@@ -730,6 +739,15 @@
                   end do
                   ! write(*,*) "Start calcwu"
                   call calcwu
+
+                  ! check for creation of stand alone erosion input files on this day
+                  if( (saeinp_daysim .eq. daysim) .or. (saeinp_jday .eq. am0jd) .or. (saeinp_all .gt. 0) ) then
+                     mksaeinp%jday = am0jd
+                     mksaeinp%simday = daysim
+                  else 
+                        mksaeinp%simday = 0
+                  end if
+
                   ! write(*,*) "Start erosion"
                   call erosion( 5.0, SURF_UPD_FLG, subrsurf, noerod, cellstate )
                   if (btest(am0efl,0) .or. btest(am0efl,1)) then

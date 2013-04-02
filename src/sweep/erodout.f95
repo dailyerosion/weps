@@ -30,8 +30,8 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1geo.inc'
-      include 'm1flag.inc'
+      include 'm1geo.inc'  ! amasim, amxsim
+      include 'm1flag.inc' ! am0efl
 
 !     ++++ LOCAL VARIABLES +++
       integer xplot, x, y

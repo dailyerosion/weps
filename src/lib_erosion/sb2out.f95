@@ -24,15 +24,11 @@
 !     o_unit= Unit number for output file
 
 !     + + + GLOBAL COMMON BLOCKS + + +
-
-      include 'p1werm.inc'
-      include 'h1db1.inc'
-      include 'p1const.inc'
-      include 'm1sim.inc'
+      include 'm1sim.inc'  ! ntstep
 
 !     + + + LOCAL VARIABLES + + +
 
-      real egavg(mngdpt)
+      real egavg(imax)
       integer m, n, k, icsr
       integer initflag, ipd, npd
       save    initflag, ipd, npd

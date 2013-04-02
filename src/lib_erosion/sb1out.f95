@@ -27,12 +27,12 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include 'p1werm.inc'
-      include 'w1clig.inc'
+      include 'w1clig.inc' ! awzypt
 
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'p1const.inc'
-      include 'm1sim.inc'
-      include 'm1geo.inc'
+      include 'p1const.inc'  ! anemht, wzoflg
+      include 'm1sim.inc'    ! ntstep
+      include 'm1geo.inc'    ! amasim, amxsim
 
 !     + + + LOCAL VARIABLES + + +
 

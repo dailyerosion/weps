@@ -38,10 +38,7 @@
 !     +++ ARGUMENT DEFINITIONS +++
 
 !     + + + GLOBAL COMMON BLOCKS + + +
-!
-      include 'p1werm.inc'
-      include 'm1sim.inc'
-      include 'm1flag.inc'
+      include 'm1sim.inc'  ! am0jd, ntstep
 
 !     +++ LOCAL VARIABLES +++
       integer        initflg

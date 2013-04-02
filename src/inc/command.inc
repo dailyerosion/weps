@@ -13,6 +13,7 @@
       integer report_debug
       integer saeinp_daysim
       integer saeinp_jday
+      integer saeinp_all
       integer init_cycle
       integer run_erosion
       integer calibrate_crops
@@ -34,7 +35,7 @@
       integer transpiration_depth
 
       common /command_args/ wc_type, ifc_format, report_debug,          &
-     & saeinp_daysim, saeinp_jday, init_cycle, run_erosion,             &
+     & saeinp_daysim, saeinp_jday, saeinp_all, init_cycle, run_erosion, &
      & calibrate_crops, cook_yield, growth_stress, water_stress_max,    &
      & layer_scale, layer_infla, layer_weighting, puddle_warm,          &
      & winter_ann_root, wind_max_value, wepp_hydro, soil_cond,          &
@@ -66,7 +67,10 @@
 
 !     saeinp_jday - specifies the julian day that a S_tand A_lone E_rosion INP_ut
 !                   file will be created (used when date is input)
-     
+
+!     saeinp_all -  specifies that S_tand A_lone E_rosion INP_ut files will be created
+!                   on every day erosion is entered. (in a subdirectory with daysim # in file name)
+
 !     init_cycle - Specifies how many man rotation cycles are done
 !                  init_cycle = 0   !no initialization cycle
 !                  init_cycle = 1   !one initialization cycle (default)

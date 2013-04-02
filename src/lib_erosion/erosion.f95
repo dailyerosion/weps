@@ -17,6 +17,7 @@
       use weps_interface_defs
       use file_io_mod, only: luo_sgrd, luo_emit
       use erosion_data_struct_defs
+      use saeinp_mod, only: mksaeinp, saeinp
 
 !     +++ ARGUMENT DECLARATIONS +++
       real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
@@ -33,20 +34,18 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
-      include  'm1subr.inc'
-      include  'p1const.inc'
-      include  'w1wind.inc'
-      include  'm1flag.inc'
-      include  'm1sim.inc'
-      include  'timer.inc'
-      include  'command.inc'
-      include  'main/main.inc'
+      include  'm1subr.inc'  ! nsubr
+      include  'p1const.inc' ! SEC_PER_DAY, anemht, awzzo, wzoflg
+      include  'w1wind.inc'  ! awadir, awudmx, awdir, awu
+      include  'm1flag.inc'  ! am0efl
+      include  'm1sim.inc'   ! erod_interval, ntstep
+      include  'timer.inc'   ! TIMEROS, TIMSBEROD, TIMSBWIND, TIMSTART, TIMSTOP
 
 !     +++ LOCAL VARIABLES +++
       integer i,j,wustfl, icsr
 !      integer nhill
       integer n
-      integer day, mon, yr, hidx
+      integer hidx
       real wuref, rusust, rut
 !      real rusust_preros(ntstep)
       real wzorg, wzorr, wzzo, wzzov
@@ -117,23 +116,6 @@
       sub_ntstep = 0.0
       hrs = 0.0
 
-!     code to output standalone erosion input file on specified date
-!     check for day of simulation for which you want a file created
-      if( saeinp_daysim.gt.0 ) then
-          if ((am0jd-ijday+1).eq.saeinp_daysim) then
-              call caldat (am0jd,day,mon,yr)
-              write(*,*) 'Stand alone erosion input file created D/M/Y',&
-     &                day,'/',mon,'/',yr,'simulation day',saeinp_daysim
-              call saeinp( subrsurf )    ! output daily erosion stuff
-          end if
-      else if( saeinp_jday.gt.0 ) then
-          if ((am0jd).eq.saeinp_jday) then
-              call caldat (am0jd,day,mon,yr)
-              write(*,*) 'Stand alone erosion input file created D/M/Y',&
-     &                day,'/',mon,'/',yr,'simulation day',am0jd-ijday+1
-              call saeinp( subrsurf )    ! output daily erosion stuff
-          end if
-      end if
    ! We need to ensure that sbemit only gets called once here to write the header
    ! multiple days in WEPS will mess this up.
   !    if (btest(am0efl,2)) then
@@ -296,6 +278,12 @@
       endif
 
       ! entering erosion submodel
+
+!     code to output standalone erosion input file on specified date
+!     check for day of simulation for which you want a file created
+      if( mksaeinp%simday .gt. 0 ) then
+          call saeinp( subrsurf )    ! output daily erosion stuff
+      end if
 
 !     sbinit calls sbsdfi to get sf< 0.01,0.1,0.84,2.0 mm
 !     and writes to grid, writes other var. to grid and

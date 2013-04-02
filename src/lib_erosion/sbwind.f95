@@ -41,8 +41,8 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include  'p1werm.inc'
-      include  'm1geo.inc'
-      include  'p1const.inc'
+      include  'm1geo.inc'   ! nbr
+      include  'p1const.inc' ! anemht, awzzo, wzoflg
 
 !     +++ LOCAL VARIABLES +++
       integer i,j, icsr,k
