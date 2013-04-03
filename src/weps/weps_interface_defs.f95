@@ -66,11 +66,10 @@
 !----------------------
       subroutine cinit(bnslay, bszlyt, bszlyd, bsdblk, bsfcce, bsfcec,  &
      &           bsfsmb, bsfom, bsfcla, bs0ph,                          &
-     &           bc0bn1, bc0bn2, bc0bn3, bc0bp1, bc0bp2,                &
-     &           bc0bp3, bsmno3,                                        &
+     &           bsmno3,                                                &
      &           bc0fd1, bc0fd2, bctopt, bctmin,                        &
      &           cc0fd1, cc0fd2,                                        &
-     &           bc0sla, bc0idc, dd, mm, yy,                            &
+     &           dd, mm, yy,                                            &
      &           bcthudf, bctdtm, bcthum, bc0hue, bcdmaxshoot,          &
      &           bc0shoot, bc0growdepth, bc0storeinit,                  &
      &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
@@ -83,15 +82,14 @@
      &           bcleafareatrend, bcstemmasstrend, bctwarmdays,         &
      &           bctchillucum, bcthardnx, bcthu_shoot_beg,              &
      &           bcthu_shoot_end, bcdpop, bcdayspring)
-      integer bnslay, bc0idc, dd, mm, yy, bcthudf, bctdtm
+      integer bnslay, dd, mm, yy, bcthudf, bctdtm
       real bszlyt(*)  ! added so a local variable would be set correctly - LEW
       real bszlyd(*), bsdblk(*), bsfcce(*), bsfcec(*), bsfsmb(*)
       real bsfom(*), bsfcla(*), bs0ph(*)
       real bc0fd1, bc0fd2, bctopt, bctmin
       real cc0fd1, cc0fd2
-      real bc0bn1, bc0bn2, bc0bn3, bn4, bc0bp1, bc0bp2, bc0bp3
       real bsmno3
-      real bc0sla, bcthum, bc0hue, bcdmaxshoot, bc0shoot
+      real bcthum, bc0hue, bcdmaxshoot, bc0shoot
       real bc0growdepth, bc0storeinit
       real bcmstandstem, bcmstandleaf, bcmstandstore
       real bcmflatstem, bcmflatleaf, bcmflatstore
@@ -133,8 +131,6 @@
      &                 bsfcce, bsfom, bsfcec, bsfsmb,                   &
      &                 bsfcla, bs0ph, bsftan, bsftap,                   &
      &                 bsmno3,                                          &
-     &                 bc0bn1, bc0bn2, bc0bn3,                          &
-     &                 bc0bp1, bc0bp2, bc0bp3,                          &
      &                 bc0ck, bcgrf, bcehu0, bczmxc,                    &
      &                 bc0nam, bc0idc, bcxrow,                          &
      &                 bctdtm, bczmrt, bctmin, bctopt,                  &
@@ -144,13 +140,13 @@
      &                 bc0dlf, bc0arp, bc0brp, bc0crp,                  &
      &                 bc0drp, bc0aht, bc0bht,                          &
      &                 bc0sla, bc0hue, bctverndel,                      &
-     &                 bweirr, bwtdmx, bwtdmn, bwzdpt,                  &
+     &                 bweirr, bwtdmx, bwtdmn,                          &
      &                 bhtsmx, bhtsmn,                                  &
-     &                 bhzpta, bhzeta, bhzptp, bhfwsf,                  &
-     &                 bm0cif, bm0cgf,                                  &
-     &                 bcthudf, bcbaflg, bcbaf, bcyraf,                 &
+     &                 bhfwsf,                                          &
+     &                 bm0cif,                                          &
+     &                 bcthudf, bcbaf,                                  &
      &                 bchyfg, bcthum, bcdpop, bcdmaxshoot,             &
-     &                 bc0transf, bc0storeinit, bcfshoot,               &
+     &                 bc0storeinit, bcfshoot,                          &
      &                 bc0growdepth, bcfleafstem, bc0shoot,             &
      &                 bc0diammax, bc0ssa, bc0ssb,                      &
      &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
@@ -167,7 +163,7 @@
      &                 bcthu_shoot_end, bcxstmrep,                      &
      &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
      &                 bprevflatstem, bprevflatleaf, bprevflatstore,    &
-     &                 bprevmshoot, bprevmtotshoot, bprevbgstemz,       &
+     &                 bprevmshoot, bprevbgstemz,                       &
      &                 bprevrootstorez, bprevrootfiberz,                &
      &                 bprevht, bprevzshoot, bprevstm, bprevrtd,        &
      &                 bprevdayap, bprevhucum, bprevrthucum,            &
@@ -183,8 +179,6 @@
       real bsfom(*), bsfcla(*), bs0ph(*)
       real bsftan(*), bsftap(*)
       real bsfsmb(*), bsmno3
-      real bc0bn1, bc0bn2, bc0bn3
-      real bc0bp1, bc0bp2, bc0bp3
       real bc0ck, bcgrf, bcehu0, bczmxc
       character*(80) bc0nam
       integer bc0idc
@@ -195,12 +189,11 @@
       real bc0alf, bc0blf, bc0clf, bc0dlf, bc0arp, bc0brp
       real bc0crp, bc0drp, bc0aht, bc0bht
       real bc0sla, bc0hue, bctverndel
-      real bweirr, bwtdmx, bwtdmn, bwzdpt
+      real bweirr, bwtdmx, bwtdmn
       real bhtsmx(*), bhtsmn(*)
-      real bhzpta, bhzeta, bhzptp, bhfwsf
+      real bhfwsf
       integer bchyfg
       real bcthum, bcdpop, bcdmaxshoot
-      integer bc0transf
       real bc0storeinit, bcfshoot
       real bc0growdepth, bcfleafstem, bc0shoot
       real bc0diammax, bc0ssa, bc0ssb
@@ -220,16 +213,15 @@
       real bcxstmrep
       real bprevstandstem, bprevstandleaf, bprevstandstore
       real bprevflatstem, bprevflatleaf, bprevflatstore
-      real bprevmshoot, bprevmtotshoot, bprevbgstemz(*)
+      real bprevmshoot, bprevbgstemz(*)
       real bprevrootstorez(*), bprevrootfiberz(*)
       real bprevht, bprevzshoot, bprevstm, bprevrtd
       integer bprevdayap
       real bprevhucum, bprevrthucum
       real bprevgrainf, bprevchillucum, bprevliveleaf
       integer bprevdayspring
-      logical bm0cif, bm0cgf
-      integer bcbaflg
-      real    bcbaf, bcyraf
+      logical bm0cif
+      real    bcbaf
       integer daysim, bcdayspring
       real    bczloc_regrow
       real    bgmstandstem, bgmstandleaf, bgmstandstore
@@ -809,7 +801,7 @@
      &                   bhtsav, bbdstm, bbffcv,                        &
      &                   bsxrgs, bszrgh, bsfcr,                         &
      &                   bslrro, bslrr, bmzele,                         &
-     &                   bh0cng, bh0cnp, bhzper,                        &
+     &                   bhzper,                                        &
      &                   bhzirr, bhzdmaxirr, bhratirr, bhdurirr,        &
      &                   bhlocirr, bhminirr, bm0monirr,                 &
      &                   bhmadirr, bhndayirr, bhmintirr,                &
@@ -825,9 +817,9 @@
      &                   bhzeasurf,                                     &
      &                   cumprecip, cumrunoff, cumevap,                 &
      &                   cumtrans, cumdrain,                            &
-     &                   initswc, initsnow, initday,                    &
      &                   presswc, pressnow, presday,                    &
      &                   bhztranspdepth, restot )
+      use file_io_mod, only: luohydro, luohlayers, luowepphdrive
       use biomaterial, only: biototal
       integer layrsn
       real bmrslp
@@ -847,7 +839,7 @@
       real bhtsav(*), bbdstm, bbffcv
       real bsxrgs, bszrgh, bsfcr
       real bslrro, bslrr, bmzele
-      real bh0cng, bh0cnp, bhzper
+      real bhzper
       real bhzirr, bhzdmaxirr, bhratirr, bhdurirr
       real bhlocirr, bhminirr
       integer bm0monirr
@@ -866,7 +858,6 @@
       real bhzeasurf
       real cumprecip, cumrunoff, cumevap
       real cumtrans, cumdrain
-      real initswc, initsnow, initday
       real presswc, pressnow, presday
       real bhztranspdepth
       type(biototal), intent(in) :: restot

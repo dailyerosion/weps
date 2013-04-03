@@ -7,8 +7,6 @@
      &                 bsfcce, bsfom, bsfcec, bsfsmb,                   &
      &                 bsfcla, bs0ph, bsftan, bsftap,                   &
      &                 bsmno3,                                          &
-     &                 bc0bn1, bc0bn2, bc0bn3,                          &
-     &                 bc0bp1, bc0bp2, bc0bp3,                          &
      &                 bc0ck, bcgrf, bcehu0, bczmxc,                    &
      &                 bc0nam, bc0idc, bcxrow,                          &
      &                 bctdtm, bczmrt, bctmin, bctopt,                  &
@@ -18,13 +16,13 @@
      &                 bc0dlf, bc0arp, bc0brp, bc0crp,                  &
      &                 bc0drp, bc0aht, bc0bht,                          &
      &                 bc0sla, bc0hue, bctverndel,                      &
-     &                 bweirr, bwtdmx, bwtdmn, bwzdpt,                  &
+     &                 bweirr, bwtdmx, bwtdmn,                          &
      &                 bhtsmx, bhtsmn,                                  &
-     &                 bhzpta, bhzeta, bhzptp, bhfwsf,                  &
-     &                 bm0cif, bm0cgf,                                  &
-     &                 bcthudf, bcbaflg, bcbaf, bcyraf,                 &
+     &                 bhfwsf,                                          &
+     &                 bm0cif,                                          &
+     &                 bcthudf, bcbaf,                                  &
      &                 bchyfg, bcthum, bcdpop, bcdmaxshoot,             &
-     &                 bc0transf, bc0storeinit, bcfshoot,               &
+     &                 bc0storeinit, bcfshoot,                          &
      &                 bc0growdepth, bcfleafstem, bc0shoot,             &
      &                 bc0diammax, bc0ssa, bc0ssb,                      &
      &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
@@ -41,7 +39,7 @@
      &                 bcthu_shoot_end, bcxstmrep,                      &
      &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
      &                 bprevflatstem, bprevflatleaf, bprevflatstore,    &
-     &                 bprevmshoot, bprevmtotshoot, bprevbgstemz,       &
+     &                 bprevmshoot, bprevbgstemz,                       &
      &                 bprevrootstorez, bprevrootfiberz,                &
      &                 bprevht, bprevzshoot, bprevstm, bprevrtd,        &
      &                 bprevdayap, bprevhucum, bprevrthucum,            &
@@ -63,6 +61,7 @@
 
       use weps_interface_defs
       use file_io_mod, only: luocrop, luoshoot
+      use p1unconv_mod, only: mgtokg
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer bnslay, bctdtm, bcthudf
@@ -71,8 +70,6 @@
       real bsfom(*), bsfcla(*), bs0ph(*)
       real bsftan(*), bsftap(*)
       real bsfsmb(*), bsmno3
-      real bc0bn1, bc0bn2, bc0bn3
-      real bc0bp1, bc0bp2, bc0bp3
       real bc0ck, bcgrf, bcehu0, bczmxc
       character*(80) bc0nam
       integer bc0idc
@@ -83,12 +80,11 @@
       real bc0alf, bc0blf, bc0clf, bc0dlf, bc0arp, bc0brp
       real bc0crp, bc0drp, bc0aht, bc0bht
       real bc0sla, bc0hue, bctverndel
-      real bweirr, bwtdmx, bwtdmn, bwzdpt
+      real bweirr, bwtdmx, bwtdmn
       real bhtsmx(*), bhtsmn(*)
-      real bhzpta, bhzeta, bhzptp, bhfwsf
+      real bhfwsf
       integer bchyfg
       real bcthum, bcdpop, bcdmaxshoot
-      integer bc0transf
       real bc0storeinit, bcfshoot
       real bc0growdepth, bcfleafstem, bc0shoot
       real bc0diammax, bc0ssa, bc0ssb
@@ -108,16 +104,15 @@
       real bcxstmrep
       real bprevstandstem, bprevstandleaf, bprevstandstore
       real bprevflatstem, bprevflatleaf, bprevflatstore
-      real bprevmshoot, bprevmtotshoot, bprevbgstemz(*)
+      real bprevmshoot, bprevbgstemz(*)
       real bprevrootstorez(*), bprevrootfiberz(*)
       real bprevht, bprevzshoot, bprevstm, bprevrtd
       integer bprevdayap
       real bprevhucum, bprevrthucum
       real bprevgrainf, bprevchillucum, bprevliveleaf
       integer bprevdayspring
-      logical bm0cif, bm0cgf
-      integer bcbaflg
-      real    bcbaf, bcyraf
+      logical bm0cif
+      real    bcbaf
       integer daysim, bcdayspring
       real    bczloc_regrow
       real    bgmstandstem, bgmstandleaf, bgmstandstore
@@ -136,12 +131,6 @@
 !     bc0brp - rprd partitioning parameter
 !     bc0bht - height s-curve parameter
 !     bsdblk      - bulk density of a layer (g/cm^3=t/m^3)
-!     bc0bn1 - normal fraction of N in crop biomass at emergence
-!     bc0bn2 - normal fraction of N in crop biomass at midseasn
-!     bc0bn3 - normal fraction of N in crop biomass at maturity
-!     bc0bp1 - normal fraction of P in crop biomass at emergence
-!     bc0bp2 - normal fraction of P in crop biomass at midseasn
-!     bc0bp3 - normal fraction of P in crop biomass at maturity
 !     bsfcce  - calcium carbonate (%)
 !     bsfcla  - % clay
 !     bsfom   - percent organic matter
@@ -186,9 +175,6 @@
 !     bcthum - potential heat units for crop maturity (deg. C)
 !     bcdpop - Crop seeding density (#/m^2)
 !     bcdmaxshoot - maximum number of shoots possible from each plant
-!     bc0transf - db input flag:
-!                 0 = crop is planted using stored biomass of seed or vegatative propagants
-!                 1 = crop is planted as a transplant with roots, stems and leaves present
 !     bc0storeinit - db input, crop storage root mass initialzation (mg/plant)
 !     bcfshoot - crop ratio of shoot diameter to length
 !     bc0growdepth - depth of growing point at time of planting (m)
@@ -268,7 +254,6 @@
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'p1solar.inc'
-      include 'p1unconv.inc'
 
 !     + + + COMMON BLOCKS + + +
       include 'crop/cgrow.inc'
@@ -280,13 +265,12 @@
 
 !     + + + LOCAL VARIABLES + + +
       integer lay, dd, mm, yy
-      real bg_stem_sum, root_store_rel, pot_stems, pot_leaf_mass
+      real root_store_rel, pot_stems, pot_leaf_mass
       real vern_delay, photo_delay, hu_delay, trend
       integer regrowth_flg
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     dd,mm,yy - the current day, month, and year
-!     bg_stem_sum - sum of below ground stem
 !     root_store_rel - root storage which could be released for regrowth
 !     pot_stems - potential number of stems which could be released for regrowth
 !     pot_leaf_mass - potential leaf mass which could be released for regrowth.
@@ -347,12 +331,10 @@
 
 !     + + + END OF SPECIFICATIONS + + +
 
-!      write(*,*) 'crop:bcdstm: ', bcdstm
 !     day of year
       call caldatw(dd, mm, yy)
       jd = dayear(dd, mm, yy)
 
-! ***         write(*,*) ' crop: bhzpta ', bhzpta
       do 5 lay = 1, bnslay
          bsfcce(lay) = bsfcce(lay) * 100.
          bsfom(lay) = bsfom(lay) * 100.
@@ -369,11 +351,10 @@
       if (bm0cif) then
           call cinit (bnslay, bszlyt, bszlyd, bsdblk, bsfcce, bsfcec,   &
      &              bsfsmb, bsfom, bsfcla, bs0ph,                       &
-     &              bc0bn1, bc0bn2, bc0bn3, bc0bp1, bc0bp2,             &
-     &              bc0bp3, bsmno3,                                     &
+     &              bsmno3,                                             &
      &              bc0fd1, bc0fd2, bctopt, bctmin,                     &
      &              cc0fd1, cc0fd2,                                     &
-     &              bc0sla, bc0idc, dd, mm, yy,                         &
+     &              dd, mm, yy,                                         &
      &              bcthudf, bctdtm, bcthum, bc0hue, bcdmaxshoot,       &
      &              bc0shoot, bc0growdepth, bc0storeinit,               &
      &              bcmstandstem, bcmstandleaf, bcmstandstore,          &

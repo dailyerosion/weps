@@ -34,9 +34,6 @@
 !     dec    - declination of earth with respect to the sun (degrees)
 !     h      - Hour angle (degrees)
 
-!     + + + COMMON BLOCKS + + +
-      include 'p1unconv.inc'
-
 !     + + + FUNCTION DECLARATIONS + + +
       real declination
       real hourangle

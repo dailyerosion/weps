@@ -24,6 +24,7 @@
 
       use weps_interface_defs
       use file_io_mod, only: luoshoot
+      use p1unconv_mod, only: mgtokg, mmtom
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer bnslay
@@ -101,7 +102,6 @@
 
 !     + + + COMMON BLOCKS + + +
       include 'm1flag.inc'
-      include 'p1unconv.inc'
       include 'command.inc'
 
 !     + + + LOCAL VARIABLES + + +

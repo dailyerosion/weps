@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 !     ------------------------------------------------------------------
-!     file 'p1unconv.inc'
+module p1unconv_mod
 
 !     These parameter variables are used for unit conversion values
 !     within WERM to make the coding more readable and maintainable.
@@ -28,6 +28,7 @@
       real             percenttofrac
       real             hrtomin
       real             sectohr
+      real             secperday
       integer          SEC_PER_DAY
       real             KG_per_M2_to_LBS_per_ACRE
       real             pi
@@ -46,6 +47,7 @@
       parameter (percenttofrac = 0.01)
       parameter (hrtomin = 60.0)
       parameter (sectohr =  1.0/3600.0)
+      parameter (secperday = 86400.0)
       parameter (SEC_PER_DAY = 3600*24)  !number of seconds per day
       parameter (KG_per_M2_to_LBS_per_ACRE = 8921.791)
       parameter (pi = 3.1415927)
@@ -67,4 +69,6 @@
 !     SEC_PER_DAY - number of seconds per day
 !     KG_per_M2_to_LBS_per_ACRE - unit conversion factor
 !     pi      - The constant PI (radians)
+
+end module p1unconv_mod
 

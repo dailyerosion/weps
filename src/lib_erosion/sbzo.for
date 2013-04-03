@@ -28,6 +28,7 @@
 !     Armbrust and Bilbro, 1995
 
       use p1erode_def, only: WZZO_MIN, WZZO_MAX
+      use p1unconv_mod, only: mtomm
 
 !     +++ ARGUMENT DECLATION +++
       real sxprg, szrgh, slrr
@@ -69,13 +70,6 @@
 !     h1    - ratio of ridge height to parallel ridge spacing
 !     bht   - biomass height (mm)
 
-!     +++ INCLUDE FILES+++
-      include 'p1unconv.inc'  ! mtomm
-
-!     +++ PARAMETERS +++
-!     parameter(pid180 = 3.14159/180)
-!     pid180- radians per degree
-!
 !     +++ END SPECIFICATIONS +++
       !Note: in BLOCK.FOR
       !wzoflg should be set to 1 and anemomht changed

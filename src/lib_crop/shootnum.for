@@ -13,6 +13,8 @@
 !     + + + KEYWORDS + + +
 !     stem number, shoot growth
 
+      use p1unconv_mod, only: mgtokg
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer shoot_flg, bnslay, bc0idc
       real bcdpop, bc0shoot, bcdmaxshoot
@@ -35,9 +37,6 @@
 !     bcmrootstorez - crop root storage mass by soil layer (kg/m^2)
 !                   (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
 !     bcdstm - Number of crop stems per unit area (#/m^2)
-
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1unconv.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer lay

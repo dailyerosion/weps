@@ -13,6 +13,7 @@
 
 !     + + + key words + + +
 !     radiation, hydrology, weps
+      use p1unconv_mod, only: mtomm
 
 !     + + + argument declarations + + +
       real bcrlai
@@ -30,7 +31,6 @@
 
 !     + + + COMMON BLOCK + + +
       include 'p1const.inc'
-      include 'p1unconv.inc'
       include 'p1werm.inc'
       include 'hydro/htheta.inc'
       include 'hydro/snowprop.inc'
@@ -85,7 +85,7 @@
         pci = min(bcrlai/3, 1.0)                !coverage factor for plants based upon leaf area index
         if (pci + snci .gt. 1.0) pci = 1.0 - snci  !make sure factors sum to 1
         sci = 1.0 - (pci + snci)                !soil albedo factor is what is left over
-        if (sci.gt.0.0) then					!need to calc soil albedo
+        if (sci.gt.0.0) then                    !need to calc soil albedo
           albs = bsfald + (bsfalw - bsfald) *                           &
      &      (theta(0) - thetaw(1)) / (thetaf(1) - thetaw(1))
           albs = max(albs, bsfalw)   !no less than wet  (wet is less than dry)

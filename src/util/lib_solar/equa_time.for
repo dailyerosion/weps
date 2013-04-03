@@ -12,6 +12,8 @@
 !     + + + KEYWORDS + + +
 !     solar equation of time
 
+      use p1unconv_mod, only: degtorad
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer idoy
 
@@ -24,14 +26,11 @@
 !     + + + LOCAL DEFINITIONS + + +
 !     b      - sub calculation (time of year, radians)
 
-!     + + + COMMON BLOCKS + + +
-      include 'p1unconv.inc'
-
 !     + + + END SPECIFICATIONS + + +
 
 !     Calculate time of year (b)
-      b = (360.0/365.0)*(idoy-81.25) * degtorad				!h-55
-      equa_time = 9.87*sin(2*b)-7.53*cos(b)-1.5*sin(b)		!h-54
+      b = (360.0/365.0)*(idoy-81.25) * degtorad                 !h-55
+      equa_time = 9.87*sin(2*b)-7.53*cos(b)-1.5*sin(b)          !h-54
 
       return
       end

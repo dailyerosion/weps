@@ -23,9 +23,9 @@
 
       use weps_interface_defs
       use biomaterial, only: biomatter, biototal
+      use p1unconv_mod, only: pi
 
 !     INCLUDE
-      include 'p1const.inc'
       include 'p1werm.inc'
 
 !     + + + FUNCTION DECLARATIONS + + +

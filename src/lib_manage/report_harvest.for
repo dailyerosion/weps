@@ -9,6 +9,7 @@
       use weps_interface_defs
       use mandate_mod, only: opercrop_date
       use file_io_mod, only: luoharvest_si, luoharvest_en
+      use p1unconv_mod, only: KG_per_M2_to_LBS_per_ACRE
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
@@ -27,7 +28,6 @@
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'p1const.inc'
       include 'm1flag.inc'
       include 'main/main.inc'
       include 'c1info.inc'

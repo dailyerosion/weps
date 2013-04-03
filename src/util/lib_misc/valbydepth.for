@@ -12,10 +12,7 @@
 !     + + + KEY WORDS + + +
 !     averaging, interpolation
 
-!     + + + COMMON BLOCKS + + +
-      include 'p1unconv.inc'
-
-!     + + + LOCAL COMMON BLOCKS + + +
+      use p1unconv_mod, only: mmtom
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn

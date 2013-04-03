@@ -19,6 +19,8 @@
 !     November 7, 2008
 !--------------------------------------------------------------------------------------     
 
+      use p1unconv_mod, only: mmtom
+
       implicit none
 
       include 'p1werm.inc'
@@ -28,7 +30,6 @@
       include 's1sgeo.inc'
       include 's1phys.inc'
       include 's1layr.inc'
-      include 'p1unconv.inc'
       include 'hydro/htheta.inc'
       include 'm1flag.inc'
       include 'h1temp.inc'

@@ -18,6 +18,7 @@
       use file_io_mod, only: luo_sgrd, luo_emit
       use erosion_data_struct_defs
       use saeinp_mod, only: mksaeinp, saeinp
+      use p1unconv_mod, only: SEC_PER_DAY
 
 !     +++ ARGUMENT DECLARATIONS +++
       real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
@@ -35,7 +36,7 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
       include  'm1subr.inc'  ! nsubr
-      include  'p1const.inc' ! SEC_PER_DAY, anemht, awzzo, wzoflg
+      include  'p1const.inc' ! anemht, awzzo, wzoflg
       include  'w1wind.inc'  ! awadir, awudmx, awdir, awu
       include  'm1flag.inc'  ! am0efl
       include  'm1sim.inc'   ! erod_interval, ntstep

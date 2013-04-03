@@ -16,7 +16,7 @@
      &                   bhtsav, bbdstm, bbffcv,                        &
      &                   bsxrgs, bszrgh, bsfcr,                         &
      &                   bslrro, bslrr, bmzele,                         &
-     &                   bh0cng, bh0cnp, bhzper,                        &
+     &                   bhzper,                                        &
      &                   bhzirr, bhzdmaxirr, bhratirr, bhdurirr,        &
      &                   bhlocirr, bhminirr, bm0monirr,                 &
      &                   bhmadirr, bhndayirr, bhmintirr,                &
@@ -32,7 +32,6 @@
      &                   bhzeasurf,                                     &
      &                   cumprecip, cumrunoff, cumevap,                 &
      &                   cumtrans, cumdrain,                            &
-     &                   initswc, initsnow, initday,                    &
      &                   presswc, pressnow, presday,                    &
      &                   bhztranspdepth, restot )
 
@@ -47,6 +46,7 @@
       use weps_interface_defs
       use file_io_mod, only: luohydro, luohlayers, luowepphdrive
       use biomaterial, only: biototal
+      use p1unconv_mod, only: mtomm
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn
@@ -67,7 +67,7 @@
       real bhtsav(*), bbdstm, bbffcv
       real bsxrgs, bszrgh, bsfcr
       real bslrro, bslrr, bmzele
-      real bh0cng, bh0cnp, bhzper
+      real bhzper
       real bhzirr, bhzdmaxirr, bhratirr, bhdurirr
       real bhlocirr, bhminirr
       integer bm0monirr
@@ -86,7 +86,6 @@
       real bhzeasurf
       real cumprecip, cumrunoff, cumevap
       real cumtrans, cumdrain
-      real initswc, initsnow, initday
       real presswc, pressnow, presday
       real bhztranspdepth
       type(biototal), intent(in) :: restot
@@ -137,9 +136,6 @@
 !     bslrro   - original random roughness height, after tillage, mm
 !     bslrr    - Allmaras random roughness parameter (mm)
 !     bmzele   - Average site elevation (m)
-!     bh0cng   - Scs curve number for class ii antecedent soil
-!     bh0cnp   - moisture conditions under good and poor
-!                hydrologic conditions
 !     bhzper   - Daily deep percolation (mm/day)
 !     bhzirr   - Daily irrigation (mm)
 !     bhzdmaxirr - characteristic maximum irrigation system application depth (mm)
@@ -196,9 +192,6 @@
 !     cumevap   - accumulation of evaporation (mm)
 !     cumtrans  - accumulation of transpiration (mm)
 !     cumdrain  - accumulation of drainage (mm)
-!     initswc   - initial soil water content (mm)
-!     initsnow  - initial snow water content (mm)
-!     initday   - initial day
 !     presswc   - present soil water content (mm)
 !     pressnow  - present snow water content (mm)
 !     presday   - present day
@@ -210,7 +203,6 @@
 !     + + + COMMON BLOCKS + + +
       include 'p1const.inc'
       include 'p1werm.inc'
-      include 'p1unconv.inc'
       include 'p1solar.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
@@ -231,9 +223,8 @@
       integer day, mo, yr
       integer l
       integer idoy
-      integer theta_check
+!      integer theta_check
       real rise, daylength
-      real ts1avg
       real rn, g_soil
       integer numeq
       real lswc, lsno
@@ -242,7 +233,7 @@
       real rad_surf
       real eff_lai
       real loc_zorr, loc_zordg, loc_zo, loc_zov, loc_zd, brcd, fld_wind
-      real rootz_p_con, rootz_p_cap, paw, paw1, slen
+      real rootz_p_con, rootz_p_cap, paw, slen
 !      real old_wind, old_etp
 
       real d1, d2
@@ -254,8 +245,6 @@
       real standevapredu, totalevapredu, accheck
       real temp, airentry(mnsz), lambda(mnsz), theta80rh(mnsz)
       real cropdp
-
-      real temp1, temp2
 
 !     + + + LOCAL DEFINITIONS + + +
 !     idoy      - Day of year

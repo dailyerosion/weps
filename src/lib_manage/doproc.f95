@@ -19,11 +19,11 @@
       use file_io_mod, only: luomanage, luotdb
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
+      use p1unconv_mod, only: mmtom
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'command.inc'
       include 'p1werm.inc'
-      include 'p1unconv.inc'
       include 'm1flag.inc'
       include 'm1sim.inc'
       include 'm1dbug.inc'

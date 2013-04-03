@@ -66,8 +66,6 @@
      &   asfcce(1,sr), asfom(1,sr), asfcec(1,sr), asfsmb(1,sr),         &
      &   asfcla(1,sr), as0ph(1,sr), asftan(1,sr), asftap(1,sr),         &
      &   asmno3(sr),                                                    &
-     &   ac0bn1(sr), ac0bn2(sr), ac0bn3(sr),                            &
-     &   ac0bp1(sr), ac0bp2(sr), ac0bp3(sr),                            &
      &   ac0ck(sr), acgrf(sr), acehu0(sr), aczmxc(sr),                  &
      &   ac0nam(sr),ac0idc(sr), acxrow(sr),                             &
      &   actdtm(sr), aczmrt(sr), actmin(sr), actopt(sr),                &
@@ -77,13 +75,13 @@
      &   ac0dlf(sr), ac0arp(sr), ac0brp(sr), ac0crp(sr),                &
      &   ac0drp(sr), ac0aht(sr), ac0bht(sr),                            &
      &   ac0sla(sr), ac0hue(sr),  actverndel(sr),                       &
-     &   aweirr, awtdmx, awtdmn, awzdpt,                                &
+     &   aweirr, awtdmx, awtdmn,                                        &
      &   ahtsmx(1,sr), ahtsmn(1,sr),                                    &
-     &   ahzpta, ahzeta, ahzptp, ahfwsf(sr),                            &
-     &   am0cif, am0cgf,                                                &
-     &   acthudf(sr), acbaflg(sr), acbaf(sr), acyraf(sr),               &
+     &   ahfwsf(sr),                                                    &
+     &   am0cif,                                                        &
+     &   acthudf(sr), acbaf(sr),                                        &
      &   achyfg(sr), acthum(sr), acdpop(sr), acdmaxshoot(sr),           &
-     &   ac0transf(sr), ac0storeinit(sr), acfshoot(sr),                 &
+     &   ac0storeinit(sr), acfshoot(sr),                                &
      &   ac0growdepth(sr), acfleafstem(sr), ac0shoot(sr),               &
      &   ac0diammax(sr), ac0ssa(sr), ac0ssb(sr),                        &
      &   acfleaf2stor(sr), acfstem2stor(sr), acfstor2stor(sr),          &
@@ -100,7 +98,7 @@
      &   acthu_shoot_end(sr), acxstmrep(sr),                            &
      &   prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr),      &
      &   prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),         &
-     &   prevmshoot(sr), prevmtotshoot(sr), prevbgstemz(1,sr),          &
+     &   prevmshoot(sr), prevbgstemz(1,sr),                             &
      &   prevrootstorez(1,sr), prevrootfiberz(1,sr),                    &
      &   prevht(sr), prevzshoot(sr), prevstm(sr), prevrtd(sr),          &
      &   prevdayap(sr), prevhucum(sr), prevrthucum(sr),                 &

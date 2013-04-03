@@ -19,12 +19,12 @@
 !     + + + KEY WORDS + + +
 !     wind speed, wind direction, sub-daily wind speed
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-
       use weps_interface_defs
       use file_io_mod, only: luiwsd, luo_subday
+      use p1unconv_mod, only: pi
+
+!     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'p1const.inc'  ! pi
       include 'm1sim.inc'    ! am0jd, ntstep
       include 'm1flag.inc'   ! am0efl, wind_gen_fmt_flag
       include 'w1wind.inc'   ! awadir, awu

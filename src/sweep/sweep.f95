@@ -17,6 +17,7 @@
       use erosion_data_struct_defs
       use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt
       use saeinp_mod, only: mksaeinp
+      use p1unconv_mod, only: SEC_PER_DAY
 
 !     +++  PURPOSE +++
 
@@ -29,7 +30,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'  ! mnsub, mnbpt, mnbr, mnarpt, mnar, mnspt, mngdpt
-      include 'p1const.inc' ! SEC_PER_DAY
       include 'm1sim.inc'   ! am0jd, erod_interval, ntstep
       include 'm1geo.inc'   ! amxsim
       include 'm1subr.inc'  ! nsubr

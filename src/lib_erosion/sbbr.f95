@@ -15,6 +15,7 @@
       use weps_interface_defs
       use erosion_data_struct_defs, only: cellsurfacestate
       use grid_geo_def, only: imax, jmax, ix, jy
+      use p1unconv_mod, only: pi
 
 !     to assign the 8 fractons calculated at each node to as 3-d
 !     array (W0br(i,j,k)) for all nodes inside sim. region.
@@ -30,7 +31,6 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1geo.inc'   ! amasim, nbr, amxsim, amxbr, amzbr, ampbr
-      include 'p1const.inc' ! pi
 
 !     + + + ARGUMENT DECLARATIONS + + +
 ! ^^^ used only in test version

@@ -34,6 +34,7 @@
 
       use weps_interface_defs
       use file_io_mod, only: luocrop
+      use p1unconv_mod, only: hatom2, mmtom, pi
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer bnslay
@@ -152,8 +153,6 @@
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'precision.inc'
-      include 'p1unconv.inc'
-      include 'p1const.inc'
       include 'command.inc'
 
 !     + + + LOCAL VARIABLES + + +

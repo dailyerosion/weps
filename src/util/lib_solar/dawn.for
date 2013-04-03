@@ -38,11 +38,6 @@
 !     h      - Hour angle (degrees)
 !     sn     - Solar noon (hour of the day, midnight = 0.0)
 
-!     + + + COMMON BLOCKS + + +
-
-      include 'p1const.inc'
-      include 'p1unconv.inc'
-
 !     + + + FUNCTION DECLARATIONS + + +
       real declination
       real hourangle
@@ -60,10 +55,10 @@
       e = equa_time(idoy)
 
 !     Calculate solar noon (sn)
-      sn = 12.0-e/60.0-4.0*mod(dlong,15.0)/60.0				!h-53
+      sn = 12.0-e/60.0-4.0*mod(dlong,15.0)/60.0              !h-53
 
 !     Calculate the time of sunrise (rise)
-      dawn = sn - h/15.0									!h-52
+      dawn = sn - h/15.0                                     !h-52
 
 !     to prevent errors of bleed over into previous day where
 !     where daylength is 24 hours, limit time of sunrise

@@ -30,9 +30,9 @@
 
       use weps_interface_defs
       use file_io_mod, only: luotempsoil
+      use p1unconv_mod, only: mmtom, pi, secperday
+
       include 'm1flag.inc'
-      include 'p1const.inc'
-      include 'p1unconv.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/snowprop.inc'
@@ -78,13 +78,11 @@
       parameter(con_temp_depth = 5.0)
 !     con_temp_depth - depth in the soil at which soil temperature is assumed
 !                      to equal average annual temperature
-      real day_sec
-      parameter( day_sec = 86400.0)
-!     day_sec - number of seconds in a day
 
 !     + + + LOCAL VARIABLES + + +
       integer lay, day, mo, yr, bly, loopcnt
-      real vsheat, thermk, zdamp, freq, time
+      real vsheat, thermk, zdamp, freq
+!      real time
       real t_air, t_surf_end, delta_t, delta_f
       real tamp, dmlayr(layrsn)
       real thermt_up, thermt_dn
@@ -199,7 +197,7 @@
           call energy_bal(bhtsno, nt_sno, bhfsnfrz, nf_sno,             &
      &         t_air, nt_lay(1), thermt_up, thermt_dn,                  &
      &         heat_cap_thaw, heat_cap_froz, 1.0, bhzsno,               &
-     &         day_sec, rad_val, soil_heat_flux )
+     &         secperday, rad_val, soil_heat_flux )
           t_surf_end = nt_sno
 
           ! clear surface radiation since it is absorbed by snow already
@@ -242,7 +240,7 @@
      &         nf_ice(lay),                                             &
      &         t_surf_end, nt_lay(bly), thermt_up, thermt_dn,           &
      &         heat_cap_thaw, heat_cap_froz, theta(lay), bszlyt(lay),   &
-     &         day_sec, rad_val, soil_val )
+     &         secperday, rad_val, soil_val )
 
           if( lay .eq. 1 ) then
               ! for surface layer
@@ -272,7 +270,7 @@
       call energy_bal(bhtsav(lay),nt_lay(lay), bhfice(lay), nf_ice(lay),&
      &         t_surf_end, bwtyav, thermt_up, thermt_dn,                &
      &         heat_cap_thaw, heat_cap_froz, theta(lay), bszlyt(lay),   &
-     &         day_sec, rad_val, soil_val )
+     &         secperday, rad_val, soil_val )
 
       delta_t = max(abs(delta_t-nt_lay(1)), 10.0*abs(delta_f-nf_ice(1)))
       loopcnt = loopcnt + 1
@@ -322,7 +320,7 @@
       thermk = thermk / bszlyd(layrsn)
 
       ! calculate angular frequency of the temperature oscillation
-      freq = (2*pi)/day_sec
+      freq = (2*pi)/secperday
 
       ! calculate diurnal damping depth
       zdamp= sqrt((2*(thermk/vsheat))/freq)
@@ -486,8 +484,9 @@
 !     the soil heat flux is returned in case it is need to describe a surface
 !     effect (enters into the ET calculation)
 
+      use p1unconv_mod, only: daytosec, mmtom
+
 !     + + + COMMON BLOCKS + + +
-      include 'p1unconv.inc'
       include 'precision.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +

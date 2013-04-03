@@ -24,6 +24,7 @@
 !     matric potential parameters
 
       use weps_interface_defs
+      use p1unconv_mod, only: fractopercent, hrtosec, mmtom
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer nlay
@@ -53,9 +54,6 @@
 !     bhfredsat - fraction of soil porosity that will be filled with water
 !                 while wetting under normal field conditions due to entrapped air
 
-!     + + + COMMON BLOCKS + + +
-      include 'p1unconv.inc'
-
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/vapprop.inc'
 
@@ -69,7 +67,7 @@
       real per_clay, per_sand, per_om
       real thetas, thetaf, thetaw, thetar
       real airentry, lambda, k_sat
-      real temp, thetaf_10, thetaf_3
+      real thetaf_10, thetaf_3
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 

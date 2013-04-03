@@ -61,7 +61,7 @@
      &            ahtsav(1,isr), biotot%dstmtot, biotot%ffcvtot,        &
      &            asxrgs(isr), aszrgh(isr), asfcr(isr),                 &
      &            aslrro(isr), aslrr(isr), amzele,                      &
-     &            ah0cng(isr), ah0cnp(isr), ahzper(isr),                &
+     &            ahzper(isr),                                          &
      &       ahzirr(isr), ahzdmaxirr(isr), ahratirr(isr), ahdurirr(isr),&
      &            ahlocirr(isr), ahminirr(isr), am0monirr(isr),         &
      &            ahmadirr(isr), ahndayirr(isr), ahmintirr(isr),        &
@@ -78,9 +78,11 @@
      &            ahzeasurf(isr),                                       &
      &            cumprecip(isr), cumrunoff(isr), cumevap(isr),         &
      &            cumtrans(isr), cumdrain(isr),                         &
-     &            initswc(isr), initsnow(isr), initday(isr),            &
      &            presswc(isr), pressnow(isr), presday(isr),            &
      &            ahztranspdepth(isr), restot )
+
+! removed from call: ah0cng(isr), ah0cnp(isr), 
+!                 initswc(isr), initsnow(isr), initday(isr)
 
       if (am0hdb .eq. 1) call hdbug(isr, nslay(isr), restot)
       call timer(TIMHYDR,TIMSTOP)      

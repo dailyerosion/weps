@@ -12,6 +12,8 @@
 !     + + + key words + + +
 !     radiation, solar, extraterrestrial
 
+      use p1unconv_mod, only: pi, degtorad
+
 !     + + + argument declarations + + +
       integer idoy
       real bmalat
@@ -21,8 +23,6 @@
 !     bmalat   - latitude of the site, degrees
 
 !     + + + COMMON BLOCK + + +
-      include 'p1const.inc'
-      include 'p1unconv.inc'
       include 'p1solar.inc'
 
 !     + + + local variables + + +
@@ -64,12 +64,12 @@
       rdec  = dec * degtorad
 
 !     compute factor for variable distance from sun along orbital path
-      dr = 1 + 0.033*cos(2*pi*idoy/365)							!h-21
+      dr = 1 + 0.033*cos(2*pi*idoy/365)                                !h-21
 
       ws = hourangle(bmalat, dec, beamrise ) * degtorad
-      ra1 = ((24.0*60.0)/pi)*gsc*dr									!h-20(a)
-      ra2 = (ws*sin(rlat)*sin(rdec))+(cos(rlat)*cos(rdec)*sin(ws))	!h-20(b)
-      radext = ra1*ra2												!h-20
+      ra1 = ((24.0*60.0)/pi)*gsc*dr                                    !h-20(a)
+      ra2 = (ws*sin(rlat)*sin(rdec))+(cos(rlat)*cos(rdec)*sin(ws))     !h-20(b)
+      radext = ra1*ra2                                                 !h-20
 
       return
       end

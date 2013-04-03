@@ -13,8 +13,7 @@
 !     + + + KEY WORDS + + +
 !     drain snow
 
-!     + + + COMMON BLOCKS + + +
-      include 'p1unconv.inc'
+      use p1unconv_mod, only: mtomm, mmtom
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/snowprop.inc'

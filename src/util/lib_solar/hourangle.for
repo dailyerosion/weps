@@ -12,6 +12,8 @@
 !     + + + KEYWORDS + + +
 !     sunrise sunset hourangle
 
+      use p1unconv_mod, only: degtorad, radtodeg
+
 !     + + + ARGUMENT DECLARATIONS + + +
       real dlat
       real dec
@@ -37,9 +39,6 @@
 !     coshr   - Cosine of hour angle at sunrise
 !     dlat_rad - latitude of site, converted to radians
 !     dec_rad - declination of earth wrt the sun (radians)
-
-!     + + + COMMON BLOCKS + + +
-      include 'p1unconv.inc'
 
 !     + + + END SPECIFICATIONS + + +
 

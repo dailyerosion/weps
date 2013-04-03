@@ -13,12 +13,10 @@
 !     ratio and temperature
 
       use weps_interface_defs
+      use p1unconv_mod, only: mtomm
 
 !     + + + KEY WORDS + + +
 !     add snow
-
-!     + + + COMMON BLOCKS + + +
-      include 'p1unconv.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/snowprop.inc'

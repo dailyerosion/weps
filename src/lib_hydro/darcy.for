@@ -23,6 +23,7 @@
 
       use weps_interface_defs
       use file_io_mod, only: luowater
+      use p1unconv_mod, only: pi, hrtosec, mtomm, mmtom
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer daysim, numeq
@@ -102,13 +103,8 @@
 !     vaptrans  - vapor transmissivity (mm/d^.5)
 !     bmrslp   - Average slope of subregion (mm/mm)
 
-!     + + + PARAMETERS + + +
-      real   pi
-      parameter( pi = 3.1415927 )
-
 !     + + + COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'p1unconv.inc'
       include 'm1flag.inc'
       include 'm1subr.inc'
 
@@ -123,16 +119,15 @@
       real       tday,tout,relerr(1),abserr(numeq)
       real       volw(numeq)
       integer    kindex, hourstep, day, mo, yr
-      real       swc, swci, ref_ranrough, ranrough
+!      real       swc
+      real       swci, ref_ranrough, ranrough
 !      integer    lstep,lfunc,ljac
       real       temp, netflux(numeq)
       real       evap, runoff, drain, infil
       integer    iminlay, imaxlay
       real       evapratio, surf_cum
       integer    idoy
-      real       thetaf, availwat
-      real       unsatcond, matricpot
-      real       laycenter, sat_rat, irrigstart, irrigmid
+      real       laycenter, irrigstart, irrigmid
 
       real       delta_drip
       parameter  (delta_drip = 0.005) ! use to avoid flooding a thin 
@@ -180,12 +175,7 @@
 !     imaxlay  - maximum index for placement of soil layers in volw array
 !     evapratio - ratio reduction in evaporation rate due to soil dryness
 !     surf_cum  - updated hourly cummulative surface evaporation (mm)
-!     thetaf    - field capacity water content (for output)
-!     availwat  - soil plant availale water content (for output)
-!     unsatcond - unsaturated hydraulic conductivity (m/s) (for output)
-!     matricpot - soil matric potential (m) (for output)
 !     layercenter - depth to the center of a soil layer (mm) (for output)
-!     sat_rat - saturation ratio (for output)
 !     irrigstart - time of start point of irrigation (surface or subsurface) event (seconds)
 !     irrigmid  - time of midpoint of irrigation (surface or subsurface) event (seconds)
 
@@ -201,7 +191,6 @@
 !      real   evapredu
 !      integer dayear
 !      real   availwc
-!      real   unsatcond_bc
 !      real   intersect
 
 !     + + + DATA INITIALIZATIONS + + +

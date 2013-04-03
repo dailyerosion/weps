@@ -37,9 +37,7 @@
 
       use weps_interface_defs
       use biomaterial, only: biomatter
-
-      include 'p1werm.inc'
-      include 'p1unconv.inc'
+      use p1unconv_mod, only: mmtom
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer cutflg
@@ -174,7 +172,7 @@
      &           btmflatstem, btmflatleaf, btmflatstore,                &
      &           tot_mass_rem, sel_mass_left )
 
-      do idy = 1,mnbpls
+      do idy = 1, size(residue)
           ! cut the individual decomposition crop pools. Note that standf
           ! is used instead of cropf, keeping plant material removal
           ! separate for living and dead crop. Grain is harvested out of both

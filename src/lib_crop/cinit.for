@@ -9,11 +9,10 @@
 
       subroutine cinit(bnslay, bszlyt, bszlyd, bsdblk, bsfcce, bsfcec,  &
      &           bsfsmb, bsfom, bsfcla, bs0ph,                          &
-     &           bc0bn1, bc0bn2, bc0bn3, bc0bp1, bc0bp2,                &
-     &           bc0bp3, bsmno3,                                        &
+     &           bsmno3,                                                &
      &           bc0fd1, bc0fd2, bctopt, bctmin,                        &
      &           cc0fd1, cc0fd2,                                        &
-     &           bc0sla, bc0idc, dd, mm, yy,                            &
+     &           dd, mm, yy,                                            &
      &           bcthudf, bctdtm, bcthum, bc0hue, bcdmaxshoot,          &
      &           bc0shoot, bc0growdepth, bc0storeinit,                  &
      &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
@@ -36,17 +35,17 @@
 
       use weps_interface_defs
       use file_io_mod, only: luoinpt
+      use p1unconv_mod, only: mgtokg, mmtom
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer bnslay, bc0idc, dd, mm, yy, bcthudf, bctdtm
+      integer bnslay, dd, mm, yy, bcthudf, bctdtm
       real bszlyt(*)  ! added so a local variable would be set correctly - LEW
       real bszlyd(*), bsdblk(*), bsfcce(*), bsfcec(*), bsfsmb(*)
       real bsfom(*), bsfcla(*), bs0ph(*)
       real bc0fd1, bc0fd2, bctopt, bctmin
       real cc0fd1, cc0fd2
-      real bc0bn1, bc0bn2, bc0bn3, bn4, bc0bp1, bc0bp2, bc0bp3
       real bsmno3
-      real bc0sla, bcthum, bc0hue, bcdmaxshoot, bc0shoot
+      real bcthum, bc0hue, bcdmaxshoot, bc0shoot
       real bc0growdepth, bc0storeinit
       real bcmstandstem, bcmstandleaf, bcmstandstore
       real bcmflatstem, bcmflatleaf, bcmflatstore
@@ -134,7 +133,6 @@
       include 'm1subr.inc'
       include 'w1clig.inc'
       include 'c1info.inc'
-      include 'p1unconv.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'crop/csoil.inc'
@@ -153,12 +151,13 @@
 !     + + + LOCAL VARIABLES + +
 !     character*20 cpnm
       integer i,n, pdate,hdate,j, m, sdmn, sdmx, dxx
-      real bsa, dg, dg1, hlmn, wt1, x1, xz, jreal
-      real xx,hlmx
+      real bsa, dg, dg1, hlmn, wt1, xz, jreal
+!      real x1, xx
+      real hlmx
       real dy_mon(14),mx_air_temp(14),mn_air_temp(14)
       real mx_air_temp2(14), mn_air_temp2(14)
       real sphu, yp1, ypn, bphu, ephu
-      real max_air,min_air,heat_unit, ad, bd, cd, dq !,d1(365)%cumheatunits,d2(730)%cumheatunits
+      real max_air, min_air, heat_unit !,d1(365)%cumheatunits,d2(730)%cumheatunits
 
       type day_heatunits
           integer day
@@ -173,7 +172,6 @@
 !          frost damage s-curve)
 ! bc0fd2  - minimum temperature below zero (c) (2nd x-coordinate in the
 !          frost damage s-curve)
-! bc0idc  - crop type:annual,perennial,etc
 ! bctmin  - base temperature (deg. c)
 ! bn      - N uptake parametres at different stages of growth(ratio)
 ! bp      - P uptake parametres at different stages of growth(ratio)
@@ -484,22 +482,7 @@
 
 !     Calculate s-curve parameters
       call scrv1(bc0fd1,cc0fd1,bc0fd2,cc0fd2,a_fr,b_fr)   ! Frost damage
-!      call scrv1(s11x1,s11y1,s11x2,s11y2,a_s11,b_s11)    ! P uptake stress parameters
-!      call scrv1(s8x1,s8y1,s8x2,s8y2,a_s8,b_s8)          ! N and P availability stress
-!      if (am0cfl .gt. 0) write (luoinpt,2110)a_co,b_co,a_fr,b_fr
 
-!     calculate bc0bn1,bc0bn2,bc0bn3,bn4,bc0bp1,bc0bp2,bc0bp3,bp4
-!      call nconc (bc0bn1,bc0bn2,bc0bn3,bn4)
-!      call nconc (bc0bp1,bc0bp2,bc0bp3,bp4)
-!      write (33,2115) bc0bn1,bc0bn2,bc0bn3,bn4,bc0bp1,bc0bp2,bc0bp3,bp4
-
-!     This section estimates soil test data and calculates initial
-!     values of no3, labile p, fresh organic matter, humus, etc in each layer.
-
-!      write (33,2990)
-!      write (33,2992) (bszlyd(i),bsdblk(i),bsfcla(i),wp(i),bs0ph(i),    &
-!     &bsfsmb(i),bsfom(i),bsfcce(i),bsfcec(i),wno3(i),ap(i),rsd(i),      &
-!     &psp(i),wn(i),i=1,10)
       trsd = 0.0
       tfon = 0.0
       tfop = 0.0

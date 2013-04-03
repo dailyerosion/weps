@@ -12,6 +12,8 @@
 !     + + + KEYWORDS + + +
 !     solar declination
 
+      use p1unconv_mod, only: degtorad
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer idoy
 
@@ -24,14 +26,11 @@
 !     + + + LOCAL DEFINITIONS + + +
 !     b      - sub calculation (time of year, radians)
 
-!     + + + COMMON BLOCKS + + +
-      include 'p1unconv.inc'
-
 !     + + + END SPECIFICATIONS + + +
 
 !     Calculate declination angle (dec)
-      b = (360.0/365.0)*(idoy-81.25) * degtorad				!h-55
-      declination = 23.45*sin(b)							!h-58
+      b = (360.0/365.0)*(idoy-81.25) * degtorad            !h-55
+      declination = 23.45*sin(b)                           !h-58
 
       return
       end

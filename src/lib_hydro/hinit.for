@@ -70,7 +70,6 @@
 
 !     + + + COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'p1unconv.inc'
       include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL COMMON BLOCKS + + +
@@ -80,7 +79,8 @@
 
 !     + + + LOCAL VARIABLES + + +
       integer k
-      real potes(mnsz), temp, temp1, temp2, temp3
+      real potes(mnsz), temp
+!     real temp1, temp2, temp3
 
 !     + + + LOCAL DEFINITION + + +
 !     potes  - Air entry potential at a std. bsdblk of 1.3 Mg/m^3

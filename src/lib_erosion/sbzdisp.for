@@ -19,6 +19,8 @@
       ! Vegetation Roughness Length and Zero-Plane Displacement as functions
       ! of Canopy Height and Area index. Boundary Layer meteorology 71:211-216.
 
+      use p1unconv_mod, only: mtomm
+
 !     +++ ARGUMENT DECLATION +++
       real szrgh, bcxrow
       integer bc0rg, wzoflg
@@ -53,11 +55,6 @@
 !     +++ LOCAL VARIABLE DEFINITIONS +++
 !     bht   - biomass height (mm)
 !     bsai  - biomass silhouette area index
-
-!     +++ INCLUDE FILES+++
-      include 'p1unconv.inc'  ! mtomm
-
-!     +++ PARAMETERS +++
 
 !     +++ END SPECIFICATIONS +++
 

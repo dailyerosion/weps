@@ -22,6 +22,8 @@
 !     + + + KEYWORDS + + +
 !     biodrag
 
+      use p1unconv_mod, only: mmtom
+
 !     + + + ARGUMENT DECLARATIONS + + +
       real    bdrlai, bdrsai, bcrlai, bcrsai
       integer bc0rg
@@ -42,9 +44,6 @@
       real fur_dis
       parameter( fur_dis = 0.5 )
 !     fur_dis  - coefficient for discounting drag of plant in furrow bottom
-
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1unconv.inc'
 
 !     + + + LOCAL VARIABLES + + +
       real red_lai, red_sai, red_fac

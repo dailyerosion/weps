@@ -57,8 +57,6 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left)
 
     INTEGER, save :: calib_yield_cnt = 0 ! Count number of crops to calibrate
 
-    INTEGER :: ret_stat = 0              ! return status values
-    INTEGER :: nval = 0                  ! number of rotation cycles X number of crops
     INTEGER :: c_no = 0                  ! crop index no
     REAL    :: t_yld = 0.0               ! target yield
     REAL    :: FACTOR = 1.6              ! factor adjustment for bracketing
