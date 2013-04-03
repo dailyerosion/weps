@@ -3,7 +3,11 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-!
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
       subroutine timer(timnum,timact)
 ! ****************************************************************** wjr
 !
@@ -11,16 +15,16 @@
 !
 !       Edit History
 !       05-Feb-99       wjr     Original coding
-!
-      include 'timer.inc'
-!      
-      integer		timnum			!# of timer being used
-      integer		timact			!action: 1==start, 2==end, 3==print, 4==reset
-      integer		idx
-!
+
+      use timer_def, only: TIMWEPS, timnam
+      
+      integer       timnum                      !# of timer being used
+      integer       timact                      !action: 1==start, 2==end, 3==print, 4==reset
+      integer       idx
+
       real          timarr(0:11)
       real          tim
-      integer		lsttim
+      integer       lsttim
       real          time(2)
       real          rtntim
 
@@ -37,12 +41,12 @@
       tim = time(1)
 
       select case (timact)
-      case (1)									! start a timer
+      case (1)                                  ! start a timer
         if (timnum .ne. TIMWEPS) then
             timarr(0) = timarr(0) + tim
         endif
         timarr(timnum) = timarr(timnum) - tim
-      case (2)									! stop a timer
+      case (2)                                  ! stop a timer
         if (timnum .ne. TIMWEPS) then
           timarr(0) = timarr(0) - tim
         endif

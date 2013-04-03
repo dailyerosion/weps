@@ -19,6 +19,7 @@
       use erosion_data_struct_defs
       use saeinp_mod, only: mksaeinp, saeinp
       use p1unconv_mod, only: SEC_PER_DAY
+      use timer_def, only: TIMEROS, TIMSBEROD, TIMSBWIND, TIMSTART, TIMSTOP
 
 !     +++ ARGUMENT DECLARATIONS +++
       real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
@@ -40,7 +41,6 @@
       include  'w1wind.inc'  ! awadir, awudmx, awdir, awu
       include  'm1flag.inc'  ! am0efl
       include  'm1sim.inc'   ! erod_interval, ntstep
-      include  'timer.inc'   ! TIMEROS, TIMSBEROD, TIMSBWIND, TIMSTART, TIMSTOP
 
 !     +++ LOCAL VARIABLES +++
       integer i,j,wustfl, icsr

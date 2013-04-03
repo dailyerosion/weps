@@ -8,6 +8,7 @@
 
       use weps_interface_defs
       use biomaterial, only: biomatter, biototal
+      use timer_def, only: TIMCROP, TIMSTART, TIMSTOP
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer daysim
@@ -35,7 +36,6 @@
       include 'h1et.inc'
       include 'h1temp.inc'
       include 'w1clig.inc'
-      include 'timer.inc'
       include 'crop/prevstate.inc'
       include 'crop/gcrop.inc'
 

@@ -16,18 +16,13 @@
       use weps_interface_defs
       use erosion_data_struct_defs
       use grid_geo_def, only: i1, i2, i3, i4, i5, i6, sin_awa, cos_awa, tan_awa, imax, jmax, ix, jy
+      use timer_def, only: TIMSBEROD, TIMSBQOUT, TIMSTART, TIMSTOP
 
 !     +++ ARGUMENT DECLARATIONS +++
-      real      time
-      integer   SURF_UPD_FLG    !Surface update flag (1=on, 0=off)
+      real      time            ! time interval (seconds)
+      integer   SURF_UPD_FLG    ! Surface update flag (1=on, 0=off)
       type(subregionsurfacestate), dimension(:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
-
-!     +++ ARGUMENT DEFINITIONS +++
-!     time     = time interval (seconds)
-
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include  'timer.inc'  ! TIMSBEROD, TIMSBQOUT, TIMSTART, TIMSTOP
 
 !     +++ LOCAL VARIABLES +++
       integer i, j, icsr

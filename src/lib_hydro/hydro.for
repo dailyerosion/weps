@@ -47,6 +47,7 @@
       use file_io_mod, only: luohydro, luohlayers, luowepphdrive
       use biomaterial, only: biototal
       use p1unconv_mod, only: mtomm
+      use timer_def, only: TIMHYDR, TIMDARC, TIMSTART, TIMSTOP
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn
@@ -209,7 +210,6 @@
       include 'm1flag.inc'
       include 'h1et.inc'
       include 'h1db1.inc'
-      include 'timer.inc'
       include 'command.inc'
 
       include 'm1geo.inc'

@@ -10,6 +10,7 @@
 
       use weps_interface_defs
       use biomaterial, only: biototal
+      use timer_def, only: TIMHYDR, TIMSTART, TIMSTOP
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer daysim
@@ -41,7 +42,6 @@
       include 'h1balance.inc'
       include 'w1wind.inc'
       include 'w1clig.inc'
-      include 'timer.inc'
 
       call timer(TIMHYDR,TIMSTART)      
 

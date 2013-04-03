@@ -8,6 +8,7 @@
 
       use weps_interface_defs
       use biomaterial, only: biototal
+      use timer_def, only: TIMSOIL, TIMSTART, TIMSTOP
 
 ! Arguments
       integer daysim
@@ -30,7 +31,6 @@
       include 'h1temp.inc'
       include 'h1db1.inc'
       include 'w1clig.inc'
-      include 'timer.inc'
 
       call timer(TIMSOIL,TIMSTART)      
 !
