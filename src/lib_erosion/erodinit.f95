@@ -23,12 +23,11 @@
       use Polygons_Mod
       use pnpoly_mod
       use subregions_mod
-      use erosion_data_struct_defs
+      use erosion_data_struct_defs, only: threshold, cellsurfacestate, am0eif
       use grid_geo_def, only: imax, jmax, ix, jy
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
-      include  'm1flag.inc'  ! am0eif
       include  'm1geo.inc'   ! nbr
       
 !     +++ ARGUMENT DECLARATIONS +++

@@ -15,7 +15,7 @@
 
 !      real             awadir
 !      real             awhrmx
-      real             awrmxn
+!      real             awrmxn
 !      real             awudmx
 !      real             awudmn
 !      real             awudav
@@ -26,7 +26,7 @@
       common / w1wind /                                                 &
 !     &                  awadir, awhrmx, awrmxn, awudmx, awudmn,         &
 !     &                  awudav, awu, awdir, awwisn
-     &                  awrmxn, awwisn
+     &                  awwisn
 
       save :: /w1wind/
 

@@ -35,7 +35,7 @@
 !     + + + END SPECIFICATIONS + + +
 
       am0til = .false.
-      ahzirr(sr) = 0.0	! zero out irrig amount from previous day
+      ahzirr(sr) = 0.0   ! zero out irrig amount from previous day
 
       return
       end

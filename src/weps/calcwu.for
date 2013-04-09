@@ -23,12 +23,12 @@
       use file_io_mod, only: luiwsd, luo_subday
       use p1unconv_mod, only: pi
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
-      use erosion_data_struct_defs, only: awudav, subday, ntstep
+      use erosion_data_struct_defs, only: awudav, subday, ntstep, am0efl
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1sim.inc'    ! am0jd
-      include 'm1flag.inc'   ! am0efl, wind_gen_fmt_flag
+      include 'm1flag.inc'   ! wind_gen_fmt_flag
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'  ! subfil, subflg

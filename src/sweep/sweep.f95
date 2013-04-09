@@ -15,6 +15,7 @@
       use weps_interface_defs
       use file_io_mod, only: fopenk
       use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, awzypt, subday
+      use erosion_data_struct_defs, only: am0eif, am0efl
       use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt
       use saeinp_mod, only: mksaeinp
       use p1unconv_mod, only: SEC_PER_DAY
@@ -31,7 +32,6 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'  ! mnsub, mnbpt, mnbr, mnarpt, mnar, mnspt, mngdpt
       include 'm1geo.inc'   ! amxsim
-      include 'm1flag.inc'  ! am0eif, am0efl
 
 !      include 'util/misc/f2kcli.inc' !declarations for f2k commandline functions
 

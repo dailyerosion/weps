@@ -15,7 +15,7 @@
       use Polygons_Mod
       use subregions_mod, only: subr_poly
       use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate, awdair, anemht, awzzo, wzoflg, &
-                                          ntstep, awadir, awudmx, subday
+                                          ntstep, awadir, awudmx, subday, am0efl, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
 
 !     +++ ARGUMENT DECLARATIONS +++
@@ -34,7 +34,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1flag.inc'   ! am0efl, am0eif
       include 'm1geo.inc'    ! amasim, nacctr, nbr, amxsim, amxar, amxbr, amzbr, ampbr, amxbrw
 
 !     + + + LOCAL COMMON BLOCKS + + +
@@ -97,8 +96,6 @@
        else
           debugflg = cmdebugflag  !use commandline setting
       endif
-
-!     m1flag.inc
 
 !     EROSION initialization flag (logical)
       line = getline(i_unit)

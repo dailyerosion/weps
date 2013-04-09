@@ -15,7 +15,7 @@
       use subregions_mod
       use file_io_mod, only: fopenk, luicli, luiwin, luiwsd,            &
      &                       luomanage, luolog
-      use erosion_data_struct_defs, only: subday, ntstep
+      use erosion_data_struct_defs, only: subday, ntstep, am0efl
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(out) :: n_rot_cycles

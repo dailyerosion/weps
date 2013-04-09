@@ -11,6 +11,7 @@
       use erosion_data_struct_defs, only: threshold
       use erosion_data_struct_defs, only: cellsurfacestate
       use erosion_data_struct_defs, only: awadir, awudmx
+      use erosion_data_struct_defs, only: am0efl
       use grid_geo_def, only: imax, jmax
 
 !     + + + ARGUMENT DECLARATIONS + + +

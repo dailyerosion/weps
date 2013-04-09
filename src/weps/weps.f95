@@ -45,7 +45,7 @@
       use debug_mod
       use mandate_mod
       use erosion_data_struct_defs, only: create_subregionsurfacestate, subregionsurfacestate, threshold, cellsurfacestate
-      use erosion_data_struct_defs, only: erod_interval, awudmx
+      use erosion_data_struct_defs, only: erod_interval, awudmx, am0eif, am0efl
       use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt
       use saeinp_mod, only: mksaeinp
       use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier

@@ -12,7 +12,7 @@
 
       logical          am0ifl
       logical          am0cif
-      logical          am0eif
+!      logical          am0eif
       logical          am0cgf
       logical          am0dif
       logical          am0sif
@@ -22,7 +22,7 @@
       integer          am0tfl
       integer          am0cfl
       integer          am0dfl
-      integer          am0efl
+!      integer          am0efl
       logical          am0gdf
       logical          am0til
 
@@ -45,10 +45,12 @@
 
 
       common / m1flag /                                                 &
-     &                  am0ifl, am0eif, am0cgf, am0cif, am0dif, am0hfl, &
+!     &                  am0ifl, am0eif, am0cgf, am0cif, am0dif, am0hfl, &
+     &                  am0ifl, am0cgf, am0cif, am0dif, am0hfl,         &
      &                  am0gdf, am0til, am0defoliatefl, am0kilfl,       &
      &                  am0cropupfl, am0sfl, am0tfl, am0cfl, am0dfl,    &
-     &                  am0efl, am0oif, am0sif,                         &
+!     &                  am0efl, am0oif, am0sif,                         &
+     &                  am0oif, am0sif,                                 &
      &                  init_loop, calib_loop, report_loop, calib_done, &
      &                  max_calib_cycles, calib_cycle,                  &
      &                  wind_gen_fmt_flag, cli_gen_fmt_flag,            &

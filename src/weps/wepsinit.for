@@ -7,6 +7,8 @@
 
       ! Initializes variables in common blocks
 
+      use erosion_data_struct_defs, only: am0eif
+
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'm1subr.inc'

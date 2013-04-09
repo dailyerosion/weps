@@ -8,7 +8,7 @@
 !     This common block contains the state variables relating to
 !     the surface soil properties and pm10 fractions in suspended soil
 !
-!     Parameter include files:  p1werm.inc, p1const.inc
+!     Parameter include files:  p1werm.inc
 !
 !     + + + VARIABLE DECLARATIONS + + +
 

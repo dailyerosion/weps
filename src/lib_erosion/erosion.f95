@@ -34,10 +34,6 @@
       real  PID180
       parameter(PID180 = 3.14159/180.)
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include  'p1werm.inc'
-      include  'm1flag.inc'  ! am0efl
-
 !     +++ LOCAL VARIABLES +++
       integer i,j,wustfl, icsr
 !      integer nhill

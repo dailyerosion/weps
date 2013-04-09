@@ -14,6 +14,7 @@
       use weps_interface_defs
       use file_io_mod
       use biomaterial, only: biomatter
+      use erosion_data_struct_defs, only: am0efl
 
       include 'p1werm.inc'
       include 'wpath.inc'

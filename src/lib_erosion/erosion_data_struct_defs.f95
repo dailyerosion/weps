@@ -154,6 +154,15 @@ module erosion_data_struct_defs
      real :: awudmn           ! Minimum daily wind speed (m/s)
      real :: awudav           ! Average daily wind speed (m/s)
      type(subdailyvalues), dimension(:), allocatable :: subday
+     logical :: am0eif        ! flag to run initialization of EROSION, If .true. then run initialization subroutines.
+     integer :: am0efl        ! flag to print EROSION output
+                              ! 0 - then print no output
+                              ! 1 - then print detailed output,
+                              ! 3 - print heading and reset to val of 98  (WEPS)
+                              ! 98 - print hourly emissions for erosion day (WEPS)
+                              ! 4 - print heading and reset to val of 99  (tsterode)
+                              ! 99 - print period emissions for erosion day (tsterode)
+                              ! 6 - then call sb1out to print debug data to "tst.out"
  ! end type simulationregionvalues
 
 contains

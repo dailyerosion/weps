@@ -9,7 +9,7 @@
 !     To print output desired from standalone EROSION submodel
 
       use weps_interface_defs
-      use erosion_data_struct_defs, only: cellsurfacestate
+      use erosion_data_struct_defs, only: cellsurfacestate, am0efl
       use grid_geo_def, only: imax, jmax
 
 !     +++ ARGUMENT DECLARATIONS +++
@@ -29,7 +29,6 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1geo.inc'  ! amasim, amxsim
-      include 'm1flag.inc' ! am0efl
 
       integer x, y
       integer :: dt(8)
