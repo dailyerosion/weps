@@ -26,10 +26,6 @@
       save    initflag
       integer yr, mo, da
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-
-      integer x, y
       integer :: dt(8)
       character(len=3) :: mstring
       common / datetime / dt, mstring

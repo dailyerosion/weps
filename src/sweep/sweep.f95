@@ -29,11 +29,6 @@
 !     runs the EROSION submodel code, and
 !     calls ERODOUT to print the generated output (stdout).
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'  ! mnsub, mnbpt, mnbr, mnarpt, mnar, mnspt, mngdpt
-
-!      include 'util/misc/f2kcli.inc' !declarations for f2k commandline functions
-
 !     +++ SUBROUTINES CALLED+++
 !     erodin
 !     erodinit
@@ -263,11 +258,6 @@
                    write(0,*) 'x-dir grid value too small (xgdpt < 1)'
                    call exit(32)
                 endif
-                if (xgdpt >= mngdpt) then
-                   write(0,*) 'xgdpt = ', xgdpt, 'mngdpt-1 = ', mngdpt-1
-                   write(0,*) 'x-dir grid value too large'
-                   call exit(33)
-                endif
              endif
              
            else if (argv(2:2) == 'y') then !Specify # of grid points in y-dir
@@ -279,11 +269,6 @@
                 if (ygdpt < 1) then
                    write(0,*) 'y-dir grid value too small (ygdpt < 1)'
                    call exit(42)
-                endif
-                if (ygdpt >= mngdpt) then
-                   write(0,*) 'ygdpt = ', ygdpt, 'mngdpt-1 = ', mngdpt-1
-                   write(0,*) 'y-dir grid value too large'
-                   call exit(43)
                 endif
              endif
 
@@ -354,7 +339,7 @@
              o_eplt_file = trim(file_bname) //  trim(o_eplt_ext)
              o_eplt_fpath = trim(fpath_bname)//trim(o_eplt_ext)
 
- !           call fopenk(o_eplt_unit, o_eplt_fpath, 'unknown')
+!             call fopenk(o_eplt_unit, o_eplt_fpath, 'unknown')
 
            else if (argv(2:5) == 'Egrd') then
              !write(0,*) '"-Egrd" option specified'

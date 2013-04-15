@@ -34,9 +34,6 @@
       integer xchl
       parameter (xchl = 12)
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-
 !     + + + LOCAL COMMON BLOCKS + + +
       integer debugflg
       common /flags/ debugflg

@@ -35,9 +35,6 @@ module saeinp_mod
 !     +++ ARGUMENT DECLARATIONS +++
       type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include  'p1werm.inc'
-
 !     +++ LOCAL VARIABLES +++
       integer k,l, sr, ip
       integer b

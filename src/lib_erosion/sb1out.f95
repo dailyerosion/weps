@@ -24,12 +24,7 @@
 !     + + + ARGUMENT DEFINITIONS + + +
 !     o_unit= Unit number for output file
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-
-      include 'p1werm.inc'
-
 !     + + + LOCAL VARIABLES + + +
-
       !integer m, n, k
       integer initflag, ipd, npd
       save    initflag, ipd, npd

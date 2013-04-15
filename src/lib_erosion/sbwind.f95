@@ -39,10 +39,6 @@
 !     wust     - threshold fr. vel. for en. at grid points
 !     wusp     - threshold fr. vel. for trans. cap. at grid points
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-
-      include  'p1werm.inc'
-
 !     +++ LOCAL VARIABLES +++
       integer i,j, icsr,k
       real wzorg, wzorr, wzzo, wzzov

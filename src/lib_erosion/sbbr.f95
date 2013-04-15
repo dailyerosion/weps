@@ -25,11 +25,7 @@
       real, intent(in) :: rel_wind_angle  ! angle of the wind relative the grid positive y-axis (see sbdirini)
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-
 !     + + + LOCAL VARIABLES + + +
-
       integer i, j, n   ! do-loop indices
       type(point) ::  pnt_grid  ! point form of grid coordinate
       type(location_intersect) ::  loc_intersect  ! point where upwind direction meets barrier, index in polyline and fraction distance between indexes

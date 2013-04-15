@@ -26,9 +26,6 @@
       use erosion_data_struct_defs, only: threshold, cellsurfacestate, am0eif
       use grid_geo_def, only: imax, jmax, ix, jy
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include  'p1werm.inc'
-      
 !     +++ ARGUMENT DECLARATIONS +++
       type(threshold), dimension(:), intent(inout) :: noerod                 ! report values to show which factors prevented erosion
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
@@ -50,9 +47,6 @@
 
       nsubr = size(subr_poly)
       nacctr = size(acct_poly)
-
-      write(*,*) 'ERODINIT: nsubr: ', nsubr
-      write(*,*) 'ERODINIT: ix, jy: ', ix, jy
 
       ! Grid is created at least once.
       if (am0eif .eqv. .true.) then

@@ -28,10 +28,6 @@
 !     dxmin - minimum grid interval (m)
 !     i     - do loop index
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-
-      include  'p1werm.inc'
-
 !     +++ LOCAL VARIABLES +++
       integer  ngdpt
       integer  i, nbr

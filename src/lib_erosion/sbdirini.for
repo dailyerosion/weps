@@ -24,9 +24,6 @@
       real prev_dir  ! previously computed direction of the wind
       type(cellsurfacestate),dimension(0:,0:),intent(inout) :: cellstate     ! grid cell state for sbbr
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-
 !     + + + END SPECIFICATION + + +
 
 !     check and do not calculate if done on last entry

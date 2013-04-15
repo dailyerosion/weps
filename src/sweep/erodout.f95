@@ -28,9 +28,6 @@
       integer yplot
       real yin(30)
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-
 !     ++++ LOCAL VARIABLES +++
       integer xplot
       character*12 xcharin(30)
