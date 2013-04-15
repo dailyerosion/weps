@@ -36,7 +36,6 @@ SUBROUTINE print_ui1_output(nperiods, nrot_years, ncycles, rep_report, mandate)
     IMPLICIT NONE
 
     INCLUDE 'p1werm.inc'
-    INCLUDE 'm1geo.inc'
 
     INTEGER, INTENT (IN) :: nperiods
     INTEGER, INTENT (IN) :: nrot_years
@@ -50,8 +49,6 @@ SUBROUTINE print_ui1_output(nperiods, nrot_years, ncycles, rep_report, mandate)
     LOGICAL :: match = .false.
     INTEGER :: match_no = 0
     CHARACTER(len=256) :: opname, cropname
-
-    INTEGER :: N_eop_vars_printed = N_eop_vars + 1  ! include no_e_event output
 
 !   format for header of ui1 output report file
 

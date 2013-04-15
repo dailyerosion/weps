@@ -13,8 +13,9 @@
 !     Calc. sweep sequence for update of grid cells
 !     calc. ridge spacing parallel the wind
 
+      use weps_interface_defs
       use grid_geo_def, only: imax, jmax, i1, i2, i3, i4, i5, i6,       &
-     &                        kbr, awa, sin_awa, cos_awa, tan_awa
+     &                       kbr, awa, sin_awa, cos_awa, tan_awa, amasim
       use erosion_data_struct_defs, only: cellsurfacestate
       use p1unconv_mod, only: degtorad
 
@@ -25,7 +26,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1geo.inc'  ! amasim
 
 !     + + + END SPECIFICATION + + +
 

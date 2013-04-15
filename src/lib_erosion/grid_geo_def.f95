@@ -4,7 +4,7 @@
 !$HeadURL$
 
 module grid_geo_def
-
+    use Points_Mod
     implicit none
 
     integer :: kbr         ! wind quadrant key relative to simulation region for barrier effect (from 1 to 8 )
@@ -30,7 +30,7 @@ module grid_geo_def
     integer, parameter :: B_G_DPT = 60      ! # of grid data points to use if barrier exists
     real, parameter :: MIN_GRID_SP = 7.0    ! minimum targeted grid spacing (m)
 
-    real :: amxsim(mnspt,mnspt) ! Coordinates of two opposite points for a rectangular simulation region.
+    type(point), dimension(2) :: amxsim ! Coordinates of two diagonally opposite points for a rectangular simulation region.
     real :: sim_area            ! sim_area - Simulation Region area (m^2)
     real :: amasim              ! Field angle (degrees) (0 to 360) the angle of the simulation region boundary relative to north.
 

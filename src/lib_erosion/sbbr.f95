@@ -17,6 +17,9 @@
       use p1unconv_mod, only: pi
       use barriers_mod
       use Points_Mod
+      use pnt_polyline_mod
+      use lin_interp_mod
+      use grid_geo_def, only: amxsim
 
 !     + + + ARGUMENT DECLARATIONS + + +
       real, intent(in) :: rel_wind_angle  ! angle of the wind relative the grid positive y-axis (see sbdirini)
@@ -24,15 +27,18 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1geo.inc'   ! amxsim
 
 !     + + + LOCAL VARIABLES + + +
 
       integer i, j, n   ! do-loop indices
       type(point) ::  pnt_grid  ! point form of grid coordinate
-      type(point) ::  pnt_intersect  ! point where upwind direction meets barrier
+      type(location_intersect) ::  loc_intersect  ! point where upwind direction meets barrier, index in polyline and fraction distance between indexes
       real :: dist   ! distance from grid cell centroid to barrier
       real :: w0br_min   ! minimum value of sheltering effect (fraction of open field fric. vel) for this point
+      integer :: npt     ! number of points along the barrier
+      real :: zbr_interp  ! value of barrier height interpolated along barrier
+      real :: pbr_interp  ! value of barrier porosity interpolated along barrier
+      real :: xbrw_interp  ! value of barrier width interpolated along barrier
 
 !     + + + FUNCTION DECLARATIONS + + +
       real fu
@@ -43,8 +49,8 @@
       do i = 1, imax-1
         do j = 1, jmax-1
           ! calculate distance to middle of grid cell (maybe offset from origin)
-          pnt%x = (i-0.5)*ix + amxsim(1,1)
-          pnt%y = (j-0.5)*jy + amxsim(2,1)
+          pnt_grid%x = (i-0.5)*ix + amxsim(1)%x
+          pnt_grid%y = (j-0.5)*jy + amxsim(1)%y
 ! ^^^tmp
 !      if (i .eq. 1 .and. j .eq. jmax-1)then
 !       write (*,*) 'sbbr output at 1, jmax-1 lx=', lx, 'ly=', ly
@@ -55,30 +61,43 @@
           w0br_min = 1.0   ! maximum value for parameter
           do n = 1, size(barrier)
             ! look for barrier up wind
-            if( intersect( pnt_grid, rel_wind_angle, barrier(n)%points, pnt_intersect ) then   ! modify to return location of intersection to index into interpolation of barrier parmeters
+            if( pl_intersect( pnt_grid, rel_wind_angle, barrier(n)%points, loc_intersect ) ) then
               ! intersection point found (it is minimum distance for this barrier)
-              dist = slen(pnt_grid, pnt_intersect)
+              dist = slen(pnt_grid, loc_intersect%pnt)
+
+              ! find number of points in barrier for interpolations
+              npt = size(barrier(n)%param)
 
               ! barrier influence calculated down wind of barrier
-              if (dist .le. 35*barrier(n)%amzbr) then
+              ! interpolate height along barrier segment
+              zbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%amzbr )
+              if (dist .le. 35*zbr_interp) then
+                ! distance is close enough for effect
                 ! interpolate parameters along barrier segment
-
+                pbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%ampbr )
+                xbrw_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%amxbrw )
                 ! find shelter effect
-                w0br_min = min(w0br_min, fu( dist, barrier(n)%amzbr(1), barrier(n)%ampbr(1), barrier(n)%amxbrw(1) ) )
+                w0br_min = min(w0br_min, fu( dist, zbr_interp, pbr_interp, xbrw_interp ) )
               end if
             end if
 
             ! look for barrier down wind
-            if( intersect( pnt_grid, rel_wind_angle-180.0, barrier(n)%points, pnt_intersect ) then   ! modify to return location of intersection to index into interpolation of barrier parmeters
+            if( pl_intersect( pnt_grid, rel_wind_angle-180.0, barrier(n)%points, loc_intersect ) ) then
               ! intersection point found (it is minimum distance for this barrier)
-              dist = slen(pnt_grid, pnt_intersect)
+              dist = slen(pnt_grid, loc_intersect%pnt)
 
               ! barrier influence calculated down wind of barrier
-              if (dist .lt. 5*amzbr(n)) then
+              ! interpolate height along barrier segment
+              zbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%amzbr )
+              if (dist .lt. 5*zbr_interp) then
+                ! distance is close enough for effect
                 ! interpolate parameters along barrier segment
+                pbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%ampbr )
+                xbrw_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%amxbrw )
 
-                ! find shelter effect
-                w0br_min = min(w0br_min, fu( dist, barrier(n)%amzbr(1), barrier(n)%ampbr(1), barrier(n)%amxbrw(1) ) )
+                ! find shelter effect (on upwind side of barrier use negative distance for correct function value)
+                w0br_min = min(w0br_min, fu( -dist, zbr_interp, pbr_interp, xbrw_interp ) )
+              end if
             end if
           end do
 
@@ -143,7 +162,7 @@
 !      return
 !      end
 
-!     function to calc. fu (fraction upwind fric. velocity
+!     function to calc. fu (fraction of upwind fric. velocity
 !     near the  barrier)
 !     (ranges: porosity 0 to 0.9, distance: -5*zbr to 50*zbr)
       real function fu (xh, zbr, pbr, xbrw)

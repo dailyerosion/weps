@@ -13,7 +13,7 @@
 
       use weps_interface_defs
       use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, awzypt, anemht, wzoflg, ntstep
-      use grid_geo_def, only: awa, kbr, imax, jmax
+      use grid_geo_def, only: awa, kbr, imax, jmax, amasim, amxsim
 
 !     + + + ARGUEMENT DECLARATIONS + + +
       real ws, wdir, hr
@@ -28,13 +28,9 @@
 
       include 'p1werm.inc'
 
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'm1geo.inc'    ! amasim, amxsim
-
 !     + + + LOCAL VARIABLES + + +
 
       !integer m, n, k
-      integer x, y
       integer initflag, ipd, npd
       save    initflag, ipd, npd
       integer yr, mo, da
@@ -81,7 +77,7 @@
         write (o_unit,*)
         write (o_unit,*) 'orientation and dimensions of sim region'
         write (o_unit,*) 'amasim(deg)  amxsim - (x1,y1) (x2,y2)'
-        write(o_unit,fmt="(1x,5f8.2)")amasim,((amxsim(x,y),x=1,2),y=1,2)
+        write(o_unit,fmt="(1x,5f8.2)") amasim, amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
         write (o_unit,*)
 
        write (o_unit,*) "Surface properties"
@@ -110,7 +106,7 @@
 
 
         write(o_unit,fmt="(1x,a)") "<field dimensions>"
-       write(o_unit,fmt="(1x,5f10.2)")amasim,((amxsim(x,y),x=1,2),y=1,2)
+       write(o_unit,fmt="(1x,5f10.2)")amasim, amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
         write(o_unit,fmt="(1x,a)") "</field dimensions>"
 
         write (o_unit,*)

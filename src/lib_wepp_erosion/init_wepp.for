@@ -7,7 +7,9 @@
       SUBROUTINE init_wepp(afterWarmup)
       
       use wepp_interface_defs
-      
+      use grid_geo_def, only: amxsim, sim_area
+      use Points_Mod, only: slen
+
       implicit none
       
       integer, intent(in) :: afterWarmup
@@ -37,7 +39,6 @@
       include 'p1werm.inc'
       include 's1dbh.inc'
 	include 's1dbc.inc'
-	include 'm1geo.inc'
 	include 'm1subr.inc'
       include 'hydro/htheta.inc'
 	include 'wepp_erosion.inc'
@@ -50,7 +51,8 @@
 !    asfcla - Soil layer clay content (Mg/Mg)
 !    asfom - Soil layer organic matter content (Mg/Mg)
 !    amxsim - This variable contains the coordinates of two
-!              opposite points for a rectangular simulation region.
+!              opposite points for a rectangular simulation region. (m)
+!    sim_area - area of simulation region (m^2)
 !    asvroc - Soil layer coarse fragments (m^3/m^3)
 !    theta - soil layer water content (m^3/m^3)
 !
@@ -61,7 +63,8 @@
       real eqom, vfsand, eqclay,totlen, thetfc(mxnsl)
       real rfg(mxnsl)
 
-      real SLPINP(MXSLP), kconsd
+!      real SLPINP(MXSLP)
+      real kconsd
       integer jdx,isr,i
 
       wp_npart = 5
@@ -86,12 +89,12 @@
       orgmatf = asfom(1,isr)
     !  
 !     compute slope length based on the length of the rectangular WEPS simulation area
-      wp_efflen = amxsim(2,2)-amxsim(2,1)
+      wp_efflen = slen(amxsim(1), amxsim(2))/2.0
       wp_slplen = wp_efflen
 
 !
 !     compute slope width based on the width of the rectangular WEPS simulation area      
-	wp_fwidth = amxsim(1,2) - amxsim(1,1)
+	wp_fwidth = sim_area / wp_efflen
 	
 
 	sand(1) = asfsan(1,isr)

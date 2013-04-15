@@ -28,7 +28,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
-      include  'm1geo.inc'   ! nbr
       
 !     +++ ARGUMENT DECLARATIONS +++
       type(threshold), dimension(:), intent(inout) :: noerod                 ! report values to show which factors prevented erosion
@@ -45,12 +44,15 @@
       type(point) :: centroid
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
-!     nbr  = number of barriers (from m1geo.inc)
+!     nbr  = number of barriers
 
 !     +++ END SPECIFICATIONS +++
 
       nsubr = size(subr_poly)
       nacctr = size(acct_poly)
+
+      write(*,*) 'ERODINIT: nsubr: ', nsubr
+      write(*,*) 'ERODINIT: ix, jy: ', ix, jy
 
       ! Grid is created at least once.
       if (am0eif .eqv. .true.) then

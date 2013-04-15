@@ -9,7 +9,7 @@
 !     To print output desired from standalone EROSION submodel
 
       use erosion_data_struct_defs, only: cellsurfacestate, am0efl
-      use grid_geo_def, only: imax, jmax
+      use grid_geo_def, only: imax, jmax, amasim, amxsim
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer o_unit, o_E_unit, sgrd_u
@@ -30,10 +30,9 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1geo.inc'  ! amasim, amxsim
 
 !     ++++ LOCAL VARIABLES +++
-      integer xplot, x, y
+      integer xplot
       character*12 xcharin(30)
       real xin(30)
       common/plot/xplot, xcharin, xin
@@ -127,8 +126,8 @@
       aegt10 = aegt10/tt
 
 !    calculate comparision of boundary and interior losses
-      lx = amxsim(1,2) - amxsim(1,1)
-      ly = amxsim(2,2) - amxsim(2,1)
+      lx = amxsim(2)%x - amxsim(1)%x
+      ly = amxsim(2)%y - amxsim(1)%y
       tot = aegt*lx*ly
       totbnd = (topt + bott + topss + botss)*lx +                       &
      &         (ritt + lftt + ritss + lftss)*ly
@@ -148,7 +147,7 @@
       write(o_unit,*)
 
       write(o_unit,fmt="(1x,a)") "<field dimensions>"
-      write(o_unit,fmt="(1x,5f10.2)") amasim,((amxsim(x,y),x=1,2),y=1,2)
+      write(o_unit,fmt="(1x,5f10.2)") amasim, amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
       write(o_unit,fmt="(1x,a)") "</field dimensions>"
       write(o_unit,*)
       write (o_unit,*) 'Total grid size: (', imax+1,',', jmax+1, ')   ',&

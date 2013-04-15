@@ -17,6 +17,7 @@
      &                       luomanage, luolog
       use erosion_data_struct_defs, only: subday, ntstep, am0efl
       use barriers_mod
+      use grid_geo_def, only: amasim, amxsim, sim_area
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(out) :: n_rot_cycles
@@ -25,7 +26,6 @@
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
-!      include 'm1geo.inc'
       include 'm1flag.inc'
       include 'm1dbug.inc'
       include 's1layr.inc'
@@ -310,16 +310,20 @@
         read (line,*,err=80) am0hdb,am0sdb,am0tdb,am0cdb,am0ddb,am0edb
 
       case (19)
+        ! simulation region angle from north (+/- 45 degrees)
         read (line,*,err=80) amasim
+
       case (20)
-        read (line,*,err=80) amxsim(1,1), amxsim(2,1)
+        ! simulation region diagonal coordinates (lower left)
+        read (line,*,err=80) amxsim(1)%x, amxsim(1)%y
       case (21)
-        read (line,*,err=80) amxsim(1,2),amxsim(2,2)
+        ! simulation region diagonal coordinates (upper right)
+        read (line,*,err=80) amxsim(2)%x, amxsim(2)%y
         ! compute the simulation area
-        sim_area = (amxsim(1,2) - amxsim(1,1)) *                        &
-     &             (amxsim(2,2) - amxsim(2,1))
+        sim_area = (amxsim(2)%x - amxsim(1)%x)                          &
+     &           * (amxsim(2)%y - amxsim(1)%y)
         write(6,*) "Simulation area (m^2)", sim_area
-        !write(6,*) amxsim(2,1),amxsim(1,1),amxsim(2,2),amxsim(1,2)
+
       case (22)
  !       These values are scaling factors for interface, not used in WEPS
         read (line,*,err=80) sclsim, sclbar
@@ -344,8 +348,8 @@
 
       case (25)
         ! read point pair
-        read (line,*,err=80) acct_poly(isr)%points(ipol)%x,             &
-     &                       acct_poly(isr)%points(ipol)%y
+        read (line,*,err=80) acct_poly(iar)%points(ipol)%x,             &
+     &                       acct_poly(iar)%points(ipol)%y
         ! read next point pair
         ipol = ipol + 1
         if( ipol .le. poly_np ) then

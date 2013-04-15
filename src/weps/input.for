@@ -35,7 +35,6 @@
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
-      include 'm1geo.inc'
       include 'm1flag.inc'
       include 'm1dbug.inc'
       include 'command.inc'

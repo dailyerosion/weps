@@ -10,7 +10,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
     USE pd_var_type_def
     use biomaterial, only: biototal
     use erosion_data_struct_defs, only: cellsurfacestate
-    use grid_geo_def, only: imax, jmax
+    use grid_geo_def, only: imax, jmax, sim_area
 
     IMPLICIT NONE
 
@@ -36,8 +36,6 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
     type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate  ! egt, egtcs, egtss, egt10
 
     include "p1werm.inc"        ! needed by other include files
-
-    include "m1geo.inc"         ! sim_area - area of simulation region (m^2)
 
     include "c1glob.inc"        ! contains
                                 ! acmstandstore(isr)      crop standing repr mass

@@ -58,7 +58,7 @@ contains
     type(point) :: b_a0
 
     ! translate segment so a is at origin 
-    b_a0 = pt_translate(a, b)
+    b_a0 = translate(a, b)
 
     l = pt_len(b_a0)
   end function pt_slen

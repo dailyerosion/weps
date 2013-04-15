@@ -49,6 +49,8 @@
       use p1unconv_mod, only: mtomm
       use timer_def, only: TIMHYDR, TIMDARC, TIMSTART, TIMSTOP
       use erosion_data_struct_defs, only: anemht, awzzo, awzdisp, wzoflg
+      use grid_geo_def, only: amxsim
+      use Points_Mod, only: slen
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn
@@ -211,7 +213,6 @@
       include 'h1db1.inc'
       include 'command.inc'
 
-      include 'm1geo.inc'
       include 'wepp_erosion.inc'
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/htheta.inc'
@@ -232,7 +233,8 @@
       real rad_surf
       real eff_lai
       real loc_zorr, loc_zordg, loc_zo, loc_zov, loc_zd, brcd, fld_wind
-      real rootz_p_con, rootz_p_cap, paw, slen
+      real rootz_p_con, rootz_p_cap, paw
+      real :: len_slope
 !      real old_wind, old_etp
 
       real d1, d2
@@ -624,7 +626,8 @@
          ! use WEPP infiltration, evaporation, redistribution
          ! passing in reduced saturation instead of full saturation
 
-         slen = amxsim(2,2)-amxsim(2,1)
+         ! use a representative slope lenght as half of the simregion diagonal distance
+         len_slope = slen(amxsim(1), amxsim(2)) / 2.0
          !write(*,*) 'daysim:', daysim
 
          call waterbal(layrsn, thetas, thetes, thetaf, thetaw,          &
@@ -636,7 +639,7 @@
      &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
      &                   ahzep, theta, thetadmx, bhrwc0,                &
      &                   ahzea, bhzper, bhzrun, bhzinf, bhzwid,         &
-     &                   slen, day, mo, yr, luowepphdrive,              &
+     &                   len_slope, day, mo, yr, luowepphdrive,         &
      &                   wepp_hydro, init_loop, calib_loop, bhfice)
 
       end if

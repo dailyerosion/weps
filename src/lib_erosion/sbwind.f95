@@ -18,6 +18,7 @@
       use weps_interface_defs
       use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, anemht, awzzo, wzoflg
       use grid_geo_def, only: kbr, imax, jmax
+      use barriers_mod, only: barrier
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer wustfl,intstep, ntstep
@@ -41,7 +42,6 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include  'p1werm.inc'
-      include  'm1geo.inc'   ! nbr
 
 !     +++ LOCAL VARIABLES +++
       integer i,j, icsr,k
@@ -85,10 +85,10 @@
 !      if (nhill .ne. 0 ) then
 !           cellstate(i,j)%wus = cellstate(i,j)%wus * w0hill(i,j,kbr)
 !        endif
-!
-!     correct friction velocity for barriers
-      if (nbr .ne. 0 ) then
-         cellstate(i,j)%wus = cellstate(i,j)%wus * cellstate(i,j)%w0br(kbr)
+
+      ! correct friction velocity for barriers
+      if ( allocated(barrier) ) then
+         cellstate(i,j)%wus = cellstate(i,j)%wus * cellstate(i,j)%w0br(1)
       endif
 
       if (wustfl .eq. 1) then

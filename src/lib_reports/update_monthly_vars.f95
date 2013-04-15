@@ -8,7 +8,7 @@ SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cell
     USE pd_var_type_def
     USE pd_var_tables
     use erosion_data_struct_defs, only: cellsurfacestate, awdair, awudmx, subday, ntstep 
-    use grid_geo_def, only: imax, jmax
+    use grid_geo_def, only: imax, jmax, sim_area
 
     IMPLICIT NONE
 
@@ -20,7 +20,6 @@ SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cell
 
     include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
-    include "m1geo.inc"         ! sim_area - area of simulation region (m^2)
 
     include "h1et.inc"          ! ah0drat (dryness ratio)
 

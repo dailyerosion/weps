@@ -27,6 +27,7 @@ module saeinp_mod
 !     + + + Modules Used + + +
       use weps_interface_defs
       use file_io_mod, only: fopenk, makenamnum
+      use grid_geo_def, only: amxsim, amasim
       use subregions_mod
       use barriers_mod
       use erosion_data_struct_defs, only: subregionsurfacestate, awdair, anemht, awzzo, wzoflg, awadir, subday, ntstep
@@ -36,7 +37,6 @@ module saeinp_mod
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
-      include  'm1geo.inc'   ! amasim, nbr, amxsim, amxbr, amzbr, ampbr, amxbrw
 
 !     +++ LOCAL VARIABLES +++
       integer k,l, sr, ip
@@ -109,23 +109,21 @@ module saeinp_mod
  2100 format ('#',/,                                                    &
      &'# +++ SIMULATION REGION +++',/,                                  &
      &'#',/,                                                            &
-     &'#     amxsim(x,y), R, (m1geo.inc) Simulation Region coordinates (&
-     &m)',/,                                                            &
+     &'#     amxsim(x,y), R, Simulation Region coordinates (m)',/, &
      &'#              Input x,y coordinates in this form: x1,y1  x2,y2')
       write(luo_saeinp,*)                                               &
-     &    amxsim(1,1), amxsim(2,1), amxsim(1,2), amxsim(2,2)
+     &    amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
       write(luo_saeinp,2105)
  2105 format(                                                           &
      &'#',/,                                                            &
-     &'#     amxsim(x,y), R, (m1geo.inc) Simulation Region orientation a&
-     &ngle',/,                                                          &
-     &'#     clockwise with 0=north')
+     &'#     amasim, R, Simulation Region orientation angle',/, &
+     &'#     clockwise is positive with 0=north')
       write(luo_saeinp,*) amasim
       write(luo_saeinp,2110)
  2110 format('#',/,                                                     &
      &'#  +++ ACCOUNTING REGIONS +++',/,                                &
      &'#',/,                                                            &
-     &'# nacctr, I, (m1geo.inc) Number of accounting regions')
+     &'# nacctr, I, Number of accounting regions')
       write(luo_saeinp,*) size(acct_poly)
 
       ! loop through all accounting regions
@@ -161,11 +159,11 @@ module saeinp_mod
      &'#',/, &
      &'#     barrier(b)%np, I, number of points in barrier polyline',/, &
      &'#     Inputs are repeated for each point specified',/, &
-     &'#     barrier(b)%point(n)%x, barrier(b)%point(n)%y, R, x,y coordinate pair',/, &
+     &'#     barrier(b)%points(n)%x, barrier(b)%points(n)%y, R, x,y coordinate pair',/, &
      &'#  0.0 500.0 ',/, &
-     &'#     barrier(b)%point(n)%amzbr, R, Barrier height (m)',/, &
-     &'#     barrier(b)%point(n)%amxbrw, R, Barrier width (m)',/, &
-     &'#     barrier(b)%point(n)%ampbr, R, Barrier porosity (m^2/m^2)',/, &
+     &'#     barrier(b)%points(n)%amzbr, R, Barrier height (m)',/, &
+     &'#     barrier(b)%points(n)%amxbrw, R, Barrier width (m)',/, &
+     &'#     barrier(b)%points(n)%ampbr, R, Barrier porosity (m^2/m^2)',/, &
      &'#  1.2 2.0 0.50 ',/, &
      &'#     After all points, the text string is given for barrier type',/, &
      &'#')
@@ -177,8 +175,8 @@ module saeinp_mod
 
          do ip = 1, barrier(b)%np
             write(luo_saeinp,2127)
- 2127       format('# barrier(b)%point(n)%x, barrier(b)%point(n)%y, R, x,y coordinate pair')
-            write(luo_saeinp,*) barrier(b)%point(ip)%x, barrier(b)%point(ip)%y
+ 2127       format('# barrier(b)%points(n)%x, barrier(b)%points(n)%y, R, x,y coordinate pair')
+            write(luo_saeinp,*) barrier(b)%points(ip)%x, barrier(b)%points(ip)%y
 
             write (luo_saeinp,2130)
  2130       format('#, amzbr(b), amxbrw(b), ampbr(b)')

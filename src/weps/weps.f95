@@ -39,7 +39,7 @@
       USE pd_report_vars
       USE pd_var_tables
       use Polygons_Mod, only: destroy_polygon
-      use subregions_mod, only: subr_poly
+      use subregions_mod, only: subr_poly, acct_poly
       use barriers_mod
       use file_io_mod, only: luo_egrd, luo_erod, luomandate, luod_above, luod_below, luowepperod, luoweppplot, luoweppsum, makedir
       use biomaterial
@@ -47,7 +47,7 @@
       use mandate_mod
       use erosion_data_struct_defs, only: create_subregionsurfacestate, subregionsurfacestate, threshold, cellsurfacestate
       use erosion_data_struct_defs, only: erod_interval, awudmx, am0eif, am0efl
-      use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt
+      use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
       use saeinp_mod, only: mksaeinp
       use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier
       use sci_soil_texture_mod, only: create_sci_soil_multiplier, destroy_sci_soil_multiplier
@@ -60,7 +60,6 @@
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'  ! am0jd
-      include 'm1geo.inc'
       include 'm1flag.inc'
       include 'm1dbug.inc'
       include 's1layr.inc'
@@ -68,7 +67,6 @@
       include 's1phys.inc'
       include 'c1info.inc'
       include 'c1gen.inc'
-
       include 'c1glob.inc'
       include 'c1db1.inc'
       include 'h1hydro.inc'
@@ -469,8 +467,8 @@
          if ((xgdpt > 0) .and. (ygdpt > 0)) then
            imax = xgdpt + 1
            jmax = ygdpt + 1
-           ix = (amxsim(1,2) - amxsim(1,1)) / xgdpt
-           jy = (amxsim(2,2) - amxsim(2,1)) / ygdpt
+           ix = (amxsim(2)%x - amxsim(1)%x) / xgdpt
+           jy = (amxsim(2)%y - amxsim(1)%y) / ygdpt
          else          !use Hagen's grid dimensioning as the default
            call sbgrid
          endif
@@ -912,7 +910,7 @@
       if( allocated(barrier) ) then
           do isr = 1, size(barrier)
               ! clear internal storage for each barrier
-              destroy_barrier(barrier(isr))
+              call destroy_barrier(barrier(isr))
           end do
           deallocate(barrier)
       end if

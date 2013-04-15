@@ -17,7 +17,8 @@
       use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate, awdair, anemht, awzzo, wzoflg, &
                                           ntstep, awadir, awudmx, subday, am0efl, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
-      use barrier_mod
+      use barriers_mod
+      use grid_geo_def, only: amasim, amxsim
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer i_unit, o_unit, cmdebugflag, already_read_inputs
@@ -35,7 +36,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1geo.inc'    ! amasim, amxsim
 
 !     + + + LOCAL COMMON BLOCKS + + +
       integer debugflg
@@ -48,7 +48,7 @@
 !
 !     +++ LOCAL VARIABLES +++
       integer i,j,k
-      integer x,y,sr,b,a,l,h
+      integer sr,ibr,a,l,h
       integer wflg
       real :: f(ntstep), wu(ntstep)
       real wfcalm, wuc, w0k, step
@@ -110,18 +110,9 @@
 
 !     +++ SIMULATION REGION +++
 
-!     Need to make sure there is no confusion on what is x1, x2, y1, and y2
-!     Not clearly defined in include files
-
-!     m1geo.inc
-
 !     Simulation region diagonal corners (x1,y1) and (x2,y2)
-!     Note: form of amxsim(x,pt) where x=1, y=2, pt=1 or 2.
       line = getline(i_unit)
-      read (line,*) ((amxsim (x,y), x=1,2),y=1,2)
-!     read (getline(i_unit),*) ((amxsim (x,y), x=1,2),y=1,2)
-!     write (o_unit,*) 'sim x1,y1 x1,y2 ',  amxsim(1,1), amxsim(1,2)
-!     write (o_unit,*) 'sim x2,y1 x2,y2 ',  amxsim(2,1), amxsim(2,2)
+      read (line,*) amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
 
 !     Simulation region orientation angle
       line = getline(i_unit)
@@ -130,14 +121,12 @@
 
 !     +++ ACCOUNTING REGIONS +++
 
-!     m1geo.inc
-
 !     Number of accounting regions
       line = getline(i_unit)
       read (line,*) nacctr
 
       ! create accounting region polygon array
-      allocate(acct_poly(nsubr), stat=alloc_stat)
+      allocate(acct_poly(nacctr), stat=alloc_stat)
       if( alloc_stat .gt. 0 ) then
          Write(*,*) 'ERROR: memory allocation, acct_poly'
       end if
@@ -147,18 +136,16 @@
         line = getline(i_unit)
         read (line,*) poly_np
         ! create polygon point storage
-        acct_poly(sr) = create_polygon(poly_np)
+        acct_poly(a) = create_polygon(poly_np)
         ! read in points
         do ipol = 1, poly_np
             ! read point pair
             line = getline(i_unit)
-            read (line,*) acct_poly(sr)%points(ipol)%x, acct_poly(sr)%points(ipol)%y
+            read (line,*) acct_poly(a)%points(ipol)%x, acct_poly(a)%points(ipol)%y
         end do
    20 continue
 
 !     +++ BARRIERS +++
-
-!     m1geo.inc
 
 !     Number of barriers
       line = getline(i_unit)
@@ -173,20 +160,20 @@
         end if
       end if
 
-      do b = 1, nbr
+      do ibr = 1, nbr
         ! number of points in barrier polyline
         line = getline(i_unit)
-        read (line,*,err=80) poly_np
-        ! crate storage for point and barrier data
-        barrier(b) = create_barrier(poly_np)
+        read (line,*) poly_np
+        ! create storage for point and barrier data
+        barrier(ibr) = create_barrier(poly_np)
         ! read in points and point data
         do ipol = 1, poly_np
            ! read point pair
            line = getline(i_unit)
-           read (line,*,err=80) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
+           read (line,*) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
            ! barrier height, width, porosity
            line = getline(i_unit)
-           read (line,*,err=80) barrier(ibr)%param(ipol)%amzbr, barrier(ibr)%param(ipol)%amxbrw, barrier(ibr)%param(ipol)%ampbr
+           read (line,*) barrier(ibr)%param(ipol)%amzbr, barrier(ibr)%param(ipol)%amxbrw, barrier(ibr)%param(ipol)%ampbr
         end do
       end do
 
@@ -528,17 +515,11 @@
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) = amxsim(1,2) - amxsim(1,1)
+          xin(xplot) = amxsim(2)%y - amxsim(1)%y
         else
           line = getline(i_unit)
         endif
-! ^^^ tmp out
-!      write (*,*) 'tmp out from erodin.for line 452'
-!     write (*,*)  'xplot =', xplot
-!      write (*,*)  'amxsim(2,1)=', amxsim(1,2)
-!      write (*,*) 'xin(xplot)=', xin(xplot)
-! ^^^ end tmp
-!
+
 !     biomass height
         line = getline(i_unit)
         read (line,*) xflag
@@ -550,12 +531,7 @@
         else
           line = getline(i_unit)
         endif
-! ^^^ tmp out
-!     write (*,*) 'tmp out from erod.for line 474'
-!     write (*,*)  'xplot =', xplot
-!     write (*,*)  'subrsurf(1)%abzht=', subrsurf(1)%abzht
-!     write (*,*) 'xin(xplot=', xin(xplot)
-! ^^^ end tmp
+
 !     biomass stem area index
         line = getline(i_unit)
         read (line,*) xflag
@@ -567,6 +543,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     biomass leaf area index
         line = getline(i_unit)
         read (line,*) xflag
@@ -578,6 +555,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     biomass flat cover
         line = getline(i_unit)
         read (line,*) xflag
@@ -589,6 +567,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     very fine sand
         line = getline(i_unit)
         read (line,*) xflag
@@ -600,6 +579,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     sand
         line = getline(i_unit)
         read (line,*) xflag
@@ -611,6 +591,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     silt
         line = getline(i_unit)
         read (line,*) xflag
@@ -622,6 +603,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     clay
         line = getline(i_unit)
         read (line,*) xflag
@@ -633,6 +615,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     rock vol.
         line = getline(i_unit)
         read (line,*) xflag
@@ -644,6 +627,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     aggregate density
         line = getline(i_unit)
         read (line,*) xflag
@@ -655,6 +639,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     aggregate stability
         line = getline(i_unit)
         read (line,*) xflag
@@ -666,6 +651,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     agregate geometric mean diameter
         line = getline(i_unit)
         read (line,*) xflag
@@ -677,6 +663,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     aggreate minimum diameter
         line = getline(i_unit)
         read (line,*) xflag
@@ -688,6 +675,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     aggregate maximum diameter
         line = getline(i_unit)
         read (line,*) xflag
@@ -699,6 +687,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     aggregate geometric std dev
         line = getline(i_unit)
         read (line,*) xflag
@@ -710,6 +699,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     soil fraction crust cover
         line = getline(i_unit)
         read (line,*) xflag
@@ -733,6 +723,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     fraction loose material on crust
         line = getline(i_unit)
         read (line,*) xflag
@@ -744,6 +735,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     mass of loose material on crust
         line = getline(i_unit)
         read (line,*) xflag
@@ -755,6 +747,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     soil crust stability
         line = getline(i_unit)
         read (line,*) xflag
@@ -766,6 +759,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     random roughness
         line = getline(i_unit)
         read (line,*) xflag
@@ -777,6 +771,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     ridge height
         line = getline(i_unit)
         read (line,*) xflag
@@ -788,6 +783,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     ridge spacing
         line = getline(i_unit)
         read (line,*) xflag
@@ -799,6 +795,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     ridge width
         line = getline(i_unit)
         read (line,*) xflag
@@ -810,6 +807,7 @@
         else
           line = getline(i_unit)
         endif
+
 !     ridge orientation
         line = getline(i_unit)
         read (line,*) xflag
@@ -822,17 +820,8 @@
           line = getline(i_unit)
         endif
       endif
-!
-! ^^^ tmp out
-!     write(*,*)'^^^'
-!     write(*,*)'tmp out from erodin.for'
-!     write(*,*)'xcharin(1)=',xcharin(1)
-!     write(*,*)'xin(1)=',xin(1)
-!     write(*,*)'^^^'
-! ^^^ end temp out
 
 !     + + + OUTPUT SECTION + + +
-
   220 format (1x, 2f8.2)
   230 format (1x, 3f8.2)
   250 format (1x, i0)
@@ -856,7 +845,7 @@
       write (o_unit,*)
       write (o_unit,*) 'orientation and dimensions of sim region'
       write (o_unit,*) 'amasim(deg)  amxsim - (x1,y1) (x2,y2)'
-      write (o_unit,260) amasim,  ((amxsim(x,y), x=1,2), y=1,2)
+      write (o_unit,260) amasim,  amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
 
       write (o_unit,*)
       write (o_unit,*)  '+++ ACCOUNTING REGIONS +++'
@@ -879,9 +868,10 @@
       if (nbr .gt. 0) then
         write (o_unit,*) 'barrier dim (x1,y1) (x2,y2) ',                &
      &                   'and height, porosity, and width'
-        do 1010 b = 1, nbr
-          write (o_unit,270) ((amxbr(x,y,b), x=1,2), y=1,2),            &
-     &                       amzbr(b), ampbr(b), amxbrw(b)
+        do 1010 ibr = 1, nbr
+          write (o_unit,270) barrier(ibr)%points(1)%x, barrier(ibr)%points(1)%y, &
+                             barrier(ibr)%points(size(barrier(ibr)%points))%x, barrier(ibr)%points(size(barrier(ibr)%points))%y, &
+     &                       barrier(ibr)%param(1)%amzbr, barrier(ibr)%param(1)%ampbr, barrier(ibr)%param(1)%amxbrw
  1010   continue
       endif
 

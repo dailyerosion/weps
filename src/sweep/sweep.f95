@@ -16,7 +16,7 @@
       use file_io_mod, only: fopenk
       use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, awzypt, subday
       use erosion_data_struct_defs, only: am0eif, am0efl
-      use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt
+      use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
       use saeinp_mod, only: mksaeinp
       use p1unconv_mod, only: SEC_PER_DAY
 
@@ -31,7 +31,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'  ! mnsub, mnbpt, mnbr, mnarpt, mnar, mnspt, mngdpt
-      include 'm1geo.inc'   ! amxsim
 
 !      include 'util/misc/f2kcli.inc' !declarations for f2k commandline functions
 
@@ -523,8 +522,8 @@
          if ((xgdpt > 0) .and. (ygdpt > 0)) then
            imax = xgdpt + 1
            jmax = ygdpt + 1
-           ix = (amxsim(1,2) - amxsim(1,1)) / xgdpt
-           jy = (amxsim(2,2) - amxsim(2,1)) / ygdpt
+           ix = (amxsim(2)%x - amxsim(1)%x) / xgdpt
+           jy = (amxsim(2)%y - amxsim(1)%y) / ygdpt
          else          !use Hagen's grid dimensioning as the default
            call sbgrid
          endif
