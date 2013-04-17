@@ -8,6 +8,7 @@
 !     +++  PURPOSE +++
 !     To print output desired from standalone EROSION submodel
 
+      use datetime_mod, only: get_systime_string
       use erosion_data_struct_defs, only: cellsurfacestate, am0efl
       use grid_geo_def, only: imax, jmax, amasim, amxsim
 
@@ -34,17 +35,12 @@
       real xin(30)
       common/plot/xplot, xcharin, xin
 
-      integer :: dt(8)
-      character(len=3) :: mstring
-      common / datetime / dt, mstring
-
-      save :: /plot/, /datetime/
+      save :: /plot/
 
 !     +++ SUBROUTINES CALLED+++
 !     plotout.for
 
 !     +++ END SPECIFICATIONS +++
-
 
 !     Calculate Averages Crossing Borders
 !      top border
@@ -138,9 +134,7 @@
       write (o_unit,*)
 
       ! Print date of Run
-12    format(1x,'Date of run: ',a3,' ',i2.2,', ',i4,' ',                &
-     &          i2.2,':',i2.2,':',i2.2)
-      write(o_unit,12) mstring, dt(3), dt(1), dt(5), dt(6), dt(7) 
+      write(o_unit,"(1x,'Date of run: ',a21)") get_systime_string()
       write(o_unit,*)
 
       write(o_unit,fmt="(1x,a)") "<field dimensions>"
@@ -332,30 +326,30 @@
        end if
       end if
 
-!    test if plot info wanted
+      ! test if plot info wanted
       if (hagen_plot_flag .EQV. .true.) then
-!
-!    test if plot info available from input files
-!    (should allow one to mix input files and get only
-!     wanted plot output)
-       if (xplot > -1) then
-!    specify plotout dep variables for all values of yplot
+
+        ! test if plot info available from input files
+        ! (should allow one to mix input files and get only
+        ! wanted plot output)
+        if (xplot > -1) then
+          ! specify plotout dep variables for all values of yplot
           yplot = 4
           if (yplot .gt. 0) then
-          ycharin(1) = 'total_eros'
-          ycharin(2) = 'salt/creep'
-          ycharin(3) = 'suspension'
-          ycharin(4) = 'PM10(kg/m^2)'
-          yin(1) = aegt
-          yin(2) = aegt-aegtss
-          yin(3) = aegtss
-          yin(4) = aegt10
+            ycharin(1) = 'total_eros'
+            ycharin(2) = 'salt/creep'
+            ycharin(3) = 'suspension'
+            ycharin(4) = 'PM10(kg/m^2)'
+            yin(1) = aegt
+            yin(2) = aegt-aegtss
+            yin(3) = aegtss
+            yin(4) = aegt10
           endif
 
-        call plotout (yplot, ycharin, yin)
+          call plotout (yplot, ycharin, yin)
         endif
       endif
-!    end of plot section
+      ! end of plot section
 
       return
       end

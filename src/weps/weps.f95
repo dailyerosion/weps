@@ -34,6 +34,7 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       use weps_interface_defs
+      use datetime_mod, only: update_system_time, get_systime_string
       USE pd_dates_vars
       USE pd_update_vars
       USE pd_report_vars
@@ -81,11 +82,6 @@
     
 !     + + + LOCAL VARIABLES + + +
       logical first
-
-      integer :: dt(8)
-      character(len=3) :: mstring
-      common / datetime / dt, mstring
-      save :: /datetime/
 
       integer, dimension(:), allocatable :: nperiods       ! number of reporting periods being accumulated
       integer, dimension(:), allocatable :: pd             ! index counter into reporting periods
@@ -243,30 +239,10 @@
       write(6,*)
 
       ! Determine date of Run
-      call date_and_time(values=dt)
+      call update_system_time
 
-      ! Determine month of year
-      select case (dt(2))
-        case (1); mstring = "Jan"
-        case (2); mstring = "Feb"
-        case (3); mstring = "Mar"
-        case (4); mstring = "Apr"
-        case (5); mstring = "May"
-        case (6); mstring = "Jun"
-        case (7); mstring = "Jul"
-        case (8); mstring = "Aug"
-        case (9); mstring = "Sep"
-        case (10); mstring = "Oct"
-        case (11); mstring = "Nov"
-        case (12); mstring = "Dec"
-        case default; mstring = "???"
-      end select
-
-
-      ! Print date of WEPS Run
-12    format(1x,'Date of WEPS Run: ',a3,' ',i2.2,', ',i4,' ',           &
-     &          i2.2,':',i2.2,':',i2.2)
-      write(6,12) mstring, dt(3), dt(1), dt(5), dt(6), dt(7)
+      ! Print date of Run
+      write(6,"(1x,'Date of WEPS run: ',a21)") get_systime_string()
       write(6,*)
 
       call timer(0,TIMSTART)

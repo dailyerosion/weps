@@ -12,6 +12,7 @@
 !     use wind dir of 270 for most to see output along wind direction
 
       use weps_interface_defs
+      use datetime_mod, only: get_systime_string
       use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, awzypt, anemht, wzoflg, ntstep
       use grid_geo_def, only: awa, kbr, imax, jmax, amasim, amxsim
 
@@ -33,12 +34,6 @@
       save    yr, mo, da, hhrr, tims
       integer i,j
 
-      integer :: dt(8)
-      character(len=3) :: mstring
-      common / datetime / dt, mstring
-!
-!     outflag = 0 - print heading output, 1 - no more heading
-
 !     + + + END SPECIFICATIONS + + +
 
 !     output headings?
@@ -56,9 +51,7 @@
         write (o_unit,*)
 
         ! Print date of Run
-212     format(1x,'Date of run: ',a3,' ',i2.2,', ',i4,' ',              &
-     &          i2.2,':',i2.2,':',i2.2)
-        write(o_unit,212) mstring, dt(3), dt(1), dt(5), dt(6), dt(7) 
+        write(o_unit,"(1x,'Date of run: ',a21)") get_systime_string()
         write(o_unit,*)
 
         write (unit=o_unit,fmt="(a,f5.2,a2,a,i1)")                      &

@@ -4,9 +4,9 @@
 #                       Updated February, 2006 - JT
 #****************************************************************
 #
-#     +++ PURPOSE +++
+# +++ PURPOSE +++
 #
-#     Input file for standalone erosion submodel program (tsterode)
+#     File for input to standalone erosion submodel program (sweep)
 #
 #     All lines beginning with a "#" character are assumed to
 #     be comment lines and are skipped.
@@ -21,7 +21,7 @@
 #     where Var_type is: I = integer L = logical R = real
 #
 #
-# +++ DEBUG STUFF +++
+# +++ DEBUG FLAG +++
 #
 #     debugflg - debug flag for providing different levels of debug info
 #                currently useful to debug/check input file data format
@@ -33,33 +33,19 @@
  0
 #
 #
-# +++ INIT STUFF +++
+# +++ INITIALIZATION +++
 #
 #     am0eif, L, EROSION "initialization" flag
 #                Must be set to .TRUE. for standalone erosion runs
  .TRUE.
 #
-#     am0efl, I, EROSION "print" flag
-#               NOTE:  Not sure if all of these have yet been replaced by
-#                      "tsterode" cmdline options.  Regardless, this flag
-#                      should be considered deprecated in this file. - LEW
-#               Range: 0 to 6
-#               0 = print input, no output
-#               1 = print input, standard output
-#               2 = print input, 1 line output
-#               3 = used in WEPS to print input, then create file "emit.out"
-#                       containing hourly suspended emission rates
-# 		4 = used in standalone to print input, then create file "emit.out"
-#                       containing hourly suspended emission rates
-#               5 = not used at present
-#               6 = print input, detail output each step using calls
-#                       to sb1out and sb2out
- 1
 #
 # +++ SIMULATION REGION +++
 #
 #     amxsim(x,y), R, Simulation Region diagonal coordinates (meters)
 #                     Input (x,y) coordinates in this form: x1,y1 x2,y2
+#                     If orientation in 0 degrees, then x axis is East-West
+#                     and y axis is North-South.
 #                      Typical Range: 10.0 to 1600.0
 #
 #                     NOTE:  Accounting region and Subregion coordinates
@@ -67,8 +53,8 @@
 #
   0.0, 0.0 1000.0, 200.0
 #
-#
-#     amasim, R, Simulation Region orientation angle (degrees from North)
+#     amasim, R, Simulation Region orientation angle
+#     clockwise is positive with 0=north
  0.0
 #
 #
@@ -92,26 +78,29 @@
 #
 #     nbr, I, Number of barriers (0-5)
  2
+#
 #     NOTE: Remaining BARRIER inputs are repeated for each barrier specified
-#           If no barriers specified (nbr=0), then no BARRIER inputs will
-#           be listed here.
+#     If no barriers specified (nbr=0), then no BARRIER inputs will be here
 #
 #     barrier(b)%np, I, number of points in barrier polyline
+#     Inputs are repeated for each point specified
+#     barrier(b)%points(n)%x, barrier(b)%points(n)%y, R, x,y coordinate pair
+# Example: 0.0 500.0 
+#     barrier(b)%points(n)%amzbr, R, Barrier height (m)
+#     barrier(b)%points(n)%amxbrw, R, Barrier width (m)
+#     barrier(b)%points(n)%ampbr, R, Barrier porosity (m^2/m^2)
+# Example: 1.2 2.0 0.50 
 #
-#     NOTE: point pairs and barrier parameters for each point are read
-#           in up to the total number of points
+#
+# barrier(b)%np, I, number of points in barrier polyline
 2
-#     barrier(b)%point(p)%x, barrier(b)%point(p)%y, R, Barrier (x,y) coordinates
+# barrier(b)%points(n)%x, barrier(b)%points(n)%y, R, x,y coordinate pair
  0.0 0.0
-#
-#       barrier(b)%param(p)%amzbr,  R, Barrier height (meters)
-#       barrier(b)%param(p)%amxbrw, R, Barrier width (meters)
-#       barrier(b)%param(p)%ampbr,  R, Barrier porosity (i.e., optical density) (m^2/m^2)
-#
+# amzbr(b), amxbrw(b), ampbr(b)
  0.2 15.0 0.5
-#
-#       Repeat previous two input lines for each additional point
+# barrier(b)%points(n)%x, barrier(b)%points(n)%y, R, x,y coordinate pair
  0.0 200.0
+# amzbr(b), amxbrw(b), ampbr(b)
  0.2 15.0 0.5
 #
 #       Barrier #2 number of points
@@ -130,10 +119,11 @@
  1000.0 0.0
 #       Barrier #2 height, width and porosity 3
  0.2 15.0 0.5
-# +++ SUBREGION REGIONS +++
 #
-#     nsubr, I, Number of subregions
-#            NOTE: must be at least 1, and together all must cover simulation region
+# +++ SUBREGIONS +++
+#
+#     nsubr, I, Number of subregions (at least 1)
+#            NOTE: together all must cover simulation region
  1
 #
 #     NOTE: Remaining SUBREGION inputs (BIOMASS, SOIL, and HYDROLOGY,
@@ -360,101 +350,103 @@
 #
 # *******************************************************
 #    NOTE:  Not necessary to modify any information below this line
-#           unless one is interested in generating a "plot.out" file.
+#           unless one is interested in customizing the 'sweep.eplt' file.
 # *******************************************************
+#
+#    WARNING: Only plots values for subregion #1
 #
 #    + + + DATA TO PLOT + + +
 #
-#      "xplot" flag for writing variables to file 'tsterode.eplt'.
+#      "xplot" flag for writing variables to file 'sweep.eplt'.
 #       -1 = write nothing
 #        0 = write erosion variables;
 #      Actual variables listed below are only written if flagged with a 1
 #
-#      NOTE:  This flag is deprecated.  Tsterode cmdline options determine
-#             if this file is create and/or data appended to it.
+#      NOTE:  The SWEEP cmdline option -Eplt determines if this file is
+#             created and/or the data specfied here appended to it.
   0
 #
 #      Next are 2 lines per variable:
 #       1st line: flag (0=don't write, 1=do write) and variable description
-#       2nd line: this info is used as a header in 'plot.out'
+#       2nd line: this info is used as a header in 'sweep.eplt'
 #           place header within first 12 positions of the line
 #
-# xin(i), R, (field length)
+# xin(i), R, field length
    1
   Length(m)
-# abzht, R, (biomass ht.(m))
+# abzht, R, biomass ht.(m)
    1
  bio_ht(m)
-# abrsai, R (stem area index)
+# abrsai, R, stem area index
   1
  stem_area
-#   abrlai(s), R, Biomass leaf area index (m^2/m^2)
+# abrlai(s), R, Biomass leaf area index (m^2/m^2)
   1
  lai_area
-# abffcv, R, (biomass flat fraction cover)
-  0
+# abffcv, R, biomass flat fraction cover
+  1
  flat_cov
-#     asfvfs(1,s), R, (soil fraction very fine sand in layer 1)
-  0
+# asfvfs(1,s), R, soil fraction very fine sand in layer 1
+  1
   vfsand
-#     asfsan(1,s), R, (soil fraction sand in layer 1)
+# asfsan(1,s), R, soil fraction sand in layer 1
   1
    sand
-#     asfsil(1,s), R (soil fraction silt in layer 1)
-  0
+# asfsil(1,s), R, soil fraction silt in layer 1
+  1
   silt
-#     asfcla(1,s), R (soil fraction clay in layer 1)
-  0
+# asfcla(1,s), R, soil fraction clay in layer 1
+  1
   clay
-#     asvoc(1,s), R (soil volume roc in layer 1)(m^3/m^3)
-  0
+# asvoc(1,s), R, soil volume roc in layer 1 (m^3/m^3)
+  1
   rock_vol
-#     aseags(1,s), R (soil aggregate stability) (ln J/m^3)
-  0
+# aseags(1,s), R, soil aggregate stability (ln J/m^3)
+  1
   ag_stab
-#     aslagm(1,s), R (soil aggregate geom. mean dia.) (mm)
-  0
+# aslagm(1,s), R, soil aggregate geom. mean dia. (mm)
+  1
   ag_gmd
-#     aslagn(1,s), R (soil aggregate min. dia.) (mm)
-  0
+# aslagn(1,s), R, soil aggregate min. dia. (mm)
+  1
   ag_min
-#     aslagx(1,s), R (soil aggregate max. dia.) (mm)
-  0
+# aslagx(1,s), R, soil aggregate max. dia. (mm)
+  1
   ag_max
-#     as0ags(1,s), R (soil aggregate geo. std. dev.)
-  0
+# as0ags(1,s), R, soil aggregate geo. std. dev.
+  1
   ag_std
-#     asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)
-  0
+# asfcr(s), R, Surface crust fraction (m^2/m^2)
+  1
   crust_cv
-#     aszcr(s), R, (s1surf.inc) Surface crust thickness (mm)
-  0
+# aszcr(s), R, Surface crust thickness (mm)
+  1
  crust_z(mm)
-#     asflos(s), R, (s1surf.inc) Fraction of loose material on surface (m^2/m^2)
-  0
+# asflos(s), R, Fraction of loose material on surface (m^2/m^2)
+  1
   los_cv
-#     asmlos(s), R, (s1surf.inc) Mass of loose material on crust (kg/m^2)
-  0
+# asmlos(s), R, Mass of loose material on crust (kg/m^2)
+  1
   los(kg/m^2)
-#     asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)
-  0
+# asdcr(s), R, Soil crust density (Mg/m^3)
+  1
   cr_den(Mg/m^3)
-#     asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)
-  0
+# asecr(s), R, Soil crust stability ln(J/kg)
+  1
   cr_se
-#     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)
-  0
+# aslrr(s), R, Allmaras random roughness (mm)
+  1
   rr(mm)
-#     aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)
-  0
+# aszrgh(s), R, Ridge height (mm)
+  1
   z_rgh(mm)
-#     asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)
-  0
+# asxrgs(s), R, Ridge spacing (mm)
+  1
   x_rgs(mm)
-#     asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)
-  0
+# asxrgw(s), R, Ridge width (mm)
+  1
   x_rgw(mm)
-#     asxrgo(s), R, (s1sgeo.inc) Ridge orientation (deg)
-  0
+# asxrgo(s), R, Ridge orientation (deg)
+  1
   a_rgo(deg)
 #

@@ -27,6 +27,7 @@
 !            to print period emissions for an erosion day.
 
       use weps_interface_defs
+      use datetime_mod, only: get_systime_string
       use erosion_data_struct_defs, only: cellsurfacestate, ntstep
       use grid_geo_def, only: imax, jmax
 
@@ -50,14 +51,6 @@
       real    aegt, aegtss, aegt10
       real    emittot, emitss, emit10, tt
 
-      integer :: dt(8)
-      character(len=3) :: mstring
-      common / datetime / dt, mstring
-
-!
-!     +++ LOCAL VARIABLE DEFINITIONS +++
-!
-!
 !     +++ OUTPUT FORMATS +++
 !
   100 format (1x,'  yr  mo  day     hr  ws  emission (kg m-2 s-1)')
@@ -82,9 +75,7 @@
           write (ounit,*)
 
           ! Print date of Run
-212       format(1x,'Date of run: ',a3,' ',i2.2,', ',i4,' ',            &
-     &          i2.2,':',i2.2,':',i2.2)
-          write (ounit,212) mstring, dt(3), dt(1), dt(5), dt(6), dt(7) 
+          write(ounit,"(1x,'Date of run: ',a21)") get_systime_string()
           write (ounit,*)
 
           write (ounit,100)

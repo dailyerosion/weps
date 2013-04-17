@@ -1,95 +1,145 @@
-# day mon yr  1 10    15
-#*****************************************************************
-#      file:  erod.in
+# WEPS erosion day mon yr  1 10    15
 #*****************************************************************
 #
 # +++ PURPOSE +++
 #
-#     Input file which is read by stand alone erosion model
+#     File for input to standalone erosion submodel program (sweep)
 #
-# +++ DEFINITIONS +++
+#     All lines beginning with a "#" character are assumed to
+#     be comment lines and are skipped.
 #
-#     Lines beginning with a "#" character are comments
+#     +++ DEFINITIONS +++
 #
-#     * = inputs NOT presently used by erosion
+#     All comments prior to each line of data input
+#     in this template input file have the following format:
 #
-#     All other input values must be correctly specified.
+#     Variable_Name, Var_type, Text Definition
 #
-#     Comments prior to each line of data have the following format
+#     where Var_type is: I = integer L = logical R = real
 #
-#     Variable_Name, Var_type, (inc file) Text Definition
-#
-#     where Var_type is: I = integer, L = logical, R = real
 #
 # +++ DEBUG FLAG +++
 #
-#     debugflg - debug flag for providing different levels of debug output
-#                value of 0 will print no debug output
-#                value of 1 will print out and number all input  lines
+#     debugflg - debug flag for providing different levels of debug info
+#                currently useful to debug/check input file data format
+#
+#                value of 0 will print no debug information
+#                value of 1 will print out and number all input file lines
 #                value of 2 will print out and number all data input lines
-#                value of 3 will do both 1 and 2 input line debug output
+#                value of 3 will do both 1 and 2
  0
 #
-# +++ INITIALIZATIONS +++
 #
-#     am0eif, L, (m1flag.inc) EROSION initialization flag
+# +++ INITIALIZATION +++
+#
+#     am0eif, L, EROSION "initialization" flag
+#                Must be set to .TRUE. for standalone erosion runs
  .TRUE.
-#    am0efl, L, (m1flag.inc) EROSION "print" flag
- 1
+#
 #
 # +++ SIMULATION REGION +++
 #
-#     amxsim(x,y), R, (m1geo.inc) Simulation Region coordinates (m)
-#              Input x,y coordinates in this form: x1,y1  x2,y2
+#     amxsim(x,y), R, Simulation Region diagonal coordinates (meters)
+#                     Input (x,y) coordinates in this form: x1,y1 x2,y2
+#                     If orientation in 0 degrees, then x axis is East-West
+#                     and y axis is North-South.
+#                      Typical Range: 10.0 to 1600.0
+#
+#                     NOTE:  Accounting region and Subregion coordinates
+#                            must also be set to the same values
+#
    0.0000000       0.0000000       365.76001       365.76001    
 #
-#     amxsim(x,y), R, (m1geo.inc) Simulation Region orientation angle
-#     clockwise with 0=north
+#
+#     amasim, R, Simulation Region orientation angle (degrees from North)
    0.0000000    
 #
 #  +++ ACCOUNTING REGIONS +++
 #
-# nacctr, I, (m1geo.inc) Number of accounting regions
+# nacctr, I, Number of accounting regions
            4
 #
-#     amxar(x,y,a), R, (m1geo.inc) Accounting Region coordinates (m)
-#                     Input x,y coordinates in this form: x1,y1  x2,y2
-#                     for each accounting region specified (nacctr)
-   0.0000000       0.0000000       183.00000       183.00000    
-   0.0000000       183.00000       183.00000       366.00000    
-   183.00000       0.0000000       366.00000       183.00000    
-   183.00000       183.00000       366.00000       366.00000    
+# accounting region polygon, count, xy pairs (subregions_mod)
+#         polygons can be:
+#         - open (the last point connects to the first point)
+#         - closed (last point is same as first point)
+#         - complex (multiple closed polygons entered as one)
+           4
+   0.0000000       0.0000000    
+   183.00000       0.0000000    
+   183.00000       183.00000    
+   0.0000000       183.00000    
+#
+# accounting region polygon, count, xy pairs (subregions_mod)
+#         polygons can be:
+#         - open (the last point connects to the first point)
+#         - closed (last point is same as first point)
+#         - complex (multiple closed polygons entered as one)
+           4
+   0.0000000       183.00000    
+   183.00000       183.00000    
+   183.00000       366.00000    
+   0.0000000       366.00000    
+#
+# accounting region polygon, count, xy pairs (subregions_mod)
+#         polygons can be:
+#         - open (the last point connects to the first point)
+#         - closed (last point is same as first point)
+#         - complex (multiple closed polygons entered as one)
+           4
+   183.00000       0.0000000    
+   366.00000       0.0000000    
+   366.00000       183.00000    
+   183.00000       183.00000    
+#
+# accounting region polygon, count, xy pairs (subregions_mod)
+#         polygons can be:
+#         - open (the last point connects to the first point)
+#         - closed (last point is same as first point)
+#         - complex (multiple closed polygons entered as one)
+           4
+   183.00000       183.00000    
+   366.00000       183.00000    
+   366.00000       366.00000    
+   183.00000       366.00000    
 #
 # +++ BARRIERS +++
 #
-#     nbr, I, (m1geo.inc) Number of barriers (0-5) 
+#     nbr, I, Number of barriers (0-5) 
            1
 #
 #     NOTE: Remaining BARRIER inputs are repeated for each barrier specified
 #     If no barriers specified (nbr=0), then no BARRIER inputs will be here
 #
-#     amxbr(x,y,b), R, (m1geo.inc) Accounting Region coordinates (m)
-#             Input x,y coordinates in this form: x1,y1 x2,y2
-#             for each barrier specified (nbr)
-#    0.0, 0.0  0.0  100.0
+#     barrier(b)%np, I, number of points in barrier polyline
+#     Inputs are repeated for each point specified
+#     barrier(b)%points(n)%x, barrier(b)%points(n)%y, R, x,y coordinate pair
+# Example: 0.0 500.0 
+#     barrier(b)%points(n)%amzbr, R, Barrier height (m)
+#     barrier(b)%points(n)%amxbrw, R, Barrier width (m)
+#     barrier(b)%points(n)%ampbr, R, Barrier porosity (m^2/m^2)
+# Example: 1.2 2.0 0.50 
 #
-#       amzbr(b), R, (m1geo.inc) Barrier height (m)
-#       ampbr(b), R, (m1geo.inc) Barrier porosity (m^2/m^2)
-#       amxbrw(b), R, (m1geo.inc) Barrier width (m)
-#  1.2 0.50 2.0
-#
-# amxar(1,1,b), amxar(2,1), amxar(1,2),amxar(2,2)
-   0.0000000       366.00000       366.00000       366.00000    
-#, amzbr(b), ampbr(b), amxbrw(b)
-   2.0000000      0.69999999       2.0000000    
+# 
+# barrier(b)%np, I, number of points in barrier polyline
+           2
+# barrier(b)%points(n)%x, barrier(b)%points(n)%y, R, x,y coordinate pair
+   0.0000000       366.00000    
+# amzbr(b), amxbrw(b), ampbr(b)
+   2.0000000       2.0000000      0.69999999    
+# barrier(b)%points(n)%x, barrier(b)%points(n)%y, R, x,y coordinate pair
+   366.00000       366.00000    
+# amzbr(b), amxbrw(b), ampbr(b)
+   2.0000000       2.0000000      0.69999999    
 #
 # +++ SUBREGIONS +++
 #
-#     nsubr, I, (m1subr.inc) Number of subregions (1-5)
+#     nsubr, I, Number of subregions (at least 1)
+#            NOTE: together all must cover simulation region
            4
 #
 #     NOTE: Remaining SUBREGION inputs (BIOMASS, SOIL, and HYDROLOGY,
-#     ie. variables defined by subregion) are repeated for nsubr 
+#     ie. variables defined by subregion) are repeated for nsubr
 #     subregions specified
 #
 #     subregion polygon, count, xy pairs (subregions_mod)
@@ -608,10 +658,10 @@
 #
 #     +++ WEATHER +++
 #
-#     awdair, R, (w1pavg.inc) Air density (kg/m^3)
+#     awdair, R, Air density (kg/m^3)
    1.1536973    
 #
-#     awadir, R, (w1wind.inc) Wind direction (deg)
+#     awadir, R, Wind direction (deg)
    202.50000    
 #
 #     ntstep, I, (local variable) Number of intervals/day to run EROSION
@@ -646,10 +696,106 @@
    14.900000       15.300000       17.299999       14.900000       12.300000       5.6999998    
    4.3000002       3.4000001       2.8000000       2.0999999       1.5000000       0.0000000    
 #
+#
+# *******************************************************
+#    NOTE:  Not necessary to modify any information below this line
+#           unless one is interested in customizing the "sweep.eplt" file.
+# *******************************************************
+#
+#    WARNING: Only plots values for subregion #1
+#
 #    + + + DATA TO PLOT + + +
 #
-#   names and values to input for plot
-#   place 1 flag in 1st line after #-name line for variables to include in plot
+#      "xplot" flag for writing variables to file "sweep.eplt".
+#       -1 = write nothing
+#        0 = write erosion variables;
+#      Actual variables listed below are only written if flagged with a 1
 #
-#   initial xplot value,I, (-1=no plot, 0 = plot indep.variables with 1 flag)
- -1
+#      NOTE:  The SWEEP cmdline option -Eplt determines if this file is
+#             created and/or the data specfied here appended to it.
+  0
+#
+#      Next are 2 lines per variable:
+#       1st line: flag (0=do not write, 1=do write) and variable description
+#       2nd line: this info is used as a header in "sweep.eplt"
+#           place header within first 12 positions of the line
+#
+# xin(i), R, field length
+   1
+  Length(m)
+# abzht, R, biomass ht.(m)
+   1
+ bio_ht(m)
+# abrsai, R, stem area index
+  1
+ stem_area
+# abrlai(s), R, Biomass leaf area index (m^2/m^2)
+  1
+ lai_area
+# abffcv, R, biomass flat fraction cover
+  1
+ flat_cov
+# asfvfs(1,s), R, soil fraction very fine sand in layer 1
+  1
+  vfsand
+# asfsan(1,s), R, soil fraction sand in layer 1
+  1
+   sand
+# asfsil(1,s), R, soil fraction silt in layer 1
+  1
+  silt
+# asfcla(1,s), R, soil fraction clay in layer 1
+  1
+  clay
+# asvoc(1,s), R, soil volume roc in layer 1(m^3/m^3)
+  1
+  rock_vol
+# aseags(1,s), R, soil aggregate stability (ln J/m^3)
+  1
+  ag_stab
+# aslagm(1,s), R, soil aggregate geom. mean dia. (mm)
+  1
+  ag_gmd
+# aslagn(1,s), R, soil aggregate min. dia. (mm)
+  1
+  ag_min
+# aslagx(1,s), R, soil aggregate max. dia. (mm)
+  1
+  ag_max
+# as0ags(1,s), R, soil aggregate geo. std. dev.
+  1
+  ag_std
+# asfcr(s), R, Surface crust fraction (m^2/m^2)
+  1
+  crust_cv
+# aszcr(s), R, Surface crust thickness (mm)
+  1
+ crust_z(mm)
+# asflos(s), R, Fraction of loose material on surface (m^2/m^2)
+  1
+  los_cv
+# asmlos(s), R, Mass of loose material on crust (kg/m^2)
+  1
+  los(kg/m^2)
+# asdcr(s), R, Soil crust density (Mg/m^3)
+  1
+  cr_den(Mg/m^3)
+# asecr(s), R, Soil crust stability ln(J/kg)
+  1
+  cr_se
+# aslrr(s), R, Allmaras random roughness (mm)
+  1
+  rr(mm)
+# aszrgh(s), R, Ridge height (mm)
+  1
+  z_rgh(mm)
+# asxrgs(s), R, Ridge spacing (mm)
+  1
+  x_rgs(mm)
+# asxrgw(s), R, Ridge width (mm)
+  1
+  x_rgw(mm)
+# asxrgo(s), R, Ridge orientation (deg)
+  1
+  a_rgo(deg)
+#

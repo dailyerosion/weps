@@ -13,6 +13,7 @@
 
       use sweep_interface_defs
       use weps_interface_defs
+      use datetime_mod, only: update_system_time, get_systime_string
       use file_io_mod, only: fopenk, luo_sgrd, luo_emit
       use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, awzypt, subday
       use erosion_data_struct_defs, only: am0eif, am0efl
@@ -58,8 +59,7 @@
       logical        have_ifile
       integer        indx, rndx
 
-      logical        hagen_plot_flag
-      logical        force_plot_flag  !ensure that commandline overrides input file settings
+      logical        hagen_plot_flag  ! creates sweep.eplt file that is appended to in subsequent runs
       integer        force_emit_val   !ensure that commandline overrides input file settings
       integer        force_debug_flag !ensure that commandline overrides input file setting
 
@@ -72,28 +72,24 @@
       integer        o_sgrd_unit   !Unit number for grid subdaily erosion
       integer        o_erod_unit   !Unit number for total erosion
       integer        o_emit_unit   !Unit number for detail grid erosion
-      !integer        o_eplt_unit   !Unit number for Hagen plot file
 
       character*80   o_einp_ext    !generated input file extension
       character*80   o_egrd_ext    !grid summary erosion file extension
       character*80   o_sgrd_ext    !grid subdaily erosion file extension
       character*80   o_erod_ext    !total erosion summary file extension
       character*80   o_emit_ext    !detail grid erosion file extension
-      character*80   o_eplt_ext    !hagen plot file extension
 
       character*1024 o_einp_file   !generated input file name
       character*1024 o_egrd_file   !grid summary erosion file name
       character*1024 o_sgrd_file   !grid subdaily erosion file name
       character*1024 o_erod_file   !total erosion summary file name
       character*1024 o_emit_file   !detail grid erosion file name
-      character*1024 o_eplt_file   !hagen plot file name
 
       character*1024 o_einp_fpath  !generated input file/path name
       character*1024 o_egrd_fpath  !grid summary erosion file/path name
       character*1024 o_sgrd_fpath  !grid subdaily erosion file/path name
       character*1024 o_erod_fpath  !total erosion summary file/path name
       character*1024 o_emit_fpath  !detail grid erosion file/path name
-      character*1024 o_eplt_fpath  !hagen plot file/path name
 
 
       real min_erosion_awu       !Minimum erosiove wind speed (m/s)
@@ -101,38 +97,13 @@
 
       integer :: SURF_UPD_FLG              ! erosion surface updating (0 - disabled, 1 - enabled)
 
-      integer :: dt(8)
-      character(len=3) :: mstring
-      common / datetime / dt, mstring
-
-      save :: /datetime/
-
 !     +++ END SPECIFICATIONS +++
 
       ! Determine date of Run
-      call date_and_time(values=dt)
-
-      ! Determine month of year
-      select case (dt(2))
-        case (1); mstring = "Jan"
-        case (2); mstring = "Feb"
-        case (3); mstring = "Mar"
-        case (4); mstring = "Apr"
-        case (5); mstring = "May"
-        case (6); mstring = "Jun"
-        case (7); mstring = "Jul"
-        case (8); mstring = "Aug"
-        case (9); mstring = "Sep"
-        case (10); mstring = "Oct"
-        case (11); mstring = "Nov"
-        case (12); mstring = "Dec"
-        case default; mstring = "???"
-      end select
+      call update_system_time
 
       ! Print date of Run
-12    format(1x,'Date of tsterode run: ',a3,' ',i2.2,', ',i4,' ',       &
-     &          i2.2,':',i2.2,':',i2.2)
-      write(6,12) mstring, dt(3), dt(1), dt(5), dt(6), dt(7) 
+      write(6,"(1x,'Date of SWEEP run: ',a21)") get_systime_string()
       write(6,*)
 
       ! initialize anemometer defaults
@@ -152,9 +123,10 @@
       SURF_UPD_FLG = 1  !enable erosion submodel surface updating by default
 
       have_ifile = .false.
+      am0efl = 0   ! set flag for creating output file to none
+
 ! *** set plot_flag value false in WEPS
       hagen_plot_flag = .false.
-      force_plot_flag = .false.
       force_emit_val = 0
       force_debug_flag = -1
 
@@ -170,7 +142,6 @@
       o_sgrd_ext = ".sgrd"   !filename extension for grid erosion subdaily output
       o_erod_ext = ".erod"   !filename extension for erosion summary output
       o_emit_ext = ".emit"   !filename extension for grid erosion detail output
-      o_eplt_ext = ".eplt"   !filename extension for paramter data plot file output
 
 ! Uses the Fortran 2k commandline parsing support.
 ! There cannot be any space between the option and any arguments,
@@ -212,11 +183,11 @@
               write(0,*) '         to "input_filename.erod" filename'
               write(0,*) '-Egrd    Output grid summary erosion results'
               write(0,*) '         to "input_filename.egrd" filename'
-              write(0,*) '-Esgrd   Output subdaily grid erosion results'
-              write(0,*) '         to "input_filename.sgrd" filename'
               write(0,*) '-Emit    Output subdaily erosion results'
               write(0,*) '         to "input_filename.emit" filename'
-              write(0,*) '-Eplt    Append to datafile "tsterode.plt"'
+              write(0,*) '-Esgrd   Output subdaily grid erosion results'
+              write(0,*) '         to "input_filename.sgrd" filename'
+              write(0,*) '-Eplt    Append to datafile "sweep.eplt"'
               write(0,*) '         in current dir for plotting vars'
               call exit(1)
 
@@ -328,18 +299,19 @@
 
              call fopenk(o_einp_unit, o_einp_fpath, 'unknown')
 
-           else if (argv(2:5) == 'Eplt') then  !If specified print Hagen's output file
-             !write(0,*) '"-Eplt" option specified'
-             force_plot_flag = .true.
+           else if (argv(2:5) == 'Erod') then
+             !write(0,*) '"-Erod" option specified'
              if (.not. have_ifile) then
-                write(0,*) 'Must specify input file before -Eplt option'
-                call exit(81)
+                write(0,*) 'Must specify input file before -Erod option'
+                call exit(121)
              endif
-             !create new grid erosion summary output filename from input filename
-             o_eplt_file = trim(file_bname) //  trim(o_eplt_ext)
-             o_eplt_fpath = trim(fpath_bname)//trim(o_eplt_ext)
 
-!             call fopenk(o_eplt_unit, o_eplt_fpath, 'unknown')
+             !create new erosion summary output filename from input filename
+             o_erod_file = trim(file_bname) //  trim(o_erod_ext)
+             o_erod_fpath = trim(fpath_bname) // trim(o_erod_ext)
+
+             call fopenk(o_erod_unit, o_erod_fpath, 'unknown')
+             am0efl = ibset(am0efl,0)  ! Print summary results
 
            else if (argv(2:5) == 'Egrd') then
              !write(0,*) '"-Egrd" option specified'
@@ -352,20 +324,7 @@
              o_egrd_fpath = trim(fpath_bname)//trim(o_egrd_ext)
 
              call fopenk(o_egrd_unit, o_egrd_fpath, 'unknown')
-
-           else if (argv(2:6) == 'Esgrd') then
-             !write(0,*) '"-Esgrd" option specified'
-             if (.not. have_ifile) then
-                write(0,*)'Must specify input file before -Esgrd option'
-                call exit(101)
-             endif
-             !create new grid erosion summary output filename from input filename
-             o_sgrd_file = trim(file_bname) //  trim(o_sgrd_ext)
-             o_sgrd_fpath = trim(fpath_bname)//trim(o_sgrd_ext)
-
-             call fopenk(o_sgrd_unit, o_sgrd_fpath, 'unknown')
-             ! set module level unit value
-             luo_sgrd = o_sgrd_unit
+             am0efl = ibset(am0efl,1)
 
            else if (argv(2:5) == 'Emit') then
              !write(0,*) '"-Emit" option specified'
@@ -380,21 +339,28 @@
              o_emit_fpath = trim(fpath_bname)//trim(o_emit_ext)
 
              call fopenk(o_emit_unit, o_emit_fpath, 'unknown')
+             am0efl = ibset(am0efl,2)
              ! set module level unit value
              luo_emit = o_emit_unit
 
-           else if (argv(2:5) == 'Erod') then
-             !write(0,*) '"-Erod" option specified'
+           else if (argv(2:6) == 'Esgrd') then
+             !write(0,*) '"-Esgrd" option specified'
              if (.not. have_ifile) then
-                write(0,*) 'Must specify input file before -Erod option'
-                call exit(121)
+                write(0,*)'Must specify input file before -Esgrd option'
+                call exit(101)
              endif
+             !create new grid erosion summary output filename from input filename
+             o_sgrd_file = trim(file_bname) //  trim(o_sgrd_ext)
+             o_sgrd_fpath = trim(fpath_bname)//trim(o_sgrd_ext)
 
-             !create new erosion summary output filename from input filename
-             o_erod_file = trim(file_bname) //  trim(o_erod_ext)
-             o_erod_fpath = trim(fpath_bname) // trim(o_erod_ext)
+             call fopenk(o_sgrd_unit, o_sgrd_fpath, 'unknown')
+             am0efl = ibset(am0efl,3)
+             ! set module level unit value
+             luo_sgrd = o_sgrd_unit
 
-             call fopenk(o_erod_unit, o_erod_fpath, 'unknown')
+           else if (argv(2:5) == 'Eplt') then  !If specified print Hagen's output file
+             !write(0,*) '"-Eplt" option specified'
+             hagen_plot_flag = .true.
 
            else     !Unknown option ....
              write (0,*) 'Ignoring uknown option: ', trim(argv)
@@ -444,63 +410,26 @@
         endif 
       endif
 
-! Checking am0efl flag value specified in input file and comparing
-! to tsterode commandline options specified.  If the necessary commandline
-! option(s) are not specified to match the input file am0efl flag setting(s)
-! then the input file flag setting is nullified for that specific option(s),
-! e.g. commandline options take precedent over the input file flag setting
-
+      ! set file output flag
+      ! this in no longer set in input file.
+      am0efl = 0
       inquire(unit=o_erod_unit, opened=opnd)
       if (opnd .eqv. .true.) then
          am0efl = ibset(am0efl,0)             !Print summary results
-      else
-         if (btest(am0efl,0)) then
-            write(0,*) 'Input file Specified Summary Results'
-            write(0,*) 'No file open to receive them. Option zeroed'
-            am0efl = ibclr(am0efl,0)
-         endif
       endif
       inquire(unit=o_egrd_unit, opened=opnd)
       if (opnd .eqv. .true.) then
          am0efl = ibset(am0efl,1)
-      else
-         if (btest(am0efl,1)) then
-            write(0,*) 'Input file Specified Grid Output'
-            write(0,*) 'No file open to receive them. Option zeroed'
-            am0efl = ibclr(am0efl,1)
-         endif
       endif
       inquire(unit=o_emit_unit, opened=opnd)
       if (opnd .eqv. .true.) then
          am0efl = ibset(am0efl,2)
-      else
-         if (btest(am0efl,2)) then
-            write(0,*) 'Input file Specified Emit Output'
-            write(0,*) 'No file open to receive them. Option zeroed'
-            am0efl = ibclr(am0efl,2)
-         endif
       endif
       inquire(unit=o_sgrd_unit, opened=opnd)
       if (opnd .eqv. .true.) then
          am0efl = ibset(am0efl,3)
-      else
-         if (btest(am0efl,3)) then
-            write(0,*) 'Input file Specified sgrid Output'
-            write(0,*) 'No file open to receive them. Option zeroed'
-            am0efl = ibclr(am0efl,3)
-         endif
       endif
       !write(0,*) 'am0efl is = ', am0efl
-!     inquire(unit=o_eplt_unit, opened=opnd)
-!     if (opnd .eqv. .true.) then
-!        hagen_plot_flag = .true.
-!        am0efl = 1             !Print summary results
-!     endif
-      if (force_plot_flag .eqv. .true.) then
-         hagen_plot_flag = .true.
-      else
-         hagen_plot_flag = .false.
-      endif
 
 !     Initialize erosion code, create grid, etc:
 !     (must come after sim field size, & no. subr specified)
@@ -534,7 +463,7 @@
 !     start erosion
       call erosion( min_erosion_awu, SURF_UPD_FLG, subrsurf, noerod, cellstate )
 
-      !tsterode will generate the final grid values and the summarized erosion totals
+      !sweep will generate the final grid values and the summarized erosion totals
       if (btest(am0efl,0).or.btest(am0efl,1).or.btest(am0efl,3)) then
        call erodout (o_egrd_unit, o_erod_unit, o_sgrd_unit, input_filename, hagen_plot_flag, cellstate)
       endif
@@ -550,7 +479,6 @@
       close(o_egrd_unit)
       close(o_sgrd_unit)
       close(o_emit_unit)
-      !close(o_eplt_unit)
 
       stop
       end program

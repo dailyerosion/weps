@@ -9,6 +9,7 @@
 !     To print output desired from standalone EROSION submodel
 
       use weps_interface_defs
+      use datetime_mod, only: get_systime_string
       use erosion_data_struct_defs, only: cellsurfacestate, am0efl
       use grid_geo_def, only: imax, jmax, amasim, amxsim
 
@@ -26,19 +27,7 @@
       save    initflag
       integer yr, mo, da
 
-      integer :: dt(8)
-      character(len=3) :: mstring
-      common / datetime / dt, mstring
-
-!     ++++ ARGUMENT DEFINITIONS +++
-
-!     +++ SUBROUTINES CALLED+++
-!     plotout.for
-
-!     ++++ LOCAL VARIABLES +++
-
 !     +++ END SPECIFICATIONS +++
-
 
 !     Calculate Averages Crossing Borders
 !      top border
@@ -131,9 +120,7 @@
             write (o_unit,*)
 
            ! Print date of Run
-12          format(1x,'Date of run: ',a3,' ',i2.2,', ',i4,' ',          &
-     &          i2.2,':',i2.2,':',i2.2)
-            write (o_unit,12) mstring, dt(3), dt(1), dt(5), dt(6), dt(7) 
+            write(o_unit,"(1x,'Date of run: ',a21)") get_systime_string()
             write (o_unit,*)
 
             write (o_unit,fmt="(1x,a,5f10.2)") "<field dimensions>",    &

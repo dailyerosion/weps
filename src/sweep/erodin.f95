@@ -15,7 +15,7 @@
       use Polygons_Mod
       use subregions_mod, only: subr_poly, acct_poly
       use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate, awdair, anemht, awzzo, wzoflg, &
-                                          ntstep, awadir, awudmx, subday, am0efl, am0eif
+                                          ntstep, awadir, awudmx, subday, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
       use barriers_mod
       use grid_geo_def, only: amasim, amxsim
@@ -80,7 +80,7 @@
 
 !     +++ END SPECIFICATIONS +++
 
-!     +++ INIT STUFF +++
+!     +++ INITIALIZATION +++
       if (already_read_inputs .gt. 0) goto 999  !Only write output 
 
       debugflg = 0 !needs to be initialized when using full debugging compiles
@@ -90,7 +90,6 @@
       line = getline(i_unit)
       if (cmdebugflag .lt. 0) then  !commandline option not set - use input file setting
           read (line,*) debugflg
-!         read ((line=getline(i_unit)),*) debugflg
        else
           debugflg = cmdebugflag  !use commandline setting
       endif
@@ -98,12 +97,6 @@
 !     EROSION initialization flag (logical)
       line = getline(i_unit)
       read (line,*) am0eif
-!     read (getline(i_unit),*) am0eif
-
-!     EROSION "print" flag (integer)
-      line = getline(i_unit)
-      read (line,*) am0efl
-!     read (getline(i_unit),*) am0efl
 
 !     +++ SIMULATION REGION +++
 
@@ -114,7 +107,6 @@
 !     Simulation region orientation angle
       line = getline(i_unit)
       read (line,*) amasim
-!     read (getline(i_unit),*) amasim
 
 !     +++ ACCOUNTING REGIONS +++
 
@@ -834,8 +826,8 @@
       write (o_unit,*)
       write (o_unit,*)  '+++ Control Flags, etc. +++'
       write (o_unit,*)
-      write (o_unit,*) 'ntstep  am0eif  nsubr  nacctr  nbr am0efl'
-      write (o_unit,400) ntstep, am0eif, nsubr, nacctr, nbr,am0efl
+      write (o_unit,*) 'ntstep  am0eif  nsubr  nacctr  nbr'
+      write (o_unit,400) ntstep, am0eif, nsubr, nacctr, nbr
 
       write (o_unit,*)
       write (o_unit,*)  '+++ SIMULATION REGION +++'
