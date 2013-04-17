@@ -11,7 +11,7 @@
 !**********************************************************************
       program sweep
 
-      use sweep_interface_defs
+      use sweep_io_mod
       use weps_interface_defs
       use datetime_mod, only: update_system_time, get_systime_string
       use file_io_mod, only: fopenk, luo_sgrd, luo_emit
