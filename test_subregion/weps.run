@@ -45,7 +45,7 @@ none
 #   RFD-OutputPeriod
 2
 #   RFD-SubmodelOutput
-1 1 1 1 3 1
+1 1 1 1 3 15
 #   RFD-DebugOutput
 0 0 0 0 0 0
 #

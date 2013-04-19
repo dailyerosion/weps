@@ -77,25 +77,15 @@
       endif
 
 !     open erosion output files
-
       if (am0efl.gt.0) then
           call fopenk (luo_subday, rootp(1:len_trim(rootp)) // 'subday.out', 'unknown')
       endif
 
       if (btest(am0efl,0)) then
-       call fopenk (luo_erod, rootp(1:len_trim(rootp)) // 'daily_erod.out', 'unknown')
+       call fopenk (luo_erod, rootp(1:len_trim(rootp)) // 'daily_out.erod', 'unknown')
       endif
-      if (btest(am0efl,1)) then
-       call fopenk (luo_egrd, rootp(1:len_trim(rootp)) // 'daily_egrd.out', 'unknown')
-      endif
-      if (btest(am0efl,2)) then
-       call fopenk (luo_emit, rootp(1:len_trim(rootp)) // 'subdaily_emit.out', 'unknown')
-      endif
-      if (btest(am0efl,3)) then
-       call fopenk (luo_sgrd, rootp(1:len_trim(rootp)) // 'subdaily_sgrd.out', 'unknown')
-      endif
-!     open plot data file
 
+!     open plot data file
       if((am0hfl.gt.0) .or. (am0sfl.gt.0) .or. (am0tfl.gt.0) .or. (am0cfl.gt.0) .or. (am0dfl.gt.0) .or. (am0efl.gt.0)) then
           call fopenk (luoplt, rootp(1:len_trim(rootp)) // 'plot.out', 'unknown')
       endif

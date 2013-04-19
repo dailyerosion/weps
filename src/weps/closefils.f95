@@ -65,7 +65,6 @@
       endif
 
 !     erosion output files
-
       if (am0efl.gt.0) then
           close(luo_subday)
       endif
@@ -73,17 +72,8 @@
       if (btest(am0efl,0)) then
        close(luo_erod)
       endif
-      if (btest(am0efl,1)) then
-       close(luo_egrd)
-      endif
-      if (btest(am0efl,2)) then
-       close(luo_emit)
-      endif
-      if (btest(am0efl,3)) then
-       close(luo_sgrd)
-      endif
-!     plot data file
 
+!     plot data file
       if((am0hfl.gt.0) .or. (am0sfl.gt.0) .or. (am0tfl.gt.0) .or. (am0cfl.gt.0) .or. (am0dfl.gt.0) .or. (am0efl.gt.0)) then
           close(luoplt)
       endif

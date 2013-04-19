@@ -430,12 +430,6 @@
       subroutine calcwu()
       end subroutine calcwu
 !---------------------------
-      subroutine daily_erodout( o_unit, o_E_unit, cellstate )
-      use erosion_data_struct_defs, only: cellsurfacestate
-      integer o_unit, o_E_unit
-      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
-      end subroutine daily_erodout
-!---------------------------
       subroutine erodinit( noerod, cellstate )
       use erosion_data_struct_defs
       type(threshold), dimension(:), intent(inout) :: noerod                 ! report values to show which factors prevented erosion

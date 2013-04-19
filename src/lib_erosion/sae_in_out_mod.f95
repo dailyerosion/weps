@@ -3,23 +3,28 @@
 !$Revision$
 !$HeadURL$
 
-module saeinp_mod
+module sae_in_out_mod
 
-!     This module is for the creation of sinfle or multiple stand alone erosion input files,
+!     This module is for the creation of single or multiple stand alone erosion input files,
 !     depending on the command line switches given
 
-  type make_saeinp
+  type make_sae_in_out
      integer :: jday      ! the present day in julian days for output
      integer :: simday    ! the present day in simulation days for creation of file
      integer :: maxday    ! maximum simday number
      character*256 :: fullpath  ! the root path plus subdirectory if indicated by multiple files
-  end type make_saeinp
+  end type make_sae_in_out
 
-  type(make_saeinp) :: mksaeinp
+  type(make_sae_in_out) :: mksaeinp
+  type(make_sae_in_out) :: mksaeout
+
+  ! placed here for sharing back with hagen_plot_flag
+  real :: aegt, aegtss, aegt10
+  logical :: in_weps
 
   contains
 
-      subroutine saeinp( subrsurf )
+      subroutine saeinp( luo_saeinp, subrsurf )
 
 !     +++ PURPOSE +++
 !     print out input file for stand alone erosion
@@ -33,13 +38,13 @@ module saeinp_mod
       use erosion_data_struct_defs, only: subregionsurfacestate, awdair, anemht, awzzo, wzoflg, awadir, subday, ntstep
 
 !     +++ ARGUMENT DECLARATIONS +++
-      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      integer, intent(inout) :: luo_saeinp      ! output unit number
+      type(subregionsurfacestate), dimension(:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
 
 !     +++ LOCAL VARIABLES +++
       integer k,l, sr, ip
       integer b
       integer day, mon, yr
-      integer :: luo_saeinp      ! output unit number
       
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
@@ -48,13 +53,16 @@ module saeinp_mod
 
 !     +++ END SPECIFICATIONS +++
 
-      call fopenk (luo_saeinp, trim(mksaeinp%fullpath) // makenamnum( 'saeros', mksaeinp%simday, mksaeinp%maxday, '.in'),'unknown')
-      call caldat (mksaeinp%jday,day,mon,yr)
+      if( luo_saeinp .lt. 0 ) then
+        call fopenk (luo_saeinp, trim(mksaeinp%fullpath) // makenamnum('saeros', mksaeinp%simday, mksaeinp%maxday, '.in'),'unknown')
+        call caldat (mksaeinp%jday,day,mon,yr)
+        write(*,'(4(a,i0))') 'Made SWEEP input file D/M/Y: ', day,'/', mon,'/', yr,' simulation day: ', mksaeinp%simday
+        write(luo_saeinp,2101) day, mon, yr
+ 2101   format('# WEPS erosion day mon yr',2(1x,i2),2x,i4)
+      else
+        write(luo_saeinp,*) '      REPORT OF INPUTS (read by erodin.for) '
+      end if
 
-      write(*,'(4(a,i0))') 'Made SWEEP input file D/M/Y: ', day,'/', mon,'/', yr,' simulation day: ', mksaeinp%simday
-
-      write(luo_saeinp,2101) day, mon, yr
- 2101 format('# WEPS erosion day mon yr',2(1x,i2),2x,i4)
 
 !     print header info
       write(luo_saeinp,1005)
@@ -438,116 +446,330 @@ module saeinp_mod
       write(luo_saeinp,*) (subday(k)%awu, k=13,18)
       write(luo_saeinp,*) (subday(k)%awu, k=19,24)
       write(luo_saeinp,2300)
- 2300 format( &
-      '#',/, &
-      '#',/, &
-      '# *******************************************************',/, &
-      '#    NOTE:  Not necessary to modify any information below this line',/, &
-      '#           unless one is interested in customizing the "sweep.eplt" file.',/, &
-      '# *******************************************************',/, &
-      '#',/, &
-      '#    WARNING: Only plots values for subregion #1',/, &
-      '#',/, &
-      '#    + + + DATA TO PLOT + + +',/, &
-      '#',/, &
-      '#      "xplot" flag for writing variables to file "sweep.eplt".',/, &
-      '#       -1 = write nothing',/, &
-      '#        0 = write erosion variables;',/, &
-      '#      Actual variables listed below are only written if flagged with a 1',/, &
-      '#',/, &
-      '#      NOTE:  The SWEEP cmdline option -Eplt determines if this file is',/, &
-      '#             created and/or the data specfied here appended to it.',/, &
-      '  0',/, &
-      '#',/, &
-      '#      Next are 2 lines per variable:',/, &
-      '#       1st line: flag (0=do not write, 1=do write) and variable description',/, &
-      '#       2nd line: this info is used as a header in "sweep.eplt"',/, &
-      '#           place header within first 12 positions of the line',/, &
-      '#',/, &
-      '# xin(i), R, field length',/, &
-      '   1',/, &
-      '  Length(m)',/, &
-      '# abzht, R, biomass ht.(m)',/, &
-      '   1',/, &
-      ' bio_ht(m)',/, &
-      '# abrsai, R, stem area index',/, &
-      '  1',/, &
-      ' stem_area',/, &
-      '# abrlai(s), R, Biomass leaf area index (m^2/m^2)',/, &
-      '  1',/, &
-      ' lai_area',/, &
-      '# abffcv, R, biomass flat fraction cover',/, &
-      '  1',/, &
-      ' flat_cov',/, &
-      '# asfvfs(1,s), R, soil fraction very fine sand in layer 1',/, &
-      '  1',/, &
-      '  vfsand',/, &
-      '# asfsan(1,s), R, soil fraction sand in layer 1',/, &
-      '  1',/, &
-      '   sand',/, &
-      '# asfsil(1,s), R, soil fraction silt in layer 1',/, &
-      '  1',/, &
-      '  silt',/, &
-      '# asfcla(1,s), R, soil fraction clay in layer 1',/, &
-      '  1',/, &
-      '  clay',/, &
-      '# asvoc(1,s), R, soil volume roc in layer 1(m^3/m^3)',/, &
-      '  1',/, &
-      '  rock_vol',/, &
-      '# aseags(1,s), R, soil aggregate stability (ln J/m^3)',/, &
-      '  1',/, &
-      '  ag_stab',/, &
-      '# aslagm(1,s), R, soil aggregate geom. mean dia. (mm)',/, &
-      '  1',/, &
-      '  ag_gmd',/, &
-      '# aslagn(1,s), R, soil aggregate min. dia. (mm)',/, &
-      '  1',/, &
-      '  ag_min',/, &
-      '# aslagx(1,s), R, soil aggregate max. dia. (mm)',/, &
-      '  1',/, &
-      '  ag_max',/, &
-      '# as0ags(1,s), R, soil aggregate geo. std. dev.',/, &
-      '  1',/, &
-      '  ag_std',/, &
-      '# asfcr(s), R, Surface crust fraction (m^2/m^2)',/, &
-      '  1',/, &
-      '  crust_cv',/, &
-      '# aszcr(s), R, Surface crust thickness (mm)',/, &
-      '  1',/, &
-      ' crust_z(mm)',/, &
-      '# asflos(s), R, Fraction of loose material on surface (m^2/m^2)',/, &
-      '  1',/, &
-      '  los_cv',/, &
-      '# asmlos(s), R, Mass of loose material on crust (kg/m^2)',/, &
-      '  1',/, &
-      '  los(kg/m^2)',/, &
-      '# asdcr(s), R, Soil crust density (Mg/m^3)',/, &
-      '  1',/, &
-      '  cr_den(Mg/m^3)',/, &
-      '# asecr(s), R, Soil crust stability ln(J/kg)',/, &
-      '  1',/, &
-      '  cr_se',/, &
-      '# aslrr(s), R, Allmaras random roughness (mm)',/, &
-      '  1',/, &
-      '  rr(mm)',/, &
-      '# aszrgh(s), R, Ridge height (mm)',/, &
-      '  1',/, &
-      '  z_rgh(mm)',/, &
-      '# asxrgs(s), R, Ridge spacing (mm)',/, &
-      '  1',/, &
-      '  x_rgs(mm)',/, &
-      '# asxrgw(s), R, Ridge width (mm)',/, &
-      '  1',/, &
-      '  x_rgw(mm)',/, &
-      '# asxrgo(s), R, Ridge orientation (deg)',/, &
-      '  1',/, &
-      '  a_rgo(deg)',/, &
-      '#')
+ 2300 format( '#' )
 
       close(luo_saeinp)
 
-      return
-      end
+   end subroutine saeinp
 
-end module saeinp_mod
+   subroutine daily_erodout( o_unit, o_E_unit, sgrd_u, input_filename, cellstate )
+
+!     +++  PURPOSE +++
+!     To print output desired from standalone EROSION submodel
+
+      use weps_interface_defs
+      use file_io_mod, only: fopenk, makenamnum
+      use datetime_mod, only: get_systime_string
+      use erosion_data_struct_defs, only: cellsurfacestate, am0efl
+      use grid_geo_def, only: imax, jmax, amasim, amxsim
+
+!     +++ ARGUMENT DECLARATIONS +++
+      integer, intent(inout) :: o_unit, o_E_unit, sgrd_u
+      character(len=*), intent(in) :: input_filename
+      type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
+
+!     ++++ LOCAL VARIABLES +++
+      integer i, j
+      real tt, lx, ly
+      real topt,topss, top10, bott, botss, bot10, ritt, ritss, rit10
+      real lftt, lftss, lft10, tot, totbnd
+
+      integer yr, mon, day
+
+!     +++ END SPECIFICATIONS +++
+
+!     Calculate Averages Crossing Borders
+!      top border
+       aegt   = 0.0
+       aegtss = 0.0
+       aegt10 = 0.0
+       j = jmax
+       do 1 i = 1, imax-1
+         aegt    = aegt   + cellstate(i,j)%egt
+         aegtss  = aegtss + cellstate(i,j)%egtss
+         aegt10  = aegt10 + cellstate(i,j)%egt10
+    1  continue
+!      calc. average at top border
+       topt  = aegt/(imax-1)
+       topss = aegtss/(imax-1)
+       top10 = aegt10/(imax-1)
+
+!      bottom border
+       aegt   = 0.0
+       aegtss = 0.0
+       aegt10 = 0.0
+       j = 0
+       do 2 i = 1, imax-1
+         aegt    = aegt   + cellstate(i,j)%egt
+         aegtss  = aegtss + cellstate(i,j)%egtss
+         aegt10  = aegt10 + cellstate(i,j)%egt10
+    2  continue
+!      calc. average at bottom border
+        bott  = aegt/(imax-1)
+        botss = aegtss/(imax-1)
+        bot10 = aegt10/(imax-1)
+
+!     right border
+       aegt   = 0.0
+       aegtss = 0.0
+       aegt10 = 0.0
+       i = imax
+       do 3 j = 1, jmax-1
+         aegt    = aegt   + cellstate(i,j)%egt
+         aegtss  = aegtss + cellstate(i,j)%egtss
+         aegt10  = aegt10 + cellstate(i,j)%egt10
+    3  continue
+!      calc. average at right border
+        ritt  = aegt/(jmax-1)
+        ritss = aegtss/(jmax-1)
+        rit10 = aegt10/(jmax-1)
+!
+!     left border
+       aegt   = 0.0
+       aegtss = 0.0
+       aegt10 = 0.0
+       i = 0
+       do 4 j = 1, jmax-1
+         aegt    = aegt   + cellstate(i,j)%egt
+         aegtss  = aegtss + cellstate(i,j)%egtss
+         aegt10  = aegt10 + cellstate(i,j)%egt10
+    4  continue
+!      calc. average at left border
+        lftt   = aegt/(jmax-1)
+        lftss  = aegtss/(jmax-1)
+        lft10  = aegt10/(jmax-1)
+
+!     calculate averages of inner grid points
+      aegt   = 0.0
+      aegtss = 0.0
+      aegt10 = 0.0
+      do 5 j=1,jmax-1
+       do 5 i= 1, imax-1
+        aegt= aegt + cellstate(i,j)%egt
+        aegtss = aegtss + cellstate(i,j)%egtss
+        aegt10 = aegt10 + cellstate(i,j)%egt10
+    5 continue
+      tt     = (imax-1)*(jmax-1)
+      aegt   = aegt/tt
+      aegtss = aegtss/tt
+      aegt10 = aegt10/tt
+
+!    calculate comparision of boundary and interior losses
+      lx = amxsim(2)%x - amxsim(1)%x
+      ly = amxsim(2)%y - amxsim(1)%y
+      tot = aegt*lx*ly
+      totbnd = (topt + bott + topss + botss)*lx +                       &
+     &         (ritt + lftt + ritss + lftss)*ly
+
+
+      if (btest(am0efl,1)) then
+
+      if( o_unit .lt. 0 ) then
+        call fopenk (o_unit, trim(mksaeout%fullpath) // makenamnum('saeros', mksaeout%simday, mksaeout%maxday, '.egrd'),'unknown')
+        call caldat (mksaeout%jday,day,mon,yr)
+        write(*,'(4(a,i0))') 'Made Daily Erosion grid file for: ', day,'/', mon,'/', yr,' simulation day: ', mksaeout%simday
+        write(o_unit, "('# WEPS erosion day mon yr',2(1x,i2),2x,i4)") day, mon, yr
+        write (o_unit,*)
+        write (o_unit,*) 'Grid cell output from WEPS run'
+        write (o_unit,*)
+      else
+        ! write header to files
+        write (o_unit,*)
+        write (o_unit,*)
+        write (o_unit,*) 'Grid cell output from SWEEP run'
+        write (o_unit,*)
+      end if
+
+      ! Print date of Run
+      write(o_unit,"(1x,'Date of run: ',a21)") get_systime_string()
+      write(o_unit,*)
+
+      write(o_unit,fmt="(1x,a)") "<field dimensions>"
+      write(o_unit,fmt="(1x,5f10.2)") amasim, amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
+      write(o_unit,fmt="(1x,a)") "</field dimensions>"
+      write(o_unit,*)
+      write (o_unit,*) 'Total grid size: (', imax+1,',', jmax+1, ')   ',&
+     &                 'Inner grid size: (', imax-1,',', jmax-1, ')'
+
+      write (o_unit,*)
+      write (o_unit,6)
+      write (o_unit,*)                                                  &
+     & '  top(i=1,imax-1,j=jmax) ',                                     &
+     & 'bottom(i=1,imax-1,j=0) ',                                       &
+     & 'right(i=imax,j=1,jmax-1) ',                                     &
+     & 'left(i=0, j=1,jmax-1) '
+      write (o_unit,10)  (cellstate(i,jmax)%egt+cellstate(i,jmax)%egtss, i = 1, imax-1)
+      write (o_unit,10)  (cellstate(i,0)%egt+cellstate(i,0)%egtss, i = 1, imax-1)
+      write (o_unit,10)  (cellstate(imax,j)%egt+cellstate(imax,j)%egtss, j = 1, jmax-1)
+      write (o_unit,10)  (cellstate(0,j)%egt+cellstate(0,j)%egtss, j = 1, jmax-1)
+
+      write (o_unit,*)
+      write (o_unit,7)
+      write (o_unit,*)                                                  &
+     & '  top(i=1,imax-1,j=jmax) ',                                     &
+     & 'bottom(i=1,imax-1,j=0) ',                                       &
+     & 'right(i=imax,j=1,jmax-1) ',                                     &
+     & 'left(i=0, j=1,jmax-1) '
+      write (o_unit,10)  (cellstate(i,jmax)%egt, i = 1, imax-1)
+      write (o_unit,10)  (cellstate(i,0)%egt, i = 1, imax-1)
+      write (o_unit,10)  (cellstate(imax,j)%egt, j = 1, jmax-1)
+      write (o_unit,10)  (cellstate(0,j)%egt, j = 1, jmax-1)
+
+      write (o_unit,*)
+      write (o_unit,8)
+      write (o_unit,*)                                                  &
+     & '  top(i=1,imax-1,j=jmax) ',                                     &
+     & 'bottom(i=1,imax-1,j=0) ',                                       &
+     & 'right(i=imax,j=1,jmax-1) ',                                     &
+     & 'left(i=0, j=1,jmax-1) '
+      write (o_unit,10)  (cellstate(i,jmax)%egtss, i = 1, imax-1)
+      write (o_unit,10)  (cellstate(i,0)%egtss, i = 1, imax-1)
+      write (o_unit,10)  (cellstate(imax,j)%egtss, j = 1, jmax-1)
+      write (o_unit,10)  (cellstate(0,j)%egtss, j = 1, jmax-1)
+
+      write (o_unit,*)
+      write (o_unit,9)
+      write (o_unit,*)                                                  &
+     & '  top(i=1,imax-1,j=jmax) ',                                     &
+     & 'bottom(i=1,imax-1,j=0) ',                                       &
+     & 'right(i=imax,j=1,jmax-1) ',                                     &
+     & 'left(i=0,j=1,jmax-1) '
+      write (o_unit,11)  (cellstate(i,jmax)%egt10, i = 1, imax-1)
+      write (o_unit,11)  (cellstate(i,0)%egt10, i = 1, imax-1)
+      write (o_unit,11)  (cellstate(imax,j)%egt10, j = 1, jmax-1)
+      write (o_unit,11)  (cellstate(0,j)%egt10, j = 1, jmax-1)
+
+      write (o_unit,*)
+      write (o_unit,fmt="(' <grid data> | ',3('|',a))")                 &                              
+     & 'Total Soil Loss', 'soil loss', '(kg/m^2)'
+      do 19  j = jmax-1, 1, -1
+      write (o_unit,10)  (cellstate(i,j)%egt, i = 1, imax-1)
+   19 continue
+      write (o_unit,fmt="(' </grid data>')")
+
+      write (o_unit,*)
+      write (o_unit,fmt="(' <grid data> | ',3('|',a))")                 &                              
+     & 'Saltation/Creep Soil Loss', 'salt/creep soil loss', '(kg/m^2)'
+      do 29  j = jmax-1, 1, -1
+      write (o_unit,10)  (cellstate(i,j)%egt-cellstate(i,j)%egtss, i = 1, imax-1)
+   29 continue
+      write (o_unit,fmt="(' </grid data>')")
+
+      write (o_unit,*)
+      write (o_unit,fmt="(' <grid data> | ',3('|',a))")                 &                              
+     & 'Suspension Soil Loss', 'suspension soil loss', '(kg/m^2)'
+      do 39  j = jmax-1, 1, -1
+      write (o_unit,10)  (cellstate(i,j)%egtss, i = 1, imax-1)
+   39 continue
+      write (o_unit,fmt="(' </grid data>')")
+
+      write (o_unit,*)
+      write (o_unit,fmt="(' <grid data> | ',3('|',a))")                 &
+     & 'PM10 Soil Loss', 'PM10 soil loss', '(kg/m^2)'
+      do 49  j = jmax-1, 1, -1
+      write (o_unit,11)  (cellstate(i,j)%egt10, i = 1, imax-1)
+   49 continue
+      write (o_unit,fmt="(' </grid data>')")
+
+      write (o_unit,*)
+      write (o_unit,*) '**Averages - Field'
+      write (o_unit,*) '     Total    salt/creep      susp       PM10 '
+      write (o_unit,*) '     egt                      egtss      egt10'
+      write (o_unit,*) '   -----------------kg/m^2--------------------'
+      write (o_unit,15)    aegt, aegt-aegtss, aegtss, aegt10
+      write (o_unit,*)
+      write (o_unit,*) '**Averages - Crossing Boundaries '
+      write (o_unit,*) 'Location      Total  Salt/Creep   Susp    PM10'
+      write (o_unit,*) '--------------------kg/m----------------------'
+      write (o_unit,21) topt+topss, topt, topss, top10
+      write (o_unit,22) bott+botss, bott, botss, bot10
+      write (o_unit,23) ritt+ritss, ritt, ritss, rit10
+      write (o_unit,24) lftt+lftss, lftt, lftss, lft10
+      write (o_unit,*)
+      write (o_unit,*) '   Comparision of interior & boundary loss'
+      write (o_unit,*) '      interior       boundary    int/bnd ratio'
+      if( totbnd.gt.1.0e-9 ) then
+          write (o_unit,16) tot, totbnd, tot/totbnd
+      else
+          !Boundary loss near or equal to zero
+          write (o_unit,16) tot, totbnd, 1.0e-9
+      end if
+
+!     additional output statements for easy shell script parsing
+      write (o_unit,*)
+!     write losses as positive numbers
+      write (o_unit,17) -aegt, aegtss-aegt, -aegtss, -aegt10
+   17 format (' repeat of total, salt/creep, susp, PM10:', 3f12.4,f12.6)
+
+      close(o_unit)
+
+!     output formats
+    6 format (1x,'  Passing Border Grid Cells - Total  egt+egtss(kg/m)')
+    7 format (1x,'  Passing Border Grid Cells - Salt/Creep   egt(kg/m)')
+    8 format (1x,'  Passing Border Grid Cells - Suspension egtss(kg/m)')
+    9 format (1x,'  Passing Border Grid Cells - PM10       egt10(kg/m)')
+   10 format (1x, 500f12.4)
+   11 format (1x, 500f12.6)
+   15 format (1x, 3(f12.4,2x), f12.6)
+   16 format (1x, 2(f13.4,2x),2x, f13.4)
+   21 format (1x, 'top   ', 1x, 4(f9.2,1x))
+   22 format (1x, 'bottom', 1x, 4(f9.2,1x))
+   23 format (1x, 'right ', 1x, 4(f9.2,1x))
+   24 format (1x, 'left  ', 1x, 4(f9.2,1x))
+
+      end if !if (btest(am0efl,1)) then
+
+      !Erosion summary - total, salt/creep, susp, pm10
+      !(loss values are positive - deposition values are negative)
+      if (btest(am0efl,0)) then
+
+      if( in_weps ) then
+         call caldat (mksaeout%jday,day,mon,yr)
+         write(*,'(4(a,i0))') 'Made Daily Erosion summary file for: ', day,'/', mon,'/', yr,' simulation day: ', mksaeout%simday
+         write (UNIT=o_E_unit,FMT="(4(f12.6),' ')",ADVANCE="NO") -aegt, -(aegt-aegtss), -aegtss, -aegt10
+         write (UNIT=o_E_unit,FMT="('# WEPS erosion day mon yr',2(1x,i2),2x,i4)",ADVANCE="NO") day, mon, yr
+         write (UNIT=o_E_unit,FMT="(A)",ADVANCE="YES") ' (loss values are positive - deposition values are negative)'
+      else
+         write (UNIT=o_E_unit,FMT="(4(f12.6),' ')",ADVANCE="NO") -aegt, -(aegt-aegtss), -aegtss, -aegt10
+         write (UNIT=o_E_unit,FMT="(A)",ADVANCE="NO") trim(input_filename)
+         write (UNIT=o_E_unit,FMT="(A)",ADVANCE="YES") ' (loss values are positive - deposition values are negative)'
+      end if
+
+      end if
+
+      !Duplicate Erosion summary info for the *.sgrd file so "tsterode" interface
+      ! can display this info on graphical report window
+      if (btest(am0efl,3) .and. (sgrd_u .ge. 0) ) then
+       write (sgrd_u,*)
+       write (sgrd_u,*) '**Averages - Field'
+       write (sgrd_u,*) '     Total    salt/creep      susp       PM10 '
+       write (sgrd_u,*) '     egt                      egtss      egt10'
+       write (sgrd_u,*) '   -----------------kg/m^2--------------------'
+       write (sgrd_u,15)    aegt, aegt-aegtss, aegtss, aegt10
+       write (sgrd_u,*)
+       write (sgrd_u,*) '**Averages - Crossing Boundaries '
+       write (sgrd_u,*) 'Location      Total  Salt/Creep   Susp    PM10'
+       write (sgrd_u,*) '--------------------kg/m----------------------'
+       write (sgrd_u,21) topt+topss, topt, topss, top10
+       write (sgrd_u,22) bott+botss, bott, botss, bot10
+       write (sgrd_u,23) ritt+ritss, ritt, ritss, rit10
+       write (sgrd_u,24) lftt+lftss, lftt, lftss, lft10
+       write (sgrd_u,*)
+       write (sgrd_u,*) '   Comparison of interior & boundary loss'
+       write (sgrd_u,*) '      interior       boundary    int/bnd ratio'
+       if( totbnd.gt.1.0e-9 ) then
+         write (sgrd_u,16) tot, totbnd, tot/totbnd
+       else
+         !Boundary loss near or equal to zero
+         write (sgrd_u,16) tot, totbnd, 1.0e-9
+       end if
+       if( sgrd_u .ge. 0 ) then
+            close(sgrd_u)
+       end if
+
+      end if
+
+   end subroutine daily_erodout
+
+end module sae_in_out_mod
 

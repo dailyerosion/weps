@@ -15,9 +15,9 @@
 !     - updates soil  variables changed by erosion.
 
       use weps_interface_defs
-      use file_io_mod, only: luo_sgrd, luo_emit
+      use file_io_mod, only: fopenk, makenamnum, luo_erod, luo_egrd, luo_emit, luo_sgrd
       use erosion_data_struct_defs
-      use saeinp_mod, only: mksaeinp, saeinp
+      use sae_in_out_mod, only: mksaeinp, mksaeout, saeinp, daily_erodout
       use p1unconv_mod, only: SEC_PER_DAY
       use timer_def, only: TIMEROS, TIMSBEROD, TIMSBWIND, TIMSTART, TIMSTOP
 
@@ -51,6 +51,7 @@
       real wubsts, wucsts, wucwts, wucdts, sfcv
       real :: dmlos_tmp, sf84mn_tmp, smaglos_tmp, smaglosmx_tmp
       logical :: first_emit  ! pass to sbemit on first entry to zero out daily accumulators
+      integer :: luo_saeinp  ! used here to tell saeinp to make it's own file
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     i,j      - index
@@ -277,7 +278,20 @@
 !     code to output standalone erosion input file on specified date
 !     check for day of simulation for which you want a file created
       if( mksaeinp%simday .gt. 0 ) then
-          call saeinp( subrsurf )    ! output daily erosion stuff
+          luo_saeinp = -1      !used here to tell saeinp to make it's own file
+          call saeinp( luo_saeinp, subrsurf )    ! output daily erosion stuff
+      end if
+
+      if (btest(am0efl,2)) then
+         if( luo_emit .lt. 0 ) then
+            call fopenk(luo_emit, trim(mksaeout%fullpath) // makenamnum('saeros',mksaeout%simday,mksaeout%maxday,'.emit'),'unknown')
+         end if
+      end if
+
+      if (btest(am0efl,3)) then
+         if( luo_sgrd .lt. 0 ) then
+            call fopenk(luo_sgrd, trim(mksaeout%fullpath) // makenamnum('saeros',mksaeout%simday,mksaeout%maxday,'.sgrd'),'unknown')
+         end if
       end if
 
 !     sbinit calls sbsdfi to get sf< 0.01,0.1,0.84,2.0 mm
@@ -485,6 +499,15 @@
 
 !     Purpose: update global variables changed by erosion at end of day
 !     not implemented partly because windgen does not correlate days.
+
+      if (btest(am0efl,2)) then
+         if( luo_emit .ge. 0 ) then
+            close(luo_emit)
+         end if
+      end if
+
+      ! output end of day erosion results
+      call daily_erodout(luo_egrd, luo_erod, luo_sgrd, mksaeout%fullpath, cellstate )
 
   100 continue
 

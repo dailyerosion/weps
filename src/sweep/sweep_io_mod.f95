@@ -14,6 +14,9 @@ module sweep_io_mod
    character*12 :: xcharin(30)
    real :: xin(30)
 
+   integer xchl          ! length of xplot (independent variable) character strings
+   parameter (xchl = 12)
+
    integer :: mrcl        ! length of line to be read in with getline
    parameter (mrcl = 512)
 
@@ -22,7 +25,7 @@ module sweep_io_mod
 
    contains
 
-   subroutine erodin (i_unit, o_unit, cmdebugflag, already_read_inputs, subrsurf)
+   subroutine erodin (i_unit, o_unit, cmdebugflag, hagen_plot_flag, subrsurf)
 
 !     +++ PURPOSE +++
 !     Utility to read initial conditions and variables from
@@ -38,18 +41,15 @@ module sweep_io_mod
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
       use barriers_mod
       use grid_geo_def, only: amasim, amxsim
+      use sae_in_out_mod, only: saeinp
 
 !     +++ ARGUMENT DECLARATIONS +++
-      integer i_unit, o_unit, cmdebugflag, already_read_inputs
+      integer i_unit, o_unit, cmdebugflag
+      logical hagen_plot_flag
       type(subregionsurfacestate), dimension(:), allocatable :: subrsurf
 
-!     +++ PARAMETERS +++
-      integer xchl          ! length of xplot (independent variable) character strings
-      parameter (xchl = 12)
-
 !     +++ LOCAL VARIABLES +++
-      integer xflag
-      integer i,j,k
+      integer i,j
       integer sr,ibr,a,l,h
       integer wflg
       real :: f(ntstep), wu(ntstep)
@@ -84,7 +84,6 @@ module sweep_io_mod
 !     +++ END SPECIFICATIONS +++
 
 !     +++ INITIALIZATION +++
-      if (already_read_inputs .gt. 0) goto 999  !Only write output 
 
       debugflg = 0 !needs to be initialized when using full debugging compiles
 !     Read the debug flag to specify level of debug support
@@ -486,11 +485,100 @@ module sweep_io_mod
 
       endif
 
+      if( hagen_plot_flag ) then 
+         call plotin(subrsurf)
+      end if
+
+!     + + + OUTPUT SECTION + + +
+      if (o_unit .ne. 6) then  !Only echo input if stdout not specified
+          call saeinp( o_unit, subrsurf )
+      endif !(o_unit .ne. 6)
+
+   end subroutine erodin
+
+   subroutine erodout (hagen_plot_flag)
+
+!     +++  PURPOSE +++
+!     To print output desired from standalone EROSION submodel
+
+      use erosion_data_struct_defs, only: cellsurfacestate
+      use sae_in_out_mod, only: daily_erodout, aegt, aegtss, aegt10
+
+!     +++ ARGUMENT DECLARATIONS +++
+      logical, intent(in) :: hagen_plot_flag
+
+!     ++++ LOCAL VARIABLES +++
+      character*12 ycharin(30)
+      integer yplot
+      real yin(30)
+
+!     +++ SUBROUTINES CALLED+++
+!     plotout
+
+!     +++ END SPECIFICATIONS +++
+
+      ! test if plot info wanted
+      if (hagen_plot_flag .EQV. .true.) then
+
+        ! test if plot info available from input files
+        ! (should allow one to mix input files and get only
+        ! wanted plot output)
+        if (xplot > -1) then
+          ! specify plotout dep variables for all values of yplot
+          yplot = 4
+          ycharin(1) = 'total_eros'
+          ycharin(2) = 'salt/creep'
+          ycharin(3) = 'suspension'
+          ycharin(4) = 'PM10(kg/m^2)'
+          yin(1) = aegt
+          yin(2) = aegt-aegtss
+          yin(3) = aegtss
+          yin(4) = aegt10
+
+          call plotout (yplot, ycharin, yin)
+        endif
+      endif
+      ! end of plot section
+
+   end subroutine erodout
+
+   subroutine plotin(subrsurf)
+
+!     + + +  PURPOSE + + +
+!     To read the configuration (xin data) for sweep.eplt file creation
+
+!    WARNING: Only plots values for subregion #1
+
+!      "xplot" flag for writing variables to file "sweep.eplt".
+!       -1 = write nothing
+!        0 = write erosion variables;
+!      Actual variables listed below are only written if flagged with a 1
+
+!      NOTE:  The SWEEP cmdline option -Eplt determines if the data
+!             specfied here is appended to the sweep.eplt file.
+
+      use file_io_mod, only: fopenk
+      use erosion_data_struct_defs, only: subregionsurfacestate, awdair, anemht, awzzo, wzoflg, &
+                                          ntstep, awadir, awudmx, subday, am0eif
+      use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
+      use barriers_mod
+      use grid_geo_def, only: amasim, amxsim
+
+
+      type(subregionsurfacestate), dimension(:), allocatable :: subrsurf
+
+      integer i_unit   ! logical unit input file number
+      character*(mrcl) line
+      integer i, xflag
+
+!     read sweepplot.cfg  configuration file 
+      call fopenk(i_unit, 'sweepplot.cfg', 'old')
+
 !     + + + PLOT SECTION + + +
 !     selectively reads succesive indep variable names and values
 !     if xplot is set to zero and the xflag is set to
 !      1 for a given variable in the erodin file
-!
+
 !     test if plotout file to be created
       line = getline(i_unit)
       read (line,*) xplot
@@ -813,519 +901,9 @@ module sweep_io_mod
         endif
       endif
 
-!     + + + OUTPUT SECTION + + +
-  220 format (1x, 2f8.2)
-  230 format (1x, 3f8.2)
-  250 format (1x, i0)
-  251 format (1x, 2f8.2)
-  260 format (1x, 6f8.2)
-  270 format (1x, 7f8.2)
-  350 format (1x, i3, 7f8.2)
-  400 format (1x, i3, 1x, l6, 4x, i3, 4x, i3, 4x, i3, 4x, i3)
+      close(i_unit)
 
-999   if (o_unit .ne. 6) then  !Only echo input if stdout not specified
-      write (o_unit,*)                                                  &
-     &  '      REPORT OF INPUTS (read by erodin.for) '
-      write (o_unit,*)
-      write (o_unit,*)  '+++ Control Flags, etc. +++'
-      write (o_unit,*)
-      write (o_unit,*) 'ntstep  am0eif  nsubr  nacctr  nbr'
-      write (o_unit,400) ntstep, am0eif, nsubr, nacctr, nbr
-
-      write (o_unit,*)
-      write (o_unit,*)  '+++ SIMULATION REGION +++'
-      write (o_unit,*)
-      write (o_unit,*) 'orientation and dimensions of sim region'
-      write (o_unit,*) 'amasim(deg)  amxsim - (x1,y1) (x2,y2)'
-      write (o_unit,260) amasim,  amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
-
-      write (o_unit,*)
-      write (o_unit,*)  '+++ ACCOUNTING REGIONS +++'
-      write (o_unit,*)
-      write (o_unit,*) 'nacctr - number of accounting regions'
-      write (o_unit,*) nacctr
-      write (o_unit,*) 'accounting region polygon, count, xy pairs'
-      do 1000 a = 1, nacctr
-        write (o_unit,250) acct_poly(a)%np
-        do ipol = 1, acct_poly(a)%np
-            write (o_unit,251) acct_poly(a)%points(ipol)%x, acct_poly(a)%points(ipol)%y
-        end do
- 1000 continue
-
-      write (o_unit,*)
-      write (o_unit,*)  '+++ BARRIERS +++'
-      write (o_unit,*)
-      write (o_unit,*) 'nbr - number of barriers'
-      write (o_unit,*) nbr
-      if (nbr .gt. 0) then
-        write (o_unit,*) 'barrier dim (x1,y1) (x2,y2) ',                &
-     &                   'and height, porosity, and width'
-        do 1010 ibr = 1, nbr
-          write (o_unit,270) barrier(ibr)%points(1)%x, barrier(ibr)%points(1)%y, &
-                             barrier(ibr)%points(size(barrier(ibr)%points))%x, barrier(ibr)%points(size(barrier(ibr)%points))%y, &
-     &                       barrier(ibr)%param(1)%amzbr, barrier(ibr)%param(1)%ampbr, barrier(ibr)%param(1)%amxbrw
- 1010   continue
-      endif
-
-      write (o_unit,*)
-      write (o_unit,*)  '+++ SUBREGIONS +++'
-      write (o_unit,*)
-      write (o_unit,*) 'nsubr - number of subregions'
-      write (o_unit,*) nsubr
-      write (o_unit,*) 'subregion polygon, count, xy pairs'
-      do 1020 sr = 1, nsubr
-        write (o_unit,250) subr_poly(sr)%np
-        do ipol = 1, subr_poly(sr)%np
-            write (o_unit,251) subr_poly(sr)%points(ipol)%x, subr_poly(sr)%points(ipol)%y
-        end do
- 1020 continue
-
-      do 1100 sr = 1, nsubr
-        write (o_unit,*)
-        write (o_unit,*)
-        write(o_unit,*) '*********************** Subregion ', sr,       &
-     &                 ' ***********************'
-
-        write (o_unit,*)
-        write(o_unit,*) '+++ BIOMASS +++'
-        write (o_unit,*)
-        write (o_unit,*) 'Biomass ht,  flat cover'
-        write (o_unit,220) subrsurf(sr)%abzht, subrsurf(sr)%abffcv
-
-        write (o_unit,*)
-        write (o_unit,*) 'Crop height, SAI,    LAI'
-        write (o_unit,230) subrsurf(sr)%aczht, subrsurf(sr)%acrsai, subrsurf(sr)%acrlai
-
-        write (o_unit,*)
-        write (o_unit,*) 'Residue height, SAI,    LAI'
-        write (o_unit,230) subrsurf(sr)%adzht_ave, subrsurf(sr)%adrsaitot, subrsurf(sr)%adrlaitot
-
-        write (o_unit,*)
-        write (o_unit,*) '+++ SOIL +++ '
-        write (o_unit,*)
-        write (o_unit,*) 'nslay - number of soil layers'
-        write (o_unit,*) subrsurf(sr)%nslay
-
-        write (o_unit,*)
-        write (o_unit,*) 'layer depth b.density ',                      &
-     &                   'vfsand   sand   silt   clay    rock vol'
-        do 1030 l = 1, subrsurf(sr)%nslay
-          write (o_unit,350) l, subrsurf(sr)%bsl(l)%aszlyt, subrsurf(sr)%bsl(l)%asdblk, &
-                 subrsurf(sr)%bsl(l)%asfvfs, subrsurf(sr)%bsl(l)%asfsan, subrsurf(sr)%bsl(l)%asfsil, &
-                 subrsurf(sr)%bsl(l)%asfcla, subrsurf(sr)%bsl(l)%asvroc
- 1030   continue
-
-        write (o_unit,*)
-          write (o_unit,*) 'layer    AgD     AgS ',                     &
-     &                   ' GMD    GMDmn     GMDmx    GSD'
-        do 1040 l = 1, subrsurf(sr)%nslay
-          write (o_unit,350) l, subrsurf(sr)%bsl(l)%asdagd, subrsurf(sr)%bsl(l)%aseags, &
-                 subrsurf(sr)%bsl(l)%aslagm, subrsurf(sr)%bsl(l)%aslagn,   &
-                 subrsurf(sr)%bsl(l)%aslagx, subrsurf(sr)%bsl(l)%as0ags
- 1040   continue
-
-        write (o_unit,*)
-        write (o_unit,*) 'Crust frac thick mass LOS frac.LOS, ',        &
-     &                   'density stability'
-        write (o_unit,260) subrsurf(sr)%asfcr, subrsurf(sr)%aszcr, subrsurf(sr)%asmlos, subrsurf(sr)%asflos,    &
-                           subrsurf(sr)%asdcr, subrsurf(sr)%asecr
-
-        write (o_unit,*)
-        write (o_unit,*) '    RR,    Rg ht,  width, spacing, ',         &
-     &                   'orient., dike spacing'
-        write (o_unit,270) subrsurf(sr)%aslrr, subrsurf(sr)%aszrgh, subrsurf(sr)%asxrgw,           &
-                           subrsurf(sr)%asxrgs, subrsurf(sr)%asargo, subrsurf(sr)%asxdks
-
-        write (o_unit,*)
-        write (o_unit,*) '+++ HYDROLOGY +++ '
-        write (o_unit,*)
-
-        write (o_unit,*) 'Snow depth (mm)'
-        write (o_unit,*) subrsurf(sr)%ahzsnd
-
-        write (o_unit,*)
-        write (o_unit,*) 'layer  wilting and actual water contents'
-        do 1050 l = 1, subrsurf(sr)%nslay
-          write (o_unit,350) l, subrsurf(sr)%bsl(l)%ahrwcw , subrsurf(sr)%bsl(l)%ahrwca
- 1050   continue
-        write (o_unit,*) 'Hourly water contents - ahrwc0'
-        write (o_unit,260) (subrsurf(sr)%ahrwc0(h), h=1,6)
-        write (o_unit,260) (subrsurf(sr)%ahrwc0(h), h=7,12)
-        write (o_unit,260) (subrsurf(sr)%ahrwc0(h), h=13,18)
-        write (o_unit,260) (subrsurf(sr)%ahrwc0(h), h=19,24)
-
- 1100 continue
-
-      write (o_unit,*)
-      write (o_unit,*) '+++ WEATHER +++'
-      write (o_unit,*)
-      write (o_unit,*) ' anemht    awwzo   wzoflg '
-      write (o_unit,*)   anemht, awzzo, wzoflg
-      write (o_unit,*) ' wind dir (deg) and max wind speed (m/s)'
-      write (o_unit,220) awadir, awudmx
-
-      write (o_unit,*)
-      write (o_unit,*) 'Wind speeds (m/s) - ', ntstep,' intervals'
-      k = 6
-      j = 1
-  860 if(k .lt. ntstep) then
-        write (o_unit,260) (subday(i)%awu, i=j,k)
-        j = k+1
-        k = k+6
-        go to 860
-      else
-        k = ntstep
-        write (o_unit,260) (subday(i)%awu, i=j,k)
-      endif
-      write (o_unit,*)
-      write (o_unit,*) 'END OF INPUTS'
-
-      endif !(o_unit .ne. 6)
-
-      !close (i_unit)
-   end subroutine erodin
-
-   subroutine erodout (o_unit, o_E_unit, sgrd_u, input_filename, hagen_plot_flag, cellstate)
-
-!     +++  PURPOSE +++
-!     To print output desired from standalone EROSION submodel
-
-      use datetime_mod, only: get_systime_string
-      use erosion_data_struct_defs, only: cellsurfacestate, am0efl
-      use grid_geo_def, only: imax, jmax, amasim, amxsim
-
-!     +++ ARGUMENT DECLARATIONS +++
-      integer o_unit, o_E_unit, sgrd_u
-      character*1024 input_filename
-      logical hagen_plot_flag
-      type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
-
-!     ++++ LOCAL VARIABLES +++
-      integer i, j
-      real aegt, aegtss, aegt10
-      real tt, lx, ly
-      real topt,topss, top10, bott, botss, bot10, ritt, ritss, rit10
-      real lftt, lftss, lft10, tot, totbnd
-
-      character*12 ycharin(30)
-      integer yplot
-      real yin(30)
-
-!     +++ SUBROUTINES CALLED+++
-!     plotout
-
-!     +++ END SPECIFICATIONS +++
-
-!     Calculate Averages Crossing Borders
-!      top border
-       aegt   = 0.0
-       aegtss = 0.0
-       aegt10 = 0.0
-       j = jmax
-       do 1 i = 1, imax-1
-         aegt    = aegt   + cellstate(i,j)%egt
-         aegtss  = aegtss + cellstate(i,j)%egtss
-         aegt10  = aegt10 + cellstate(i,j)%egt10
-    1  continue
-!      calc. average at top border
-       topt  = aegt/(imax-1)
-       topss = aegtss/(imax-1)
-       top10 = aegt10/(imax-1)
-
-!      bottom border
-       aegt   = 0.0
-       aegtss = 0.0
-       aegt10 = 0.0
-       j = 0
-       do 2 i = 1, imax-1
-         aegt    = aegt   + cellstate(i,j)%egt
-         aegtss  = aegtss + cellstate(i,j)%egtss
-         aegt10  = aegt10 + cellstate(i,j)%egt10
-    2  continue
-!      calc. average at bottom border
-        bott  = aegt/(imax-1)
-        botss = aegtss/(imax-1)
-        bot10 = aegt10/(imax-1)
-
-!     right border
-       aegt   = 0.0
-       aegtss = 0.0
-       aegt10 = 0.0
-       i = imax
-       do 3 j = 1, jmax-1
-         aegt    = aegt   + cellstate(i,j)%egt
-         aegtss  = aegtss + cellstate(i,j)%egtss
-         aegt10  = aegt10 + cellstate(i,j)%egt10
-    3  continue
-!      calc. average at right border
-        ritt  = aegt/(jmax-1)
-        ritss = aegtss/(jmax-1)
-        rit10 = aegt10/(jmax-1)
-!
-!     left border
-       aegt   = 0.0
-       aegtss = 0.0
-       aegt10 = 0.0
-       i = 0
-       do 4 j = 1, jmax-1
-         aegt    = aegt   + cellstate(i,j)%egt
-         aegtss  = aegtss + cellstate(i,j)%egtss
-         aegt10  = aegt10 + cellstate(i,j)%egt10
-    4  continue
-!      calc. average at left border
-        lftt   = aegt/(jmax-1)
-        lftss  = aegtss/(jmax-1)
-        lft10  = aegt10/(jmax-1)
-
-!     calculate averages of inner grid points
-      aegt   = 0.0
-      aegtss = 0.0
-      aegt10 = 0.0
-      do 5 j=1,jmax-1
-       do 5 i= 1, imax-1
-        aegt= aegt + cellstate(i,j)%egt
-        aegtss = aegtss + cellstate(i,j)%egtss
-        aegt10 = aegt10 + cellstate(i,j)%egt10
-    5 continue
-      tt     = (imax-1)*(jmax-1)
-      aegt   = aegt/tt
-      aegtss = aegtss/tt
-      aegt10 = aegt10/tt
-
-!    calculate comparision of boundary and interior losses
-      lx = amxsim(2)%x - amxsim(1)%x
-      ly = amxsim(2)%y - amxsim(1)%y
-      tot = aegt*lx*ly
-      totbnd = (topt + bott + topss + botss)*lx +                       &
-     &         (ritt + lftt + ritss + lftss)*ly
-
-
-      if (btest(am0efl,1)) then
-!     write header to files
-      write (o_unit,*)
-      write (o_unit,*)
-      write (o_unit,*) 'OUTPUT FROM ERODOUT.FOR '
-      write (o_unit,*)
-
-      ! Print date of Run
-      write(o_unit,"(1x,'Date of run: ',a21)") get_systime_string()
-      write(o_unit,*)
-
-      write(o_unit,fmt="(1x,a)") "<field dimensions>"
-      write(o_unit,fmt="(1x,5f10.2)") amasim, amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
-      write(o_unit,fmt="(1x,a)") "</field dimensions>"
-      write(o_unit,*)
-      write (o_unit,*) 'Total grid size: (', imax+1,',', jmax+1, ')   ',&
-     &                 'Inner grid size: (', imax-1,',', jmax-1, ')'
-
-
-      write (o_unit,*)
-      write (o_unit,6)
-      write (o_unit,*)                                                  &
-     & '  top(i=1,imax-1,j=jmax) ',                                     &
-     & 'bottom(i=1,imax-1,j=0) ',                                       &
-     & 'right(i=imax,j=1,jmax-1) ',                                     &
-     & 'left(i=0, j=1,jmax-1) '
-      write (o_unit,10)  (cellstate(i,jmax)%egt+cellstate(i,jmax)%egtss, i = 1, imax-1)
-      write (o_unit,10)  (cellstate(i,0)%egt+cellstate(i,0)%egtss, i = 1, imax-1)
-      write (o_unit,10)  (cellstate(imax,j)%egt+cellstate(imax,j)%egtss, j = 1, jmax-1)
-      write (o_unit,10)  (cellstate(0,j)%egt+cellstate(0,j)%egtss, j = 1, jmax-1)
-
-      write (o_unit,*)
-      write (o_unit,7)
-      write (o_unit,*)                                                  &
-     & '  top(i=1,imax-1,j=jmax) ',                                     &
-     & 'bottom(i=1,imax-1,j=0) ',                                       &
-     & 'right(i=imax,j=1,jmax-1) ',                                     &
-     & 'left(i=0, j=1,jmax-1) '
-      write (o_unit,10)  (cellstate(i,jmax)%egt, i = 1, imax-1)
-      write (o_unit,10)  (cellstate(i,0)%egt, i = 1, imax-1)
-      write (o_unit,10)  (cellstate(imax,j)%egt, j = 1, jmax-1)
-      write (o_unit,10)  (cellstate(0,j)%egt, j = 1, jmax-1)
-
-      write (o_unit,*)
-      write (o_unit,8)
-      write (o_unit,*)                                                  &
-     & '  top(i=1,imax-1,j=jmax) ',                                     &
-     & 'bottom(i=1,imax-1,j=0) ',                                       &
-     & 'right(i=imax,j=1,jmax-1) ',                                     &
-     & 'left(i=0, j=1,jmax-1) '
-      write (o_unit,10)  (cellstate(i,jmax)%egtss, i = 1, imax-1)
-      write (o_unit,10)  (cellstate(i,0)%egtss, i = 1, imax-1)
-      write (o_unit,10)  (cellstate(imax,j)%egtss, j = 1, jmax-1)
-      write (o_unit,10)  (cellstate(0,j)%egtss, j = 1, jmax-1)
-
-      write (o_unit,*)
-      write (o_unit,9)
-      write (o_unit,*)                                                  &
-     & '  top(i=1,imax-1,j=jmax) ',                                     &
-     & 'bottom(i=1,imax-1,j=0) ',                                       &
-     & 'right(i=imax,j=1,jmax-1) ',                                     &
-     & 'left(i=0,j=1,jmax-1) '
-      write (o_unit,11)  (cellstate(i,jmax)%egt10, i = 1, imax-1)
-      write (o_unit,11)  (cellstate(i,0)%egt10, i = 1, imax-1)
-      write (o_unit,11)  (cellstate(imax,j)%egt10, j = 1, jmax-1)
-      write (o_unit,11)  (cellstate(0,j)%egt10, j = 1, jmax-1)
-
-      write (o_unit,*)
-      write (o_unit,fmt="(' <grid data> | ',3('|',a))")                 &                              
-     & 'Total Soil Loss', 'soil loss', '(kg/m^2)'
-      do 19  j = jmax-1, 1, -1
-      write (o_unit,10)  (cellstate(i,j)%egt, i = 1, imax-1)
-   19 continue
-      write (o_unit,fmt="(' </grid data>')")
-
-      write (o_unit,*)
-      write (o_unit,fmt="(' <grid data> | ',3('|',a))")                 &                              
-     & 'Saltation/Creep Soil Loss', 'salt/creep soil loss', '(kg/m^2)'
-      do 29  j = jmax-1, 1, -1
-      write (o_unit,10)  (cellstate(i,j)%egt-cellstate(i,j)%egtss, i = 1, imax-1)
-   29 continue
-      write (o_unit,fmt="(' </grid data>')")
-
-      write (o_unit,*)
-      write (o_unit,fmt="(' <grid data> | ',3('|',a))")                 &                              
-     & 'Suspension Soil Loss', 'suspension soil loss', '(kg/m^2)'
-      do 39  j = jmax-1, 1, -1
-      write (o_unit,10)  (cellstate(i,j)%egtss, i = 1, imax-1)
-   39 continue
-      write (o_unit,fmt="(' </grid data>')")
-
-      write (o_unit,*)
-      write (o_unit,fmt="(' <grid data> | ',3('|',a))")                 &
-     & 'PM10 Soil Loss', 'PM10 soil loss', '(kg/m^2)'
-      do 49  j = jmax-1, 1, -1
-      write (o_unit,11)  (cellstate(i,j)%egt10, i = 1, imax-1)
-   49 continue
-      write (o_unit,fmt="(' </grid data>')")
-
-      write (o_unit,*)
-      write (o_unit,*) '**Averages - Field'
-      write (o_unit,*) '     Total    salt/creep      susp       PM10 '
-      write (o_unit,*) '     egt                      egtss      egt10'
-      write (o_unit,*) '   -----------------kg/m^2--------------------'
-      write (o_unit,15)    aegt, aegt-aegtss, aegtss, aegt10
-      write (o_unit,*)
-      write (o_unit,*) '**Averages - Crossing Boundaries '
-      write (o_unit,*) 'Location      Total  Salt/Creep   Susp    PM10'
-      write (o_unit,*) '--------------------kg/m----------------------'
-      write (o_unit,21) topt+topss, topt, topss, top10
-      write (o_unit,22) bott+botss, bott, botss, bot10
-      write (o_unit,23) ritt+ritss, ritt, ritss, rit10
-      write (o_unit,24) lftt+lftss, lftt, lftss, lft10
-      write (o_unit,*)
-      write (o_unit,*) '   Comparision of interior & boundary loss'
-      write (o_unit,*) '      interior       boundary    int/bnd ratio'
-      if( totbnd.gt.1.0e-9 ) then
-          write (o_unit,16) tot, totbnd, tot/totbnd
-      else
-          !Boundary loss near or equal to zero
-          write (o_unit,16) tot, totbnd, 1.0e-9
-      end if
-
-!^^^tmp out
-!      write (o_unit,*) 'lx=', lx, 'ly=', ly,'tot',tot
-!^^^end tmpout
-
-!     additional output statements for easy shell script parsing
-      write (o_unit,*)
-!     write losses as positive numbers
-      write (o_unit,17) -aegt, aegtss-aegt, -aegtss, -aegt10
-   17 format (' repeat of total, salt/creep, susp, PM10:', 3f12.4,f12.6)
-
-!     output formats
-
-    6 format (1x,'  Passing Border Grid Cells - Total  egt+egtss(kg/m)')
-    7 format (1x,'  Passing Border Grid Cells - Salt/Creep   egt(kg/m)')
-    8 format (1x,'  Passing Border Grid Cells - Suspension egtss(kg/m)')
-    9 format (1x,'  Passing Border Grid Cells - PM10       egt10(kg/m)')
-
-!   50 format (1x,'  Leaving Field Grid Cells - Total       egt(kg/m^2)')
-!   60 format (1x,'  Leaving Field Grid Cells - Salt/Creep egt-egtss(kg/m^2)')
-!   70 format (1x,'  Leaving Field Grid Cells - Suspension egtss(kg/m^2)')
-!   80 format (1x,'  Leaving Field Grid Cells - PM10      egt10(kg/m^2)')
-
-   10 format (1x, 500f12.4)
-   11 format (1x, 500f12.6)
-   15 format (1x, 3(f12.4,2x), f12.6)
-   16 format (1x, 2(f13.4,2x),2x, f13.4)
-   21 format (1x, 'top   ', 1x, 4(f9.2,1x))
-   22 format (1x, 'bottom', 1x, 4(f9.2,1x))
-   23 format (1x, 'right ', 1x, 4(f9.2,1x))
-   24 format (1x, 'left  ', 1x, 4(f9.2,1x))
-
-      endif !if (btest(am0efl,1)) then
-
-      !Erosion summary - total, salt/creep, susp, pm10
-      !(loss values are positive - deposition values are negative)
-      if (btest(am0efl,0)) then
-         write (UNIT=o_E_unit,FMT="(4(f12.6),' ')",ADVANCE="NO")        &
-     &          -aegt, -(aegt-aegtss), -aegtss, -aegt10
-         write (UNIT=o_E_unit,FMT="(A)",ADVANCE="YES")                  &
-     &         trim(input_filename)
-      endif
-      !Duplicate Erosion summary info for the *.sgrd file so "tsterode" interface
-      ! can display this info on graphical report window
-!      write(0,*) "Before btest(am0efl,3) test", am0efl, btest(am0efl,3)
-!      if (btest(am0efl,3)) then
-!      write(0,*) "In print section"
-!         write (UNIT=sgrd_u,FMT="(4(f12.6),' ')",ADVANCE="NO")     &
-!     &          -aegt, -(aegt-aegtss), -aegtss, -aegt10
-!         write (UNIT=sgrd_u,FMT="(A)",ADVANCE="YES")               &
-!     &         trim(input_filename)
-!      endif
-      if (btest(am0efl,3)) then
-       write (sgrd_u,*)
-       write (sgrd_u,*) '**Averages - Field'
-       write (sgrd_u,*) '     Total    salt/creep      susp       PM10 '
-       write (sgrd_u,*) '     egt                      egtss      egt10'
-       write (sgrd_u,*) '   -----------------kg/m^2--------------------'
-       write (sgrd_u,15)    aegt, aegt-aegtss, aegtss, aegt10
-       write (sgrd_u,*)
-       write (sgrd_u,*) '**Averages - Crossing Boundaries '
-       write (sgrd_u,*) 'Location      Total  Salt/Creep   Susp    PM10'
-       write (sgrd_u,*) '--------------------kg/m----------------------'
-       write (sgrd_u,21) topt+topss, topt, topss, top10
-       write (sgrd_u,22) bott+botss, bott, botss, bot10
-       write (sgrd_u,23) ritt+ritss, ritt, ritss, rit10
-       write (sgrd_u,24) lftt+lftss, lftt, lftss, lft10
-       write (sgrd_u,*)
-       write (sgrd_u,*) '   Comparision of interior & boundary loss'
-       write (sgrd_u,*) '      interior       boundary    int/bnd ratio'
-       if( totbnd.gt.1.0e-9 ) then
-         write (sgrd_u,16) tot, totbnd, tot/totbnd
-       else
-         !Boundary loss near or equal to zero
-         write (o_unit,16) tot, totbnd, 1.0e-9
-       end if
-      end if
-
-      ! test if plot info wanted
-      if (hagen_plot_flag .EQV. .true.) then
-
-        ! test if plot info available from input files
-        ! (should allow one to mix input files and get only
-        ! wanted plot output)
-        if (xplot > -1) then
-          ! specify plotout dep variables for all values of yplot
-          yplot = 4
-          if (yplot .gt. 0) then
-            ycharin(1) = 'total_eros'
-            ycharin(2) = 'salt/creep'
-            ycharin(3) = 'suspension'
-            ycharin(4) = 'PM10(kg/m^2)'
-            yin(1) = aegt
-            yin(2) = aegt-aegtss
-            yin(3) = aegtss
-            yin(4) = aegt10
-          endif
-
-          call plotout (yplot, ycharin, yin)
-        endif
-      endif
-      ! end of plot section
-
-   end subroutine erodout
+   end subroutine plotin
 
    subroutine plotout (yplot, ycharin, yin)
 
@@ -1335,7 +913,7 @@ module sweep_io_mod
 !         and write to sweep.eplt file for each eros run
 
 !     plotout is called from erodout.for with yin data
-!     the xin data come from common/plot/ with erodin.for
+!     the xin data come from file read by plotin
 
       use file_io_mod, only: fopenk
 

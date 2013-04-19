@@ -123,7 +123,7 @@
       write (o_unit,*) "Surface layer properties"
       write (o_unit,fmt="(a,f5.2,a)")                                   &
      &       "Surface course fragments",                                &
-     &       subrsurf%bsl%asvroc, " (m^3/m^3)"
+     &       subrsurf%bsl(1)%asvroc, " (m^3/m^3)"
       write (o_unit,fmt="(a,a,f5.2,a)") "Initial soil ",                &
      & "mass fraction in surface layer < 0.10 mm ",                     &
      & subrsurf%sf10ic, " (kg/kg)"

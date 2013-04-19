@@ -42,14 +42,15 @@
       use Polygons_Mod, only: destroy_polygon
       use subregions_mod, only: subr_poly, acct_poly
       use barriers_mod
-      use file_io_mod, only: luo_egrd, luo_erod, luomandate, luod_above, luod_below, luowepperod, luoweppplot, luoweppsum, makedir
+      use file_io_mod, only: luo_egrd, luo_erod, luo_emit, luo_sgrd
+      use file_io_mod, only: luomandate, luod_above, luod_below, luowepperod, luoweppplot, luoweppsum, makedir
       use biomaterial
       use debug_mod
       use mandate_mod
       use erosion_data_struct_defs, only: create_subregionsurfacestate, subregionsurfacestate, threshold, cellsurfacestate
       use erosion_data_struct_defs, only: erod_interval, awudmx, am0eif, am0efl
       use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
-      use saeinp_mod, only: mksaeinp
+      use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
       use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier
       use sci_soil_texture_mod, only: create_sci_soil_multiplier, destroy_sci_soil_multiplier
       use stir_report_mod, only: create_stir_accumulator, destroy_stir_accumulator
@@ -679,13 +680,26 @@
          am0sif = .false.  ! Done with all initialization and calibration phases
          ci_year = 0  ! nothing has yet been printed into ci.out
 
+         ! settings for creation of erosion submodel detailed outputs
          mksaeinp%maxday = ljday - ijday + 1  ! set maximum daysim possible for saeinp file name extension
+         mksaeout%maxday = ljday - ijday + 1  ! set maximum daysim possible for saeinp file name extension
          if( saeinp_all .gt. 0 ) then
-            mksaeinp%fullpath = trim(rootp)//'saeinp_files/'
+            ! creating many SWEEP input files
+            mksaeinp%fullpath = trim(rootp)//'sae_in_out_files/'
             call makedir(mksaeinp%fullpath)
          else
+            ! creating one SWEEP input file
             mksaeinp%fullpath = trim(rootp)
          end if
+
+         ! erosion submodel grid output
+         if( btest(am0efl,1) ) then
+            mksaeout%fullpath = trim(rootp)//'sae_in_out_files/'
+            call makedir(mksaeout%fullpath)
+         end if
+
+         ! set output flag
+         in_weps = .true.
 
          ! begin report simulation phase
          write(6,*) "Starting report phase"
@@ -736,11 +750,21 @@
                         mksaeinp%simday = 0
                   end if
 
+                  ! create setting for multiple output files
+                  mksaeout%jday = am0jd
+                  mksaeout%simday = daysim
+                  if (btest(am0efl,0) .or. btest(am0efl,1)) then
+                     luo_egrd = -1   ! setting this here signals daily erodout to create a separate file for each erosion day
+                  endif
+                  if (btest(am0efl,2)) then
+                     luo_emit = -1   ! setting this here signals erosion to create a separate file for each erosion day
+                  end if
+                  if (btest(am0efl,3)) then
+                     luo_sgrd = -1   ! setting this here signals erosion to create a separate file for each erosion day
+                  end if
+
                   ! write(*,*) "Start erosion"
                   call erosion( 5.0, SURF_UPD_FLG, subrsurf, noerod, cellstate )
-                  if (btest(am0efl,0) .or. btest(am0efl,1)) then
-                     call daily_erodout( luo_egrd,luo_erod, cellstate )
-                  endif
                end if
             end if
 

@@ -14,11 +14,11 @@
       use sweep_io_mod
       use weps_interface_defs
       use datetime_mod, only: update_system_time, get_systime_string
-      use file_io_mod, only: fopenk, luo_sgrd, luo_emit
+      use file_io_mod, only: fopenk, luo_erod, luo_egrd, luo_emit, luo_sgrd
       use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, awzypt, subday
       use erosion_data_struct_defs, only: am0eif, am0efl
       use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
-      use saeinp_mod, only: mksaeinp
+      use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
       use p1unconv_mod, only: SEC_PER_DAY
 
 !     +++  PURPOSE +++
@@ -54,7 +54,6 @@
       integer        numarg
       integer        ll, ss
       logical        opnd
-      integer        already_read_inputs
  
       logical        have_ifile
       integer        indx, rndx
@@ -129,8 +128,6 @@
       hagen_plot_flag = .false.
       force_emit_val = 0
       force_debug_flag = -1
-
-      already_read_inputs = 0  !flag to keep from reading inputs more than once
 
 !     Set unit numbers for input and output file devices.
 !     (stdin = 5, stdout = 6)
@@ -295,7 +292,7 @@
              endif
              !create new grid erosion summary output filename from input filename
              o_einp_file = trim(file_bname) //  trim(o_einp_ext)
-             o_einp_fpath = trim(fpath_bname)//trim(o_einp_ext)
+             o_einp_fpath = trim(fpath_bname) // trim(o_einp_ext)
 
              call fopenk(o_einp_unit, o_einp_fpath, 'unknown')
 
@@ -312,6 +309,8 @@
 
              call fopenk(o_erod_unit, o_erod_fpath, 'unknown')
              am0efl = ibset(am0efl,0)  ! Print summary results
+             ! set module level unit value
+             luo_erod = o_erod_unit
 
            else if (argv(2:5) == 'Egrd') then
              !write(0,*) '"-Egrd" option specified'
@@ -325,6 +324,8 @@
 
              call fopenk(o_egrd_unit, o_egrd_fpath, 'unknown')
              am0efl = ibset(am0efl,1)
+             ! set module level unit value
+             luo_egrd = o_egrd_unit
 
            else if (argv(2:5) == 'Emit') then
              !write(0,*) '"-Emit" option specified'
@@ -360,7 +361,11 @@
 
            else if (argv(2:5) == 'Eplt') then  !If specified print Hagen's output file
              !write(0,*) '"-Eplt" option specified'
-             hagen_plot_flag = .true.
+             ! if configuration file exists, sets this flag to .true.
+             inquire (FILE='sweepplot.cfg',EXIST=hagen_plot_flag)
+             if( .not. hagen_plot_flag ) then
+                write(0,*) '-Eplt option ignored, sweepplot.cfg file not found.'
+             end if
 
            else     !Unknown option ....
              write (0,*) 'Ignoring uknown option: ', trim(argv)
@@ -370,6 +375,11 @@
         input_filename = 'from_stdin'
       endif
 
+      ! transfer name into erosion via mksaeout
+      mksaeout%fullpath = trim(input_filename)
+      ! set output flag
+      in_weps = .false.
+
       if (((xgdpt > 0) .and. (ygdpt == 0)) .or.                         &
      &    ((xgdpt == 0) .and. (ygdpt > 0))) then
         write(0,*) 'xgdpt = ', xgdpt, 'ygdpt = ', ygdpt
@@ -378,22 +388,13 @@
         call exit(131)
       endif
 
-      inquire(unit=o_egrd_unit, opened=opnd)
-      if (opnd .eqv. .true.) then
-         !write(0,*) 'calling erodin with output unit no: ', o_egrd_unit
-         call erodin(i_unit, o_egrd_unit, force_debug_flag, already_read_inputs, subrsurf) !Put copy of input in .egrd file
-         already_read_inputs = already_read_inputs + 1
-      endif
-
       inquire(unit=o_einp_unit, opened=opnd)
       if (opnd .eqv. .true.) then
          !write(0,*) 'calling erodin with output unit no: ', o_einp_unit
-         call erodin(i_unit, o_einp_unit, force_debug_flag, already_read_inputs, subrsurf) !Echo input to a file
-         already_read_inputs = already_read_inputs + 1
+         call erodin(i_unit, o_einp_unit, force_debug_flag, hagen_plot_flag, subrsurf) !Echo input to a file
       else
          !write(0,*) 'calling erodin with output unit no: ', o_unit
-         call erodin(i_unit, o_unit, force_debug_flag, already_read_inputs, subrsurf)  !Doesn't echo input to file
-         already_read_inputs = already_read_inputs + 1
+         call erodin(i_unit, o_unit, force_debug_flag, hagen_plot_flag, subrsurf)  !Doesn't echo input to file
       endif
 
       ! Set based on allocated size of subrsurf
@@ -410,26 +411,7 @@
         endif 
       endif
 
-      ! set file output flag
-      ! this in no longer set in input file.
-      am0efl = 0
-      inquire(unit=o_erod_unit, opened=opnd)
-      if (opnd .eqv. .true.) then
-         am0efl = ibset(am0efl,0)             !Print summary results
-      endif
-      inquire(unit=o_egrd_unit, opened=opnd)
-      if (opnd .eqv. .true.) then
-         am0efl = ibset(am0efl,1)
-      endif
-      inquire(unit=o_emit_unit, opened=opnd)
-      if (opnd .eqv. .true.) then
-         am0efl = ibset(am0efl,2)
-      endif
-      inquire(unit=o_sgrd_unit, opened=opnd)
-      if (opnd .eqv. .true.) then
-         am0efl = ibset(am0efl,3)
-      endif
-      !write(0,*) 'am0efl is = ', am0efl
+      write(0,*) 'am0efl is = ', am0efl
 
 !     Initialize erosion code, create grid, etc:
 !     (must come after sim field size, & no. subr specified)
@@ -463,10 +445,8 @@
 !     start erosion
       call erosion( min_erosion_awu, SURF_UPD_FLG, subrsurf, noerod, cellstate )
 
-      !sweep will generate the final grid values and the summarized erosion totals
-      if (btest(am0efl,0).or.btest(am0efl,1).or.btest(am0efl,3)) then
-       call erodout (o_egrd_unit, o_erod_unit, o_sgrd_unit, input_filename, hagen_plot_flag, cellstate)
-      endif
+      ! configured summary info
+      call erodout (hagen_plot_flag)
 
       if (i_unit .ne. 5) then
         close(i_unit)
@@ -476,9 +456,9 @@
       endif
       close(o_einp_unit)
       close(o_erod_unit)
-      close(o_egrd_unit)
-      close(o_sgrd_unit)
-      close(o_emit_unit)
+      !close(o_egrd_unit)
+      !close(o_sgrd_unit)
+      !close(o_emit_unit)
 
       stop
       end program
