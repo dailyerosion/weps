@@ -108,8 +108,6 @@
       ! initialize anemometer defaults
       call anemometer_init
 
-      awzypt = 300.0      !Requires yrly average precip. (Hagen's best estimate for us to use)
-
       mksaeinp%simday = 0 ! 0 means saeinp will not be used to create file.
 
       min_erosion_awu = 5.0  !default minimum erosive wind speed
@@ -124,7 +122,6 @@
       have_ifile = .false.
       am0efl = 0   ! set flag for creating output file to none
 
-! *** set plot_flag value false in WEPS
       hagen_plot_flag = .false.
       force_emit_val = 0
       force_debug_flag = -1

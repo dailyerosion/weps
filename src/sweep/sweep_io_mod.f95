@@ -27,28 +27,29 @@ module sweep_io_mod
 
    subroutine erodin (i_unit, o_unit, cmdebugflag, hagen_plot_flag, subrsurf)
 
-!     +++ PURPOSE +++
-!     Utility to read initial conditions and variables from
-!     input file (stdin or erod.in) for the standalone erosion submodel
+      ! +++ PURPOSE +++
+      ! Utility to read initial conditions and variables from
+      ! input file (stdin or erod.in) for the standalone erosion submodel
 
-!     If "o_unit" == stdout (6) then input not echo'd
+      ! If "o_unit" == stdout (6) then input not echo'd
 
-!     + + + Modules Used + + +
+      ! + + + Modules Used + + +
       use Polygons_Mod
       use subregions_mod, only: subr_poly, acct_poly
-      use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate, awdair, anemht, awzzo, wzoflg, &
+      use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate, &
+                                          awzypt, awdair, anemht, awzzo, wzoflg, &
                                           ntstep, awadir, awudmx, subday, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
       use barriers_mod
       use grid_geo_def, only: amasim, amxsim
       use sae_in_out_mod, only: saeinp
 
-!     +++ ARGUMENT DECLARATIONS +++
+      ! +++ ARGUMENT DECLARATIONS +++
       integer i_unit, o_unit, cmdebugflag
       logical hagen_plot_flag
       type(subregionsurfacestate), dimension(:), allocatable :: subrsurf
 
-!     +++ LOCAL VARIABLES +++
+      ! +++ LOCAL VARIABLES +++
       integer i,j
       integer sr,ibr,a,l,h
       integer wflg
@@ -63,31 +64,31 @@ module sweep_io_mod
       integer :: nbr         ! number of barriers (read from input file)
       character*(mrcl) line
 
-!     + + + LOCAL VARIABLE DEFINITIONS + + +
-!     i, j, k = do-loop indices
-!     x,y,sr,b,a,l,h = do-loop indices
-!     wflg = flag to determine format of wind speed data (0 = Weibull, 1 = real)
-!     debugflg = flag to output debug data (0 = none, 1 = input, 2 = more, etc.)
-!     xplot    = flag to put plot data in arrays
-!               (value>0 = no. indep input variable, 0= none)
-!     f(mntime) = cumulative frequency of wind at speeds < subday(i)%awu
-!     wfcalm    = wind fraction intercept (+calm, - no calm in period)
-!     wuc       = Weibull wind speed distribution scale factor (m/s)
-!     w0k       = Weibull wind speed distribution shape factor
-!     step      = tmp real variable for ntstep
-!     xcharin(i)= indep. variable name(s) used in plot
-!     xin(i)    = indep. variable value(s) used in plot
+      ! + + + LOCAL VARIABLE DEFINITIONS + + +
+      ! i, j, k = do-loop indices
+      ! x,y,sr,b,a,l,h = do-loop indices
+      ! wflg = flag to determine format of wind speed data (0 = Weibull, 1 = real)
+      ! debugflg = flag to output debug data (0 = none, 1 = input, 2 = more, etc.)
+      ! xplot    = flag to put plot data in arrays
+      !           (value>0 = no. indep input variable, 0= none)
+      ! f(mntime) = cumulative frequency of wind at speeds < subday(i)%awu
+      ! wfcalm    = wind fraction intercept (+calm, - no calm in period)
+      ! wuc       = Weibull wind speed distribution scale factor (m/s)
+      ! w0k       = Weibull wind speed distribution shape factor
+      ! step      = tmp real variable for ntstep
+      ! xcharin(i)= indep. variable name(s) used in plot
+      ! xin(i)    = indep. variable value(s) used in plot
 
-!     +++ FUNCTIONS CALLED +++
-!     getline
+      ! +++ FUNCTIONS CALLED +++
+      ! getline
 
-!     +++ END SPECIFICATIONS +++
+      ! +++ END SPECIFICATIONS +++
 
-!     +++ INITIALIZATION +++
+      ! +++ INITIALIZATION +++
 
       debugflg = 0 !needs to be initialized when using full debugging compiles
-!     Read the debug flag to specify level of debug support
-!     (currently only input file level debug supported)
+      ! Read the debug flag to specify level of debug support
+      ! (currently only input file level debug supported)
 
       line = getline(i_unit)
       if (cmdebugflag .lt. 0) then  !commandline option not set - use input file setting
@@ -96,23 +97,23 @@ module sweep_io_mod
           debugflg = cmdebugflag  !use commandline setting
       endif
 
-!     EROSION initialization flag (logical)
+      ! EROSION initialization flag (logical)
       line = getline(i_unit)
       read (line,*) am0eif
 
-!     +++ SIMULATION REGION +++
+      ! +++ SIMULATION REGION +++
 
-!     Simulation region diagonal corners (x1,y1) and (x2,y2)
+      ! Simulation region diagonal corners (x1,y1) and (x2,y2)
       line = getline(i_unit)
       read (line,*) amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
 
-!     Simulation region orientation angle
+      ! Simulation region orientation angle
       line = getline(i_unit)
       read (line,*) amasim
 
-!     +++ ACCOUNTING REGIONS +++
+      ! +++ ACCOUNTING REGIONS +++
 
-!     Number of accounting regions
+      ! Number of accounting regions
       line = getline(i_unit)
       read (line,*) nacctr
 
@@ -136,13 +137,13 @@ module sweep_io_mod
         end do
    20 continue
 
-!     +++ BARRIERS +++
+      ! +++ BARRIERS +++
 
-!     Number of barriers
+      ! Number of barriers
       line = getline(i_unit)
       read (line,*) nbr
 
-!     NOTE: Barrier data must not be in the input file if "nbr = 0"
+      ! NOTE: Barrier data must not be in the input file if "nbr = 0"
       if( nbr .gt. 0 ) then
         ! allocate structure for barriers
         allocate(barrier(nbr), stat = alloc_stat)
@@ -168,11 +169,11 @@ module sweep_io_mod
         end do
       end do
 
-!     +++ SUBREGION REGIONS +++
+      ! +++ SUBREGION REGIONS +++
 
-!     m1subr.inc
+      ! m1subr.inc
 
-!     Number of subregions
+      ! Number of subregions
       line = getline(i_unit)
       read (line,*) nsubr
 
@@ -187,7 +188,7 @@ module sweep_io_mod
          Write(*,*) 'ERROR: memory allocation, subrsurf, subr_poly'
       end if
 
-!     Dimensions, Biomass, Soil, and Hydrology (by subregion)
+      ! Dimensions, Biomass, Soil, and Hydrology (by subregion)
       do 100  sr=1, nsubr
         ! read subregion polygon point count
         line = getline(i_unit)
@@ -201,35 +202,35 @@ module sweep_io_mod
             read (line,*) subr_poly(sr)%points(ipol)%x, subr_poly(sr)%points(ipol)%y
         end do
 
-!     +++ BIOMASS +++
+      ! +++ BIOMASS +++
 
-!     b1geom.inc
+      ! b1geom.inc
 
-!       Biomass height
-!        line = getline(i_unit)
-!        read (line,*)  abzht(sr)
-!!       read (getline(i_unit),*) abzht(sr)
-!       Now reads in average "residue height" instead of "biomass height'
-!       LEW - 1/26/06
+        ! Biomass height
+        !  line = getline(i_unit)
+        !  read (line,*)  abzht(sr)
+        !! read (getline(i_unit),*) abzht(sr)
+        ! Now reads in average "residue height" instead of "biomass height'
+        ! LEW - 1/26/06
         line = getline(i_unit)
         read (line,*)  subrsurf(sr)%adzht_ave
 
-!     c1glob.inc
+      ! c1glob.inc
 
-!       Crop height
+        ! Crop height
         line = getline(i_unit)
         read (line,*)  subrsurf(sr)%aczht
 
-!       Crop stem area index and leaf area index
+        ! Crop stem area index and leaf area index
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%acrsai, subrsurf(sr)%acrlai
 
-!       Residue stem area index and leaf area index
+        ! Residue stem area index and leaf area index
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%adrsaitot, subrsurf(sr)%adrlaitot
 
-!       use crop and residue values to find the total value
-!       sum the stem area index and leaf area index values
+        ! use crop and residue values to find the total value
+        ! sum the stem area index and leaf area index values
         subrsurf(sr)%abrsai = subrsurf(sr)%acrsai + subrsurf(sr)%adrsaitot
         subrsurf(sr)%abrlai = subrsurf(sr)%acrlai + subrsurf(sr)%adrlaitot
 
@@ -241,49 +242,49 @@ module sweep_io_mod
             subrsurf(sr)%abzht = ( subrsurf(sr)%adzht_ave*subrsurf(sr)%adrsaitot                   &
                                + subrsurf(sr)%aczht*subrsurf(sr)%acrsai ) / subrsurf(sr)%abrsai
         endif
-!     c1gen.inc
+      ! c1gen.inc
 
-!       addition to code for biodrag
-!       crop row spacing and seed location
+        ! addition to code for biodrag
+        ! crop row spacing and seed location
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%acxrow, subrsurf(sr)%ac0rg
 
-!       These aren't used in EROSION yet
-!       Biomass stem area index by height
-!       read (getline(i_unit),*) (abrsaz(h,sr), h=1,mncz)
-!       Biomass leaf area index by height
-!       read (getline(i_unit),*) (abrlaz(h,sr), h=1,mncz)
+        ! These aren't used in EROSION yet
+        ! Biomass stem area index by height
+        ! read (getline(i_unit),*) (abrsaz(h,sr), h=1,mncz)
+        ! Biomass leaf area index by height
+        ! read (getline(i_unit),*) (abrlaz(h,sr), h=1,mncz)
 
-!       Biomass flat fraction cover, standing cover, and fraction total cover
-!       read (getline(i_unit),*) abffcv(sr), abfscv(sr), abftcv(sr)
-!       Only flat fraction cover used yet
+        ! Biomass flat fraction cover, standing cover, and fraction total cover
+        ! read (getline(i_unit),*) abffcv(sr), abfscv(sr), abftcv(sr)
+        ! Only flat fraction cover used yet
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%abffcv
 
-!     +++ SOIL +++
+      ! +++ SOIL +++
 
-!       s1layr.inc, s1phys.inc & s1agg.inc
+        ! s1layr.inc, s1phys.inc & s1agg.inc
 
-!       Number of soil layers (in this subregion)
+        ! Number of soil layers (in this subregion)
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%nslay
 
         ! allocate arrays for soil layer and surface wetness values
         call create_subregionsurfacestate(subrsurf(sr)%nslay, 24, subrsurf(sr))
 
-!       Soil layer thickness
+        ! Soil layer thickness
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%aszlyt,l=1,subrsurf(sr)%nslay)
 
-!       Soil layer bulk density
+        ! Soil layer bulk density
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%asdblk, l=1,subrsurf(sr)%nslay)
 
-!       Sand, silt, and clay fractions
+        ! Sand, silt, and clay fractions
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%asfsan, l=1,subrsurf(sr)%nslay)
 
-!       read very fine sand content edit 6-9-01 LH
+        ! read very fine sand content edit 6-9-01 LH
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%asfvfs, l=1,subrsurf(sr)%nslay)
 
@@ -293,21 +294,21 @@ module sweep_io_mod
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%asfcla, l=1,subrsurf(sr)%nslay)
 
-!       Volume of rock fraction
+        ! Volume of rock fraction
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%asvroc, l=1,subrsurf(sr)%nslay)
 
-!       s1agg.inc
-!       Soil layer aggregate density
+        ! s1agg.inc
+        ! Soil layer aggregate density
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%asdagd, l=1,subrsurf(sr)%nslay)
 
-!       Soil layer aggregate stability
+        ! Soil layer aggregate stability
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%aseags, l=1,subrsurf(sr)%nslay)
 
 ! Check these variables with ASD inc files and Hagen's EROSION inc files - LEW
-!       Soil layer ASD parms (gmd, min, max, gsd)
+        ! Soil layer ASD parms (gmd, min, max, gsd)
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%aslagm, l=1,subrsurf(sr)%nslay)
 
@@ -320,17 +321,17 @@ module sweep_io_mod
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%as0ags, l=1,subrsurf(sr)%nslay)
 
-!       s1surf.inc & s1sgeo.inc
+        ! s1surf.inc & s1sgeo.inc
 
-!       Crust parms (fraction, thickness)
+        ! Crust parms (fraction, thickness)
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%asfcr, subrsurf(sr)%aszcr, &
-!       Crust parms (fraction cover of loose material, mass loose material)
+        ! Crust parms (fraction cover of loose material, mass loose material)
              subrsurf(sr)%asflos, subrsurf(sr)%asmlos, &
-!       Crust parms (crust density and stability)
+        ! Crust parms (crust density and stability)
              subrsurf(sr)%asdcr, subrsurf(sr)%asecr
 
-!       Random Roughness
+        ! Random Roughness
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%aslrr
 
@@ -352,31 +353,31 @@ module sweep_io_mod
            write(0,*) 'wzzo > WZZO_MAX: ', subrsurf(sr)%aslrr*0.3,' > ', WZZO_MAX
         end if
 
-!       Oriented Roughness (ridge ht, spacing, width, orientation)
+        ! Oriented Roughness (ridge ht, spacing, width, orientation)
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%aszrgh, subrsurf(sr)%asxrgs, subrsurf(sr)%asxrgw, subrsurf(sr)%asargo
 
-!       Oriented Roughness ( spacing)
+        ! Oriented Roughness ( spacing)
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%asxdks
 
-!     +++ HYDROLOGY +++
+      ! +++ HYDROLOGY +++
 
-!       h1db1.inc
+        ! h1db1.inc
 
-!       Snow depth
+        ! Snow depth
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%ahzsnd
 
-!       Soil layer wilting point
+        ! Soil layer wilting point
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%ahrwcw, l=1,subrsurf(sr)%nslay)
 
-!       Soil layer water content
+        ! Soil layer water content
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%ahrwca, l=1,subrsurf(sr)%nslay)
 
-!       Soil surface hourly water content
+        ! Soil surface hourly water content
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%ahrwc0(h), h=1,12)
 
@@ -385,20 +386,29 @@ module sweep_io_mod
 
   100 continue
 
-!     +++ WEATHER +++
+      ! +++ WEATHER +++
+
+      write(*,*) 'ERODIN: ready to read weather'
+
+      ! Average annual precipitation
+      line = getline(i_unit)
+      read (line,*) awzypt
 
 ! We need to check on the units for air density - variable definition says (kg/m^3)
 ! Also, we need to see why it currently isn't being used - LJH said it was
-!     Air density
+      ! Air density
       line = getline(i_unit)
       read (line,*) awdair
 
-!     Wind Direction
+      ! Wind Direction
       line = getline(i_unit)
       read (line,*) awadir
 
-!     Number of "steps" during 24 hours (96 = 15 minute intervals)
+      ! Number of "steps" during 24 hours (96 = 15 minute intervals)
       line = getline(i_unit)
+
+      write(*,*) 'ERODIN: line for ntstep', trim(line)
+
       read (line,*) ntstep
 
       ! allocate wind direction and speed array
@@ -407,52 +417,52 @@ module sweep_io_mod
          Write(*,*) 'ERROR: memory allocation, erodin wind direction and speed'
       end if
 
-!     anemometer height, zo at anemom, and location (station or field)
-!     note if flag=1, at field, awwzo will be changed to field value
+      ! anemometer height, zo at anemom, and location (station or field)
+      ! note if flag=1, at field, awwzo will be changed to field value
       line = getline(i_unit)
       read (line,*) anemht, awzzo, wzoflg
 
-!     Weibull wind flag (0 - read Weibull parms, 1 - read wind speeds)
+      ! Weibull wind flag (0 - read Weibull parms, 1 - read wind speeds)
       line = getline(i_unit)
       read (line,*) wflg
 
-!     wind data inputs as the Weibull paramters
-!     (wfcalm, wuc, w0k) is indicated by code ntstep = 99
+      ! wind data inputs as the Weibull paramters
+      ! (wfcalm, wuc, w0k) is indicated by code ntstep = 99
       if (wflg .eq. 0) then
 
-!       Weibull parms (fraction calm, c, k)
+        ! Weibull parms (fraction calm, c, k)
         line = getline(i_unit)
         read (line,*) wfcalm, wuc, w0k
 
-!       calculate daily max wind speed (99% speed)
-!       awudmx = wuc*(-log((1.0-0.99)/(1-wfcalm)))**(1.0/w0k)
+        ! calculate daily max wind speed (99% speed)
+        ! awudmx = wuc*(-log((1.0-0.99)/(1-wfcalm)))**(1.0/w0k)
 
-!       calculate period wind speeds
+        ! calculate period wind speeds
         step = ntstep
         do 198 i= 1, ntstep
-!         find center of each step and add empirical last term from file ntstep.mcd
+          ! find center of each step and add empirical last term from file ntstep.mcd
             f(i) = (1.0/(2.0*step)) + ((i-1)/step) +0.3/(step*w0k)
-!         to prevent out-of-range
+          ! to prevent out-of-range
           if (f(i) .lt. wfcalm) then
             f(i) = wfcalm
           endif
           subday(i)%awu = wuc*(-log((1.0-f(i))/(1.0-wfcalm)))**(1.0/w0k)
   198   end do
-!       Use greatest interval wind speed rather than 99% speed above
+        ! Use greatest interval wind speed rather than 99% speed above
         awudmx = subday(ntstep)%awu
-!
-!       change weibull wind speed dist. to a symmetric shape similar
-!       to the daily distribution from wind gen
 
-!       insure that ntstep is an even no.
+        ! change weibull wind speed dist. to a symmetric shape similar
+        ! to the daily distribution from wind gen
+
+        ! insure that ntstep is an even no.
         ntstep = (ntstep/2)*2
 
-!       store wind speed in temp array
+        ! store wind speed in temp array
         do 110 i = 1, ntstep
           wu(i) = subday(i)%awu
   110   end do
 !
-!       generate the symmetric distribution
+        ! generate the symmetric distribution
         i = -1
         do 115 j = 1, ntstep/2
            i = i+2
@@ -469,13 +479,13 @@ module sweep_io_mod
           line = getline(i_unit)
           read (line,*) (subday(i)%awu,i=(j-1)*6+1,(j-1)*6+6)
 191     end do
-!       If not divisible evenly by 6, then get the remaining values
+        ! If not divisible evenly by 6, then get the remaining values
         if (mod(ntstep,6) .ne. 0) then
           line = getline(i_unit)
           read (line,*) (subday(i)%awu,i=(j-1)*6+1,(j-1)*6+mod(ntstep,6))
         endif
 
-!     Determine the maximum wind speed during the day
+      ! Determine the maximum wind speed during the day
         awudmx = 0.0
         do 193 i = 1, ntstep
            if( awudmx .lt. subday(i)%awu ) then
@@ -489,7 +499,7 @@ module sweep_io_mod
          call plotin(subrsurf)
       end if
 
-!     + + + OUTPUT SECTION + + +
+      ! + + + OUTPUT SECTION + + +
       if (o_unit .ne. 6) then  !Only echo input if stdout not specified
           call saeinp( o_unit, subrsurf )
       endif !(o_unit .ne. 6)
@@ -498,24 +508,24 @@ module sweep_io_mod
 
    subroutine erodout (hagen_plot_flag)
 
-!     +++  PURPOSE +++
-!     To print output desired from standalone EROSION submodel
+      ! +++  PURPOSE +++
+      ! To print output desired from standalone EROSION submodel
 
       use erosion_data_struct_defs, only: cellsurfacestate
       use sae_in_out_mod, only: daily_erodout, aegt, aegtss, aegt10
 
-!     +++ ARGUMENT DECLARATIONS +++
+      ! +++ ARGUMENT DECLARATIONS +++
       logical, intent(in) :: hagen_plot_flag
 
-!     ++++ LOCAL VARIABLES +++
+      ! ++++ LOCAL VARIABLES +++
       character*12 ycharin(30)
       integer yplot
       real yin(30)
 
-!     +++ SUBROUTINES CALLED+++
-!     plotout
+      ! +++ SUBROUTINES CALLED+++
+      ! plotout
 
-!     +++ END SPECIFICATIONS +++
+      ! +++ END SPECIFICATIONS +++
 
       ! test if plot info wanted
       if (hagen_plot_flag .EQV. .true.) then
@@ -544,18 +554,18 @@ module sweep_io_mod
 
    subroutine plotin(subrsurf)
 
-!     + + +  PURPOSE + + +
-!     To read the configuration (xin data) for sweep.eplt file creation
+      ! + + +  PURPOSE + + +
+      ! To read the configuration (xin data) for sweep.eplt file creation
 
-!    WARNING: Only plots values for subregion #1
+      ! WARNING: Only plots values for subregion #1
 
-!      "xplot" flag for writing variables to file "sweep.eplt".
-!       -1 = write nothing
-!        0 = write erosion variables;
-!      Actual variables listed below are only written if flagged with a 1
+       ! "xplot" flag for writing variables to file "sweep.eplt".
+       ! -1 = write nothing
+       !  0 = write erosion variables;
+       ! Actual variables listed below are only written if flagged with a 1
 
-!      NOTE:  The SWEEP cmdline option -Eplt determines if the data
-!             specfied here is appended to the sweep.eplt file.
+       ! NOTE:  The SWEEP cmdline option -Eplt determines if the data
+       !        specfied here is appended to the sweep.eplt file.
 
       use file_io_mod, only: fopenk
       use erosion_data_struct_defs, only: subregionsurfacestate, awdair, anemht, awzzo, wzoflg, &
@@ -571,24 +581,24 @@ module sweep_io_mod
       character*(mrcl) line
       integer i, xflag
 
-!     read sweepplot.cfg  configuration file 
+      ! read sweepplot.cfg  configuration file 
       call fopenk(i_unit, 'sweepplot.cfg', 'old')
 
-!     + + + PLOT SECTION + + +
-!     selectively reads succesive indep variable names and values
-!     if xplot is set to zero and the xflag is set to
-!      1 for a given variable in the erodin file
+      ! + + + PLOT SECTION + + +
+      ! selectively reads succesive indep variable names and values
+      ! if xplot is set to zero and the xflag is set to
+      !  1 for a given variable in the erodin file
 
-!     test if plotout file to be created
+      ! test if plotout file to be created
       line = getline(i_unit)
       read (line,*) xplot
       if (xplot .eq. 0) then
-!     intialize xin array
+      ! intialize xin array
       do 194 i=1,30
          xin(i) = 0.0
   194 continue
-!
-!     field length (good for wind parallel x-axis)
+
+      ! field length (good for wind parallel x-axis)
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -600,7 +610,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     biomass height
+      ! biomass height
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -612,7 +622,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     biomass stem area index
+      ! biomass stem area index
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -624,7 +634,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     biomass leaf area index
+      ! biomass leaf area index
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -636,7 +646,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     biomass flat cover
+      ! biomass flat cover
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -648,7 +658,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     very fine sand
+      ! very fine sand
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -660,7 +670,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     sand
+      ! sand
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -672,7 +682,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     silt
+      ! silt
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -684,7 +694,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     clay
+      ! clay
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -696,7 +706,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     rock vol.
+      ! rock vol.
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -708,7 +718,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     aggregate density
+      ! aggregate density
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -720,7 +730,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     aggregate stability
+      ! aggregate stability
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -732,7 +742,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     agregate geometric mean diameter
+      ! agregate geometric mean diameter
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -744,7 +754,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     aggreate minimum diameter
+      ! aggreate minimum diameter
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -756,7 +766,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     aggregate maximum diameter
+      ! aggregate maximum diameter
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -768,7 +778,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     aggregate geometric std dev
+      ! aggregate geometric std dev
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -780,7 +790,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     soil fraction crust cover
+      ! soil fraction crust cover
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -792,7 +802,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 !
-!     surface crust thickness
+      ! surface crust thickness
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -804,7 +814,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     fraction loose material on crust
+      ! fraction loose material on crust
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -816,7 +826,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     mass of loose material on crust
+      ! mass of loose material on crust
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -828,7 +838,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     soil crust stability
+      ! soil crust stability
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -840,7 +850,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     random roughness
+      ! random roughness
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -852,7 +862,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     ridge height
+      ! ridge height
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -864,7 +874,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     ridge spacing
+      ! ridge spacing
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -876,7 +886,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     ridge width
+      ! ridge width
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -888,7 +898,7 @@ module sweep_io_mod
           line = getline(i_unit)
         endif
 
-!     ridge orientation
+      ! ridge orientation
         line = getline(i_unit)
         read (line,*) xflag
         if (xflag .eq. 1) then
@@ -907,50 +917,50 @@ module sweep_io_mod
 
    subroutine plotout (yplot, ycharin, yin)
 
-!     + + +  PURPOSE + + +
-!     1. to create headings for sweep.eplt file
-!     2. to store dep var (yin) and indep var (xin)
-!         and write to sweep.eplt file for each eros run
+      ! + + +  PURPOSE + + +
+      ! 1. to create headings for sweep.eplt file
+      ! 2. to store dep var (yin) and indep var (xin)
+      !     and write to sweep.eplt file for each eros run
 
-!     plotout is called from erodout.for with yin data
-!     the xin data come from file read by plotin
+      ! plotout is called from erodout.for with yin data
+      ! the xin data come from file read by plotin
 
       use file_io_mod, only: fopenk
 
-!     + + + ARGUMENT DECLARATAIONS + + +
+      ! + + + ARGUMENT DECLARATAIONS + + +
       integer yplot             ! number of dep variables to put in sweep.eplt file
       character*12 ycharin(30)  ! name(s) of dep. variables
       real yin(30)              ! value(s) of dep. variables
 
-!     + + + LOCAL VARIABLES + + +
+      ! + + + LOCAL VARIABLES + + +
       integer :: j       ! counter, loop index
       integer :: nline   ! number of lines read in from file
       logical :: used    ! logical for presence of sweep.eplt file
       character*500 line, plotdat(500) ! string read in from file
       integer :: luo1    ! output file unit number
 
-!     + + + FORMATS + + +
+      ! + + + FORMATS + + +
   200 format(40f12.4)
   201 format(' file:')
   202 format('sweep.eplt')
 
-!     + + + END SPECIFICATIONS + + +
+      ! + + + END SPECIFICATIONS + + +
 
-!     create sweep.eplt file
+      ! create sweep.eplt file
       inquire (FILE='sweep.eplt',EXIST=used)
       if(.not.used) then
 
-!       write heading for sweep.eplt
+        ! write heading for sweep.eplt
         call fopenk(luo1, 'sweep.eplt', 'new')
         write(luo1,201)
         write(luo1,202)
-!      write(luo1,*)((ycharin(i),i=1,yplot),(xcharin(i),i=1,xplot))
+       ! write(luo1,*)((ycharin(i),i=1,yplot),(xcharin(i),i=1,xplot))
         write(luo1,*)  ycharin(1:yplot), xcharin(1:xplot)
         write(luo1,*)
         close(UNIT=luo1)
       endif
 
-!     read current sweep.eplt file to plotdat char. array
+      ! read current sweep.eplt file to plotdat char. array
       call fopenk(luo1, 'sweep.eplt', 'old')
       rewind (UNIT=luo1)
       j = 0
@@ -959,13 +969,13 @@ module sweep_io_mod
       plotdat(j) = line
       go to 20
 
-!     update the sweep.eplt file
+      ! update the sweep.eplt file
    50 nline = j
       rewind (UNIT=luo1)
       do 55 j = 1, nline
          write(luo1,'(a)') trim(plotdat(j))
    55 continue
-!     change sign of erosion components (yin) and write variables
+      ! change sign of erosion components (yin) and write variables
       write (luo1,200)  (-1)*yin(1:yplot), xin(1:xplot)
       close (UNIT=luo1)
 

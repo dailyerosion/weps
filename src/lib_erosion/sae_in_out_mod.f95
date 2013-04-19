@@ -35,7 +35,7 @@ module sae_in_out_mod
       use grid_geo_def, only: amxsim, amasim
       use subregions_mod
       use barriers_mod
-      use erosion_data_struct_defs, only: subregionsurfacestate, awdair, anemht, awzzo, wzoflg, awadir, subday, ntstep
+      use erosion_data_struct_defs, only: subregionsurfacestate, awzypt, awdair, anemht, awzzo, wzoflg, awadir, subday, ntstep
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer, intent(inout) :: luo_saeinp      ! output unit number
@@ -402,6 +402,10 @@ module sae_in_out_mod
       '#',/, &
       '#     +++ WEATHER +++',/, &
       '#',/, &
+      '#     awzypt, R, Average annual precipitation (mm)')
+      write(luo_saeinp,*) awzypt
+      write(luo_saeinp,2273)
+ 2273 format('#',/, &
       '#     awdair, R, Air density (kg/m^3)')
       write(luo_saeinp,*) awdair
       write(luo_saeinp,2275)
