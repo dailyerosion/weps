@@ -14,7 +14,7 @@
       use weps_interface_defs
       use datetime_mod, only: get_systime_string
       use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, awzypt, anemht, wzoflg, ntstep
-      use grid_geo_def, only: awa, kbr, imax, jmax, amasim, amxsim
+      use grid_mod, only: awa, kbr, imax, jmax, amasim, amxsim
 
 !     + + + ARGUEMENT DECLARATIONS + + +
       real ws, wdir, hr

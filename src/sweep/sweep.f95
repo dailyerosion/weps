@@ -15,9 +15,10 @@
       use weps_interface_defs
       use datetime_mod, only: update_system_time, get_systime_string
       use file_io_mod, only: fopenk, luo_erod, luo_egrd, luo_emit, luo_sgrd
-      use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, awzypt, subday
-      use erosion_data_struct_defs, only: am0eif, am0efl
-      use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
+      use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, awzypt, &
+                                          subday, am0eif, am0efl
+      use barriers_mod, only: minht_barriers
+      use grid_mod, only: sbgrid, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
       use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
       use p1unconv_mod, only: SEC_PER_DAY
 
@@ -422,7 +423,7 @@
            ix = (amxsim(2)%x - amxsim(1)%x) / xgdpt
            jy = (amxsim(2)%y - amxsim(1)%y) / ygdpt
          else          !use Hagen's grid dimensioning as the default
-           call sbgrid
+           call sbgrid( minht_barriers() )
          endif
 
          ! allocate cellstate array to cover grid

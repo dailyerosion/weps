@@ -7,7 +7,7 @@
 
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: cellsurfacestate
-      use grid_geo_def, only: imax, jmax
+      use grid_mod, only: imax, jmax
       use sci_report_mod, only: scisum
 
 !     + + + ARGUMENT DECLARATIONS + + +

@@ -10,7 +10,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
     USE pd_var_type_def
     use biomaterial, only: biototal
     use erosion_data_struct_defs, only: cellsurfacestate
-    use grid_geo_def, only: imax, jmax, sim_area
+    use grid_mod, only: imax, jmax, sim_area
 
     IMPLICIT NONE
 

@@ -6,7 +6,7 @@
 ! A polyline is simply an ordered set of points.
 
 module barriers_mod
-  use Points_Mod
+  use Points_Mod, only: point, slen
   implicit none
  
   type barrier_params
@@ -74,14 +74,12 @@ contains
 !     to calculate the fraction of open field friction velocity
 !     in from up wind and down wind sources of shelter at all interior nodes
 
-      use weps_interface_defs
       use erosion_data_struct_defs, only: cellsurfacestate
-      use grid_geo_def, only: imax, jmax, ix, jy
+      use grid_mod, only: imax, jmax, ix, jy, amxsim
       use p1unconv_mod, only: pi
-      use Points_Mod
-      use pnt_polyline_mod
-      use lin_interp_mod
-      use grid_geo_def, only: amxsim
+      use Points_Mod, only: point
+      use pnt_polyline_mod, only: location_intersect, pl_intersect
+      use lin_interp_mod, only: lin_interp
 
 !     + + + ARGUMENT DECLARATIONS + + +
       real, intent(in) :: rel_wind_angle  ! angle of the wind relative the grid positive y-axis (see sbdirini)
@@ -193,5 +191,24 @@ contains
       endif
 
   end function fu
+
+  function minht_barriers() result( minht )
+
+    real :: minht  ! minimum barrier height
+
+    integer :: i   ! do loop index
+
+    if( allocated(barrier) ) then
+      ! barriers exist
+      ! find shortest barrier height
+      do i = 1, size(barrier)
+         minht = minval(barrier(i)%param(1:size(barrier(i)%param))%amzbr)
+      end do
+    else
+      ! no barriers, so set height to zero
+      minht = 0.0
+    endif
+
+  end function minht_barriers
 
 end module barriers_mod

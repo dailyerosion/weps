@@ -34,14 +34,14 @@ module sweep_io_mod
       ! If "o_unit" == stdout (6) then input not echo'd
 
       ! + + + Modules Used + + +
-      use Polygons_Mod
+      use Polygons_Mod, only: create_polygon
       use subregions_mod, only: subr_poly, acct_poly
       use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate, &
                                           awzypt, awdair, anemht, awzzo, wzoflg, &
                                           ntstep, awadir, awudmx, subday, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
       use barriers_mod, only: create_barrier, barrier
-      use grid_geo_def, only: amasim, amxsim
+      use grid_mod, only: amasim, amxsim
       use sae_in_out_mod, only: saeinp
 
       ! +++ ARGUMENT DECLARATIONS +++
@@ -166,6 +166,11 @@ module sweep_io_mod
            ! barrier height, width, porosity
            line = getline(i_unit)
            read (line,*) barrier(ibr)%param(ipol)%amzbr, barrier(ibr)%param(ipol)%amxbrw, barrier(ibr)%param(ipol)%ampbr
+           if( barrier(ibr)%param(ipol)%amzbr .le. 0.0 ) then
+             write(*,*) 'ERROR: Barrier height must be > 0'
+             write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol
+             call exit(37)
+           end if
         end do
       end do
 
@@ -571,7 +576,7 @@ module sweep_io_mod
       use erosion_data_struct_defs, only: subregionsurfacestate, awdair, anemht, awzzo, wzoflg, &
                                           ntstep, awadir, awudmx, subday, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
-      use grid_geo_def, only: amasim, amxsim
+      use grid_mod, only: amasim, amxsim
 
 
       type(subregionsurfacestate), dimension(:), allocatable :: subrsurf

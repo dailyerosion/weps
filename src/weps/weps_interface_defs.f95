@@ -481,14 +481,6 @@
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine sberod
 !----------------------------
-      subroutine sbgrid()
-      end subroutine sbgrid
-!----------------------------
-      subroutine sbigrd( cellstate )
-      use erosion_data_struct_defs, only: cellsurfacestate
-      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
-      end subroutine sbigrd   
-!----------------------------
       subroutine sbinit( subrsurf, cellstate )
       use erosion_data_struct_defs
       type(subregionsurfacestate), dimension(:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)

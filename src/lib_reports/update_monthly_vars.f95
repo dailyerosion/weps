@@ -8,7 +8,7 @@ SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cell
     USE pd_var_type_def
     USE pd_var_tables
     use erosion_data_struct_defs, only: cellsurfacestate, awdair, awudmx, subday, ntstep 
-    use grid_geo_def, only: imax, jmax, sim_area
+    use grid_mod, only: imax, jmax, sim_area
 
     IMPLICIT NONE
 

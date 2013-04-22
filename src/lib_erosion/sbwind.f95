@@ -17,7 +17,7 @@
 
       use weps_interface_defs
       use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, anemht, awzzo, wzoflg
-      use grid_geo_def, only: kbr, imax, jmax
+      use grid_mod, only: kbr, imax, jmax
       use barriers_mod, only: barrier
 
 !     +++ ARGUMENT DECLARATIONS +++

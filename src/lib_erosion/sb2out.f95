@@ -13,7 +13,7 @@
 
       use weps_interface_defs
       use erosion_data_struct_defs, only: cellsurfacestate, ntstep
-      use grid_geo_def, only: imax, jmax
+      use grid_mod, only: imax, jmax
 
 !     + + + ARGUEMENT DECLARATIONS + + +
       real hr

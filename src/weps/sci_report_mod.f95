@@ -28,7 +28,7 @@ module sci_report_mod
       use weps_interface_defs
       use file_io_mod, only: luosci
       use erosion_data_struct_defs, only: cellsurfacestate
-      use grid_geo_def, only: imax, jmax, ix, jy
+      use grid_mod, only: imax, jmax, ix, jy
       use sci_soil_texture_mod, only: get_sci_soil_multiplier
 
 !     + + + ARGUMENT DECLARATIONS + + +

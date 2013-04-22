@@ -15,7 +15,7 @@
 
       use weps_interface_defs
       use erosion_data_struct_defs
-      use grid_geo_def, only: i1, i2, i3, i4, i5, i6, sin_awa, cos_awa, tan_awa, imax, jmax, ix, jy
+      use grid_mod, only: i1, i2, i3, i4, i5, i6, sin_awa, cos_awa, tan_awa, imax, jmax, ix, jy
       use timer_def, only: TIMSBEROD, TIMSBQOUT, TIMSTART, TIMSTOP
 
 !     +++ ARGUMENT DECLARATIONS +++

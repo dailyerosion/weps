@@ -8,7 +8,6 @@
 !     +++ PURPOSE +++
 !
 !     Controls calls to subroutines that:
-!       create the Erosion submodel grid (sbgrid)    
 !       initialize Erosion submodel output array to zero (sbigrd).
 !       calculate normalized effect of hills on friction velocity 
 !        on grid for each wind direction (not activated)
@@ -16,26 +15,21 @@
 !        when erosion is not being called.
 
 !     + + + Modules Used + + +
-      use weps_interface_defs
-      use Points_Mod
-      use Polygons_Mod
-      use pnpoly_mod
+      use grid_mod, only: sbigrd, init_regions_grid
       use subregions_mod
       use erosion_data_struct_defs, only: threshold, cellsurfacestate, am0eif
-      use grid_geo_def, only: imax, jmax, ix, jy
 
 !     +++ ARGUMENT DECLARATIONS +++
       type(threshold), dimension(:), intent(inout) :: noerod                 ! report values to show which factors prevented erosion
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
 !     +++ SUBROUTINES CALLED +++
-!     sbgrid
 !     sbigrd
 !     sbhill (not activated)
 
 !     +++ LOCAL VARIABLES +++
-      integer i, j, sr, nsubr, nacctr
-      type(point) :: centroid
+      integer :: sr    ! do loop index
+      integer :: nsubr ! total number of subregions
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     nbr  = number of barriers
@@ -43,48 +37,10 @@
 !     +++ END SPECIFICATIONS +++
 
       nsubr = size(subr_poly)
-      nacctr = size(acct_poly)
 
       ! Grid is created at least once.
       if (am0eif .eqv. .true.) then
-         ! assign subregion number to each grid cell
-         ! code lifted from sbgrid because it is initialized there - LEW
-         do j = 1, jmax-1
-           do i = 1, imax-1
-             ! The grid cell is assumed rectangular. Use centroid of grid cell
-             ! with subregion polygon to select grid cell subregion
-             centroid%x = 0.5 * (i-1+i) * ix
-             centroid%y = 0.5 * (j-1+j) * jy
-             do sr = 1, nsubr
-               ! Check if it is inside subregion polygon
-               if( pnpoly(centroid, subr_poly(sr)) .ge. 0) then
-                  ! centroid of grid cell is inside or on edge of subregion polygon
-                  ! set subregion index
-                  cellstate(i,j)%csr = sr
-                  ! default to first polygon if on edge by exiting the subregion do loop
-                  exit
-               end if
-             end do
-             ! check final status
-             if( cellstate(i,j)%csr .eq. 0 ) then
-                 ! this grid cell not assigned to a subregion
-                 write(*,*) 'ERROR: no subregion for grid cell ',i,':',j
-                 write(*,*) 'Subregion coverage is not complete'
-                 stop
-             end if
-             ! do same assignment check for accounting regions
-             do sr = 1, nacctr
-               ! Check if it is inside subregion polygon
-               if( pnpoly(centroid, acct_poly(sr)) .ge. 0) then
-                  ! centroid of grid cell is inside or on edge of subregion polygon
-                  ! set accounting region index
-                  cellstate(i,j)%car = sr
-                  ! default to first polygon if on edge by exiting the accounting region do loop
-                  exit
-               end if
-             end do
-           end do          
-        end do
+         call init_regions_grid( cellstate )
 
          ! set grid cell output arrays to zero
          call sbigrd( cellstate )

@@ -29,7 +29,7 @@
       use weps_interface_defs
       use datetime_mod, only: get_systime_string
       use erosion_data_struct_defs, only: cellsurfacestate, ntstep
-      use grid_geo_def, only: imax, jmax
+      use grid_mod, only: imax, jmax
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer        ounit   !Unit number for detail grid erosion

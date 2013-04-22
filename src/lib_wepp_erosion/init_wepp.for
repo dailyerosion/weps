@@ -7,7 +7,7 @@
       SUBROUTINE init_wepp(afterWarmup)
       
       use wepp_interface_defs
-      use grid_geo_def, only: amxsim, sim_area
+      use grid_mod, only: amxsim, sim_area
       use Points_Mod, only: slen
 
       implicit none

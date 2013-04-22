@@ -15,7 +15,7 @@
 
       use weps_interface_defs
       use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, awzypt
-      use grid_geo_def, only: imax, jmax
+      use grid_mod, only: imax, jmax
       use p1erode_def, only: SLRR_MIN, SLRR_MAX
 
 !     + + + ARGUEMENT DECLARATIONS + + +

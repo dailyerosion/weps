@@ -49,7 +49,8 @@
       use mandate_mod
       use erosion_data_struct_defs, only: create_subregionsurfacestate, subregionsurfacestate, threshold, cellsurfacestate
       use erosion_data_struct_defs, only: erod_interval, awudmx, am0eif, am0efl
-      use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
+      use barriers_mod, only: minht_barriers
+      use grid_mod, only: sbgrid, sbigrd, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
       use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
       use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier
       use sci_soil_texture_mod, only: create_sci_soil_multiplier, destroy_sci_soil_multiplier
@@ -447,7 +448,7 @@
            ix = (amxsim(2)%x - amxsim(1)%x) / xgdpt
            jy = (amxsim(2)%y - amxsim(1)%y) / ygdpt
          else          !use Hagen's grid dimensioning as the default
-           call sbgrid
+           call sbgrid( minht_barriers() )
          endif
 
          ! allocate cellstate array to cover grid
@@ -862,8 +863,8 @@
                end if
             endif
 
-           ! set erosion accumulators on grid to zero
-           call sbigrd( cellstate )
+            ! set erosion accumulators on grid to zero in preparation for next day
+            call sbigrd( cellstate )
 
          end do   ! end of "reporting" loop
          report_loop = .false.

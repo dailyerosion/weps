@@ -11,13 +11,13 @@
 
 !     + + + Modules Used + + +
       use weps_interface_defs
-      use Polygons_Mod
-      use subregions_mod
+      use Polygons_Mod, only: create_polygon
+      use subregions_mod, only: acct_poly, subr_poly
       use file_io_mod, only: fopenk, luicli, luiwin, luiwsd,            &
      &                       luomanage, luolog
       use erosion_data_struct_defs, only: subday, ntstep, am0efl
       use barriers_mod, only: create_barrier, barrier
-      use grid_geo_def, only: amasim, amxsim, sim_area
+      use grid_mod, only: amasim, amxsim, sim_area
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(out) :: n_rot_cycles
@@ -470,6 +470,11 @@
       case (37)
         ! barrier height
         read (line,*,err=80) barrier(ibr)%param(ipol)%amzbr
+        if( barrier(ibr)%param(ipol)%amzbr .le. 0.0 ) then
+          write(*,*) 'ERROR: Barrier height must be > 0'
+          write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol
+          call exit(37)
+        end if
       case (38)
         ! barrier width
         read (line,*,err=80) barrier(ibr)%param(ipol)%amxbrw

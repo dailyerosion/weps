@@ -8,7 +8,7 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     USE pd_var_type_def
     USE pd_var_tables
     use erosion_data_struct_defs, only: cellsurfacestate, awdair, awudmx, subday, ntstep 
-    use grid_geo_def, only: imax, jmax, sim_area
+    use grid_mod, only: imax, jmax, sim_area
 
     IMPLICIT NONE
 

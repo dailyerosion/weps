@@ -49,7 +49,7 @@
       use p1unconv_mod, only: mtomm
       use timer_def, only: TIMHYDR, TIMDARC, TIMSTART, TIMSTOP
       use erosion_data_struct_defs, only: anemht, awzzo, awzdisp, wzoflg
-      use grid_geo_def, only: amxsim
+      use grid_mod, only: amxsim
       use Points_Mod, only: slen
 
 !     + + + ARGUMENT DECLARATIONS + + +

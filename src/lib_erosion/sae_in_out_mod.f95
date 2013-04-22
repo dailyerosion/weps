@@ -32,7 +32,7 @@ module sae_in_out_mod
 !     + + + Modules Used + + +
       use weps_interface_defs
       use file_io_mod, only: fopenk, makenamnum
-      use grid_geo_def, only: amxsim, amasim
+      use grid_mod, only: amxsim, amasim
       use subregions_mod
       use barriers_mod, only: barrier
       use erosion_data_struct_defs, only: subregionsurfacestate, awzypt, awdair, anemht, awzzo, wzoflg, awadir, subday, ntstep
@@ -465,7 +465,7 @@ module sae_in_out_mod
       use file_io_mod, only: fopenk, makenamnum
       use datetime_mod, only: get_systime_string
       use erosion_data_struct_defs, only: cellsurfacestate, am0efl
-      use grid_geo_def, only: imax, jmax, amasim, amxsim
+      use grid_mod, only: imax, jmax, amasim, amxsim
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer, intent(inout) :: o_unit, o_E_unit, sgrd_u
