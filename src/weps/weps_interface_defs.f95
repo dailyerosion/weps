@@ -436,21 +436,6 @@
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine erodinit
 !---------------------------
-      subroutine sb1out( jj, nn, hr, ws, wdir, o_unit, subrsurf, cellstate )
-      use erosion_data_struct_defs
-      real ws, wdir, hr
-      integer  jj, nn, o_unit
-      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
-      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
-      end subroutine sb1out   
-!----------------------------
-      subroutine sb2out (jj, nn, hr, o_unit, cellstate)
-      use erosion_data_struct_defs, only: cellsurfacestate
-      real hr
-      integer  jj, nn, o_unit
-      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
-      end subroutine sb2out    
-!----------------------------
       subroutine sbaglos (wus, wust, wusto, sf84ic, asvroc,             &
      &                    smaglosmx, smaglos, sf84mn, sf84)
 
@@ -458,14 +443,6 @@
       real smaglosmx, smaglos, sf84mn, sf84 
       end subroutine sbaglos
 !-----------------------------
-      subroutine sbemit (ounit, ws, hhr, cellstate, first_emit)
-      use erosion_data_struct_defs
-      integer        ounit   !Unit number for detail grid erosion
-      real           ws, hhr
-      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
-      logical, intent(inout) :: first_emit
-      end subroutine sbemit
-!----------------------------
       subroutine sberod (time,flg, subrsurf, cellstate)
       use erosion_data_struct_defs
       real      time
