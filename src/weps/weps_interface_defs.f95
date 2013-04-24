@@ -443,55 +443,6 @@
       real smaglosmx, smaglos, sf84mn, sf84 
       end subroutine sbaglos
 !-----------------------------
-      subroutine sberod (time,flg, subrsurf, cellstate)
-      use erosion_data_struct_defs
-      real      time
-      integer   flg    !Surface update flag (1=on, 0=off)
-      type(subregionsurfacestate), dimension(:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
-      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
-      end subroutine sberod
-!----------------------------
-      subroutine sbinit( subrsurf, cellstate )
-      use erosion_data_struct_defs
-      type(subregionsurfacestate), dimension(:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
-      type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
-      end subroutine sbinit
-!----------------------------
-      subroutine sbpm10                                                 &
-     &  (seags, secr, sfcla, sfsan, awzypt,                             &
-     &  canag, cancr, sf10an, sf10en, sf10bk)
-
-        real seags, secr, sfcla, sfsan, awzypt
-        real canag, cancr,sf10an, sf10en, sf10bk                             
-      end subroutine sbpm10
-!----------------------------
-      subroutine sbqout                                                 &
-     & (SURF_UPD_FLG, wus, wust, wusp, sf10, sf84,                      &
-     & sf200, szcr, sfcr, sflos, smlos,                                 &
-     & szrgh, sxrgs, sxprg, slrr,                                       &
-     & sfcla, sfsan,                                                    &
-     & sfvfs, svroc, brsai, bzht,                                       &
-     & bffcv, time,                                                     &
-     & canag, cancr, sf10an, sf10en, sf10bk,                            &
-     & lx, qi, qssi, q10i,                                              &
-     & dmlos, sf84mn, sf84ic, sf10ic, asvroc,smaglosmx,                 &
-     & qo, qsso, q10o )
-      integer :: SURF_UPD_FLG    !Surface update flag (1=on, 0=off)
-      real wus, wust, wusp, sf10, sf84
-      real sf200, szcr, sfcr, sflos, smlos
-      real szrgh, sxrgs, sxprg, slrr
-      real sfcla, sfsan,sfvfs
-      real svroc, brsai, bzht, bffcv, time
-      real canag, cancr, sf10an, sf10en, sf10bk
-      real lx, qi, qssi, q10i, qo, qsso, q10o
-      real dmlos, sf84mn, sf84ic, sf10ic, asvroc, smaglosmx
-      end subroutine sbqout
-!-----------------------------
-      subroutine sbsfdi (slagm, s0ags, slagn, slagx, sldi, sfdi)
-
-      real slagm, s0ags, slagn, slagx, sldi, sfdi         
-      end subroutine sbsfdi
-!-----------------------------
 
 !---------------  HYDRO Routines -----------------------------
       real function acplwu (awcr, awcr_crit, wup)

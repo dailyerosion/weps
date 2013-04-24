@@ -22,7 +22,9 @@
       use timer_def, only: TIMEROS, TIMSBEROD, TIMSBWIND, TIMSTART, TIMSTOP
       use barriers_mod, only: sbbr
       use grid_mod, only: sbdirini
-      use wind_mod, only: sbwind, sbzo, sbwus, sbwust, biodrag
+      use wind_mod, only: sbzo, sbwus, biodrag
+      use sberod_mod, only: sberod, sbinit, sbwind
+      use process_mod, only: sbwust, sbsfdi
 
 !     +++ ARGUMENT DECLARATIONS +++
       real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss

@@ -11,6 +11,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
     use biomaterial, only: biototal
     use erosion_data_struct_defs, only: cellsurfacestate
     use grid_mod, only: imax, jmax, sim_area
+    use process_mod, only: sbsfdi
 
     IMPLICIT NONE
 
