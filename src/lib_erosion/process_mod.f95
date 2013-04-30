@@ -17,15 +17,13 @@ module process_mod
 !     calculate the saltation/creep, suspension, and PM-10 discharge
 !     from each control volume
 
-      use p1erode_def, only: SLRR_MIN
-
 !     +++ ARGUMENT DECLARATIONS +++
       integer, intent(in) :: SURF_UPD_FLG    !Surface update flag (1=on, 0=off)
       real, intent(in) :: wus          ! friction velocity (m/s)
       real, intent(in) :: wust         ! friction velocity threhold at emission (m/s)
       real, intent(in) :: wusp         ! friction velocity threshold at transport cap.(m/s)
       real, intent(inout) :: sf10         ! soil fraction less than 0.010 mm (PM10)
-      real, intent(inout) :: sf84         ! soil fraction less than 0.84 mm      
+      real, intent(inout) :: sf84         ! soil fraction less than 0.84 mm
       real, intent(inout) :: sf200        ! soil fractions less than 2.0 mm
       real, intent(inout) :: szcr         ! soil crust thickness
       real, intent(inout) :: sfcr         ! soil fraction  area crusted
@@ -49,10 +47,10 @@ module process_mod
       real, intent(in) :: sf10en       ! soil fraction of pm10 in emitted suspension size
       real, intent(in) :: sf10bk       ! soil fraction of pm10 in saltion/creep breakage
       real, intent(in) :: lx           ! "effective" length of erosion cell (m)
-      real, intent(inout) :: qi           ! input to C.V. of saltation, creep (kg/m*s)
+      real, intent(in) :: qi           ! input to C.V. of saltation, creep (kg/m*s)
       real, intent(in) :: qssi         ! input to C.V. of suspension (kg/m*2)
       real, intent(in) :: q10i         ! input to C.V. of pm-10 (kg/m*2)
-      real, intent(inout) :: dmlos        ! change in loose mass on aggregated sfc. (kg/m^2)
+      real, intent(inout) :: dmlos        ! change in loose mass on aggregated sfc. (kg/m^2) (from the beginning of the erosion event)
       real, intent(in) :: sf84mn       ! soil surface fraction less than 0.84 below which no emission occurs
       real, intent(in) :: sf84ic       ! soil surface fraction less than 0.84 initially
       real, intent(in) :: sf10ic       ! soil surface fraction less than 0.10 initially
@@ -63,25 +61,19 @@ module process_mod
       real, intent(out) :: q10o         ! output from C.V. of pm-10 (kg/m*s)
 
 !     +++ PARAMETERS +++
-      real, parameter :: cs = 0.3      ! saltation transport coef. (kg*s^2/m^4)
       real, parameter :: cmp = 0.0001  ! mixing parameter coef.
       real, parameter :: ctf = 1.2     ! ridge trapping fraction
       real, parameter :: cdp = 0.02    ! deposition coef. for saltation
       real, parameter :: c10dp = 0.001 ! deposition coef. for pm10
 
 !     +++ LOCAL VARIABLES +++
-      real :: fracd    ! dynamic threshold adjustment - added per LH's suggestions
       real :: cen      ! coef. of emission (1/m)
-      real :: ceno     ! Coef. of emission for bare, loose, erodible sfc.
-      real :: renb     ! reduction in emission on bare soil by cover and rough.
-      real :: sargc    ! soil angle of ridge shelter weibull 'c' (deg.)
-      real :: sarrc    ! soil angle of random roughness weibull 'c'(deg.)
       real :: sfa12    ! soil fraction area with shelter angle > 12 deg.
       real :: sfcv     ! soil fraction clod & crust cover
       real :: srrg     ! ratio of ridge spacing to ridge spacing parallel wind direction
-      real :: renv     ! reductin in emission on bare soil by flat biomass
       real :: qen      ! transport capacity using emission threshold (kg/m*s)
       real :: qcp      ! transport capacity using trans. cap. threshold (kg/m*s)
+      real :: qi_tcap  ! input limited by transport capacity (kg/m*s)
       real :: ci       ! coef. of saltation interception by biomass stems (1/m) edit LH 8-29-05
       real :: sfsn     ! fraction of soil saltation and creep in saltation
       real :: fan      ! fraction saltation impacting clods & crust
@@ -98,79 +90,57 @@ module process_mod
       real :: t1,t2    ! intermediate calc. param. for salt. and susp. soln eq.
       real :: ct       ! total trap coefficient
       real :: cm       ! soil mixing parameter for suspension
-      real :: tmp      ! intermdediate calc. param. for transport cap. soln eq.
-      real :: crlos    ! factor that decreases loose cover with roughness
-      real :: dmtlos   ! soil loss/dep. for each time-step (+ = deposition)
-      real :: fdm      ! increase of dmtlos mass to agg. reservoir when loss exceeds smlos from crust
-      real :: sz       ! tmp variable for roughness
-      real :: szc      ! tmp variable for prior crust thickness (mm)
-      real :: szv      ! change in height based on volume change (mm)
-      real :: qitmp    ! temporary storage for input qi
-      real :: dmt      ! soil loss total in time-step (+ = depostion) (kg/m^2)
-      real :: smasstot ! total soil reservior mass (kg/m^2)
+      real :: mntime   ! smallest time step where one of the surface updates reaches a limit
 
 !     +++ END SPECIFICATIONS +++
 
       ! calc. fraction of area with shelter > 12 degrees
-      sarrc = 2.3 * sqrt (slrr)
-      if ((sxprg .gt. 10.0) .and. (szrgh .gt. 1.0)) then
-         sargc = 65.4*(szrgh/sxprg)**0.65
-         sfa12 =(1.- exp(-(12./sargc)**0.77))*(exp(-(12./sarrc)**0.77)) &
-     &             + exp(-(12./sargc)**0.77)
-      else
-          sfa12 = exp(-(12./sarrc)**0.77)
-      endif
+      sfa12 = frac_area_sheltered( slrr, sxprg, szrgh )
 
       ! The following changes were made based upon Larry Hagen's email
       ! me on Fri, Jan. 31, 2003 to represent dynamic threshold instead
       ! assuming a static threshold - LEW
 
-      ! calc. change to dynamic transport ! edit ljh 1-24-05
-      fracd = 0.05 * (1.0 - sfa12)
-
       ! calc. transport cap. for emission edit 5/30/01 LH
-      qen = cs * wus * wus * (wus - (wust-fracd))
+      qen = transport_capacity( wus, wust, sfa12 )
       ! calc. transport cap. for trapping
-      qcp = cs * wus * wus * (wus - (wusp-fracd))
+      qcp = transport_capacity( wus, wusp, sfa12 )
       if (qcp .lt. 0.0) then
          qcp = 0.001
       endif
 
-      ! store tmp qi
-      qitmp = qi
       ! test for trap region with both saltation & suspension deposition
       if (qen < 0.0001) then                 !edit ljh 1-24-05
+        ! this is a trapping only region
         qen  = 0.00001
         qo   = 0.0
-        qi   = qo          !no abrasion when no transport edit 8-30-06
+        qi_tcap   = qo          !no abrasion when no transport edit 8-30-06
         ct   = 1.0         !traps all incoming saltation discharge
         fancan = 0.0
         qsso = qssi*exp(-cdp*lx)
         q10o = q10i*exp(-c10dp*lx)
         go to 90
       elseif (qen .le. qi) then
-        ! test for saltation deposition region with suspension emission. We have set qi to qen
-        ! to calc. suspension and abrasion and then used the real qi value to calc. the deposition. 12-5-2000 LH
-        qi = qen
+        ! this is a saltation trapping region with suspension emission
+        ! We have set qi_tcap to qen to calculate suspension and abrasion
+        ! and then used the real qi value to calc. the deposition. 12-5-2000 LH
+        qi_tcap = qen
+      else
+        qi_tcap = qi
+      endif
+
+      ! fraction emission coef. reduction by roughness and area not emitting
+      if( sf84 .le. sf84mn) then        ! edit LH 6-27-06
+         sfcv = fraction_area_noemit( 0.0, sfcr, sflos, svroc )
+      else
+         sfcv = fraction_area_noemit( sf84, sfcr, sflos, svroc )
       endif
 
       ! Calc. emission params for saltation/creep
-      ! emission coef. for bare, loose, erodible soil (1/m)
-      ceno = 0.06
-      ! fraction emission coef. reduction by flat biomass
-      renv = 0.075 + 0.934*exp(-bffcv/0.149)
-      ! fraction emission coef. reduction by roughness and area not emitting
 
-      if( sf84 .le. sf84mn) then        ! edit LH 6-27-06
-         sfcv = ((1.-sfcr)*(1.- 0.) + sfcr - sflos*sfcr)*(1.-svroc) + svroc
-      else
-         sfcv = ((1.-sfcr)*(1.-sf84) + sfcr - sflos*sfcr)*(1.-svroc) + svroc
-      endif
+      ! coefficient of emission
+      cen = emission_coef( sfcv, sfa12, bffcv )
 
-      ! edit 7-17-01  LH
-      renb = (-0.051 + 1.051*exp(-sfcv/0.33050512))*(1 - sfa12)
-      cen = ceno*renv*renb
-      ! if (cen .lt. 0.0001) cen = 0.0
       ! soil fraction suspension in emitted soil; lower for loose on cr
       sfssen = (sf10/(sf200+0.001))*(1. - sfcr*0.8)
       ! soil mixing parameter for suspension
@@ -195,7 +165,7 @@ module process_mod
 
       ! fraction of saltation abrading clods, crust and loose
       fan = (exp(- 4.0*bffcv))*(exp(-3*svroc))*sfsn
-      fan = amax1(fan,0.)
+      fan = max(fan,0.)
       ! fraction abrading aggregates
       fanag = (1. - sf84)*(1. - sfcr)*fan
       ! fraction abrading crust
@@ -228,7 +198,7 @@ module process_mod
       ! solve for saltation/creep out
       ! collect variables
       s = sqrt(4.*a*c + b**2.)
-      p = (-2.*c*qi + b)/s
+      p = (-2.*c*qi_tcap + b)/s
       ! change p-values that are out of range, math range restriction: (-1 < p < 1) edit 7-18-01 LH
       if (p .le. -1.) then
          t1 = -20
@@ -274,167 +244,9 @@ module process_mod
       ! execute this section if flag is set
    90 if (SURF_UPD_FLG .eq. 1) then
 
-        ! calc change in loose surface soil for time step (+ = surface gain)
-        ! terms: - total loss,  + created by abrasion
-        dmt = ((-(qo-qitmp) - (qsso-qssi))/lx)*time
-        dmtlos = dmt + (fancan*qi)*time      !edit LH 3-1-05
-
-        ! set initial to zero
-        fdm = 0.0
-        ! coef. for cover of loose mass (same as SOIL eq. s-24,2-25)
-        sz = amax1(szrgh, 4.0*slrr)
-        crlos = exp(-0.08*sz**0.5)
-
-        ! execute this section if crust present
-        if (sfcr .gt. 0.01) then
-          ! increase loss per unit area crust if non-emitting aggregate sfc.
-          if (dmtlos .lt. 0 .and. sf84 .le. sf84mn) then   !edit LH 2-28-05
-             dmtlos = dmtlos*(1.0/sfcr)
-          endif
-
-          ! update loose on crust           ! edit LH 2-24-05
-          smlos = smlos + dmtlos
-          if (smlos < 0) then           ! loose removal exceeded
-            fdm = smlos* sfcr/(1.0001-sfcr) !remove extra from ag. area
-            smlos = 0.0
-          endif
-
-          ! update cover of loose mass
-          if (smlos > 0) then
-            tmp = 3.5*smlos**1.5
-            if(tmp.gt.80.) then       !test and prevent underflow condition
-              sflos = crlos
-            else
-              sflos = (1.0 - exp(-tmp))*crlos
-            endif
-          else
-            sflos = 0
-          endif
-
-          if (fancan > 0.0) then    ! abrasion occurs edit LH 1-9-07
-          ! update fancr
-            if (dmtlos > 0.0 )then
-              fancr = (sfcr - sflos*sfcr)*fan  !edit LH 2-16-05
-            endif
-
-             ! update crust thickness
-            szc = amax1(0.001, szcr)
-            szcr = szcr - (fancr*cancr*qi/(1.4*sfcr))*time !edit LH 3-1-05
-            szcr = amax1(szcr, 0.00)
-
-            ! update crust (consolidated) zone cover
-            sfcr = sfcr*szcr/szc
-            sfcr = amax1(0.0, sfcr)
-          endif
-        else
-          smlos = 0.
-          sflos = 0.
-        endif
-
-        ! execute this section if clods are present
-        if (sfcr .lt. 0.99) then
-
-          ! change in loose mass on aggregated and rock surface,(+)=increase
-          dmlos = dmlos + dmtlos + fdm
-
-          ! update sf84 when net loose soil gain on agg. & rock
-          ! added smasstot to simplify SF84 & SF10 equations
-          smasstot= smaglosmx/(sf84ic*(1.001-asvroc))   !edit LH 3-26-07
-          if (dmlos .lt. 0.0 ) then
-            sf84 = (smaglosmx + dmlos)/smasstot
-          else
-            sf84=(smaglosmx+dmlos)/(smasstot + dmlos)
-            ! bad LH 3-24-07        sf84 = min(sf84,(dmlos/0.4))
-          endif
-
-          ! set limits on sf84
-          sf84 = max(0.0, sf84)
-          sf84 = min(0.9999, sf84)
-
-          ! update rock cover based on dmt (soil loss(-) or gain(+))
-          if (asvroc .gt. 0.0 .and. asvroc .lt. 1.0) then
-            svroc = svroc - 7.5*((1-svroc)/(1-asvroc)) * (dmt/(1200*(1.001-svroc)))
-            svroc = min( 1.0, max(svroc, 0.0) )
-          endif
-
-          ! update sf200
-          sf200 = (2 - sf84)*sf84
-          sf200 = amin1(sf200, 1.0)
-          sf200 = amax1(0.001,sf200)
-
-          ! update sf10             edit LH 3-9-05
-           ! if (dmtlos > 0 ) then
-             ! sf10 = sf10 - sf10*dmtlos
-             ! sf10 = amax1(.01,sf10)
-           ! endif
-          if (dmlos < 0.0) then
-            sf10 = sf10ic*sf84/sf84ic
-          else
-            sf10 = sf10ic*smasstot/(smasstot+dmlos) !edit 3-26-07 LH
-          endif
-           ! sf10 = sf84*0.01
-
-          ! check that cumulative distribution points are always rational
-          if( sf84 .ge. sf200 ) then
-            sf84 = min( sf84, 0.9999999*sf200)
-            !write(*,*) 'sbqout: sf84 >= sf200'
-          end if
-          if( sf10 .ge. sf84 ) then
-            sf10 = min( sf10, 0.9999999*sf84)
-            !write(*,*) 'sbqout: sf10 >= s84'
-          end if
-
-           ! fanag = (1-sf84)*(1-sfcr)*fan
-
-        endif
-
-        ! update surface roughness
-
-        ! rate of volume change caused by emission
-        ! (used bulk densities of 1.2 for loose and 1.4 for crust to calc. mm depth per m^2 of area)
-         ! szv= cen*(qen - qi)/1.2
-
-        ! if trapping then emission lowers roughness, i.e. it comes from highest areas.
-         ! If (ct .gt. 0.) then
-           ! szv= -szv
-         ! endif
-        ! calc. change in mean surface depth
-        ! terms: emission, trapped, abrasion, & abrasion not emitted
-         ! szv = (szv - ct*qi/1.2 - fancan*qi/1.4 - (1.0 - sfssan)*fancan*qi*qi/(qen*1.2))*time
-         ! if (szv .gt. 0.0) then  ! slow roughness increase edit LH 8-30-06
-           ! szv = szv*0.5
-         ! endif
-
-        ! new trial roughness update edit LH 8-31-06
-        if (ct .gt. 0.0) then                 !trapping
-          if (dmtlos .gt. 0.0) then            !deposition (-roughness)
-            szv = -2.0*dmtlos/1.2
-          else
-            szv =  dmtlos/1.2                  !emission (-roughness)
-          endif
-        else
-           if (dmtlos .gt. 0.0) then
-             szv = - dmtlos/1.2                 !deposition (-roughness)
-           else
-             szv = 0.5*dmtlos/1.2               ! emission (+ roughness)
-           endif
-        endif
-        szv = szv-(2.0*(fancan*qi/1.4))*time ! abrasion (- roughness)
-
-        ! update ridge height
-        if (szrgh .gt. 10.) then
-          szrgh = szrgh + szv
-          ! set lower limit on ridge height
-          szrgh = amax1(szrgh, 0.0)
-        endif
-        ! update random roughness
-        slrr = slrr + szv/4.0
-        ! set lower limit on slrr
-        slrr = max(slrr, SLRR_MIN)
-
+        mntime = update_surface( time, qi, qi_tcap, qssi, qo, qsso, lx, fan, fancr, cancr, fancan, sf84mn, sf84ic, sf10ic, asvroc, &
+                             smaglosmx, ct, szcr, sfcr, sflos, smlos, dmlos, sf10, sf84, sf200, svroc, szrgh, slrr )
       endif
-
-      qi = qitmp
 
     end subroutine sbqout
 
@@ -478,7 +290,7 @@ module process_mod
       wusto = 1.7 - 1.35 * exp( -b1 - b2*( (1-sf84ic)*(1-asvroc) + asvroc )**2 )
 
       ! calc fraction bare surface that does not emit
-      sfcv = ((1 - sfcr)*(1 - sf84) + sfcr - sfcr*sflos)*(1 - svroc) + svroc
+      sfcv = fraction_area_noemit( sf84, sfcr, sflos, svroc )
 
       ! to avoid a zero value
       sfcv = sfcv + 0.0001
@@ -625,7 +437,7 @@ module process_mod
       smaglosmx = exp(2.708 - 7.603*((1-sf84ic)*(1-asvroc) + asvroc))
 
       ! reduce max mobile soil for roughness, cover, etc.
-      smaglos = smaglosmx * (wus - wust) / (0.75 - amin1(wusto,wust))
+      smaglos = smaglosmx * (wus - wust) / (0.75 - min(wusto,wust))
       smaglos = max(0.0, smaglos)
       !smaglos = min(smaglosmx, smaglos)
 
@@ -637,7 +449,7 @@ module process_mod
       !    sf84mn = 0.05
       else
        sf84mn=(smaglosmx - smaglos)/(smaglosmx/(sf84ic*(1.001-asvroc)))
-       sf84mn = amax1(0.0, sf84mn)
+       sf84mn = max(0.0, sf84mn)
       endif
 
     end subroutine sbaglos
@@ -676,6 +488,302 @@ module process_mod
       endif
 
     end subroutine sbsfdi
+
+    function frac_area_sheltered( slrr, sxprg, szrgh ) result( sfa12 )
+      real, intent(in) :: slrr         ! soil random roughness (mm)
+      real, intent(in) :: sxprg        ! soil ridge spacing parallel wind direction (mm)
+      real, intent(in) :: szrgh        ! soil ridge height (mm)
+      real :: sfa12    ! soil fraction area with shelter angle > 12 deg.
+
+      real :: sargc    ! soil angle of ridge shelter weibull 'c' (deg.)
+      real :: sarrc    ! soil angle of random roughness weibull 'c'(deg.)
+      real :: sfrg12   ! sheltered soil fraction for ridge
+      real :: sfrr12   ! sheltered soil fraction for random roughness
+
+      sarrc = 2.3 * sqrt (slrr)
+      sfrr12 = exp(-(12.0/sarrc)**0.77)
+      if ((sxprg .gt. 10.0) .and. (szrgh .gt. 1.0)) then
+         sargc = 65.4*(szrgh/sxprg)**0.65
+         sfrg12 = exp(-(12.0/sargc)**0.77)
+      else
+          sfrg12 = 0.0
+      endif
+      sfa12 = (1.0 - sfrg12)*(sfrr12) + sfrg12
+
+    end function frac_area_sheltered
+
+    function cover_loose_mass( smlos, szrgh, slrr ) result( sflos )
+      real, intent(in) :: smlos        ! soil mass of loose soil (only on crust)
+      real, intent(in) :: szrgh        ! soil ridge height (mm)
+      real, intent(in) :: slrr         ! soil random roughness (mm)
+      real :: sflos        ! soil fraction area of loose soil (only on crust)
+
+      real :: sz       ! tmp variable for roughness
+      real :: crlos    ! factor that decreases loose cover with roughness
+      real :: tmp      ! intermediate calculation value
+
+      if (smlos > 0) then
+        ! coef. for cover of loose mass (same as SOIL eq. s-24,2-25)
+        sz = max(szrgh, 4.0*slrr)
+        crlos = exp(-0.08*sz**0.5)
+
+        tmp = 3.5*smlos**1.5
+        if(tmp.gt.80.) then       !test and prevent underflow condition
+          sflos = crlos
+        else
+          sflos = (1.0 - exp(-tmp))*crlos
+        endif
+      else
+        sflos = 0
+      endif
+
+    end function cover_loose_mass
+
+    function fraction_area_noemit( sf84, sfcr, sflos, svroc ) result( sfcv )
+      real, intent(in) :: sf84         ! soil fraction less than 0.84 mm
+      real, intent(in) :: sfcr         ! soil fraction  area crusted
+      real, intent(in) :: sflos        ! soil fraction area of loose soil (only on crust)
+      real, intent(in) :: svroc        ! soil fraction rock >2.0 mm by volume
+      real :: sfcv     ! soil fraction clod & crust cover
+
+      sfcv = ((1.-sfcr)*(1.-sf84) + sfcr - sflos*sfcr)*(1.-svroc) + svroc
+
+    end function fraction_area_noemit
+
+    function emission_coef( sfcv, sfa12, bffcv ) result( cen )
+      real, intent(in) :: sfcv         ! soil fraction clod & crust cover
+      real, intent(in) :: sfa12        ! soil fraction area with shelter angle > 12 deg.
+      real, intent(in) :: bffcv        ! biomass fraction flat cover
+      real :: cen      ! coef. of emission (1/m)
+
+      real :: ceno     ! Coef. of emission for bare, loose, erodible soil (1/m)
+      real :: renb     ! reduction in emission on bare soil by cover and rough.
+      real :: renv     ! reduction in emission on bare soil by flat biomass
+
+      ceno = 0.06
+      ! fraction emission coef. reduction by flat biomass
+      renv = 0.075 + 0.934*exp(-bffcv/0.149)
+      ! edit 7-17-01  LH
+      renb = (-0.051 + 1.051*exp(-sfcv/0.33050512))*(1 - sfa12)
+      cen = ceno*renv*renb
+      ! if (cen .lt. 0.0001) cen = 0.0
+
+    end function emission_coef
+
+    function transport_capacity( wus, wusthr, sfa12 ) result( qcap )
+      real, intent(in) :: wus          ! friction velocity (m/s)
+      real, intent(in) :: wusthr       ! friction velocity threshold (m/s)
+      real, intent(in) :: sfa12        ! soil fraction area with shelter angle > 12 deg.
+      real :: qcap      ! transport capacity using threshold (kg/m*s)
+
+      real :: fracd    ! dynamic threshold adjustment - added per LH's suggestions
+      real, parameter :: cs = 0.3      ! saltation transport coef. (kg*s^2/m^4)
+
+      ! calc. change to dynamic transport ! edit ljh 1-24-05
+      fracd = 0.05 * (1.0 - sfa12)
+
+      ! calc. transport cap. for emission edit 5/30/01 LH
+      qcap = cs * wus * wus * (wus - (wusthr - fracd))
+
+    end function transport_capacity
+
+    function update_surface( time, qi, qi_tcap, qssi, qo, qsso, lx, fan, fancr, cancr, fancan, sf84mn, sf84ic, sf10ic, asvroc, &
+                             smaglosmx, ct, szcr, sfcr, sflos, smlos, dmlos, sf10, sf84, sf200, svroc, szrgh, slrr ) &
+                             result( mntime )
+
+      use p1erode_def, only: SLRR_MIN
+
+      real, intent(in) :: time         ! time step (seconds)
+      real, intent(in) :: qi           ! input to C.V. of saltation, creep (kg/m*s)
+      real, intent(in) :: qi_tcap      ! input limited by transport capacity (kg/m*s)
+      real, intent(in) :: qssi         ! input to C.V. of suspension (kg/m*2)
+      real, intent(in) :: qo           ! output from C.V. of saltation, creep (kg/m*s)
+      real, intent(in) :: qsso         ! output from C.V. of suspension (kg/m*s)
+      real, intent(in) :: lx           ! "effective" length of erosion cell (m)
+      real, intent(in) :: fan          ! fraction saltation impacting clods & crust
+      real, intent(inout) :: fancr        ! fraction saltation impacting crust
+      real, intent(in) :: cancr        ! coefficient of crust abrasion (1/m)
+      real, intent(in) :: fancan       ! product of fan & can ie. effective abrasion coef. (1/m)
+      real, intent(in) :: sf84mn       ! soil surface fraction less than 0.84 below which no emission occurs
+      real, intent(in) :: sf84ic       ! soil surface fraction less than 0.84 initially
+      real, intent(in) :: sf10ic       ! soil surface fraction less than 0.10 initially
+      real, intent(in) :: asvroc       ! soil surface volume rock at start of event
+      real, intent(in) :: smaglosmx    ! max mobile soil reservoir of aggregated sfc.(kg/m^2)
+      real, intent(in) :: ct           ! total trap coefficient
+      real, intent(inout) :: szcr         ! soil crust thickness
+      real, intent(inout) :: sfcr         ! soil fraction  area crusted
+      real, intent(inout) :: sflos        ! soil fraction area of loose soil (only on crust)
+      real, intent(out) :: smlos        ! soil mass of loose soil (only on crust)
+      real, intent(inout) :: dmlos        ! change in loose mass on aggregated sfc. (kg/m^2) (from the beginning of the erosion event)
+      real, intent(inout) :: sf10         ! soil fraction less than 0.010 mm (PM10)
+      real, intent(inout) :: sf84         ! soil fraction less than 0.84 mm
+      real, intent(inout) :: sf200        ! soil fractions less than 2.0 mm
+      real, intent(inout) :: svroc        ! soil fraction rock >2.0 mm by volume
+      real, intent(inout) :: szrgh        ! soil ridge height (mm)
+      real, intent(inout) :: slrr         ! soil random roughness (mm)
+      real :: mntime               ! smallest time step where one of the surface updates reaches a limit
+      
+      real :: dmt      ! soil loss total in time-step (+ = deposition) (kg/m^2)
+      real :: dmtlos   ! soil loss/dep. for each time-step (+ = deposition)
+      real :: fdm      ! increase of dmtlos mass to agg. reservoir when loss exceeds smlos from crust
+      real :: szc      ! tmp variable for prior crust thickness (mm)
+      real :: szv      ! change in height based on volume change (mm)
+      real :: smasstot ! total soil reservior mass (kg/m^2)
+
+      ! set mntime since not yet checking
+      mntime = time
+
+      ! calc change in loose surface soil for time step (+ = surface gain)
+      ! terms: - total loss,  + created by abrasion
+      dmt = ((-(qo-qi) - (qsso-qssi))/lx)*time
+      dmtlos = dmt + (fancan*qi_tcap)*time      !edit LH 3-1-05
+
+      ! set initial to zero
+      fdm = 0.0
+
+      ! execute this section if crust present
+      if (sfcr .gt. 0.01) then
+        ! increase loss per unit area crust if non-emitting aggregate sfc.
+        if (dmtlos .lt. 0 .and. sf84 .le. sf84mn) then   !edit LH 2-28-05
+           dmtlos = dmtlos*(1.0/sfcr)
+        endif
+
+        ! update loose on crust           ! edit LH 2-24-05
+        smlos = smlos + dmtlos
+        if (smlos < 0) then           ! loose removal exceeded
+          fdm = smlos* sfcr/(1.0001-sfcr) !remove extra from ag. area
+          smlos = 0.0
+        endif
+
+        ! update cover of loose mass on crust
+        sflos = cover_loose_mass( smlos, szrgh, slrr )
+
+        ! in calling routine, fancan is always greater than 0.0
+        if (fancan > 0.0) then    ! abrasion occurs edit LH 1-9-07
+          ! update fancr
+          if (dmtlos > 0.0 )then
+            fancr = (sfcr - sflos*sfcr)*fan  !edit LH 2-16-05
+          endif
+
+          ! update crust thickness
+          szc = max(0.001, szcr)
+          szcr = szcr - (fancr*cancr*qi_tcap/(1.4*sfcr))*time !edit LH 3-1-05
+          szcr = max(szcr, 0.00)
+
+          ! update crust (consolidated) zone cover
+          sfcr = sfcr*szcr/szc
+          sfcr = max(0.0, sfcr)
+        endif
+      else
+        smlos = 0.
+        sflos = 0.
+      endif
+
+      ! execute this section if clods are present
+      if (sfcr .lt. 0.99) then
+
+        ! change in loose mass on aggregated and rock surface,(+)=increase
+        dmlos = dmlos + dmtlos + fdm
+
+        ! update sf84 when net loose soil gain on agg. & rock
+        ! added smasstot to simplify SF84 & SF10 equations
+        smasstot= smaglosmx/(sf84ic*(1.001-asvroc))   !edit LH 3-26-07
+        if (dmlos .lt. 0.0 ) then
+          sf84 = (smaglosmx + dmlos)/smasstot
+        else
+          sf84=(smaglosmx+dmlos)/(smasstot + dmlos)
+          ! bad LH 3-24-07        sf84 = min(sf84,(dmlos/0.4))
+        endif
+
+        ! set limits on sf84
+        sf84 = max(0.0, sf84)
+        sf84 = min(0.9999, sf84)
+
+        ! update rock cover based on dmt (soil loss(-) or gain(+))
+        if (asvroc .gt. 0.0 .and. asvroc .lt. 1.0) then
+          svroc = svroc - 7.5*((1-svroc)/(1-asvroc)) * (dmt/(1200*(1.001-svroc)))
+          svroc = min( 1.0, max(svroc, 0.0) )
+        endif
+
+        ! update sf200
+        sf200 = (2 - sf84)*sf84
+        ! sf84 limited above, so these limits not needed. FAF
+        sf200 = min(sf200, 1.0)
+        sf200 = max(0.001,sf200)
+
+        ! update sf10             edit LH 3-9-05
+        ! if (dmtlos > 0 ) then
+          ! sf10 = sf10 - sf10*dmtlos
+          ! sf10 = max(.01,sf10)
+        ! endif
+        if (dmlos < 0.0) then
+          sf10 = sf10ic*sf84/sf84ic
+        else
+          sf10 = sf10ic*smasstot/(smasstot+dmlos) !edit 3-26-07 LH
+        endif
+        ! sf10 = sf84*0.01
+
+        ! check that cumulative distribution points are always rational
+        ! Not necessary, since sf84 = 1 (max value) means sf200 = 1 and all other values less than 1, sf200 is alway greater than sf84
+        if( sf84 .ge. sf200 ) then
+          sf84 = min( sf84, 0.9999999*sf200)
+          !write(*,*) 'sbqout: sf84 >= sf200'
+        end if
+        if( sf10 .ge. sf84 ) then
+          sf10 = min( sf10, 0.9999999*sf84)
+          !write(*,*) 'sbqout: sf10 >= s84'
+        end if
+
+        ! fanag = (1-sf84)*(1-sfcr)*fan
+
+      endif
+
+      ! update surface roughness
+
+      ! rate of volume change caused by emission
+      ! (used bulk densities of 1.2 for loose and 1.4 for crust to calc. mm depth per m^2 of area)
+      ! szv= cen*(qen - qi_tcap)/1.2
+
+      ! if trapping then emission lowers roughness, i.e. it comes from highest areas.
+      ! If (ct .gt. 0.) then
+        ! szv= -szv
+      ! endif
+      ! calc. change in mean surface depth
+      ! terms: emission, trapped, abrasion, & abrasion not emitted
+      ! szv = (szv - ct*qi_tcap/1.2 - fancan*qi_tcap/1.4 - (1.0 - sfssan)*fancan*qi_tcap*qi_tcap/(qen*1.2))*time
+      ! if (szv .gt. 0.0) then  ! slow roughness increase edit LH 8-30-06
+        ! szv = szv*0.5
+      ! endif
+
+      ! new trial roughness update edit LH 8-31-06
+      if (ct .gt. 0.0) then                 !trapping
+        if (dmtlos .gt. 0.0) then            !deposition (-roughness)
+          szv = -2.0*dmtlos/1.2
+        else
+          szv =  dmtlos/1.2                  !emission (-roughness)
+        endif
+      else
+        if (dmtlos .gt. 0.0) then
+          szv = - dmtlos/1.2                 !deposition (-roughness)
+        else
+          szv = 0.5*dmtlos/1.2               ! emission (+ roughness)
+        endif
+      endif
+      szv = szv-(2.0*(fancan*qi_tcap/1.4))*time ! abrasion (- roughness)
+
+      ! update ridge height
+      if (szrgh .gt. 10.) then
+        szrgh = szrgh + szv
+        ! set lower limit on ridge height
+        szrgh = max(szrgh, 0.0)
+      endif
+
+      ! update random roughness
+      slrr = slrr + szv/4.0
+      ! set lower limit on slrr
+      slrr = max(slrr, SLRR_MIN)
+
+    end function update_surface
 
 end module process_mod
 

@@ -48,13 +48,13 @@ module erosion_mod
       integer :: i,j      ! index
       integer :: wustfl   ! flag to update threshold friction velocity
       integer :: icsr     ! index of current subregion (now only one)
-      integer :: nhill    ! number of hills
+!      integer :: nhill    ! number of hills
       integer :: n        ! number of ??
       integer :: hidx     ! hour index (for referencing surface water content)
       real :: wuref      ! reference wind speed (m/s) 
       real :: rusust     ! ratio of friction vel. to threshold friction vel.
       real :: rut        ! ratio of rusust for this timestep
-      real :: rusust_preros ! ratio of friction vel. to threshold friction vel. by timestep (max all subregions) before erosion starts
+!      real :: rusust_preros ! ratio of friction vel. to threshold friction vel. by timestep (max all subregions) before erosion starts
       real :: wzorg      ! aerodynamic roughness of ridge (mm)
       real :: wzorr      ! aerodynamic roughness of random roughness (mm)
       real :: wzzo       ! soil surface aerodynamic roughness (mm)
@@ -140,7 +140,7 @@ module erosion_mod
             sina = max(0.10, sina)
             subrsurf(icsr)%sxprg = subrsurf(icsr)%asxrgs/sina
               if (subrsurf(icsr)%asxdks > subrsurf(icsr)%asxrgs/3.) then
-                subrsurf(icsr)%sxprg = amin1(subrsurf(icsr)%sxprg, subrsurf(icsr)%asxdks)
+                subrsurf(icsr)%sxprg = min(subrsurf(icsr)%sxprg, subrsurf(icsr)%asxdks)
               endif
           else
               subrsurf(icsr)%sxprg = 1000

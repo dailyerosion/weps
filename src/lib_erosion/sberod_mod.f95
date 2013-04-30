@@ -352,7 +352,7 @@ module sberod_mod
           endif
 
           at = cellstate(i,j)%wus/cellstate(i,j)%wust
-          rusust = amax1(rusust, at)
+          rusust = max(rusust, at)
 
         end do
       end do
