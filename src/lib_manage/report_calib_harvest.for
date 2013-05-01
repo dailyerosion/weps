@@ -61,16 +61,16 @@
 
       !Start a new line if this is the next rotation cycle
       if (bmrotation .gt. cprevcalibrotation(sr))  then
-         write(unit=luoharvest_calib,fmt="(a)") ''        ! write newline
-         write(unit=luoharvest_calib_parm,fmt="(a)") ''   ! write newline
+         write(unit=luoharvest_calib(sr),fmt="(a)") ''        ! write newline
+         write(unit=luoharvest_calib_parm(sr),fmt="(a)") ''   ! write newline
       end if
 
       !Start a new line if this is the next calib_cycle
       if ((bmrotation .eq. cprevcalibrotation(sr))                      &
      &        .and. (prev_calib_cycle .ne. calib_cycle) ) then
          if (prev_calib_cycle .ne. -1) then             ! planting operation
-            write(unit=luoharvest_calib,fmt="(a)") ''        ! write newline
-            write(unit=luoharvest_calib_parm,fmt="(a)") ''   ! write newline
+            write(unit=luoharvest_calib(sr),fmt="(a)") ''        ! write newline
+            write(unit=luoharvest_calib_parm(sr),fmt="(a)") ''   ! write newline
          end if
          prev_calib_cycle = calib_cycle                 ! keep prev cycle
       end if
@@ -82,17 +82,17 @@
 ! Only harvest triggers the following print statements
 
       !Print out the "calibration cycle" and "rotation year within cycle"
-      write(unit=luoharvest_calib, fmt=1000,advance='NO')               &
+      write(unit=luoharvest_calib(sr), fmt=1000,advance='NO')           &
      &      calib_cycle, bmrotation
-      write(unit=luoharvest_calib_parm, fmt=1001,advance='NO')          &
+      write(unit=luoharvest_calib_parm(sr), fmt=1001,advance='NO')      &
      &      calib_cycle
 
       !Print out the "planting" and "harvest" dates and "crop name"
-      write(unit=luoharvest_calib,fmt=1015,advance='NO')                &
+      write(unit=luoharvest_calib(sr),fmt=1015,advance='NO')            &
      &      aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),         &
      &      lopday, lopmon, lopyr,                                      &
      &      ac0nam(sr)(1:len_trim(ac0nam(sr)))
-      write(unit=luoharvest_calib_parm,fmt=1015,advance='NO')           &
+      write(unit=luoharvest_calib_parm(sr),fmt=1015,advance='NO')       &
      &      aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),         &
      &      lopday, lopmon, lopyr,                                      &
      &      ac0nam(sr)(1:len_trim(ac0nam(sr)))
@@ -105,24 +105,24 @@
       end if
 
       !Print out "dry weight yield removed" and "residue left"
-      write(unit=luoharvest_calib,fmt=1020,advance='NO')                &
+      write(unit=luoharvest_calib(sr),fmt=1020,advance='NO')            &
      &      mass_rem, 'kg/m^2', mass_left, 'kg/m^2'
 
       !Print out "harvest index", "wet weight yield" and "yield water content"
-      write(unit=luoharvest_calib,fmt=1030,advance='NO')                &
+      write(unit=luoharvest_calib(sr),fmt=1030,advance='NO')            &
      &      harvest_index, "HI",                                        &
      &      mass_rem/(1.0-(acywct(sr)/100.0)), "kg/m^2",                &
      &      acywct(sr), '% H2O'
 
       !Print out "biomass adj factor", "yield adj factor",
       !          "target yield" and "target yield units"
-      write(unit=luoharvest_calib,fmt=1040,advance='NO')                &
+      write(unit=luoharvest_calib(sr),fmt=1040,advance='NO')            &
      &    acbaflg(sr),acbaf(sr),acyraf(sr),acytgt(sr),trim(acynmu(sr))
-      write(unit=luoharvest_calib_parm,fmt=1041,advance='NO')           &
+      write(unit=luoharvest_calib_parm(sr),fmt=1041,advance='NO')       &
      &    acbaf(sr)
 
       !Print out "wet target yield" (metric) and "dry target yield" (metric)
-      write(unit=luoharvest_calib,fmt=1050,advance='NO')                &
+      write(unit=luoharvest_calib(sr),fmt=1050,advance='NO')            &
      &    acytgt(sr)/acycon(sr), 'kg/m^2',                              &
      &    (acytgt(sr)/acycon(sr)) * (1.0-(acywct(sr)/100.0)), 'kg/m^2'
 

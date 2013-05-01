@@ -122,39 +122,40 @@
 !          write weather cligen and windgen variables
       if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and.  &
      &   (isr .eq. tisr)) then
-         write(luocdb,2030) cd,cm,cy,isr
+         write(luocdb(isr),2030) cd,cm,cy,isr
       else
-         write(luocdb,2031) cd,cm,cy,isr
+         write(luocdb(isr),2031) cd,cm,cy,isr
       end if
-      write(luocdb,2032)
-      write(luocdb,2038) awzdpt, awtdmx, awtdmn, aweirr, awudmx, awudmn,&
-     &               awtdpt, awadir, awhrmx, awrrh
+      write(luocdb(isr),2032)
+      write(luocdb(isr),2038) awzdpt, awtdmx, awtdmn, aweirr, awudmx,   &
+     &                        awudmn, awtdpt, awadir, awhrmx, awrrh
 
-!      write(luocdb,2045) isr
+!      write(luocdb(isr),2045) isr
 
-      write(luocdb,2050) isr, isr, isr, isr, isr, isr, isr
-      write(luocdb,2051) amrslp(isr), acftcv(isr), acrlai(isr),         &
+      write(luocdb(isr),2050) isr, isr, isr, isr, isr, isr, isr
+      write(luocdb(isr),2051) amrslp(isr), acftcv(isr), acrlai(isr),    &
      &               aczrtd(isr), restot%mftot, ahfwsf(isr), ac0nam(isr)
-      write(luocdb,2052) isr, isr, isr, isr
-      write(luocdb,2053)                                                &
+      write(luocdb(isr),2052) isr, isr, isr, isr
+      write(luocdb(isr),2053)                                           &
      &               actdtm(isr), acthucum(isr), acmst(isr), acmrt(isr),&
      &               ahzeta, ahzetp, ahzpta
-      write(luocdb,2054) isr, isr, isr, isr
-      write(luocdb,2055) ahzea, ahzep, ahzptp, actmin(isr),             &
+      write(luocdb(isr),2054) isr, isr, isr, isr
+      write(luocdb(isr),2055) ahzea, ahzep, ahzptp, actmin(isr),        &
      &               actopt(isr), as0rrk(isr), aslrr(isr)
-      write(luocdb,2056)
+      write(luocdb(isr),2056)
 
       do 200 l = 1,slay
-         write(luocdb,2060) l,aszlyt(l,isr), ahrsk(l,isr), ahrwc(l,isr),&
+         write(luocdb(isr),2060) l,aszlyt(l,isr), ahrsk(l,isr),         &
+     &                  ahrwc(l,isr),                                   &
      &                  ahrwcs(l,isr), ahrwca(l,isr), ahrwcf(l,isr),    &
      &                  ahrwcw(l,isr), ah0cb(l,isr), aheaep(l,isr),     &
      &                  ahtsmx(l,isr), ahtsmn(l,isr)
   200 continue
-         write(luocdb,2065)
+         write(luocdb(isr),2065)
 
       do 300 l=1,slay
-         write(luocdb,2070) l,asfsan(l,isr),asfsil(l,isr),asfcla(l,isr),&
-     &                  asfom(l,isr), asdblk(l,isr),                    &
+         write(luocdb(isr),2070) l,asfsan(l,isr),asfsil(l,isr),         &
+     &                  asfcla(l,isr), asfom(l,isr), asdblk(l,isr),     &
      &                  aslagm(l,isr), as0ags(l,isr), aslagn(l,isr),    &
      &                  aslagx(l,isr), aseags(l,isr)
   300 continue

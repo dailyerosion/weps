@@ -26,11 +26,11 @@
       close(luicli)
       close(luiwin)
       close(luiwsd)
-      if (am0hdb .eq. 1) close(luohdb)
-      if (am0sdb .eq. 1) close(luosdb)
-      if (am0tdb .eq. 1) close(luotdb)
-      if (am0cdb .eq. 1) close(luocdb)
       do idx = 1, size(luoddb)
+         if (am0hdb .eq. 1) close(luohdb(idx))
+         if (am0sdb .eq. 1) close(luosdb(idx))
+         if (am0tdb .eq. 1) close(luotdb(idx))
+         if (am0cdb .eq. 1) close(luocdb(idx))
          if (am0ddb .eq. 1) close(luoddb(idx))
          if (am0tfl .eq. 1) close(luomanage(idx))
       end do
@@ -52,11 +52,12 @@
       end do
 
       if (calibrate_crops .gt. 0) then
-          ! calibration harvest output file
-          close(luoharvest_calib)
-
-          ! calibration harvest output file for GUI
-          close(luoharvest_calib_parm)
+         do idx = 1, size(luoplt)
+            ! calibration harvest output file
+            close(luoharvest_calib(idx))
+            ! calibration harvest output file for GUI
+            close(luoharvest_calib_parm(idx))
+         end do
       endif
 
 !     erosion output files

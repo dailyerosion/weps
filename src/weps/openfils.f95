@@ -77,11 +77,20 @@
       end do
 
       if (calibrate_crops .gt. 0) then
-          ! calibration harvest output file
-          call fopenk (luoharvest_calib,rootp(1:len_trim(rootp)) // 'harvest_calib.out', 'unknown')
-
-          ! calibration harvest output file for GUI
-          call fopenk (luoharvest_calib_parm,rootp(1:len_trim(rootp)) // 'harvest_calib_parm.out', 'unknown')
+         sum_stat = 0
+         allocate( luoharvest_calib(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luoharvest_calib_parm(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luoharvest_calib, luoharvest_calib_parm arrays'
+         end if
+         do idx = 1, nsubr
+            ! calibration harvest output file
+            call fopenk (luoharvest_calib(idx), trim(rootp) // trim(subr_text(idx)) // 'luoharvest_calib.out', 'unknown')
+            ! calibration harvest output file for GUI
+            call fopenk (luoharvest_calib_parm(idx), trim(rootp) // trim(subr_text(idx)) // 'luoharvest_calib_parm.out', 'unknown')
+         end do
       endif
 
 !     open erosion output files
@@ -271,22 +280,50 @@
          call fopenk(luoci, rootp(1:len_trim(rootp)) // 'ci.out', 'unknown')
       endif
 
-        if (am0hdb .eq. 1) call fopenk (luohdb,                         &
-     &     rootp(1:len_trim(rootp)) // 'hdbug.out', 'unknown')
-        if (am0sdb .eq. 1) call fopenk (luosdb,                         &
-     &     rootp(1:len_trim(rootp)) // 'sdbug.out', 'unknown')
-        if (am0tdb .eq. 1) call fopenk (luotdb,                         &
-     &     rootp(1:len_trim(rootp)) // 'tdbug.out', 'unknown')
-        if (am0cdb .eq. 1) call fopenk (luocdb,                         &
-     &     rootp(1:len_trim(rootp)) // 'cdbug.out', 'unknown')
-      if (am0ddb .eq. 1) then
          ! create arrays for subregion debug output files
+      if (am0hdb .eq. 1) then
+         allocate( luohdb(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luohdb array'
+         end if
+         do idx = 1, nsubr
+            call fopenk (luohdb(idx), trim(rootp) // trim(subr_text(idx)) // 'hdbug.out', 'unknown')
+         end do
+      end if
+      if (am0sdb .eq. 1) then
+         allocate( luosdb(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luosdb array'
+         end if
+         do idx = 1, nsubr
+            call fopenk (luosdb(idx), trim(rootp) // trim(subr_text(idx)) // 'sdbug.out', 'unknown')
+         end do
+      end if
+      if (am0tdb .eq. 1) then
+         allocate( luotdb(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luotdb array'
+         end if
+         do idx = 1, nsubr
+            call fopenk (luotdb(idx), trim(rootp) // trim(subr_text(idx)) // 'tdbug.out', 'unknown')
+         end do
+      end if
+      if (am0cdb .eq. 1) then
+         allocate( luocdb(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luocdb array'
+         end if
+         do idx = 1, nsubr
+            call fopenk (luocdb(idx), trim(rootp) // trim(subr_text(idx)) // 'cdbug.out', 'unknown')
+         end do
+      end if
+      if (am0ddb .eq. 1) then
          allocate( luoddb(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luoddb array'
          end if
          do idx = 1, nsubr
-            call fopenk (luoddb(idx), rootp(1:len_trim(rootp)) // subr_text(idx) // 'ddbug.out', 'unknown')
+            call fopenk (luoddb(idx), trim(rootp) // trim(subr_text(idx)) // 'ddbug.out', 'unknown')
          end do
       end if
 

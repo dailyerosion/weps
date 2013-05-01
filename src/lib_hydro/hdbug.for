@@ -125,43 +125,44 @@
 
       if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and.  &
      &   (isr .eq. tisr)) then
-         write(luohdb,2030) cd,cm,cy,isr
+         write(luohdb(isr),2030) cd,cm,cy,isr
       else
-         write(luohdb,2031) cd,cm,cy,isr
+         write(luohdb(isr),2031) cd,cm,cy,isr
       end if
-      write(luohdb,2032)
-      write(luohdb,2038) awzdpt, awtdmx, awtdmn, aweirr, awudmx, awudmn,&
-     &               awtdpt, awadir, awhrmx, awrrh
+      write(luohdb(isr),2032)
+      write(luohdb(isr),2038) awzdpt, awtdmx, awtdmn, aweirr, awudmx,   &
+     &               awudmn, awtdpt, awadir, awhrmx, awrrh
 
-!      write(luohdb,2045) isr
+!      write(luohdb(isr),2045) isr
 
-      write(luohdb,2050) isr, isr, isr, isr, isr, isr, isr
-      write(luohdb,2051) amrslp(isr), acftcv(isr), acrlai(isr),         &
+      write(luohdb(isr),2050) isr, isr, isr, isr, isr, isr, isr
+      write(luohdb(isr),2051) amrslp(isr), acftcv(isr), acrlai(isr),    &
      &               aczrtd(isr), restot%mftot, ahfwsf(isr), ahzper(isr)
-      write(luohdb,2052) isr, isr, isr, isr
-      write(luohdb,2053) ahzrun(isr), ahzirr(isr), ahzsno(isr),         &
+      write(luohdb(isr),2052) isr, isr, isr, isr
+      write(luohdb(isr),2053) ahzrun(isr), ahzirr(isr), ahzsno(isr),    &
      &               ahzsmt(isr), ahzeta, ahzetp, ahzpta
-      write(luohdb,2054) isr, isr, isr, isr
-      write(luohdb,2055) ahzea, ahzep, ahzptp, ah0cng(isr),             &
+      write(luohdb(isr),2054) isr, isr, isr, isr
+      write(luohdb(isr),2055) ahzea, ahzep, ahzptp, ah0cng(isr),        &
      &               ah0cnp(isr), as0rrk(isr), aslrr(isr)
-      write(luohdb,2056)
+      write(luohdb(isr),2056)
 
       do 200 l = 1,slay
-         write(luohdb,2060) l, aszlyt(l,isr), ahrsk(l,isr),ahrwc(l,isr),&
+         write(luohdb(isr),2060) l, aszlyt(l,isr), ahrsk(l,isr),        &
+     &                  ahrwc(l,isr),                                   &
      &                  ahrwcs(l,isr), ahrwca(l,isr), ahrwcf(l,isr),    &
      &                  ahrwcw(l,isr), ah0cb(l,isr), aheaep(l,isr),     &
      &                  ahtsmx(l,isr), ahtsmn(l,isr)
   200 continue
-         write(luohdb,2065)
+         write(luohdb(isr),2065)
 
       do 300 l=1,slay
-         write(luohdb,2070) l, asfsan(l,isr), asfsil(l,isr),            &
+         write(luohdb(isr),2070) l, asfsan(l,isr), asfsil(l,isr),       &
      &                  asfcla(l,isr), asfom(l,isr), asdblk(l,isr),     &
      &                  aslagm(l,isr), as0ags(l,isr), aslagn(l,isr),    &
      &                  aslagx(l,isr), aseags(l,isr)
   300 continue
 
-!
+
       tisr = isr
       tday = cd
       tmo = cm

@@ -115,33 +115,34 @@
 !          write weather cligen and windgen variables
       if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and.  &
      &   (isr .eq. tisr)) then
-         write(luosdb,2030) cd,cm,cy,daysim,isr
+         write(luosdb(isr),2030) cd,cm,cy,daysim,isr
       else
-         write(luosdb,2031) cd,cm,cy,daysim,isr
+         write(luosdb(isr),2031) cd,cm,cy,daysim,isr
       end if
-      write(luosdb,2032)
-      write(luosdb,2038) awzdpt,awtdmx,awtdmn,aweirr,awudmx,awudmn,     &
+      write(luosdb(isr),2032)
+      write(luosdb(isr),2038) awzdpt,awtdmx,awtdmn,aweirr,awudmx,awudmn,&
      &               awtdpt,awadir,awhrmx,amzele
 
-      write(luosdb,2050) isr,isr,isr,isr,isr,isr,isr
+      write(luosdb(isr),2050) isr,isr,isr,isr,isr,isr,isr
 
-      write(luosdb,2051) amrslp(isr),acftcv(isr),acrlai(isr),           &
+      write(luosdb(isr),2051) amrslp(isr),acftcv(isr),acrlai(isr),      &
      &               aczrtd(isr), biotot%mftot, ahfwsf(isr), ahzper(isr)
-      write(luosdb,2052) isr,isr,isr,isr,isr,isr,isr
-      write(luosdb,2053) ahzrun(isr),ahzirr(isr),ahzsno(isr),           &
+      write(luosdb(isr),2052) isr,isr,isr,isr,isr,isr,isr
+      write(luosdb(isr),2053) ahzrun(isr),ahzirr(isr),ahzsno(isr),      &
      &               ahzsmt(isr), asxrgs(isr),aszrgh(isr),aslrr(isr)
-      write(luosdb,2054) isr,isr,isr,isr,isr,isr,isr
-      write(luosdb,2055) asfcr(isr),asecr(isr),asmlos(isr),asflos(isr), &
-     &               ac0rg(isr),as0rrk(isr),aszcr(isr)
-      write(luosdb,2056)
+      write(luosdb(isr),2054) isr,isr,isr,isr,isr,isr,isr
+      write(luosdb(isr),2055) asfcr(isr), asecr(isr), asmlos(isr),      &
+     &               asflos(isr), ac0rg(isr),as0rrk(isr),aszcr(isr)
+      write(luosdb(isr),2056)
 
       do 200 l = 1,slay
-         write(luosdb,2060) l,aszlyt(l,isr),ahrsk(l,isr), ahrwc(l,isr), &
+         write(luosdb(isr),2060) l, aszlyt(l,isr), ahrsk(l,isr),        &
+     &                  ahrwc(l,isr),                                   &
      &                  ahrwcs(l,isr),ahrwca(l,isr), ahrwcf(l,isr),     &
      &                  ahrwcw(l,isr),ah0cb(l,isr),aheaep(l,isr),       &
      &                  ahtsmx(l,isr), ahtsmn(l,isr)
   200 continue
-      write(luosdb,2065)
+      write(luosdb(isr),2065)
 !     om, bulk density, min ag dia., and ag. stability do not have
 !     values at the surface and thus are set to high values so the
 !     output will read '*******' for these values
@@ -152,8 +153,8 @@
 !      if (aslagn(0,isr) .eq. 0.0) aslagn(0,isr)  = 1111111111111.
 
       do 300 l=1,slay
-         write(luosdb,2070) l,asfsan(l,isr),asfcla(l,isr),asfom(l,isr), &
-     &                  asdsblk(l,isr),asdblk(l,isr),                   &
+         write(luosdb(isr),2070) l, asfsan(l,isr), asfcla(l,isr),       &
+     &                  asfom(l,isr), asdsblk(l,isr), asdblk(l,isr),    &
      &                  aslagm(l,isr), as0ags(l,isr), aslagn(l,isr),    &
      &                  aslagx(l,isr), aseags(l,isr)
   300 continue

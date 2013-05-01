@@ -76,45 +76,45 @@
       case (2) ! random roughness process (process code 02)
  2067     format('aslrr') 
  2062     format (f7.2)
-          write(luotdb,2067)
-          write(luotdb,2062) aslrr(sr)
+          write(luotdb(sr),2067)
+          write(luotdb(sr),2062) aslrr(sr)
 
       case (3) ! oriented roughness ridge only process (process code 03)
  2070     format(3x,'aszrgh asxrgw asxrgs asargo asxdks asxdkh')
  2071     format (4x,6(2x,f7.3))
-          write(luotdb,2070)
-          write(luotdb,2071) aszrgh(sr), asxrgw(sr), asxrgs(sr),        &
+          write(luotdb(sr),2070)
+          write(luotdb(sr),2071) aszrgh(sr), asxrgw(sr), asxrgs(sr),        &
      &      asargo(sr), asxdks(sr), asxdkh(sr)
 
       case (4) ! oriented roughness process dike only (process code 04)
-          write(luotdb,2070)
-          write(luotdb,2071) aszrgh(sr), asxrgw(sr), asxrgs(sr),        &
+          write(luotdb(sr),2070)
+          write(luotdb(sr),2071) aszrgh(sr), asxrgw(sr), asxrgs(sr),        &
      &      asargo(sr), asxdks(sr), asxdkh(sr)
 
       case (5) ! oriented roughness process (process code 05)
  2072     format(3x,'asfcr  asflos')
  2073     format (1x,2f7.3)
-          write(luotdb,2072)
-          write(luotdb,2073) asfcr(sr), asflos(sr)
-          write(luotdb,2070)
-          write(luotdb,2071) aszrgh(sr), asxrgw(sr), asxrgs(sr),        &
+          write(luotdb(sr),2072)
+          write(luotdb(sr),2073) asfcr(sr), asflos(sr)
+          write(luotdb(sr),2070)
+          write(luotdb(sr),2071) aszrgh(sr), asxrgw(sr), asxrgs(sr),        &
      &      asargo(sr), asxdks(sr), asxdkh(sr)
 
       case (11) ! crushing process (process code 11)
  2040     format(3x,'aslagn aslagx aslagm as0ags') 
  2050     format (1x,4f7.2)
-          write(luotdb,2040) 
+          write(luotdb(sr),2040) 
           do idx = 1,slay
-            write(luotdb,2050) aslagn(idx,sr), aslagx(idx,sr),          &
+            write(luotdb(sr),2050) aslagn(idx,sr), aslagx(idx,sr),          &
      &        aslagm(idx,sr), as0ags(idx,sr) 
           end do
 
       case (12) ! loosening process (process code 12)
  2041     format(3x,'asdblk  asdsblk   aszlyt') 
  2051     format (1x,f7.2,2x,f7.2,2x,f7.2)
-          write(luotdb,2041) 
+          write(luotdb(sr),2041) 
           do idx = 1,slay
-            write(luotdb,2051)                                          &
+            write(luotdb(sr),2051)                                          &
      &      asdblk(idx,sr), asdsblk(idx,sr), aszlyt(idx,sr)
           end do 
 
@@ -128,38 +128,38 @@
      &       'ahrwc aheaep ahrwcw ahrwcf ahrwca ahrwcs')
  2068     format(3x,'layer residue(1)%deriv%mrtz(s)  residue(2)%deriv%mrtz(s)  residue(3)%deriv%mrtz(s) ',           &
      &               ' residue(1)%deriv%mbgz(s)  residue(2)%deriv%mbgz(s)  residue(3)%deriv%mbgz(s)') 
-          write(luotdb,2065)
+          write(luotdb(sr),2065)
           do idx = 1,slay
-            write(luotdb,2060) idx, asdblk(idx,sr), aszlyt(idx,sr),     &
+            write(luotdb(sr),2060) idx, asdblk(idx,sr), aszlyt(idx,sr),     &
      &        asfsan(idx,sr), asfsil(idx,sr), asfcla(idx,sr),           &
      &        as0ph(idx,sr), ascmg(idx,sr), ascna(idx,sr),              &
      &        asfcce(idx,sr), asfcec(idx,sr), asfesp(idx,sr)
           end do 
-          write(luotdb,2066)
+          write(luotdb(sr),2066)
           do idx = 1,slay
-            write(luotdb,2061) asfom(idx,sr), asfnoh(idx,sr),           &
+            write(luotdb(sr),2061) asfom(idx,sr), asfnoh(idx,sr),           &
      &        asfpoh(idx,sr), asfpsp(idx,sr), asfsmb(idx,sr),           &
      &        asdagd(idx,sr), aseags(idx,sr), ahrwc(idx,sr),            &
      &        aheaep(idx,sr), ahrwcw(idx,sr), ahrwcf(idx,sr),           &
      &        ahrwca(idx,sr), ahrwcs(idx,sr)
           end do 
-          write(luotdb,2068)
+          write(luotdb(sr),2068)
           do idx = 1,slay
-            write(luotdb,2063)                                          &
+            write(luotdb(sr),2063)                                          &
      &        idx, residue(1)%deriv%mrtz(idx), residue(2)%deriv%mrtz(idx), residue(3)%deriv%mrtz(idx),&
      &        residue(1)%deriv%mbgz(idx), residue(2)%deriv%mbgz(idx), residue(3)%deriv%mbgz(idx)
           end do 
 
       case (14) ! inversion process (process code 14)
           do idx = 1,slay
-            write(luotdb,2060) idx, asdblk(idx,sr), aszlyt(idx,sr),     &
+            write(luotdb(sr),2060) idx, asdblk(idx,sr), aszlyt(idx,sr),     &
      &        asfsan(idx,sr), asfsil(idx,sr), asfcla(idx,sr),           &
      &        as0ph(idx,sr), ascmg(idx,sr), ascna(idx,sr),              &
      &        asfcce(idx,sr), asfcec(idx,sr), asfesp(idx,sr)
           end do 
-          write(luotdb,2066)
+          write(luotdb(sr),2066)
           do idx = 1,slay
-            write(luotdb,2061) asfom(idx,sr), asfnoh(idx,sr),           &
+            write(luotdb(sr),2061) asfom(idx,sr), asfnoh(idx,sr),           &
      &        asfpoh(idx,sr), asfpsp(idx,sr), asfsmb(idx,sr),           &
      &        asdagd(idx,sr), aseags(idx,sr), ahrwc(idx,sr),            &
      &        aheaep(idx,sr), ahrwcw(idx,sr), ahrwcf(idx,sr),           &
@@ -181,12 +181,12 @@
      &            + residue(idx)%mass%flatstore + residue(idx)%mass%flatrootstore     &
      &            + residue(idx)%mass%flatrootfiber
           end do 
-          write(luotdb,*) total, ' total flat mass'
-          write(luotdb,2500)
-          write(luotdb,2501) 0, atmflatstem(sr), atmflatleaf(sr),       &
+          write(luotdb(sr),*) total, ' total flat mass'
+          write(luotdb(sr),2500)
+          write(luotdb(sr),2501) 0, atmflatstem(sr), atmflatleaf(sr),       &
      &      atmflatstore(sr), atmflatrootstore(sr), atmflatrootfiber(sr)
           do idx = 1, mnbpls
-            write(luotdb,2501) idx, residue(idx)%mass%flatstem,                &
+            write(luotdb(sr),2501) idx, residue(idx)%mass%flatstem,                &
      &        residue(idx)%mass%flatleaf, residue(idx)%mass%flatstore,                &
      &        residue(idx)%mass%flatrootstore, residue(idx)%mass%flatrootfiber
           end do 
@@ -200,12 +200,12 @@
      &            + residue(idx)%mass%flatstore + residue(idx)%mass%flatrootstore     &
      &            + residue(idx)%mass%flatrootfiber
           end do 
-          write(luotdb,*) total, ' total flat mass'
-          write(luotdb,2500)
-          write(luotdb,2501) 0, atmflatstem(sr), atmflatleaf(sr),       &
+          write(luotdb(sr),*) total, ' total flat mass'
+          write(luotdb(sr),2500)
+          write(luotdb(sr),2501) 0, atmflatstem(sr), atmflatleaf(sr),       &
      &      atmflatstore(sr), atmflatrootstore(sr), atmflatrootfiber(sr)
           do idx = 1, mnbpls
-            write(luotdb,2501) idx, residue(idx)%mass%flatstem,                &
+            write(luotdb(sr),2501) idx, residue(idx)%mass%flatstem,                &
      &        residue(idx)%mass%flatleaf, residue(idx)%mass%flatstore,                &
      &        residue(idx)%mass%flatrootstore, residue(idx)%mass%flatrootfiber
           end do 
@@ -224,14 +224,14 @@
  2074     format(3x,'residue(1)%deriv%mf residue(2)%deriv%mf residue(3)%deriv%mf residue(1)%deriv%mst',                 &
      &      ' residue(2)%deriv%mst residue(3)%deriv%mst')
  2075     format (6(2x,f7.3))
-          write(luotdb,2068)
+          write(luotdb(sr),2068)
           do idx = 1,slay
-            write(luotdb,2063) idx, residue(1)%deriv%mrtz(idx), residue(2)%deriv%mrtz(idx), &
+            write(luotdb(sr),2063) idx, residue(1)%deriv%mrtz(idx), residue(2)%deriv%mrtz(idx), &
      &        residue(3)%deriv%mrtz(idx), residue(1)%deriv%mbgz(idx), residue(2)%deriv%mbgz(idx),     &
      &        residue(3)%deriv%mbgz(idx)
           end do 
-          write(luotdb,2074)
-          write(luotdb,2075) residue(1)%deriv%mf, residue(2)%deriv%mf, residue(3)%deriv%mf,        &
+          write(luotdb(sr),2074)
+          write(luotdb(sr),2075) residue(1)%deriv%mf, residue(2)%deriv%mf, residue(3)%deriv%mf,        &
      &      residue(1)%deriv%mst, residue(2)%deriv%mst, residue(3)%deriv%mst
 
       case (37) ! thinning to population process (process code 37)
@@ -248,24 +248,24 @@
  2164     format (3x,3f7.3)
  2169     format(4x,'acmyld  aczht  aczrtd')
  2269     format(4x,'residue()%deriv%fscv  residue()%deriv%ffcv ')
-          write(luotdb,2169)
-          write(luotdb,2164) acmstandstore(sr), aczht(sr), aczrtd(sr)
-          write(luotdb,2269)
+          write(luotdb(sr),2169)
+          write(luotdb(sr),2164) acmstandstore(sr), aczht(sr), aczrtd(sr)
+          write(luotdb(sr),2269)
           do idx = 1, mnbpls
-            write(luotdb,2073) residue(idx)%deriv%fscv, residue(idx)%deriv%ffcv
+            write(luotdb(sr),2073) residue(idx)%deriv%fscv, residue(idx)%deriv%ffcv
           end do 
 
       case (62) ! biomass remove pool process (process code 62)
  6200     format ( a2, 9(1x, f7.4) )
  6201     format ( i2, 9(1x, f7.4) )
-          write(luotdb,*) 'pool stand(height stem leaf store)',         &
+          write(luotdb(sr),*) 'pool stand(height stem leaf store)',         &
      &                'flat(stem leaf store rootstore rootfiber)' 
-          write(luotdb,6200) 'T', atzht(sr), atmstandstem(sr),          &
+          write(luotdb(sr),6200) 'T', atzht(sr), atmstandstem(sr),          &
      &        atmstandleaf(sr), atmstandstore(sr),                      &
      &        atmflatstem(sr), atmflatleaf(sr),                         &
      &      atmflatstore(sr), atmflatrootstore(sr), atmflatrootfiber(sr)
           do idx = 1, mnbpls
-            write(luotdb,6201) idx, residue(idx)%geometry%zht, residue(idx)%mass%standstem,&
+            write(luotdb(sr),6201) idx, residue(idx)%geometry%zht, residue(idx)%mass%standstem,&
      &        residue(idx)%mass%standleaf, residue(idx)%mass%standstore,              &
      &        residue(idx)%mass%flatstem, residue(idx)%mass%flatleaf,                 &
      &        residue(idx)%mass%flatstore, residue(idx)%mass%flatrootstore,           &
