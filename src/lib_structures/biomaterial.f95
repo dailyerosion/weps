@@ -362,6 +362,7 @@ contains
      integer :: alloc_stat  ! allocation status return
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
 
+     sum_stat = 0
      ! allocate below ground arrays
      allocate(decompfac%iddg(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat

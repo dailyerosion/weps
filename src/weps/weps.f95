@@ -86,6 +86,7 @@
       include 'manage/oper.inc'
     
 !     + + + LOCAL VARIABLES + + +
+      character(len=21) :: rundatetime
       logical first
 
       integer, dimension(:), allocatable :: nperiods       ! number of reporting periods being accumulated
@@ -247,7 +248,8 @@
       call update_system_time
 
       ! Print date of Run
-      write(6,"(1x,'Date of WEPS run: ',a21)") get_systime_string()
+      rundatetime = get_systime_string() ! with Lahey f95, had to assign to variable first
+      write(6,"(1x,'Date of WEPS run: ',a21)") rundatetime
       write(6,*)
 
       call timer(0,TIMSTART)
@@ -392,10 +394,9 @@
       call openfils(residue)
 
       do isr = 1, nsubr
-          ! this prints header to plot.out file
-          call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
-          ! this prints header to decomp.out file
-          call bpools( isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr) )
+          ! Likely that we will put all management data into memory
+          ! and only read and initialize everything here, looping through
+          ! each management file (one for each subregion).
 
           ! Initialize the management file and rotation counters
           call mfinit(isr, tinfil(isr))
@@ -466,9 +467,12 @@
       endif
       am0gdf = .true.
 
-!     Likely that we will put all management data into memory
-!     and only read and initialize everything here, looping through
-!     each management file (one for each subregion).
+      do isr = 1, nsubr
+          ! this prints header to plot.out file
+          call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
+          ! this prints header to decomp.out file
+          call bpools( isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr) )
+      end do
 
 !     Initializations unique to particular submodels
       do isr=1,nsubr

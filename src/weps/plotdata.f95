@@ -21,7 +21,7 @@
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(threshold), intent(in) :: noerod
-      type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
+      type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
  
 !       Edit History
 !       04-Mar-99       wjr     created

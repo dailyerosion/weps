@@ -500,11 +500,12 @@
       real eratio      
       end function calctht0
 !---------------------------
-      subroutine callhydr(daysim, isr, restot)
+      subroutine callhydr(daysim, isr, restot, biotot)
       use biomaterial, only: biototal
       integer daysim
       integer isr                   
       type(biototal), intent(in) :: restot
+      type(biototal), intent(in) :: biotot
       end subroutine callhydr
 !---------------------------
       subroutine darcy(isr, daysim, numeq, bszlyt, bszlyd, bulkden,     &

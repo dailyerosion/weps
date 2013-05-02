@@ -26,6 +26,8 @@
       include 'm1flag.inc'
 
 !      include 'util/misc/f2kcli.inc'  !declarations for f2k commandline functions
+      INTEGER  COMMAND_ARGUMENT_COUNT ! required by the Lahey f95 compiler
+      EXTERNAL COMMAND_ARGUMENT_COUNT
       include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL COMMON BLOCKS + + +

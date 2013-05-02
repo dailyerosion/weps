@@ -33,9 +33,9 @@ module stir_report_mod
 
    type(stir_accumulators), dimension(:), allocatable :: stircum
 
-   contains
+ contains
 
-      subroutine create_stir_accumulator(nsubr, mxphops)
+    subroutine create_stir_accumulator(nsubr, mxphops)
         integer, intent(in) :: nsubr
         integer, intent(in) :: mxphops  ! maximum number of planting and harvest operations that can be tracked with these arrays
 
@@ -57,9 +57,9 @@ module stir_report_mod
         if( sum_stat .gt. 0 ) then
            write(*,*) 'ERROR: unable to allocate memory for stir accumulators'
         end if
-      end subroutine create_stir_accumulator
+    end subroutine create_stir_accumulator
 
-      subroutine destroy_stir_accumulator(nsubr)
+    subroutine destroy_stir_accumulator(nsubr)
         integer, intent(in) :: nsubr
 
         ! local variable
@@ -80,9 +80,9 @@ module stir_report_mod
         if( sum_stat .gt. 0 ) then
            write(*,*) 'ERROR: unable to deallocate memory for stir accumulators'
         end if
-      end subroutine destroy_stir_accumulator
+    end subroutine destroy_stir_accumulator
 
-      subroutine stir_report(isr, end_of_file, ostir, oenergyarea)
+    subroutine stir_report(isr, end_of_file, ostir, oenergyarea)
 
 !     + + + MODULES + + +
       use stir_soil_texture_mod, only : get_stir_soil_multiplier
@@ -206,8 +206,7 @@ module stir_report_mod
 
 1000  format (i2,'/',i2,'/',i4,3(' | ',a),2(' | ',f8.2),2(' | ',i1) )
 
-      return
-      end
+    end subroutine stir_report
 
 end module stir_report_mod
 

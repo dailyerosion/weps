@@ -39,6 +39,7 @@
 !     erodout
 
 !     ++++ LOCAL VARIABLES +++
+      character(len=21) :: rundatetime
       integer :: nsubr       ! number of subregions (found from size of subrsurf)
       type(subregionsurfacestate), dimension(:), allocatable :: subrsurf
       type(threshold), dimension(:), allocatable :: noerod                 ! report values to show which factors prevented erosion
@@ -96,7 +97,10 @@
       real min_erosion_awu       !Minimum erosiove wind speed (m/s)
                                  !to evaluate for erosion loss
 
-      integer :: SURF_UPD_FLG              ! erosion surface updating (0 - disabled, 1 - enabled)
+      integer :: SURF_UPD_FLG    ! erosion surface updating (0 - disabled, 1 - enabled)
+
+      INTEGER  COMMAND_ARGUMENT_COUNT ! required by the Lahey f95 compiler
+      EXTERNAL COMMAND_ARGUMENT_COUNT
 
 !     +++ END SPECIFICATIONS +++
 
@@ -104,7 +108,8 @@
       call update_system_time
 
       ! Print date of Run
-      write(6,"(1x,'Date of SWEEP run: ',a21)") get_systime_string()
+      rundatetime = get_systime_string() ! with Lahey f95, had to assign to variable first
+      write(6,"(1x,'Date of SWEEP run: ',a21)")  rundatetime
       write(6,*)
 
       ! initialize anemometer defaults

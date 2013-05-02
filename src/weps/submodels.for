@@ -31,7 +31,7 @@
         call updres(isr, residue, restot)                 !update decomp residue pools
 
 !        write(*,*) "Start callhydr"
-        call callhydr(daysim, isr, restot)      !call HYDROLOGY submodel
+        call callhydr(daysim, isr, restot, biotot)      !call HYDROLOGY submodel
         ! do not change order. Hydro may set irrigation amounts that
         ! will affect soil.
 

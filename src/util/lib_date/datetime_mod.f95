@@ -57,6 +57,8 @@ module datetime_mod
   public :: dayear
   public :: lstday
   public :: isleap
+  public :: wkday
+  public :: mvdate
 
 contains
 
@@ -396,5 +398,55 @@ contains
          leap_year_TF = .FALSE.
       endif
     end function isleap
+
+    integer function wkday( dd, mm, yyyy )
+
+!     + + + PURPOSE + + +
+!     Given a date in dd/mm/yyyy format
+!     wkday will give the day of the week.
+!     0 = Monday
+!     1 = Tuesday
+!     2 = Wednesday
+!     3 = Thursday
+!     4 = Friday
+!     5 = Saturday
+!     6 = Sunday
+
+!     + + + ARGUMENT DECLARATIONS + + + 
+      integer, intent(in) :: dd    ! day
+      integer, intent(in) :: mm    ! month
+      integer, intent(in) :: yyyy  ! year
+
+!     + + + END SPECIFICATIONS + + +
+
+      ! We simply find the Julian Day and do a modulo of the value
+      wkday=mod((julday (dd,mm,yyyy)), 7)
+
+    end function wkday
+
+    subroutine mvdate( delta, dd, mm, yyyy, nday, nmonth, nyear )
+
+!     + + + PURPOSE + + +
+!     Compute a date which is delta number of days before or after the
+!     date that is passed.
+
+!     + + + ARGUMENT DECLARATIONS + + + 
+      integer delta, dd, mm, yyyy, nday, nmonth, nyear
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     delta  - positive or negative integer indicating number of days
+!     dd     - day   -\
+!     mm     - month   >-- passed in parameters. WILL NOT CHANGE
+!     yyyy   - year  -/
+!
+!     nday   - day   -\
+!     nmonth - month   >-- results are shipped out in here
+!     nyear  - year  -/
+
+!     + + + END SPECIFICATIONS + + +
+
+      call caldat ((julday (dd, mm, yyyy)+delta), nday, nmonth, nyear)
+
+    end subroutine mvdate
 
 end module datetime_mod

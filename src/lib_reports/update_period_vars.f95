@@ -34,7 +34,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
                                 ! abrcd           all effective silhouette
                                 ! abmf(isr)       all flat mass
                                 ! abmst(isr)      all standing mass
-    type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate  ! egt, egtcs, egtss, egt10
+    type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10
 
     include "p1werm.inc"        ! needed by other include files
 

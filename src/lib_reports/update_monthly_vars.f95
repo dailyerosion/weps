@@ -16,7 +16,7 @@ SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cell
     INTEGER, INTENT (IN) :: cm  ! current month
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:), intent(inout) :: monthly_update
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:), intent(inout) :: mrot_update
-    type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
+    type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
 
     include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)

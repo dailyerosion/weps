@@ -89,6 +89,8 @@
       ahzsmt(isr) = 0.0
       ah0cng(isr) = 0.0
       ah0cnp(isr) = 0.0
+      ahfwsf(isr) = 1.0
+      ahzper(isr) = 0.0
 
       do idx = 1, nslay(isr)
           ahtsmx(idx, isr) = 0.0
