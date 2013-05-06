@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine  cdbug(isr, slay, restot)
+      subroutine  cdbug(isr, slay, crop, restot)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -19,18 +19,14 @@
 
       use datetime_mod, only: get_simdate
       use file_io_mod, only: luocdb
-      use biomaterial, only: biototal
+      use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
 
 !     + + +   ARGUMENT DECLARATIONS + + +
-      integer        isr
-      integer        slay
-      type(biototal), intent(in) :: restot
-
-!     + + +   ARGUMENT DEFINITIONS + + +
-!     isr       - the subregion index.
-!     slay      - number of soil layers
-!     restot    - structure containing residue totals
+      integer, intent(in) :: isr    ! subregion index
+      integer, intent(in) :: slay   ! number of soil layers
+      type(biomatter), intent(in) :: crop    ! structure containing full crop description
+      type(biototal), intent(in) :: restot   ! structure containing residue totals
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -79,7 +75,7 @@
 
 !     + + + DATA INITIALIZATIONS + + +
 
-      if (am0cif  .eqv. .true.) then
+      if (crop%growth%am0cif .eqv. .true.) then
           tday = -1
           tmo = -1
           tyr = -1

@@ -4,7 +4,7 @@
 !$HeadURL$
 
       subroutine manage( sr, syear, lopdd, lopmm, lopyy,                &
-     &                   residue, biotot, mandate)
+     &                   crop, residue, biotot, mandate)
 
 !     + + + PURPOSE + + +
 !     This is the main routine of the MANAGEMENT submodel. The date passed
@@ -40,6 +40,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, syear
       integer lopdd, lopmm, lopyy
+      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
@@ -124,7 +125,7 @@
         if(opskip.eq.0) call dogroup(sr)
       case ('P')
         if(opskip.eq.0) then
-           call doproc(sr, mcount(sr), residue, biotot, mandate)
+           call doproc(sr, mcount(sr), crop, residue, biotot, mandate)
         endif
       case ('D')
         call stir_report(sr, .false., ostir, oenergyarea)

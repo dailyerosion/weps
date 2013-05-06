@@ -479,7 +479,7 @@
             call decoinit(residue(ipl, isr), decompfac(isr))
          end do
          call decopen(isr) ! prints headers in above.out and below.out
-         call cropinit(isr)
+         call cropinit(isr, crop(isr))
          ! initialize all dependent variables
          call updres(isr, residue(1:size(residue,1), isr), restot(isr))
          call sumbio(isr, residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))
@@ -538,7 +538,7 @@
          end if
          do isr=1,nsubr   ! do multiple subregion      
           ! isr = 1 !Note: we are no longer dealing with multiple subregions here
-          call submodels(isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
+          call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
      &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
@@ -621,7 +621,7 @@
 
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
-            call submodels(isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr),&
+            call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),&
      &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
 
             call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
@@ -671,7 +671,6 @@
          am0dif = .true.
          am0eif = .true.
          am0sif = .true.
-         am0cgf = .false.
          am0ifl = .false.
          am0jd = ijday           ! Reset loop counter to first day of simulation
          ! store day for use in simulation date routines
@@ -749,7 +748,7 @@
 !           if (am0jd.eq.ljday) call dbgdmp(daysim, isr, residue(isr), biotot(isr))
 
             do isr=1,nsubr   ! do multiple subregion     
-               call submodels(isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
+               call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
                               biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
             end do
 

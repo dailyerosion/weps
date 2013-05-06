@@ -43,20 +43,22 @@
       
 !-------------------- CROP Routines --------------------------------
 !------------------------
-      subroutine callcrop(daysim, sr, residue, restot, croptot)
+      subroutine callcrop(daysim, sr, crop, residue, restot, croptot)
       use biomaterial, only: biomatter, biototal
       integer daysim
       integer sr
-      type(biomatter), dimension(:), intent(inout) :: residue
+      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
+      type(biomatter), dimension(:), intent(inout) :: residue  ! structure containing full residue pool description
       type(biototal), intent(in) :: restot
       type(biototal), intent(inout) :: croptot
       end subroutine callcrop
 !----------------------
-      subroutine  cdbug(isr, slay, restot)
-      use biomaterial, only: biototal
-      integer        isr
-      integer        slay
-      type(biototal), intent(in) :: restot
+      subroutine  cdbug(isr, slay, crop, restot)
+      use biomaterial, only: biomatter, biototal
+      integer, intent(in) :: isr    ! subregion index
+      integer, intent(in) :: slay   ! number of soil layers
+      type(biomatter), intent(in) :: crop    ! structure containing full crop description
+      type(biototal), intent(in) :: restot   ! structure containing residue totals
       end subroutine cdbug
 !----------------------
       subroutine chillu(bctchillucum, day_max_temp, day_min_temp)
@@ -64,11 +66,8 @@
       real, intent(in) :: day_max_temp, day_min_temp            
       end subroutine chillu
 !----------------------
-      subroutine cinit(isr, bnslay, bszlyt, bszlyd, bsdblk, bsfcce,     &
-     &           bsfcec, bsfsmb, bsfom, bsfcla, bs0ph,                  &
-     &           bsmno3,                                                &
-     &           bc0fd1, bc0fd2, bctopt, bctmin,                        &
-     &           cc0fd1, cc0fd2,                                        &
+      subroutine cinit(isr, bnslay, bszlyd,                             &
+     &           bctopt, bctmin,                                        &
      &           bcthudf, bctdtm, bcthum, bc0hue, bcdmaxshoot,          &
      &           bc0shoot, bc0growdepth, bc0storeinit,                  &
      &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
@@ -82,13 +81,9 @@
      &           bctchillucum, bcthardnx, bcthu_shoot_beg,              &
      &           bcthu_shoot_end, bcdpop, bcdayspring)
       integer, intent(in) :: isr   ! subregion number
-      integer bnslay, dd, mm, yy, bcthudf, bctdtm
-      real bszlyt(*)  ! added so a local variable would be set correctly - LEW
-      real bszlyd(*), bsdblk(*), bsfcce(*), bsfcec(*), bsfsmb(*)
-      real bsfom(*), bsfcla(*), bs0ph(*)
-      real bc0fd1, bc0fd2, bctopt, bctmin
-      real cc0fd1, cc0fd2
-      real bsmno3
+      integer bnslay, bcthudf, bctdtm
+      real bszlyd(*)
+      real bctopt, bctmin
       real bcthum, bc0hue, bcdmaxshoot, bc0shoot
       real bc0growdepth, bc0storeinit
       real bcmstandstem, bcmstandleaf, bcmstandstore
@@ -154,10 +149,7 @@
       real hmx, bcthucum  
       end subroutine cprnl
 !-----------------------------
-      subroutine cropgrow (isr, bnslay, bszlyt, bszlyd, bsdblk,         &
-     &                 bsfcce, bsfom, bsfcec, bsfsmb,                   &
-     &                 bsfcla, bs0ph, bsftan, bsftap,                   &
-     &                 bsmno3,                                          &
+      subroutine cropgrow (isr, bnslay, bszlyd,                         &
      &                 bc0ck, bcgrf, bcehu0, bczmxc,                    &
      &                 bc0nam, bc0idc, bcxrow,                          &
      &                 bctdtm, bczmrt, bctmin, bctopt,                  &
@@ -202,11 +194,7 @@
      &                 bgzht, bgdstm, bgxstmrep, bggrainf )
       integer, intent(in) :: isr   ! subregion number
       integer bnslay, bctdtm, bcthudf
-      real bszlyt(*)
-      real bszlyd(*), bsdblk(*), bsfcec(*), bsfcce(*)
-      real bsfom(*), bsfcla(*), bs0ph(*)
-      real bsftan(*), bsftap(*)
-      real bsfsmb(*), bsmno3
+      real bszlyd(*)
       real bc0ck, bcgrf, bcehu0, bczmxc
       character*(80) bc0nam
       integer bc0idc
@@ -258,8 +246,10 @@
       real    bgzht, bgdstm, bgxstmrep, bggrainf
       end subroutine cropgrow
 !---------------------------
-      subroutine cropinit(isr)                          
+      subroutine cropinit(isr, crop)
+      use biomaterial, only: biomatter, biototal
       integer isr
+      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       end subroutine cropinit
 !---------------------------
       subroutine growth(isr, bnslay, bszlyd, bc0ck, bcgrf,              &
@@ -1109,10 +1099,12 @@
       integer       isr
       end subroutine spllay_ifc
 !--------------------------------
-      subroutine submodels (isr, residue, restot, croptot, biotot, decompfac, mandate)
+      subroutine submodels (isr, crop, residue, restot, croptot,        &
+     &                      biotot, decompfac, mandate)
       use biomaterial, only: biomatter, biototal, decomp_factors
       use mandate_mod, only: opercrop_date
       integer isr
+      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(inout) :: restot, croptot, biotot
       type(decomp_factors), intent(inout) :: decompfac
@@ -1186,10 +1178,11 @@
       integer sr
       end subroutine dooper
 !---------------------------
-      subroutine   doproc (sr, bmrotation, residue, biotot, mandate)
+      subroutine   doproc (sr, bmrotation, crop, residue, biotot, mandate)
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
       integer sr, bmrotation
+      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
@@ -1206,11 +1199,12 @@
       REAL    :: mass_left
       end subroutine get_calib_yield
 !--------------------------
-      subroutine manage( sr, syear, lopdd, lopmm, lopyy, residue, biotot, mandate)
+      subroutine manage( sr, syear, lopdd, lopmm, lopyy, crop, residue, biotot, mandate)
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
       integer sr, syear
       integer lopdd, lopmm, lopyy
+      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate

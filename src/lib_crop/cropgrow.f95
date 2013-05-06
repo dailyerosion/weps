@@ -3,10 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine cropgrow (isr, bnslay, bszlyt, bszlyd, bsdblk,         &
-     &                 bsfcce, bsfom, bsfcec, bsfsmb,                   &
-     &                 bsfcla, bs0ph, bsftan, bsftap,                   &
-     &                 bsmno3,                                          &
+      subroutine cropgrow (isr, bnslay, bszlyd,                         &
      &                 bc0ck, bcgrf, bcehu0, bczmxc,                    &
      &                 bc0nam, bc0idc, bcxrow,                          &
      &                 bctdtm, bczmrt, bctmin, bctopt,                  &
@@ -51,13 +48,7 @@
      &                 bgzht, bgdstm, bgxstmrep, bggrainf )
 
 !     + + + PURPOSE + + +
-!     This is the main program for implementing the crop growth
-!     calculations in the various subroutines. For any questions refer
-!     to Amare Retta at the USDA Wind Erosion Research Laboratory,
-!     University, Manhattan KS 66506.
-
-!     + + + KEYWORDS + + +
-!     Wind erosion crop model
+!     This is the main program for implementing the crop growth calculations.
 
       use weps_interface_defs
       use datetime_mod, only: get_simdate_doy
@@ -68,11 +59,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
       integer bnslay, bctdtm, bcthudf
-      real bszlyt(*)
-      real bszlyd(*), bsdblk(*), bsfcec(*), bsfcce(*)
-      real bsfom(*), bsfcla(*), bs0ph(*)
-      real bsftan(*), bsftap(*)
-      real bsfsmb(*), bsmno3
+      real bszlyd(*)
       real bc0ck, bcgrf, bcehu0, bczmxc
       character*(80) bc0nam
       integer bc0idc
@@ -129,23 +116,15 @@
 !     bc0alf - leaf partitioning parameter
 !     bc0arp - rprd partitioning parameter
 !     bc0aht - height s-curve parameter
-!     bsmno3 - amount of applied N (t/ha)
 !     bc0blf - leaf partitioning parameter
 !     bc0brp - rprd partitioning parameter
 !     bc0bht - height s-curve parameter
-!     bsdblk      - bulk density of a layer (g/cm^3=t/m^3)
-!     bsfcce  - calcium carbonate (%)
-!     bsfcla  - % clay
-!     bsfom   - percent organic matter
-!     bsftan  - total available N in a layer from all sources (kg/ha)
-!     bsftap  - total available P in a layer from all sources (kg/ha)
 !     bc0clf - leaf partitioning parameter
 !     bc0crp - rprd partitioning parameter
 !     bsfcec     - cation exchange capacity (cmol/kg)
 !     bc0ck  - light extinction coeffficient (fraction)
 !     bc0dlf - leaf partitioning parameter
 !     bc0drp - rprd partitioning parameter
-!     dmag   - stress adjusted cummulated aboveground biomass (t/ha)
 !     bctdtm - days to maturity (same as dtm)
 !     bc0fd1 - minimum temperature below zero (C)
 !     cc0fd1 - fraction of biomass lost each day due to frost
@@ -157,7 +136,6 @@
 !     bc0idc - crop type:annual,perennial,etc
 !     bc0nam - crop name
 !     acxrow - Crop row spacing (m)
-!     bs0ph  - soil pH
 !     bczmrt - maximum root depth
 !     bc0sla - specific leaf area (cm^2/g)
 !     bsfsmb     - sum of bases (cmol/kg)
@@ -256,20 +234,20 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'p1solar.inc'
-
-!     + + + COMMON BLOCKS + + +
-      include 'crop/cgrow.inc'
-      include 'crop/cenvr.inc'
-      include 'crop/cparm.inc'
-      include 'crop/csoil.inc'
-      include 'crop/chumus.inc'
-      include 'crop/cfert.inc'
+      include 'm1sim.inc'
 
 !     + + + LOCAL VARIABLES + + +
+      integer :: jd     ! simulation day of year
       integer lay
       real root_store_rel, pot_stems, pot_leaf_mass
       real vern_delay, photo_delay, hu_delay, trend
       integer regrowth_flg
+      real a_fr, b_fr
+      real :: hrlt, hrlty   ! length of day in hours for today and yesterday
+      real :: hui           ! heat unit index
+      real :: huiy          ! heat unit index for yesterday
+      real :: huirt         ! root growth heat unit index
+      real :: huirty        ! root growth heat unit index yesterday
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     root_store_rel - root storage which could be released for regrowth
@@ -322,8 +300,7 @@
 !     cinit
 !     huc1
 !     growth
-!     npcy
-!
+
 !     + + + FUNCTION DECLARATIONS + + +
 !      real huc1
 !      real daylen
@@ -333,25 +310,11 @@
 !     day of year
       jd = get_simdate_doy()
 
-      do 5 lay = 1, bnslay
-         bsfcce(lay) = bsfcce(lay) * 100.
-         bsfom(lay) = bsfom(lay) * 100.
-         bsfcla(lay) = bsfcla(lay) * 100.
-
-         wn(lay) = 0.0
-         wp(lay) = 0.0
-         wno3(lay) = bsftan(lay)
-         ap(lay) = bsftap(lay)
-    5 continue
-
-!     initialize growth and nutrient variables when crop is planted
+!     initialize growth variables when crop is planted
 !     bm0cif is flag to initialize crop at start of planting
       if (bm0cif) then
-          call cinit( isr, bnslay, bszlyt, bszlyd, bsdblk, bsfcce,      &
-     &              bsfcec, bsfsmb, bsfom, bsfcla, bs0ph,               &
-     &              bsmno3,                                             &
-     &              bc0fd1, bc0fd2, bctopt, bctmin,                     &
-     &              cc0fd1, cc0fd2,                                     &
+          call cinit( isr, bnslay, bszlyd,                              &
+     &              bctopt, bctmin,                                     &
      &              bcthudf, bctdtm, bcthum, bc0hue, bcdmaxshoot,       &
      &              bc0shoot, bc0growdepth, bc0storeinit,               &
      &              bcmstandstem, bcmstandleaf, bcmstandstore,          &
@@ -401,8 +364,8 @@
           bm0cif = .false.  !turn off after initialization is complete
       else
           ! calculate day length
-          hrlty = hrlt
-          hrlt = daylen(xlat, jd, civilrise)
+          hrlty = daylen(amalat, jd-1, civilrise)
+          hrlt = daylen(amalat, jd, civilrise)
 
           ! set trend direction for living leaf area from external forces
           trend = (bcfliveleaf*bcmstandleaf)                            &
@@ -666,7 +629,7 @@
               end if
           end if
 
-          ! temporary location    ! calculates Frost damage s-curve coefficients
+          ! calculates Frost damage s-curve coefficients
           call scrv1(bc0fd1,cc0fd1,bc0fd2,cc0fd2,a_fr,b_fr)
 
           ! calculate plant growth state variables
@@ -748,12 +711,6 @@
           bcdayam = bcdayam + 1
 
       end if
-
-      do lay = 1, bnslay
-         bsfcce(lay) = bsfcce(lay) / 100.
-         bsfom(lay) = bsfom(lay) / 100.
-         bsfcla(lay) = bsfcla(lay) / 100.
-      end do
 
       return
       end

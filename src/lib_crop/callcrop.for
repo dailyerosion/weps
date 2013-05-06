@@ -2,7 +2,7 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine callcrop(daysim, sr, residue, restot, croptot)
+      subroutine callcrop(daysim, sr, crop, residue, restot, croptot)
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
@@ -14,7 +14,8 @@
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer daysim
       integer sr
-      type(biomatter), dimension(:), intent(inout) :: residue
+      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
+      type(biomatter), dimension(:), intent(inout) :: residue  ! structure containing full residue pool description
       type(biototal), intent(in) :: restot
       type(biototal), intent(inout) :: croptot
 
@@ -53,20 +54,15 @@
 
       ! check for a valid growing crop
       if( (ac0shoot(sr) .le. 0.0) .or. (acdpop(sr) .le. 0.0) ) then
-          am0cgf = .false.
+          crop%growth%am0cgf = .false.
       end if
 
 !     only continue if crop is growing
-      if( am0cgf ) then
+      if( crop%growth%am0cgf ) then
 
-         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), restot)
+         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), crop, restot)
 
-         write(*,*) 'CALLCROP: acxrow(sr): ', acxrow(sr)
-         call cropgrow(sr, nslay(sr),                                   &
-     &   aszlyt(1,sr), aszlyd(1,sr), asdblk(1,sr),                      &
-     &   asfcce(1,sr), asfom(1,sr), asfcec(1,sr), asfsmb(1,sr),         &
-     &   asfcla(1,sr), as0ph(1,sr), asftan(1,sr), asftap(1,sr),         &
-     &   asmno3(sr),                                                    &
+         call cropgrow(sr, nslay(sr), aszlyd(1,sr),                     &
      &   ac0ck(sr), acgrf(sr), acehu0(sr), aczmxc(sr),                  &
      &   ac0nam(sr),ac0idc(sr), acxrow(sr),                             &
      &   actdtm(sr), aczmrt(sr), actmin(sr), actopt(sr),                &
@@ -79,7 +75,7 @@
      &   aweirr, awtdmx, awtdmn,                                        &
      &   ahtsmx(1,sr), ahtsmn(1,sr),                                    &
      &   ahfwsf(sr),                                                    &
-     &   am0cif,                                                        &
+     &   crop%growth%am0cif,                                            &
      &   acthudf(sr), acbaf(sr),                                        &
      &   achyfg(sr), acthum(sr), acdpop(sr), acdmaxshoot(sr),           &
      &   ac0storeinit(sr), acfshoot(sr),                                &
@@ -110,7 +106,7 @@
      &   agmbgstemz(1,sr),                                              &
      &   agzht(sr), agdstm(sr), agxstmrep(sr), aggrainf(sr) )
 
-         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), restot)
+         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), crop, restot)
       end if
 
       ! check for abandoned stems in crop regrowth
@@ -139,7 +135,6 @@
      &      nslay(sr), residue)
       end if
 
-         write(*,*) 'CALLCROP: acxrow(sr): ', acxrow(sr)
       ! update all derived globals for crop global variables
       call cropupdate(                                                  &
      &      acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),      &

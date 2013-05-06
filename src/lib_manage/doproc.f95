@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   doproc (sr, bmrotation, residue, biotot, mandate)
+      subroutine   doproc (sr, bmrotation, crop, residue, biotot, mandate)
 
 !     + + + PURPOSE + + +
 !     Doproc is called when a processline is found in the management file
@@ -55,6 +55,7 @@
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
+      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
@@ -73,7 +74,6 @@
 !     ahrwcf    - 1/3 bar soil water content
 !     ahrwcs    - saturation soil water content
 !     ahrwcw    - 15 bar soil water content
-!     am0cgf    - flag to call crop growth between plant and harvest
 !     am0defoliatefl  - flag set by defoliate process
 !                 0 - no defoliation
 !                 1 - defoliation triggered
@@ -838,7 +838,7 @@
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)),* , err=901) am0defoliatefl
 
-        if( am0cgf .and. .not. am0cif ) then
+        if( crop%growth%am0cgf .and. .not. crop%growth%am0cif ) then
           ! crop growth flag on and not on initialization cycle
           if( am0defoliatefl .eq. 1 ) then
              ! defoliate by dropping all crop leaf mass into crop flat pool
@@ -896,14 +896,14 @@
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)),* , err=901) am0kilfl
 
-        if( am0cgf .and. .not. am0cif ) then
+        if( crop%growth%am0cgf .and. .not. crop%growth%am0cif ) then
           ! crop growth flag on and not on initialization cycle
           if ((am0kilfl.eq.2).or.((am0kilfl.eq.1).and.((ac0idc(sr).eq.1)&
      &       .or.(ac0idc(sr).eq.2).or.(ac0idc(sr).eq.4)                 &
      &       .or.(ac0idc(sr).eq.5)))) then
 !            Stop the crop growth (ie. stop calling crop submodel) and
 !            transfer crop state to temporary crop pool
-             call kill_crop( am0cgf, nslay(sr),                         &
+             call kill_crop( crop%growth%am0cgf, nslay(sr),                         &
      &           acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr), &
      &           acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),    &
      &           acmrootstorez(1,sr), acmrootfiberz(1,sr),              &
@@ -1561,12 +1561,12 @@
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
 !     kill and transfer only if existing crop and new crop
-      if( am0cgf.and.(acdstm(sr).gt.0.0) ) then
+      if( crop%growth%am0cgf.and.(acdstm(sr).gt.0.0) ) then
 !         In a growth model growing only a single crop, any existing crop must
 !         be killed and transferred to residue or all the residue will be lost
 !         when the new crop is initialized
 !        (remove when multiple species capable)
-          call kill_crop( am0cgf, nslay(sr),                            &
+          call kill_crop( crop%growth%am0cgf, nslay(sr),                            &
      &           acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr), &
      &           acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),    &
      &           acmrootstorez(1,sr), acmrootfiberz(1,sr),              &
@@ -1734,9 +1734,9 @@
 !       do not initialize crop if no crop is present
         if( acdpop(sr) .gt. 0.0 ) then
 !         set flag for crop initialization - jt
-          am0cif = .true.
+          crop%growth%am0cif = .true.
 !         set crop growth flag on - jt
-          am0cgf = .true.
+          crop%growth%am0cgf = .true.
 !         give crop the proper name
           ac0nam(sr) = cropname
           call stir_crop(sr, cropname, 1)

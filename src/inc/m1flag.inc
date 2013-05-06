@@ -11,9 +11,9 @@
 !     + + + VARIABLE DECLARATIONS + + +
 
       logical          am0ifl
-      logical          am0cif
+!      logical          am0cif
 !      logical          am0eif
-      logical          am0cgf
+!      logical          am0cgf
       logical          am0dif
       logical          am0sif
       logical          am0oif
@@ -46,7 +46,7 @@
 
       common / m1flag /                                                 &
 !     &                  am0ifl, am0eif, am0cgf, am0cif, am0dif, am0hfl, &
-     &                  am0ifl, am0cgf, am0cif, am0dif,                 &
+     &                  am0ifl, am0dif,                                 &
      &                  am0gdf, am0til, am0defoliatefl, am0kilfl,       &
 !     &                  am0cropupfl, am0sfl, am0tfl, am0cfl, am0dfl,    &
      &                  am0cropupfl,                                    &

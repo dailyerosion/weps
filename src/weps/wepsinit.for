@@ -39,10 +39,6 @@
       am0sif = .true.            ! m1flag.inc
       am0ifl = .true.            ! m1flag.inc
 
-      ! no crop growing at start of simulation
-      am0cgf = .false.           ! m1flag.inc
-      am0cif = .false.           ! m1flag.inc
-
       subflg = .true.            ! main/main.inc
 
       ! set grid flag until first gridding is done

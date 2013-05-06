@@ -43,6 +43,8 @@ module biomaterial
   end type biostate_geometry
 
   type biostate_growth
+     logical :: am0cgf      ! flag if set to .true. then run CROP growth subroutines.
+     logical :: am0cif      ! flag if set to .true. then run CROP growth initialization subroutine.
      real :: thucum         ! crop accumulated heat units
      real :: trthucum       ! accumulated root growth heat units (degree-days)
 

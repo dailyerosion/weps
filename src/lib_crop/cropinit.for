@@ -3,12 +3,14 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine cropinit(isr)
+      subroutine cropinit(isr, crop)
 
       use weps_interface_defs
+      use biomaterial, only: biomatter, biototal
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
+      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -25,6 +27,10 @@
 
 !     + + + LOCAL VARIABLE DECLARATIONS + + +
       integer idx
+
+      ! no crop growing at start of simulation
+      crop%growth%am0cgf = .false.
+      crop%growth%am0cif = .false.
 
       acmstandstem(isr) = 0.0
       acmstandleaf(isr) = 0.0
