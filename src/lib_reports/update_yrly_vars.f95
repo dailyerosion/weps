@@ -3,25 +3,25 @@
 !$Revision$
 !$HeadURL$
 
-SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cellstate)
+SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cellstate, h1et)
 
     USE pd_var_type_def
     USE pd_var_tables
     use erosion_data_struct_defs, only: cellsurfacestate, awdair, awudmx, subday, ntstep 
     use grid_mod, only: imax, jmax, sim_area
+    use hydro_data_struct_defs, only: hydro_derived_et
 
     IMPLICIT NONE
 
-    INTEGER :: isr              ! current subregion
+    INTEGER, intent (in) :: isr  ! current subregion
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrly_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrot_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yr_update
     type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10
+    type(hydro_derived_et), intent(in) :: h1et
 
     include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
-
-    include "h1et.inc"          ! ah0drat (dryness ratio)
 
     include "h1db1.inc"         ! ahzsnd(s) snow depth in mm
 
@@ -389,9 +389,9 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
   CALL run_ave(yrot_update(Wind_energy), we, 1)
   CALL run_ave(yr_update(Wind_energy), we, 1)
 
-  CALL run_ave(yrly_update(Dryness_ratio), ah0drat, 1)
-  CALL run_ave(yrot_update(Dryness_ratio), ah0drat, 1)
-  CALL run_ave(yr_update(Dryness_ratio), ah0drat, 1)
+  CALL run_ave(yrly_update(Dryness_ratio), h1et%drat, 1)
+  CALL run_ave(yrot_update(Dryness_ratio), h1et%drat, 1)
+  CALL run_ave(yr_update(Dryness_ratio), h1et%drat, 1)
 
   s = 1  !currently have only one subregion
   ! Note that the 20mm depth should be a global parameter

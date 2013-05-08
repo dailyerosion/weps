@@ -4,11 +4,12 @@
 !$HeadURL$
 
       subroutine submodels (isr, crop, residue, restot, croptot,        &
-     &                      biotot, decompfac, mandate)
+     &                      biotot, decompfac, mandate, h1et)
 
       use weps_interface_defs
       use biomaterial, only: biomatter, biototal, decomp_factors
       use mandate_mod, only: opercrop_date
+      use hydro_data_struct_defs, only: hydro_derived_et
 
       include 'p1werm.inc'
       include 'm1flag.inc'      !am0cropupfl
@@ -21,6 +22,7 @@
       type(biototal), intent(inout) :: restot, croptot, biotot
       type(decomp_factors), intent(inout) :: decompfac
       type(opercrop_date), dimension(:), intent(inout) :: mandate
+      type(hydro_derived_et), intent(inout) :: h1et
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     restot          - structure array containing summary residue pool amounts for all subregions
@@ -33,7 +35,7 @@
         call updres(isr, residue, restot)                 !update decomp residue pools
 
 !        write(*,*) "Start callhydr"
-        call callhydr(daysim, isr, restot, biotot)      !call HYDROLOGY submodel
+        call callhydr(daysim, isr, restot, biotot, h1et)      !call HYDROLOGY submodel
         ! do not change order. Hydro may set irrigation amounts that
         ! will affect soil.
 
@@ -47,7 +49,7 @@
         ! the previous day crop data registers even though growth flag is
         ! turned off.
         if( crop%growth%am0cgf .or. (am0cropupfl.gt.0) ) then
-            call callcrop(daysim, isr, crop, residue, restot, croptot)
+            call callcrop(daysim, isr, crop, residue, restot, croptot, h1et)
         end if
 
 !        write(*,*) "Start decomp"

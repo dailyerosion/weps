@@ -17,6 +17,10 @@ module Points_Mod
      module procedure pt_sub
   end interface
  
+  interface operator (.eq.)
+     module procedure pt_equal
+  end interface
+
   interface slen
      module procedure pt_len
      module procedure pt_slen
@@ -44,6 +48,19 @@ contains
     c = point(a%x - b%x, a%y - b%y)
   end function pt_sub
  
+  function pt_equal(a, b) result(c)
+    type(point), intent(in) :: a, b
+    logical :: c
+ 
+    ! Note: this can fail if points a and b are calculated, 
+    ! and not exactly the same data values read in from a file
+    if( (a%x .eq. b%x) .and. (a%y .eq. b%y) ) then
+       c = .true.
+    else
+       c = .false.
+    end if
+  end function pt_equal
+
   function pt_len(a) result(l)
     type(point), intent(in) :: a
     real :: l

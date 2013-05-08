@@ -43,22 +43,26 @@
       
 !-------------------- CROP Routines --------------------------------
 !------------------------
-      subroutine callcrop(daysim, sr, crop, residue, restot, croptot)
+      subroutine callcrop(daysim, sr, crop, residue, restot, croptot, h1et)
       use biomaterial, only: biomatter, biototal
+      use hydro_data_struct_defs, only: hydro_derived_et
       integer daysim
       integer sr
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue  ! structure containing full residue pool description
       type(biototal), intent(in) :: restot
       type(biototal), intent(inout) :: croptot
+      type(hydro_derived_et), intent(in) :: h1et
       end subroutine callcrop
 !----------------------
-      subroutine  cdbug(isr, slay, crop, restot)
+      subroutine  cdbug(isr, slay, crop, restot, h1et)
       use biomaterial, only: biomatter, biototal
+      use hydro_data_struct_defs, only: hydro_derived_et
       integer, intent(in) :: isr    ! subregion index
       integer, intent(in) :: slay   ! number of soil layers
       type(biomatter), intent(in) :: crop    ! structure containing full crop description
       type(biototal), intent(in) :: restot   ! structure containing residue totals
+      type(hydro_derived_et), intent(in) :: h1et
       end subroutine cdbug
 !----------------------
       subroutine chillu(bctchillucum, day_max_temp, day_min_temp)
@@ -490,12 +494,14 @@
       real eratio      
       end function calctht0
 !---------------------------
-      subroutine callhydr(daysim, isr, restot, biotot)
+      subroutine callhydr(daysim, isr, restot, biotot, h1et)
       use biomaterial, only: biototal
+      use hydro_data_struct_defs, only: am0hdb, hydro_derived_et
       integer daysim
       integer isr                   
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: biotot
+      type(hydro_derived_et), intent(inout) :: h1et
       end subroutine callhydr
 !---------------------------
       subroutine darcy(isr, daysim, numeq, bszlyt, bszlyd, bulkden,     &
@@ -583,11 +589,13 @@
       real bszrgh, bsxrgw, bsxrgs
       end function furrowcut
 !-------------------------
-      subroutine  hdbug(isr, slay, restot)
+      subroutine  hdbug(isr, slay, restot, h1et)
       use biomaterial, only: biototal
+      use hydro_data_struct_defs, only: hydro_derived_et
       integer isr                   
       integer slay                   
       type(biototal), intent(in) :: restot
+      type(hydro_derived_et), intent(in) :: h1et
       end subroutine hdbug
 !-------------------------
       subroutine heat(isr, layrsn, bszlyd, bszlyt, theta, thetas,       &
@@ -640,8 +648,10 @@
       real bszlyd(*), bszlyt(*), vaptrans, evaplimit 
       end subroutine hinit
 !------------------------
-      subroutine hydrinit(isr)
+      subroutine hydrinit(isr, h1et)
+      use hydro_data_struct_defs, only: hydro_derived_et
       integer isr
+      type(hydro_derived_et), intent(inout) :: h1et
       end subroutine hydrinit
 !-------------------------
       subroutine hydro ( isr, layrsn, bmrslp, bbzht,                    &
@@ -674,9 +684,9 @@
      &                   cumprecip, cumrunoff, cumevap,                 &
      &                   cumtrans, cumdrain,                            &
      &                   presswc, pressnow, presday,                    &
-     &                   bhztranspdepth, restot )
-      use file_io_mod, only: luohydro, luohlayers, luowepphdrive
+     &                   bhztranspdepth, restot, h1et )
       use biomaterial, only: biototal
+      use hydro_data_struct_defs, only: am0hfl, hydro_derived_et
       integer, intent(in) :: isr   ! subregion number
       integer layrsn
       real bmrslp
@@ -718,6 +728,7 @@
       real presswc, pressnow, presday
       real bhztranspdepth
       type(biototal), intent(in) :: restot
+      type(hydro_derived_et), intent(inout) :: h1et
       end subroutine hydro
 !-----------------------
       real function internode_wt_bc(cond_up, cond_low,                  &
@@ -1100,15 +1111,17 @@
       end subroutine spllay_ifc
 !--------------------------------
       subroutine submodels (isr, crop, residue, restot, croptot,        &
-     &                      biotot, decompfac, mandate)
+     &                      biotot, decompfac, mandate, h1et)
       use biomaterial, only: biomatter, biototal, decomp_factors
       use mandate_mod, only: opercrop_date
+      use hydro_data_struct_defs, only: hydro_derived_et
       integer isr
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(inout) :: restot, croptot, biotot
       type(decomp_factors), intent(inout) :: decompfac
       type(opercrop_date), dimension(:), intent(inout) :: mandate
+      type(hydro_derived_et), intent(inout) :: h1et
       end subroutine submodels
 !-------------------------------
       subroutine sumbio(isr, residue, restot, croptot, biotot)
@@ -1867,19 +1880,21 @@
 !----------------------
       SUBROUTINE run_ave(pd_ave, new_val, cnt) 
       USE pd_var_type_def
-
       TYPE (pd_var_type),INTENT (INOUT) :: pd_ave
       REAL,    INTENT (IN) :: new_val
       INTEGER, INTENT (IN) :: cnt      
       end subroutine run_ave
 !-----------------------
-    SUBROUTINE update_hmonth_update_vars(cd, cm, hmonth_update, hmrot_update)
-    USE pd_var_type_def
+    SUBROUTINE update_hmonth_update_vars(isr, cd, cm, hmonth_update, hmrot_update, h1et)
+    USE pd_var_type_def, only: pd_var_type
     USE pd_var_tables
+    use hydro_data_struct_defs, only: hydro_derived_et
+    INTEGER, intent (in) :: isr  ! current subregion
     INTEGER, INTENT (IN) :: cd  ! current day
     INTEGER, INTENT (IN) :: cm  ! current month
     TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:), intent(inout) :: hmonth_update
     TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:,:), intent(inout) :: hmrot_update
+    type(hydro_derived_et), intent(in) :: h1et
     end subroutine update_hmonth_update_vars
 !-----------------------
     SUBROUTINE update_hmonth_report_vars(cur_day, cur_month, cur_yr, nrot_years, hmonth_update, hmrot_update, hmonth_report)
@@ -1894,15 +1909,17 @@
     TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:,:,0:), intent(inout) :: hmonth_report
     end SUBROUTINE update_hmonth_report_vars
 !-----------------------
-    SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cellstate)
+    SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cellstate, h1et)
     USE pd_var_type_def
     USE pd_var_tables
-    use erosion_data_struct_defs, only: cellsurfacestate
-    INTEGER :: isr              ! current subregion
+    use erosion_data_struct_defs, only: cellsurfacestate, awdair, awudmx, subday, ntstep 
+    use hydro_data_struct_defs, only: hydro_derived_et
+    INTEGER, intent (in) :: isr  ! current subregion
     INTEGER, INTENT (IN) :: cm  ! current month
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:), intent(inout) :: monthly_update
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:), intent(inout) :: mrot_update
     type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
+    type(hydro_derived_et), intent(in) :: h1et
     end subroutine  update_monthly_update_vars
 !------------------------
 SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_update, mrot_update, monthly_report)
@@ -1939,15 +1956,17 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
     TYPE (pd_var_type), DIMENSION(Min_period_vars:,:), intent(inout) :: period_report
     end SUBROUTINE update_period_report_vars
 !-------------------------            
-SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cellstate)
+    SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cellstate, h1et)
     USE pd_var_type_def
     USE pd_var_tables
-    use erosion_data_struct_defs, only: cellsurfacestate
-    INTEGER :: isr              ! current subregion
+    use erosion_data_struct_defs, only: cellsurfacestate, awdair, awudmx, subday, ntstep 
+    use hydro_data_struct_defs, only: hydro_derived_et
+    INTEGER, intent (in) :: isr  ! current subregion
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrly_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrot_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yr_update
     type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10
+    type(hydro_derived_et), intent(in) :: h1et
     end subroutine update_yrly_update_vars
 !-------------------------            
     SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, yrly_update, yrot_update, yr_update, yrly_report, yr_report)

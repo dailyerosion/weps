@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine callhydr(daysim, isr, restot, biotot)
+      subroutine callhydr(daysim, isr, restot, biotot, h1et)
 
 ! ***************************************************************** wjr
 ! Wrapper to call hydro
@@ -12,13 +12,14 @@
       use biomaterial, only: biototal
       use timer_mod, only: timer, TIMHYDR, TIMSTART, TIMSTOP
       use erosion_data_struct_defs, only: awudav
-      use hydro_data_struct_defs, only: am0hdb
+      use hydro_data_struct_defs, only: am0hdb, hydro_derived_et
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer daysim
       integer isr                   
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: biotot
+      type(hydro_derived_et), intent(inout) :: h1et
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     restot          - structure array containing summary residue pool amounts for all subregions
@@ -45,7 +46,7 @@
 
       call timer(TIMHYDR,TIMSTART)      
 
-      if (am0hdb(isr) .eq. 1) call hdbug(isr, nslay(isr), restot)
+      if (am0hdb(isr) .eq. 1) call hdbug(isr, nslay(isr), restot, h1et)
 
       call hydro( isr, nslay(isr), amrslp(isr), biotot%zht_ave,         &
      &            acrlai(isr), acrsai(isr), aczht(isr), acdayap(isr),   &
@@ -79,12 +80,12 @@
      &            cumprecip(isr), cumrunoff(isr), cumevap(isr),         &
      &            cumtrans(isr), cumdrain(isr),                         &
      &            presswc(isr), pressnow(isr), presday(isr),            &
-     &            ahztranspdepth(isr), restot )
+     &            ahztranspdepth(isr), restot, h1et )
 
 ! removed from call: ah0cng(isr), ah0cnp(isr), 
 !                 initswc(isr), initsnow(isr), initday(isr)
 
-      if (am0hdb(isr) .eq. 1) call hdbug(isr, nslay(isr), restot)
+      if (am0hdb(isr) .eq. 1) call hdbug(isr, nslay(isr), restot, h1et)
       call timer(TIMHYDR,TIMSTOP)      
 
       end

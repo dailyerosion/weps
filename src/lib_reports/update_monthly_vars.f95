@@ -3,25 +3,25 @@
 !$Revision$
 !$HeadURL$
 
-SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cellstate)
+SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cellstate, h1et)
 
     USE pd_var_type_def
     USE pd_var_tables
     use erosion_data_struct_defs, only: cellsurfacestate, awdair, awudmx, subday, ntstep 
     use grid_mod, only: imax, jmax, sim_area
+    use hydro_data_struct_defs, only: hydro_derived_et
 
     IMPLICIT NONE
 
-    INTEGER :: isr              ! current subregion
+    INTEGER, intent (in) :: isr  ! current subregion
     INTEGER, INTENT (IN) :: cm  ! current month
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:), intent(inout) :: monthly_update
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:), intent(inout) :: mrot_update
     type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
+    type(hydro_derived_et), intent(in) :: h1et
 
     include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
-
-    include "h1et.inc"          ! ah0drat (dryness ratio)
 
     include "h1db1.inc"         ! ahzsnd(s) snow depth in mm
 
@@ -302,8 +302,8 @@ END IF  !Have_Erosion flag
   CALL run_ave(monthly_update(Wind_energy), we, 1)
   CALL run_ave(mrot_update(Wind_energy,cm), we, 1)
 
-  CALL run_ave(monthly_update(Dryness_ratio), ah0drat, 1)
-  CALL run_ave(mrot_update(Dryness_ratio,cm), ah0drat, 1)
+  CALL run_ave(monthly_update(Dryness_ratio), h1et%drat, 1)
+  CALL run_ave(mrot_update(Dryness_ratio,cm), h1et%drat, 1)
 
   s = 1  !currently have only one subregion
   ! Note that the 20mm depth should be a global parameter

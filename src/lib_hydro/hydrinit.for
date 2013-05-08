@@ -3,15 +3,15 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine hydrinit(isr)
+      subroutine hydrinit(isr, h1et)
 
 ! Contains init code from main
 
       use weps_interface_defs
+      use hydro_data_struct_defs, only: hydro_derived_et
 
       include 'p1werm.inc'
       include 'h1db1.inc'
-      include 'h1et.inc'
       include 'h1hydro.inc'
       include 'h1balance.inc'
       include 's1layr.inc'
@@ -28,7 +28,11 @@
       
       include 'wepp_erosion.inc'
 
-      integer isr, idx
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer isr
+      type(hydro_derived_et), intent(inout) :: h1et
+
+      integer idx
       real ltheta(mnsz)
       real sand(mnsz),clay(mnsz),orgmat(mnsz)
 
@@ -126,7 +130,12 @@
       ahztransprtmax(isr) = 0.0
 
       ! initializing a previously un-init'd variable
-      ahzpta = 0
+      h1et%zea = 0.0
+      h1et%zep = 0.0
+      h1et%zeta = 0.0
+      h1et%zetp = 0.0
+      h1et%zpta = 0.0
+      h1et%zptp = 0.0
 
       return
       end

@@ -60,6 +60,7 @@
       use sci_soil_texture_mod, only: create_sci_soil_multiplier, destroy_sci_soil_multiplier
       use stir_report_mod, only: create_stir_accumulator, destroy_stir_accumulator
       use sci_report_mod
+      use hydro_data_struct_defs
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -120,6 +121,7 @@
 
       type(reporting_report), dimension(:), target, allocatable :: rep_report
       type(reporting_update), dimension(:), target, allocatable :: rep_update
+      type(hydro_derived_et), dimension(:), allocatable :: h1et   ! structure with reporting values for Evaporation/Transpiration
 
       integer :: alloc_stat, sum_stat
 
@@ -343,10 +345,12 @@
       sum_stat = sum_stat + alloc_stat
       allocate(scisum(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
-
+      allocate(h1et(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
       if( sum_stat .gt. 0 ) then
          Write(*,*) 'ERROR: unable to allocate enough memory for weps main data arrays'
       end if
+
       do isr = 1, nsubr
          ! complete allocation of layers
          crop(isr) = create_biomatter(nslay(isr), mncz)
@@ -486,7 +490,7 @@
          call sci_stir_init(isr)
 
         ! Initialize the water holding capacity variable
-        call hydrinit(isr)
+        call hydrinit(isr, h1et(isr))
 
         ! initialize soil depth to bottom of layers (mm) from layer thickness (mm)
         call soilinit(isr)
@@ -539,7 +543,7 @@
          do isr=1,nsubr   ! do multiple subregion      
           ! isr = 1 !Note: we are no longer dealing with multiple subregions here
           call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
-     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
+     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr))
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
 
@@ -622,7 +626,7 @@
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
             call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),&
-     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
+     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr))
 
             call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
 
@@ -749,7 +753,7 @@
 
             do isr=1,nsubr   ! do multiple subregion     
                call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
-                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
+                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr))
             end do
 
             if (run_erosion > 0) then   ! Are we simulating erosion in this RUN
@@ -830,24 +834,28 @@
                end if
             end if
 
+            ! area average values over simregion for 0 index reporting
+            call sim_area_ave_h1et( subr_poly, h1et )
+
             do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
                ! Compute yrly values
                call update_yrly_update_vars( isr, rep_update(isr)%yrly_update, rep_update(isr)%yrot_update, &
-                                             rep_update(isr)%yr_update, cellstate )
+                                             rep_update(isr)%yr_update, cellstate, h1et(isr) )
                if ( (cm == 12) .and. (cd == 31) ) then          ! end of current year
                   call update_yrly_report_vars(yrsim, maxper, rep_update(isr)%yrly_update, rep_update(isr)%yrot_update, &
                                                rep_update(isr)%yr_update, rep_report(isr)%yrly_report, rep_report(isr)%yr_report)
                end if
 
                ! Compute monthly values
-               call update_monthly_update_vars(isr, cm, rep_update(isr)%monthly_update, rep_update(isr)%mrot_update, cellstate)
+               call update_monthly_update_vars(isr, cm, rep_update(isr)%monthly_update, &
+                                               rep_update(isr)%mrot_update, cellstate, h1et(isr))
                if (cd == lstday(cm,cy)) then                    ! end of current month
                   call update_monthly_report_vars(cm, yrsim, maxper, &
                        rep_update(isr)%monthly_update, rep_update(isr)%mrot_update, rep_report(isr)%monthly_report)
                end if
 
                ! Compute half month values
-               call update_hmonth_update_vars(cd, cm, rep_update(isr)%hmonth_update, rep_update(isr)%hmrot_update)
+               call update_hmonth_update_vars(isr, cd, cm, rep_update(isr)%hmonth_update, rep_update(isr)%hmrot_update, h1et(isr))
                if ((cd == 14) .or. (cd == lstday(cm,cy))) then  ! end of half month
                   call update_hmonth_report_vars(cd, cm, yrsim, maxper, &
                        rep_update(isr)%hmonth_update, rep_update(isr)%hmrot_update, rep_report(isr)%hmonth_report)
@@ -962,6 +970,8 @@
       deallocate(biotot, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       deallocate(decompfac, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(h1et, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       if( sum_stat .gt. 0 ) then
          Write(*,*) 'ERROR: unable to deallocate crop and residue'

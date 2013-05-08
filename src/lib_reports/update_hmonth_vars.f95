@@ -1,26 +1,26 @@
-!
 !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
-!
-SUBROUTINE update_hmonth_update_vars(cd, cm, hmonth_update, hmrot_update)
 
-    USE pd_var_type_def
+SUBROUTINE update_hmonth_update_vars(isr, cd, cm, hmonth_update, hmrot_update, h1et)
+
+    USE pd_var_type_def, only: pd_var_type
     USE pd_var_tables
     use erosion_data_struct_defs, only: subday, awudmx, awdair, ntstep
+    use hydro_data_struct_defs, only: hydro_derived_et
 
     IMPLICIT NONE
 
+    INTEGER, intent (in) :: isr  ! current subregion
     INTEGER, INTENT (IN) :: cd  ! current day
     INTEGER, INTENT (IN) :: cm  ! current month
     TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:), intent(inout) :: hmonth_update
     TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:,:), intent(inout) :: hmrot_update
+    type(hydro_derived_et), intent(in) :: h1et
 
     include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
-
-    include "h1et.inc"          ! ah0drat (dryness ratio)
 
     include "h1db1.inc"         ! ahzsnd(s) snow depth in mm
 
@@ -54,8 +54,8 @@ SUBROUTINE update_hmonth_update_vars(cd, cm, hmonth_update, hmrot_update)
     CALL run_ave(hmonth_update(Wind_energy), we, 1)
     CALL run_ave(hmrot_update(Wind_energy,hm), we, 1)
 
-    CALL run_ave(hmonth_update(Dryness_ratio), ah0drat, 1)
-    CALL run_ave(hmrot_update(Dryness_ratio,hm), ah0drat, 1)
+    CALL run_ave(hmonth_update(Dryness_ratio), h1et%drat, 1)
+    CALL run_ave(hmrot_update(Dryness_ratio,hm), h1et%drat, 1)
 
     s = 1  !currently have only one subregion
     ! Note that the 20mm depth should be a global parameter

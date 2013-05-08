@@ -1,119 +1,230 @@
-#---------------------- WEPS SIMULATION RUN FILE ----------------
-#
+#VERSION=1.10
+#------------ WEPS SIMULATION RUN FILE ------------
+# Note: Lines beginning with '#' are comment lines.
+#       Lines beginning with '#   RFD' are comments used by the interface.
 #
 # --USER INFORMATION
-#   User name:
-      Wind E. Rosion
-#   Simulation ID:
-      Agronomy Farm 111 - initial values measured March 19, 1992
-#   Site location:
-      Manhattan, Kansas   NW 1/4, 27-19-36
+#   RFD-UserName
+Excercise 5
+#   RFD-FarmId RFD-TractId RFD-FieldId RFD-runtypedisp RFD-RotationYears RFD-CycleCount
+ |  |  | cycle | 1 | 6
+#   RFD-Site
+FIPS:US-WA-021
 #
 # --SITE INFORMATION
-#    Site Latitude (decimal degrees):
- 39.11
-#    Site Longitude (decimal degrees):
-                    90.33
-#    Site Elevation:
-                     500.0
+#   Signed Latitude
++46.53
+#   Signed Longitude
+-118.90
+#   RFD-Elevation(meters)
+417.0 
+#   RFD-ClimateFlag|RFD-cligen.station
+choice|cligen|+46.75;-118.617|45|3546|HATTON 10 E|417.0
+#   RFD-WindFlag|RFD-windgen.station
+choice|windgen|+46.267;-119.117|727845|US|WA|PASCO/TRI-CITIES
 #
 # --SIMULATION PERIOD
-#    Start date:  day  month  year
-                   01    01   1982
-#    End date:    day  month  year
-                   31    12   1985
-#    Number of time steps per day for wind speed distribution
-                   24
-#
-# --RUN FILES (INPUT)
-#     CLIGEN file:
-../run/try.cli
-#     WINDGEN file:
-../run/oneyr.win
-#     sub-daily wind file (for 'real' data):
-#       * if entire sub-daily data set is to be
-#         generated - enter 'none'
+#   RFD-StartDate(day month year)
+01 01 0001
+#   RFD-EndDate(day month year)
+31 12 0840
+#   RFD-TimeSteps(per day)
+24
+# --RUN FILE FILENAMES (INPUT)
+#   RFD-climate file
+cli_gen.cli
+#   RFD-wind file
+win_gen.win
+#   RFD-sub-daily file
 none
-#     Initial Field Conditions file:
-../run/bare.ifc
-#     MANAGEMENT (TILLAGE) file:
-../run/no.man
-#  WEPS OUTPUT OPTIONS
-#     General report
-#       Filename:
-../out/out.out
-#    General report forms - enter 1 for output, 0 for none
-#      Client  I/O  Weather  Sim Region  Manage  Erosion
-#      ------  ---  -------  ----------  ------  -------
-          1     1      1       1          1        1
-#    enter code number for frequency of Period output for general report
-#    note that yearly and simulation summaies are always output
-#    1 = daily, 2 = weekly, 3 = biweekly, 4 = monthly
-       2
-# -- Submodel Output
-#     Detailed submodel outputs - enter code # for output, 0 for none
-#       Code:    HYDRO    SOIL    MANAGE    CROP    DECOMP    EROSION
-                   0       0        0         0        3        0
-# -- Debug Output
-#     Generate debug file - enter 1 for output, 0 for none
-#     file name will have the format '*bug.out'  (eg. hdbug.out for HYDRO)
-#     note - no debug output for MANAGEMENT or EROSION for this release
-#                HYDRO    SOIL      CROP    DECOMP    MANAGE
-                  0         0        0        0        0
-#
+# --WEPS OUTPUT OPTIONS
+#   RFD-ErosionSubmodelOutput
+15
+#   RFD-OutputFile
+# null  (hasn't been used in years, so eliminate it now)
+#   RFD-ReportForm
+# 0 0 0 0 0 0 (not used at all, so eliminate it now)
+#   RFD-OutputPeriod
+#2(not used at all, so eliminate it now)
 # --SIMULATION REGION INFORMATION
-#    Simulation region angle clockwise from North:
-                       5.0
-#    Simulation region coordinates (meters)
-#          point 1:   x          y
-                     0.0        0.0
-#          point 2:   x          y
-                   100.0      100.0
+#   RFD-RegionAngle(degrees clockwise from North)
+0.0
+#   Origin coordinates of simulation region (meters)
+0.0  0.0
+#    RFD-XLength(meters)  RFD-YLength(meters)
+365.76  365.76
+#   RFD-Scales(place holder line - needed for older versions of WEPS)
+5.5 5.5
 #
-#    No. accounting regions:
-                             1
+#   RFD-AccNo
+4
+#   Accounting region coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
+0.0  0.0
+183  0.0
+183  183
+0.0  183
+#   Accounting region coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
+0.0  183
+183  183
+183  366
+0.0  366
+#   Accounting region coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
+183  0.0
+366  0.0
+366  183
+183  183
+#   Accounting region coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
+183  183
+366  183
+366  366
+183  366
 #
-#      ******** repeat for each accounting region *************
-#      ******** only one allowed for current release **********
-#    Accounting region 1:
-#            coordinates (meters)
-#               point 1:   x            y
-                         25.0         25.0
-#               point 2:   x            y
-                         75.0         75.0
+#  number of subregions
+4
+#   RFD-SubregionNo
+# 1
+#   RFD-SubmodelOutput
+7 1 1 1 3
+#   RFD-DebugOutput
+1 1 1 1 1
 #
-#    No. of subregions:
-                       1
+#   Subregion polygon coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
+0.0  183
+183  183
+183  366
+0.0  366
+#   RFD-AverageSlope(ratio m/m)
+-1
+#   RFD-SoilRockFragments
+0.0
+#   RFD-SoilFile
+Anders_1_90_SIL.ifc
+#   RFD-ManageFile
+WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
+#   RFD-WaterErosionLoss
+0.0000
 #
-#      ******** repeat for each subregion *********************
-#      ******** only one allowed for current release **********
-#    *Subregion 1:
-#           coordinates (meters)
-#               point 1:   x            y
-                          0.0          0.0
-#               point 2:   x            y
-                        100.0        100.0
-#     No. of barriers:
-                       1
-#     barrier endpoints (if none - all coordinates must = 0.0)
-#     Barrier 1:
-#           coordinates (meters)
-#              point 1:     x            y
-                           0.0          0.0
-#              point 2:     x            y
-                           0.0        100.0
-#     barrier height (meters)
-     20
-#     barrier width (meters)
-      10
-#     barrier porosity (decimal fraction)
-     0.6
-#     soil series:
-#                Reading Silt Loam
-#     average slope:
-                     0.50
+#   RFD-SubregionNo
+# 2
+#   RFD-SubmodelOutput
+7 1 1 1 3 15
+#   RFD-DebugOutput
+1 1 1 1 1 1
 #
-#--------------- END OF SIMULATION RUN FILE ----------------
-
-
-
+#   Subregion polygon coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
+183  183
+366  183
+366  366
+183  366
+#   RFD-AverageSlope(ratio m/m)
+-1
+#   RFD-SoilRockFragments
+0.0
+#   RFD-SoilFile
+Anders_AKC_45_ST_SIL.ifc
+#   RFD-ManageFile
+Alfalfa, fall seed, 3yr-Potato-WWheat, circle irr CMZ49.man
+#   RFD-WaterErosionLoss
+0.0000
+#
+#   RFD-SubregionNo
+# 3
+#   RFD-SubmodelOutput
+7 1 1 1 3 15
+#   RFD-DebugOutput
+1 1 1 1 1 1
+#
+#   Subregion region coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
+0.0  0.0
+183  0.0
+183  183
+0.0  183
+#   RFD-AverageSlope(ratio m/m)
+-1
+#   RFD-SoilRockFragments
+0.0
+#   RFD-SoilFile
+Norfolk_NoA_90_LS.ifc
+#   RFD-ManageFile
+Wheat,winter,after fallow,conv.,CMZ50.man
+#   RFD-WaterErosionLoss
+0.0000
+#
+#   RFD-SubregionNo
+# 4
+#   RFD-SubmodelOutput
+7 1 1 1 3 15
+#   RFD-DebugOutput
+1 1 1 1 1 1
+#
+#   Subregion region coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
+183  0.0
+366  0.0
+366  183
+183  183
+#   RFD-AverageSlope(ratio m/m)
+-1
+#   RFD-SoilRockFragments
+0.0
+#   RFD-SoilFile
+Anders_1_90_SIL.ifc
+#   RFD-ManageFile
+Canola, fall; Fallow_ Wheat, winter; Fallow; mulch till, Z50.man
+#   RFD-WaterErosionLoss
+0.0000
+#
+#   RFD-BarrierNo
+1
+#   RFD-BarrierS coordinates (meters) | height (meters) | width (meters) | porosity
+#   Note: subregion mod included skipping reading barriers is there are 0. No placeholder necessary.
+# number of coordinates
+2
+# first coordinate pair and data
+0 366 
+2
+2
+0.7
+# second coordinate pair and data
+366 366
+2
+2
+0.7
+#   RFD-BarrierT  type 
+Shrubs 1row leafoff
+#
+# --CIRCULAR FIELD INFORMATION
+# Note: These fields are not used by the weps simulation.
+#       The shape and radius values are used by the user 
+#       interface to approximate a rectangular field.  They
+#       are included here so the reports can display the 
+#       correct field shape.
+#
+#   RFD-Shape
+circle
+#   RFD-Radius
+206.36
+#---------- END OF SIMULATION RUN FILE ------------

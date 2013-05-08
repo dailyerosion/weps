@@ -33,7 +33,7 @@
      &                   cumprecip, cumrunoff, cumevap,                 &
      &                   cumtrans, cumdrain,                            &
      &                   presswc, pressnow, presday,                    &
-     &                   bhztranspdepth, restot )
+     &                   bhztranspdepth, restot, h1et )
 
 !     + + + PURPOSE + + +
 !     This subroutine is the main (supervisory) program for the
@@ -53,7 +53,7 @@
       use grid_mod, only: amxsim
       use Points_Mod, only: slen
       use wind_mod, only: sbzdisp, sbzo, biodrag
-      use hydro_data_struct_defs, only: am0hfl
+      use hydro_data_struct_defs, only: am0hfl, hydro_derived_et
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -97,6 +97,7 @@
       real presswc, pressnow, presday
       real bhztranspdepth
       type(biototal), intent(in) :: restot
+      type(hydro_derived_et), intent(inout) :: h1et
 
 !     + + +  ARGUMENT DEFINITIONS + + +
 !     layrsn   - Number of soil layers used in simulation
@@ -213,7 +214,6 @@
       include 'p1solar.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
-      include 'h1et.inc'
       include 'h1db1.inc'
       include 'command.inc'
 
@@ -345,7 +345,7 @@
 !     &      ,t80,'swc',t87,'*hfwsf',t101,'*czrtd',t115,'*snwc'
 !     &      ,t122,'theta'/,
 !     *  /, t16,34('-'),'mm',33('-')/1x, 100('-'))
- 2080 format('# daysim doy yr  ahzetp  ahzep ahzptp  ahzea ahzpta bhzper&
+ 2080 format('# daysim doy yr  h1et%zetp  h1et%zep h1et%zptp  h1et%zea h1et%zpta bhzper&
      & bhzirr bwzdpt  dprec bhzrun bhzinf   lswc   swc  bhzsnd bhzsno  c&
      &heck cropdp rootwc rootwcap bhfwsf surfdry bwtdav vaptrans evaplim&
      &it st_evapr fl_evapr to_evapr')
@@ -442,7 +442,7 @@
           call transp (layrsn, 0, bszlyd, bszlyt, cropdp*mtomm,         &
      &                 theta, thetas, thetaf, thetaw,                   &
      &                 theta80rh, thetar, airentry, lambda,             &
-     &                 bhrsk, bhtsav, ahzptp, ahzpta, bhfwsf)
+     &                 bhrsk, bhtsav, h1et%zptp, h1et%zpta, bhfwsf)
 
           ! check for irrigation depletion or stress trigger
           ! present, both trigger at the same level
@@ -531,10 +531,10 @@
 
       ! calculate dryness ratio
       if (bwzdpt .eq. 0.0) then
-         ah0drat = 10.0
+         h1et%drat = 10.0
        else
          vlh = d1 - (d2*bwtdav)                               !h-24
-         ah0drat = rn / (vlh * bwzdpt)
+         h1et%drat = rn / (vlh * bwzdpt)
       end if
 
       ! biodrag used for roughness length and below for surface evaporation reduction
@@ -559,13 +559,13 @@
 !     Calculate potential evapotranspiration using subroutine et
       g_soil = 0.0 ! test
       call et(rn, g_soil, fld_wind, bmzele, bwtdmx, bwtdmn, bwtdav,     &
-     &        bwtdpt, bwrrh, ahzetp, loc_met_height, loc_zov, loc_zd)
+     &        bwtdpt, bwrrh, h1et%zetp, loc_met_height, loc_zov, loc_zd)
 
-      if (  ahzetp  .le.  0.0  ) then
-         ahzep = 0.0
-         ahzptp = 0.0
-         ahzetp = 0.0
-         ahzea = 0.0
+      if (  h1et%zetp  .le.  0.0  ) then
+         h1et%zep = 0.0
+         h1et%zptp = 0.0
+         h1et%zetp = 0.0
+         h1et%zea = 0.0
          standevapredu = 1.0
          totalevapredu = 1.0
       else
@@ -573,18 +573,18 @@
          ! evaporation based on canopy partioning above as a function of leaf area
          ! index.
         
-         ahzptp = ahzetp * epart
-         ahzep = ahzetp - ahzptp
+         h1et%zptp = h1et%zetp * epart
+         h1et%zep = h1et%zetp - h1et%zptp
 
          ! If snow is present, it completely supresses any moisture loss (energy
          ! balance on snow determined snowmelt rates, no sublimation or evap assumed)
          if ( bhzsno .gt. 0.0 )  then
-             ahzep = 0.0
+             h1et%zep = 0.0
          end if
          ! this is zeroed here as a starting point for darcy which uses potential
          ! and finds actual. Previously set to snow evap amount and added to soil
          ! surface evaporation in darcy
-         ahzea = 0.0
+         h1et%zea = 0.0
 
 !        If plant residue is present, then reduce the potential soil
 !        evaporation on the basis of the amount of plant residues on
@@ -598,7 +598,7 @@
          ! Soil Sci Soc Am J. 53:911-916. Data was refit to an exponential 
          ! power relationship in subroutine resevapredu.
          totalevapredu = standevapredu * bbevapredu
-         ahzep = ahzep * totalevapredu
+         h1et%zep = h1et%zep * totalevapredu
 
       endif
 
@@ -618,10 +618,10 @@
      &       theta, thetadmx, thetas, thetaf, thetaw, thetar,           &
      &       bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav,               &
      &       bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext, bwtdpt,            &
-     &       rise, daylength, ahzep, dprecip, bwdurpt, bwpeaktpt,       &
+     &       rise, daylength, h1et%zep, dprecip, bwdurpt, bwpeaktpt,       &
      &       dirrig, bhdurirr, bhlocirr, bhzoutflow,                    &
      &       bbdstm, bbffcv, bslrro, bslrr, bmzele, bhrwc0,             &
-     &       ahzea, bhzper, bhzrun, bhzinf, bhzwid,                     &
+     &       h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,                     &
      &       bhzeasurf, evaplimit, vaptrans, bmrslp )
 
       else
@@ -639,8 +639,8 @@
      &                   bhzsno, bslrr, bmrslp, bsfsan, bsfcla,         &
      &                   bsfcr, bsvroc, bsdblk, bsfcec,                 &
      &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
-     &                   ahzep, theta, thetadmx, bhrwc0,                &
-     &                   ahzea, bhzper, bhzrun, bhzinf, bhzwid,         &
+     &                   h1et%zep, theta, thetadmx, bhrwc0,                &
+     &                   h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,         &
      &                   len_slope, day, mo, yr, isr,                   &
      &                   wepp_hydro, init_loop, calib_loop, bhfice)
 
@@ -652,11 +652,11 @@
       call timer(TIMHYDR,TIMSTART)
 
 !     following darcy, check total et against reduced soil surface ET
-!      ahzptp = min(ahzptp, ahzetp - ahzea)
+!      h1et%zptp = min(h1et%zptp, h1et%zetp - h1et%zea)
 
 !     Calculate actual plant transpiration using subroutine transp
 !     and determine the water stress factor
-      if ( ahzptp .gt. 0.0 )  then
+      if ( h1et%zptp .gt. 0.0 )  then
           do l=1,layrsn
               airentry(l) = bheaep(l) / gravconst
               lambda(l) = 1.0 / bh0cb(l)
@@ -669,14 +669,14 @@
           call transp (layrsn, 1, bszlyd, bszlyt, cropdp*mtomm,         &
      &                   theta, thetas, thetaf, thetaw,                 &
      &                   theta80rh, thetar, airentry, lambda,           &
-     &                   bhrsk, bhtsav, ahzptp, ahzpta, bhfwsf)
+     &                   bhrsk, bhtsav, h1et%zptp, h1et%zpta, bhfwsf)
 
       else
-          ahzpta = 0.0
+          h1et%zpta = 0.0
           bhfwsf = 1.0
       end if
 !     Calculate actual evapotranspiration
-      ahzeta = ahzea + ahzpta
+      h1et%zeta = h1et%zea + h1et%zpta
 
 !     Convert water from volume back to mass basis
       do l=1,layrsn
@@ -689,14 +689,14 @@
 !     &           bwtdmn, bwtdmx, bhtsmx, bhtsmn, bszlyt)
 
       ! update accumulated surface evaporation variable
-      bhzeasurf = bhzeasurf + ahzea
+      bhzeasurf = bhzeasurf + h1et%zea
 
 !     update cumulative variables
       swc = dot_product(theta(1:layrsn),bszlyt(1:layrsn))
       cumprecip = cumprecip + bhzirr + bwzdpt
       cumrunoff = cumrunoff + bhzrun
-      cumevap = cumevap + ahzea
-      cumtrans = cumtrans + ahzpta
+      cumevap = cumevap + h1et%zea
+      cumtrans = cumtrans + h1et%zpta
       cumdrain = cumdrain + bhzper
       presswc = swc
       pressnow = bhzsno
@@ -728,10 +728,10 @@
              write(luohydro(isr),*)
          end if
          accheck = lswc - swc + lsno - bhzsno + bhzirr + bwzdpt         &
-     &           - ahzea - ahzpta - bhzper - bhzrun
+     &           - h1et%zea - h1et%zpta - bhzper - bhzrun
 ! 2090 format(1x,i5,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),1x,f7.3,11(1x,f6.2))
-         write(luohydro(isr),2090) daysim,idoy,yr,ahzetp, ahzep, ahzptp,&
-     &       ahzea, ahzpta, bhzper, bhzirr, bwzdpt, dprecip, bhzrun,    &
+         write(luohydro(isr),2090) daysim,idoy,yr,h1et%zetp, h1et%zep, h1et%zptp,&
+     &       h1et%zea, h1et%zpta, bhzper, bhzirr, bwzdpt, dprecip, bhzrun,    &
      &       bhzinf, lswc, swc, bhzsnd, bhzsno, accheck, cropdp,        &
      &      plant_wat_t(0.0,cropdp*mtomm,theta(1),thetaw,bszlyd,layrsn),&
      &       plant_wat_t(0.0,cropdp*mtomm,thetaf,thetaw,bszlyd,layrsn), &

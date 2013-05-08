@@ -12,7 +12,7 @@
 !     + + + Modules Used + + +
       use weps_interface_defs
       use datetime_mod, only: lstday
-      use Polygons_Mod, only: create_polygon
+      use Polygons_Mod, only: create_polygon, set_area_polygon
       use subregions_mod, only: acct_poly, subr_poly
       use file_io_mod, only: fopenk, luicli, luiwin, luiwsd, luolog
       use erosion_data_struct_defs, only: subday, ntstep, am0efl
@@ -122,7 +122,7 @@
       ! use case statement to appropriately assign values
       typidx = typidx + 1
 
-      write(*,*) 'INPRUN: typidx: ', typidx, 'line: ', trim(line)
+      !write(*,*) 'INPRUN: typidx: ', typidx, 'line: ', trim(line)
 
       select case (typidx)
       case (1)
@@ -346,6 +346,8 @@
            ! read another point pair
            typidx = typidx - 1
         else
+           ! finished with this accounting region
+           call set_area_polygon( acct_poly(iar) )
            iar = iar + 1
            if( iar .le. nacctr ) then
               ! read another accounting region
@@ -425,6 +427,9 @@
         if( ipol .le. poly_np ) then
             ! read another point pair
             typidx = typidx - 1
+        else
+            ! polygon complete
+            call set_area_polygon(subr_poly(isr))
         end if
 
       case (28)

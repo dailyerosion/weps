@@ -2,7 +2,7 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine callcrop(daysim, sr, crop, residue, restot, croptot)
+      subroutine callcrop(daysim, sr, crop, residue, restot, croptot, h1et)
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
@@ -10,6 +10,7 @@
       use biomaterial, only: biomatter, biototal
       use timer_mod, only: timer, TIMCROP, TIMSTART, TIMSTOP
       use crop_data_struct_defs, only: am0cdb
+      use hydro_data_struct_defs, only: hydro_derived_et
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer daysim
@@ -18,6 +19,7 @@
       type(biomatter), dimension(:), intent(inout) :: residue  ! structure containing full residue pool description
       type(biototal), intent(in) :: restot
       type(biototal), intent(inout) :: croptot
+      type(hydro_derived_et), intent(in) :: h1et
 
 ! Includes
       include 'p1werm.inc'
@@ -34,7 +36,6 @@
       include 's1phys.inc'
       include 's1sgeo.inc'    ! Contains required variables for biodrag()
       include 'h1hydro.inc'
-      include 'h1et.inc'
       include 'h1temp.inc'
       include 'w1clig.inc'
       include 'crop/prevstate.inc'
@@ -60,7 +61,7 @@
 !     only continue if crop is growing
       if( crop%growth%am0cgf ) then
 
-         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), crop, restot)
+         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), crop, restot, h1et)
 
          call cropgrow(sr, nslay(sr), aszlyd(1,sr),                     &
      &   ac0ck(sr), acgrf(sr), acehu0(sr), aczmxc(sr),                  &
@@ -106,7 +107,7 @@
      &   agmbgstemz(1,sr),                                              &
      &   agzht(sr), agdstm(sr), agxstmrep(sr), aggrainf(sr) )
 
-         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), crop, restot)
+         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), crop, restot, h1et)
       end if
 
       ! check for abandoned stems in crop regrowth
