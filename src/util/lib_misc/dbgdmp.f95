@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine dbgdmp(day, sr, residue, croptot, biotot)
+      subroutine dbgdmp(day, sr, crop, residue, croptot, biotot)
 ! ****************************************************************** wjr
 !     The dumps variables that have gone out of range
 
@@ -16,6 +16,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: day
       integer, intent(in) :: sr
+      type(biomatter), intent(in) :: crop
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
@@ -726,8 +727,8 @@
      &  write(*,*) 'day ',day,' ac0fd2(',idx,') ', ac0fd2(idx, sr)
   200 continue     
 
-      if (ac0ck(sr).lt.0.0.or.ac0ck(sr).gt.1.0)                         &
-     &  write(*,*) 'day ',day,' ac0ck ', ac0ck(sr)
+      if (crop%database%ck.lt.0.0.or.crop%database%ck.gt.1.0)                         &
+     &  write(*,*) 'day ',day,' ac0ck ', crop%database%ck
 
 ! c1db1
 
@@ -797,10 +798,10 @@
 !
       if (ac0ssb(sr).lt.0.0.or.ac0ssb(sr).gt.tstmax)                    &
      &  write(*,*) 'day ',day,' ac0ssb ', ac0ssb(sr)
-!
-      if (ac0sla(sr).lt.0.0.or.ac0sla(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0sla ', ac0sla(sr)
-!
+
+      if (crop%database%sla.lt.0.0.or.crop%database%sla.gt.tstmax) &
+        write(*,*) 'day ',day,' ac0sla ', crop%database%sla
+
       if (ac0hue(sr).lt.0.0.or.ac0hue(sr).gt.tstmax)                    &
      &  write(*,*) 'day ',day,' ac0hue ', ac0hue(sr)
 !

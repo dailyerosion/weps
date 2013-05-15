@@ -13,7 +13,7 @@
       integer          ac0rg(mnsub)
       real             acdpop(mnsub)
       real             acytgt(mnsub)
-      integer          achyfg(mnsub)
+!      integer          achyfg(mnsub)
       character*80     acynmu(mnsub)
       real             acycon(mnsub)
       real             acywct(mnsub)
@@ -28,7 +28,7 @@
      &                 ac0rg,                                           &
      &                 acdpop,                                          &
      &                 acytgt,                                          &
-     &                 achyfg,                                          &
+!     &                 achyfg,                                          &
      &                 acynmu,                                          &
      &                 acycon, acywct,                                  &
      &                 acrsfg,                                          &

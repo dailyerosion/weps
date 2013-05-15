@@ -717,7 +717,7 @@
      &                      afvt(2), afvt(3), afvt(4), afvt(5)
 
 !     do process
-        call flatvt(afvt, fracarea, acrbc(sr), &
+        call flatvt(afvt, fracarea, crop%database%rbc, &
      &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       crop%geometry%dstm, residue, bioflg)
@@ -758,7 +758,7 @@
      &             tdepth,tstddepth,tmindepth,tmaxdepth)
 
 !     do process
-        call mburyvt(mfvt,fracarea,acrbc(sr), burydistflg,   &
+        call mburyvt(mfvt,fracarea,crop%database%rbc, burydistflg,   &
      &             tlayer,aszlyt(1,sr),aszlyd(1,sr),                    &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atmflatrootstore(sr), atmflatrootfiber(sr),                &
@@ -899,13 +899,13 @@
      &       .or.(ac0idc(sr).eq.5)))) then
 !            Stop the crop growth (ie. stop calling crop submodel) and
 !            transfer crop state to temporary crop pool
-             call kill_crop( crop%growth%am0cgf, nslay(sr),                         &
+             call kill_crop( crop%growth%am0cgf, nslay(sr), &
      &           crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
-     &           crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,    &
-     &           crop%mass%rootstorez, crop%mass%rootfiberz,              &
-     &           crop%mass%stemz,                                      &
-     &           crop%geometry%zht, crop%geometry%dstm, crop%geometry%xstmrep, crop%geometry%zrtd,      &
-     &           crop%geometry%grainf,                                          &
+     &           crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+     &           crop%mass%rootstorez, crop%mass%rootfiberz, &
+     &           crop%mass%stemz, &
+     &           crop%geometry%zht, crop%geometry%dstm, crop%geometry%xstmrep, crop%geometry%zrtd, &
+     &           crop%geometry%grainf, &
      &           atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
      &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
      &           atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),          &
@@ -948,10 +948,10 @@
      &    cutflg, cutht, pyieldf, pstalkf, rstandf
 
 !     do process
-        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf,              &
-     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
-     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
-     &       crop%geometry%zht, crop%geometry%grainf, achyfg(sr),                       &
+        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf, &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+     &       crop%geometry%zht, crop%geometry%grainf, crop%geometry%hyfg, &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atzht(sr), atgrainf(sr), residue,                          &
@@ -1003,10 +1003,10 @@
      &    cutht, pyieldf, pstalkf, rstandf
 !     do process
         cutflg = 2
-        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf,              &
-     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
-     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
-     &       crop%geometry%zht, crop%geometry%grainf, achyfg(sr),                       &
+        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf, &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+     &       crop%geometry%zht, crop%geometry%grainf, crop%geometry%hyfg, &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atzht(sr), atgrainf(sr), residue,                          &
@@ -1066,7 +1066,7 @@
 !     do process
         call fall_mod_vt( rate_mult_vt, thresh_mult_vt,                 &
      &                    sel_pool, fracarea,                           &
-     &                    acrbc(sr), crop%database%dkrate, crop%database%ddsthrsh, &
+     &                    crop%database%rbc, crop%database%dkrate, crop%database%ddsthrsh, &
      &                    residue )
 
 !     post-process stuff
@@ -1091,10 +1091,10 @@
      &    thinval, pyieldf, pstalkf, rstandf
 !     do process
         thinflg = 1
-        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf,          &
-     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
-     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
-     &       crop%geometry%dstm, crop%geometry%grainf, achyfg(sr),                      &
+        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+     &       crop%geometry%dstm, crop%geometry%grainf, crop%geometry%hyfg, &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atdstm(sr), atgrainf(sr), residue,                         &
@@ -1117,9 +1117,9 @@
       &          mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
-     &        acthum(sr), crop%geometry%xstmrep,                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr), &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1146,10 +1146,10 @@
      &    thinval, pyieldf, pstalkf, rstandf
 !     do process
         thinflg = 0
-        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf,          &
-     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
-     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
-     &       crop%geometry%dstm, crop%geometry%grainf, achyfg(sr),                      &
+        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+     &       crop%geometry%dstm, crop%geometry%grainf, crop%geometry%hyfg, &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atdstm(sr), atgrainf(sr), residue,                         &
@@ -1209,8 +1209,8 @@
      &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
      &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
      &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
-     &      crop%bname, crop%database%xstm, acrbc(sr), ac0sla(sr), ac0ck(sr),   &
-     &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, achyfg(sr),  &
+     &      crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck,   &
+     &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg,  &
      &      crop%database%resevapa, crop%database%resevapb, &
      &      nslay(sr), residue )
       end if
@@ -1244,10 +1244,10 @@
      &      mature_warn_flg, cutflg, cutht, pyieldf, pstalkf, rstandf
 
 !     do process
-        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf,              &
-     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
-     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
-     &       crop%geometry%zht, crop%geometry%grainf, achyfg(sr),                       &
+        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf, &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+     &       crop%geometry%zht, crop%geometry%grainf, crop%geometry%hyfg, &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atzht(sr), atgrainf(sr), residue,                          &
@@ -1272,9 +1272,9 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
-     &        acthum(sr), crop%geometry%xstmrep,                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr), &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1306,7 +1306,7 @@
         call cut(cutflg, cutht, pyieldf, pstalkf, rstandf,              &
      &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
      &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
-     &       crop%geometry%zht, crop%geometry%grainf, achyfg(sr),                       &
+     &       crop%geometry%zht, crop%geometry%grainf, crop%geometry%hyfg,                       &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atzht(sr), atgrainf(sr), residue,                          &
@@ -1330,9 +1330,9 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
-     &        acthum(sr), crop%geometry%xstmrep,                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr), &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1361,10 +1361,10 @@
      &      mature_warn_flg, thinval, pyieldf, pstalkf, rstandf
 !     do process
         thinflg = 1
-        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf,          &
-     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
-     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
-     &       crop%geometry%dstm, crop%geometry%grainf, achyfg(sr),                      &
+        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+     &       crop%geometry%dstm, crop%geometry%grainf, crop%geometry%hyfg, &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atdstm(sr), atgrainf(sr), residue,                         &
@@ -1389,9 +1389,9 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
-     &        acthum(sr), crop%geometry%xstmrep,                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr), &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1415,15 +1415,15 @@
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
+        read(line(2:len_trim(line)),* , err=901) &
+     &      harv_report_flg, harv_calib_flg, harv_unit_flg, &
      &      mature_warn_flg, thinval, pyieldf, pstalkf, rstandf
 !     do process
         thinflg = 0
-        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf,          &
-     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
-     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
-     &       crop%geometry%dstm, crop%geometry%grainf, achyfg(sr),                      &
+        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+     &       crop%geometry%dstm, crop%geometry%grainf, crop%geometry%hyfg, &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atdstm(sr), atgrainf(sr), residue,                         &
@@ -1444,12 +1444,12 @@
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
           end if
           if( harv_report_flg .gt. 0 ) then
-            call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
+            call report_harvest( sr, bmrotation, mass_rem, mass_left, &
      &                           harv_unit_flg, mandate, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
-     &        acthum(sr), crop%geometry%xstmrep,                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr), &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1582,8 +1582,8 @@
      &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
      &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
      &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
-     &      crop%bname, crop%database%xstm, acrbc(sr), ac0sla(sr), ac0ck(sr),   &
-     &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, achyfg(sr),  &
+     &      crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck,   &
+     &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg,  &
      &      crop%database%resevapa, crop%database%resevapb, &
      &      nslay(sr), residue )
       endif
@@ -1600,7 +1600,7 @@
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)),* , err=901)                        &
      &    acdpop(sr), acdmaxshoot(sr), acbaflg(sr), acytgt(sr),         &
-     &    acbaf(sr), acyraf(sr), achyfg(sr)
+     &    acbaf(sr), acyraf(sr), crop%geometry%hyfg
 
 !     get additional line of data
         mcur(sr) = mcur(sr) + 1
@@ -1613,7 +1613,7 @@
 !     read yield reporting values and growth characteristics
         read(line(2:len_trim(line)), *, err=901)                        &
      &    acywct(sr), acycon(sr), ac0idc(sr), acgrf(sr),                &
-     &    ac0ck(sr), acehu0(sr)
+     &    crop%database%ck, acehu0(sr)
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
@@ -1638,13 +1638,13 @@
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)), *, err=901)                        &
      &    ac0aht(sr), ac0bht(sr), ac0ssa(sr), ac0ssb(sr),               &
-     &    ac0sla(sr), ac0hue(sr), ac0transf(sr), ac0diammax(sr)
+     &    crop%database%sla, ac0hue(sr), ac0transf(sr), ac0diammax(sr)
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)), *, err=901)                        &
      &    ac0storeinit(sr), ac0shoot(sr), acfleafstem(sr), acfshoot(sr),&
-     &    acfleaf2stor(sr), acfstem2stor(sr), acfstor2stor(sr),acrbc(sr)
+     &    acfleaf2stor(sr), acfstem2stor(sr), acfstor2stor(sr),crop%database%rbc
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
@@ -1671,9 +1671,9 @@
 
         ! check crop type to see if yield coefficient and grain fraction are used
         if( cook_yield .eq. 1 ) then
-            if(     (achyfg(sr) .eq. 0)                                 &
-     &         .or. (achyfg(sr) .eq. 1)                                 &
-     &         .or. (achyfg(sr) .eq. 5) ) then
+            if(     (crop%geometry%hyfg .eq. 0)                                 &
+     &         .or. (crop%geometry%hyfg .eq. 1)                                 &
+     &         .or. (crop%geometry%hyfg .eq. 5) ) then
             ! grain fraction is used
                 if(       (acyld_coef(sr) .gt. 1.0 )                    &
      &              .and. (acyld_coef(sr) * acgrf(sr) .lt. 1.0) ) then
@@ -1765,13 +1765,13 @@
         bioflg = 0
 
         ! do process
-        call remove( sel_position, sel_pool, bioflg,                    &
-     &    stemf, leaff, storef, rootstoref, rootfiberf,                 &
-     &    crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,        &
-     &    crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,           &
-     &    crop%mass%rootstorez, crop%mass%rootfiberz,                     &
-     &    crop%mass%stemz,                                             &
-     &    crop%geometry%zht, crop%geometry%dstm, crop%geometry%grainf, achyfg(sr),              &
+        call remove( sel_position, sel_pool, bioflg, &
+     &    stemf, leaff, storef, rootstoref, rootfiberf, &
+     &    crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+     &    crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+     &    crop%mass%rootstorez, crop%mass%rootfiberz, &
+     &    crop%mass%stemz, &
+     &    crop%geometry%zht, crop%geometry%dstm, crop%geometry%grainf, crop%geometry%hyfg, &
      &    atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),        &
      &    atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),           &
      &    atmflatrootstore(sr), atmflatrootfiber(sr),                   &
@@ -1797,9 +1797,9 @@
      &           mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
-     &        acthum(sr), crop%geometry%xstmrep,                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr), &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1828,13 +1828,13 @@
      &      storef, leaff, stemf, rootstoref, rootfiberf
 
         ! do process
-        call remove( sel_position, sel_pool, bioflg,                    &
-     &    stemf, leaff, storef, rootstoref, rootfiberf,                 &
-     &    crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,        &
-     &    crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,           &
-     &    crop%mass%rootstorez, crop%mass%rootfiberz,                     &
-     &    crop%mass%stemz,                                             &
-     &    crop%geometry%zht, crop%geometry%dstm, crop%geometry%grainf, achyfg(sr),              &
+        call remove( sel_position, sel_pool, bioflg, &
+     &    stemf, leaff, storef, rootstoref, rootfiberf, &
+     &    crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+     &    crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+     &    crop%mass%rootstorez, crop%mass%rootfiberz, &
+     &    crop%mass%stemz, &
+     &    crop%geometry%zht, crop%geometry%dstm, crop%geometry%grainf, crop%geometry%hyfg, &
      &    atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),        &
      &    atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),           &
      &    atmflatrootstore(sr), atmflatrootfiber(sr),                   &

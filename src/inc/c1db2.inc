@@ -20,14 +20,15 @@
 !      real             ac0pt2(2,mnsub)
       real             ac0fd1(2,mnsub)
       real             ac0fd2(2,mnsub)
-      real             ac0ck(mnsub)
+!      real             ac0ck(mnsub)
 
       common / c1db2 /                                                  &
 !     &                 actopt, actmin, acfdla, acrdla,                  &
 !     &                 ac0caf, ac0psf,                                  &
 !     &                 ac0pt1, ac0pt2, ac0fd1, ac0fd2, ac0ck
      &                 actopt, actmin,                                  &
-     &                 ac0fd1, ac0fd2, ac0ck
+!     &                 ac0fd1, ac0fd2, ac0ck
+     &                 ac0fd1, ac0fd2
 
       save :: /c1db2/
 

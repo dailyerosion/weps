@@ -62,7 +62,7 @@
          if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), crop, restot, h1et)
 
          call cropgrow(sr, nslay(sr), aszlyd(1,sr),                     &
-     &   ac0ck(sr), acgrf(sr), acehu0(sr), aczmxc(sr),                  &
+     &   crop%database%ck, acgrf(sr), acehu0(sr), aczmxc(sr),                  &
      &   crop%bname,ac0idc(sr), acxrow(sr),                             &
      &   actdtm(sr), aczmrt(sr), actmin(sr), actopt(sr),                &
      &   ac0fd1(1,sr), ac0fd2(1,sr), ac0fd1(2,sr), ac0fd2(2,sr),        &
@@ -70,13 +70,13 @@
      &   ac0alf(sr), ac0blf(sr), ac0clf(sr),                            &
      &   ac0dlf(sr), ac0arp(sr), ac0brp(sr), ac0crp(sr),                &
      &   ac0drp(sr), ac0aht(sr), ac0bht(sr),                            &
-     &   ac0sla(sr), ac0hue(sr),  actverndel(sr),                       &
+     &   crop%database%sla, ac0hue(sr),  actverndel(sr),                       &
      &   aweirr, awtdmx, awtdmn,                                        &
      &   ahtsmx(1,sr), ahtsmn(1,sr),                                    &
      &   ahfwsf(sr),                                                    &
      &   crop%growth%am0cif,                                            &
      &   acthudf(sr), acbaf(sr),                                        &
-     &   achyfg(sr), acthum(sr), acdpop(sr), acdmaxshoot(sr),           &
+     &   crop%geometry%hyfg, acthum(sr), acdpop(sr), acdmaxshoot(sr),           &
      &   ac0storeinit(sr), acfshoot(sr),                                &
      &   ac0growdepth(sr), acfleafstem(sr), ac0shoot(sr),               &
      &   ac0diammax(sr), ac0ssa(sr), ac0ssb(sr),                        &
@@ -128,8 +128,8 @@
      &      agmbgstemz(1,sr), agmbgleafz(1,sr), agmbgstorez(1,sr),      &
      &      agmbgrootstorez(1,sr), agmbgrootfiberz(1,sr),               &
      &      agzht(sr), agdstm(sr), agxstmrep(sr), aggrainf(sr),         &
-     &      crop%bname, crop%database%xstm, acrbc(sr), ac0sla(sr), ac0ck(sr), &
-     &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, achyfg(sr), &
+     &      crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck, &
+     &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg, &
      &      crop%database%resevapa, crop%database%resevapb, &
      &      nslay(sr), residue)
       end if
@@ -148,8 +148,8 @@
      &      crop%deriv%rsai, crop%deriv%rlai, crop%deriv%rsaz, crop%deriv%rlaz, &
      &      crop%deriv%ffcv, crop%deriv%fscv, crop%deriv%ftcv, crop%deriv%fcancov, &
      &      ac0rg(sr), acxrow(sr), &
-     &      nslay(sr), ac0ssa(sr), ac0ssb(sr), ac0sla(sr),              &
-     &      crop%database%covfact, ac0ck(sr), crop%database%xstm, acdpop(sr), &
+     &      nslay(sr), ac0ssa(sr), ac0ssb(sr), crop%database%sla,              &
+     &      crop%database%covfact, crop%database%ck, crop%database%xstm, acdpop(sr), &
      &      ahztranspdepth(sr), ahzfurcut(sr),                          &
      &      ahztransprtmin(sr), ahztransprtmax(sr), croptot  )
 

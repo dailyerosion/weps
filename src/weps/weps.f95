@@ -743,8 +743,8 @@
                call flush(6)
             end if
 
-!           if (am0jd.eq.ijday+1) call dbgdmp(daysim, isr, residue(isr), croptot(isr), biotot(isr))
-!           if (am0jd.eq.ljday) call dbgdmp(daysim, isr, residue(isr), croptot(isr), biotot(isr))
+!           if (am0jd.eq.ijday+1) call dbgdmp(daysim, isr, crop(isr), residue(isr), croptot(isr), biotot(isr))
+!           if (am0jd.eq.ljday) call dbgdmp(daysim, isr, crop(isr), residue(isr), croptot(isr), biotot(isr))
 
             do isr=1,nsubr   ! do multiple subregion     
                call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &

@@ -2620,10 +2620,11 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       character*(*) val
       end function begtrm
 !----------------------------------
-      subroutine dbgdmp(day,sr, residue, croptot, biotot)
+      subroutine dbgdmp(day, sr, crop, residue, croptot, biotot)
       use biomaterial, only: biomatter, biototal
       integer, intent(in) :: day
       integer, intent(in) :: sr
+      type(biomatter), intent(in) :: crop
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot

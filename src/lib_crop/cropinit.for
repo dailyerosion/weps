@@ -79,9 +79,9 @@
       crop%deriv%ftcv = 0.0
 
       crop%database%xstm = 0.0
-      acrbc(isr) = 1
+      crop%database%rbc = 1
       crop%database%covfact = 0.0
-      ac0ck(isr) = 0.0
+      crop%database%ck = 0.0
 
       ! initialize some derived globals for crop global variables
       crop%deriv%fcancov = 0.0
@@ -98,13 +98,13 @@
 
 !     initialize crop type id to 0 indicating no crop type is growing
       ac0idc(isr) = 0
-      ac0sla(isr) = 0.0
+      crop%database%sla = 0.0
       acdpop(isr) = 0.0
 
 !     initialize row placement to be on the ridge
       ac0rg(isr) = 1
 !     initialize harvestable yield fraction flag
-      achyfg(isr) = 0
+      crop%geometry%hyfg = 0
 
       ! initialize decomp parameters since they are used before a crop is growing
       do idx = 1, size(crop%database%dkrate)

@@ -39,10 +39,10 @@
       real             ac0bht(mnsub)
       real             ac0ssa(mnsub)
       real             ac0ssb(mnsub)
-      real             ac0sla(mnsub)
+!      real             ac0sla(mnsub)
       real             ac0hue(mnsub)
 
-      integer          acrbc(mnsub)
+!      integer          acrbc(mnsub)
 
 !  These are the names used by decomp (with an "ac" prepended)
 !      real             acdkrate(mndk,mnsub)
@@ -79,8 +79,9 @@
      &                 acrbe, acrbed, ac0lad, ac0sad ,acgrf,            &
      &                 acehu0, actverndel, ac0bceff, ac0alf ,ac0blf,    &
      &                 ac0clf, ac0dlf, ac0arp, ac0brp, ac0crp, ac0drp,  &
-     &                 ac0aht, ac0bht, ac0ssa, ac0ssb, ac0sla, ac0hue,  &
-     &                 acrbc,                                           &
+!     &                 ac0aht, ac0bht, ac0ssa, ac0ssb, ac0sla, ac0hue,  &
+     &                 ac0aht, ac0bht, ac0ssa, ac0ssb, ac0hue,          &
+!     &                 acrbc,                                           &
 !     &                 acdkrate, acxstm, acddsthrsh, accovfact,         &
      &                 acdmaxshoot,                                     &
      &                 ac0transf, ac0storeinit, acfshoot,               &
