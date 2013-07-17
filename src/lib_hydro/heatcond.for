@@ -7,8 +7,8 @@
      &                       bsfsan, bsfsil, bsfcla, bsfom)
 
 !     + + + PURPOSE + + +
-!     This function returns the volumetric heat capacity of the soil
-!     given mass fractions of the soil constituents. (J/kg C)
+!     This function returns the volumetrically based thermal conductivity of the soil
+!     given mass fractions of the soil constituents. (J/s m C) or (W/m C)
 
 !     + + + KEYWORDS + + +
 !     soil heat capacity

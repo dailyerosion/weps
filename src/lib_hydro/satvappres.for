@@ -7,6 +7,8 @@
 
       ! returns the saturated vapor pressure for water (kPa)
       ! Approximation from Jensen ASCE manual 70 evapotranspiration
+      ! referenced to Tetens (1930), and transformed by Murray (1966)
+      ! Converted here to use temperature in (C)
       ! valid in normal climatic condition range
 
       real airtemp

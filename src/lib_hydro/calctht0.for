@@ -58,7 +58,7 @@
       theter = thetae * thetaw(1)
 
       calctht0 = min( thetax, theter )
-!      calctht0 = theter
+      !calctht0 = theter
 
       return
       end 

@@ -811,8 +811,6 @@
       end if
 
 !     set return values used by the WEPP erosion code
-!     
-!  
       wp_runoff = runoff
       wp_peakro = peakro/(mtomm * hrtosec)
       wp_effdrn = effdrn*hrtomin
@@ -835,6 +833,11 @@
       wp_prev_crust_frac = bsfcr
       ! set cumulative rainfall energy for next day
       wp_rkecum = rkecum_update
+
+      ! surface water content is gravimetric (kg/kg)
+      do idx = 1, 24
+          bhrwc0(idx) = bhrwc0(idx) / bsdblk(1)
+      end do
 
       return
       end

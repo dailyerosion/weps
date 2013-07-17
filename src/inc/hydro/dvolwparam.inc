@@ -28,10 +28,11 @@
      &       atmpres,                                                   &
      &       surface_rate, surface_start, surface_end,                  &
      &       source_rate(mnsz), source_start(mnsz), source_end(mnsz),   &
-     &       lastvolw(mnsz+7), cond(mnsz), swm(mnsz),                   &
+     &       lastvolw(mnsz+7), cond(mnsz), potm(mnsz), swm(mnsz),       &
      &       soilrh(mnsz), soilvapden(mnsz), soildiffu(mnsz),           &
      &       prevvolw(mnsz+7)
 
+      real fluxv(mnsz), fluxw(mnsz)
 
       common / dvolwparam /                                             &
      & layrsn, istate, iwork,                                           &
@@ -48,9 +49,9 @@
      & atmpres,                                                         &
      & surface_rate, surface_start, surface_end,                        &
      & source_rate, source_start, source_end,                           &
-     & lastvolw, cond, swm,                                             &
+     & lastvolw, cond, potm, swm,                                       &
      & soilrh, soilvapden, soildiffu,                                   &
-     & prevvolw
+     & prevvolw, fluxv, fluxw
 
       save :: /dvolwparam/
 

@@ -190,8 +190,16 @@
 !      real   atmpreselev, depstore, fricfact, store
 !      real   calctht0
 !      real   evapredu
+!      integer dayear
 !      real   availwc
+!      real   unsatcond_bc
+      real   unsatcond_pot_bc
+      real   matricfluxpot_bc
 !      real   intersect
+
+!      real   diffusive, vaporden
+
+      real   evap_dissag
 
 !     + + + DATA INITIALIZATIONS + + +
 
@@ -219,7 +227,7 @@
 ! 2100    format('darcy: lrx, wc, wct, wfluxn, deltim, wfluxr(top), wflu &
 !     &xr(bottom)',/,i2,7f11.3,/,7f11.3)
  3000 format('# sec daysim doy yr var depth volw netflux numeq = ',i3)
- 3010 format(1x,f8.1,1x,i5,1x,i3,1x,i4,1x,i3,4(1x,g11.4))
+ 3010 format(1x,f8.1,1x,i5,1x,i3,1x,i4,1x,i3,8(1x,g11.4))
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -251,8 +259,17 @@
       layrsn = numeq - 6
       iminlay = 6
       imaxlay = layrsn + 5
-      do kindex = 1, layrsn
+
+      tlay(1) = bszlyt(1) *  mmtom
+      dist(1) = tlay(1) / 2.
+      depth(1) = dist(1)
+      do kindex = 2, layrsn
           tlay(kindex) = bszlyt(kindex) *  mmtom
+        dist(kindex) = (tlay(kindex) + tlay(kindex-1))/2.
+        depth(kindex) = depth(kindex-1) + dist(kindex)
+      end do
+
+      do kindex = 1, layrsn
           thetas(kindex) = bthetas(kindex)
           thetaw(kindex) = bthetaw(kindex)
           thetar(kindex) = bthetar(kindex)
@@ -266,13 +283,13 @@
 !          thetaw(kindex) = volwat_matpot_bc(potwilt, thetar(kindex),    &
 !     &               thetas(kindex), airentry(kindex), lambda(kindex))
           soiltemp(kindex) = bhtsav(kindex)
+          call matricpot_bc(theta(kindex),thetar(kindex),thetas(kindex),&
+     &                 airentry(kindex), lambda(kindex), thetaw(kindex),&
+     &                 theta80rh(kindex), soiltemp(kindex),             &
+     &                 potm(kindex), soilrh(kindex) )
+          swm(kindex) = potm(kindex) - depth(kindex)
       end do
-      dist(1) = tlay(1) / 2.
-      depth(1) = dist(1)
-      do kindex = 2, layrsn
-        dist(kindex) = (tlay(kindex) + tlay(kindex-1))/2.
-        depth(kindex) = depth(kindex-1) + dist(kindex)
-      end do
+
       airtmaxprev = bwtdmxprev
       airtmin = bwtdmn
       airtmax = bwtdmx
@@ -445,23 +462,63 @@
          call dvolw(neq, t, volw, netflux)
          do kindex=1,5
              write(luowater(isr),3010) t, daysim, idoy, yr, kindex,     &
-     &             0.0, volw(kindex), netflux(kindex), 0.0
+     &        .0, volw(kindex), netflux(kindex), 0.0, 0.0, 0.0, 0.0, 0.0
          end do
          ! set surface water content value and output above thetat(1)
+!         temp = evap_dissag(                                            &
+!     &               t, sunrise, sunset, lenday, evapamp, evapdaypot)
+!         evapratio = netflux(3)/temp
          evapratio = evapredu(bhzeasurf, evaplimit, vaptrans, bhzep)
          theta(0) = calctht0(bszlyd, theta, thetaw, evapratio)      !H-64,65,66
          write(luowater(isr),3010) t, daysim, idoy, yr, 0,              &
-     &         0.0, 0.0, evapratio, theta(0)
+     &         0.0, 0.0, evapratio, theta(0), 0.0, 0.0, 0.0, 0.0
          ! output from differencing array continued into soil layers
          do kindex=6,numeq-1
              laycenter = bszlyd(kindex-5)-0.5*bszlyt(kindex-5)
              write(luowater(isr),3010) t, daysim, idoy, yr, kindex,     &
-     &            laycenter,volw(kindex),netflux(kindex),theta(kindex-5)
+     &           laycenter,volw(kindex),netflux(kindex),theta(kindex-5),&
+     &           fluxv(kindex-5), fluxw(kindex-5),                      &
+     &           swm(kindex-5), cond(kindex-5)
          end do
          ! output from differencing array for drainage value
          kindex = numeq
          write(luowater(isr),3010) t, daysim, idoy, yr, kindex,         &
-     &         0.0, volw(kindex), netflux(kindex), 0.0
+     &       0.0, volw(kindex), netflux(kindex), 0.0, 0.0, 0.0, 0.0, 0.0
+
+!         if (am0ifl .eqv. .true.) then
+!           ! write out main soil properties
+!           write(*,*)'darcyprop: thetas thetaf thetaw bulkden bh0cb ',  &
+!     &             'bheaep bhrsk'
+!         end if
+!
+!         write(*,*)'darcyprop: ', thetas(1), bthetaf(1), thetaw(1),     &
+!     &                bulkden(1), bh0cb(1), bheaep(1), bhrsk(1)
+!
+!         if( daysim .eq. 63 ) then
+!           ! write out the soil properties for surface layer
+!          write(*,*)'darcygraph: theta suction cond condp diffu vapden   &
+!     &fluxpot'
+!           do kindex = 1, 100
+!             call matricpot_bc(kindex*thetas(1)/100,thetar(1),thetas(1),&
+!     &                      airentry(1), lambda(1), thetaw(1),          &
+!     &                      theta80rh(1), soiltemp(1),                  &
+!     &                      matricpot, soilrh(1) )
+!             swm(1) = matricpot - depth(1)
+!             soilvapden(1) = vaporden( soiltemp(1), soilrh(1) )
+!             soildiffu(1) = diffusive(kindex*thetas(1)/100, thetas(1),  &
+!     &                               soiltemp(1), atmpres )
+!             cond(1) = unsatcond_bc(kindex*thetas(1)/100,thetar(1),     &
+!     &                    thetas(1), ksat(1),lambda(1))
+!             unsatcond = unsatcond_pot_bc( matricpot, ksat(1),          &
+!     &                   airentry(1), lambda(1))
+!             temp = matricfluxpot_bc( matricpot, airentry(1), ksat(1),  &
+!     &              lambda(1) )
+!             write(*,*)'darcygraph: ', kindex*thetas(1)/100, -matricpot, &
+!     &                  cond(1), unsatcond, soildiffu(1), soilvapden(1),&
+!     &                  temp
+!           end do
+!        end if
+
       end if
 
 !     start loop in time
@@ -564,24 +621,29 @@
          call dvolw(neq, t, volw, netflux)
          do kindex=1,5
              write(luowater(isr),3010) t, daysim, idoy, yr, kindex,     &
-     &         0.0, volw(kindex), netflux(kindex), 0.0
+     &       0.0, volw(kindex), netflux(kindex), 0.0, 0.0, 0.0, 0.0, 0.0
          end do
          ! set surface water content value and output above thetat(1)
          surf_cum = bhzeasurf + bhzea + (volw(3) - prevvolw(3)) * mtomm
+!         temp = evap_dissag(                                            &
+!     &               t, sunrise, sunset, lenday, evapamp, evapdaypot)
+!         evapratio = netflux(3)/temp
          evapratio = evapredu( surf_cum, evaplimit, vaptrans, bhzep )
          theta(0) = calctht0(bszlyd, theta, thetaw, evapratio)      !H-64,65,66
          write(luowater(isr),3010) t, daysim, idoy, yr, 0,              &
-     &         0.0, 0.0, evapratio, theta(0)
+     &         0.0, 0.0, evapratio, theta(0), 0.0, 0.0, 0.0, 0.0
          ! output from differencing array continued into soil layers
          do kindex=6,numeq-1
              laycenter = bszlyd(kindex-5) - 0.5*bszlyt(kindex-5)
              write(luowater(isr),3010) t, daysim, idoy, yr, kindex,     &
-     &         laycenter, volw(kindex), netflux(kindex), theta(kindex-5)
+     &         laycenter, volw(kindex), netflux(kindex),theta(kindex-5),&
+     &         fluxv(kindex-5), fluxw(kindex-5),                        &
+     &         swm(kindex-5), cond(kindex-5)
          end do
          ! output from differencing array for drainage value
          kindex = numeq
          write(luowater(isr),3010) t, daysim, idoy, yr, kindex,         &
-     &     0.0, volw(kindex), netflux(kindex), 0.0
+     &     0.0, volw(kindex), netflux(kindex), 0.0, 0.0, 0.0, 0.0, 0.0
       end if
 
       if( t.lt.(hourstep*hrtosec)) goto 30
@@ -610,7 +672,13 @@
       surf_cum = bhzeasurf + bhzea
       evapratio = evapredu( surf_cum, evaplimit, vaptrans, bhzep )
 
-!      theta(0) = theta(1)
+      ! evaporation ratio based on flux ratio
+!      call dvolw(neq, t, volw, netflux)
+!      temp = evap_dissag(                                               &
+!     &               t, sunrise, sunset, lenday, evapamp, evapdaypot)
+!      evapratio = netflux(3)/temp
+
+      !theta(0) = theta(1)
       theta(0) = calctht0(bszlyd, theta, thetaw, evapratio)      !H-64,65,66
 
       bhrwc0(hourstep) = theta(0)/bulkden(1)
@@ -641,11 +709,20 @@
           endif
       end do
 
-      if(     (raindepth.gt.0.0)                                        &
-     &   .and.(tout.ge.rainend)                                         &
-     &   .and.(bhzwid.le.0.0) ) then
-          bhzwid = store( iminlay, imaxlay, prevvolw, volw, bszlyd )
-      endif
+      if(      (raindepth .gt. 0.0)                                     &
+     &    .or. ((dirrig .gt. 0.0) .and. (bhlocirr .ge. 0.0)) ) then
+        if( raindepth .gt. 0.0 ) then
+          if(     (tout .ge. max(rainend, surface_end))                 &
+     &      .and. (bhzwid. le. 0.0) ) then
+            bhzwid = store( iminlay, imaxlay, prevvolw, volw, bszlyd )
+          end if
+        else
+          if(     (tout .ge. surface_end)                               &
+     &      .and. (bhzwid. le. 0.0) ) then
+            bhzwid = store( iminlay, imaxlay, prevvolw, volw, bszlyd )
+          end if
+        end if
+      end if
 
       hourstep = hourstep + 1
 !-------------------------------------

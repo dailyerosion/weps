@@ -14,7 +14,7 @@
 !     This subroutine calculates the full range of matric potential
 !     parameters and properties from given values of bulk density, cation
 !     exchange capacity, sand, clay and organic matter fractions
-!     Equations taken from: Rawls, D.L. and D.L. Brakensiek. 1989.
+!     Equations taken from: Rawls, W.J. and D.L. Brakensiek. 1989.
 !     Estimation of soil water retention and hydraulic properties, H.J.
 !     Morel-Seytoux (ed.), Unsaturated flow in hydraulic modeling theory
 !     and practice. 275-300, NATO ASI Series. Series c: Mathematical and
@@ -72,18 +72,21 @@
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 
 !     + + + PARAMETERS + + +
-      real   sand_hi
-      parameter   (sand_hi = 0.85)
-      real   sand_lo
-      parameter   (sand_lo = 0.60)
+!      real   sand_hi
+!      parameter   (sand_hi = 0.85)
+!      real   sand_lo
+!      parameter   (sand_lo = 0.60)
 
 !     + + + END SPECIFICATIONS + + + 
 
       do lay=1,nlay
 
           ! indicated range for relationships is enforced here
-          per_clay = min(60.0, max(5.0, bsfcla(lay) * fractopercent))
-          per_sand = min(70.0, max(5.0, bsfsan(lay) * fractopercent))
+!          per_clay = min(60.0, max(5.0, bsfcla(lay) * fractopercent))
+!          per_sand = min(70.0, max(5.0, bsfsan(lay) * fractopercent))
+          ! testing shows that equations are well behaved outside of range
+          per_clay = bsfcla(lay) * fractopercent
+          per_sand = bsfsan(lay) * fractopercent
           per_om = bsfom(lay) * fractopercent
 
           porosity = 1 - bsdblk(lay) / bsdpart(lay)

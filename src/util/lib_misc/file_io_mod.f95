@@ -47,6 +47,9 @@ module file_io_mod
     integer, dimension(:), allocatable :: luohydro        ! write hydro.out for hydrology surface details
     integer, dimension(:), allocatable :: luohlayers      ! write hlayers.out for hydrology subsurface details
     integer, dimension(:), allocatable :: luowater        ! write water.out for darcy detailed solution info
+    integer, dimension(:), allocatable :: luosurfwat      ! write surfwat.out for specific darcy detailed solution info
+    integer, dimension(:), allocatable :: luoweather      ! write specific weather data for hydrology (esp net radiation)
+
     integer, dimension(:), allocatable :: luotempsoil     ! write tempsoil.out for soil temperature details
 
     integer, dimension(:), allocatable :: luowepphdrive   ! write wepp_runoff.out for wepp runoff details

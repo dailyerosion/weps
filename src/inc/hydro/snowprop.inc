@@ -13,7 +13,7 @@
 !     max_snow_den - maximum possible snow density (kg/m^3)
 !     heat_fusion -  latent heat of fusion for water (J/kg)
 
-      parameter(min_snow_den = 100.0)
+      parameter(min_snow_den = 50.0)
       parameter(melt_snow_den = 350.0)
       parameter(max_snow_den = 522.0)
       parameter(heat_fusion = 337000.0)

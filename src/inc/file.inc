@@ -131,6 +131,12 @@
       parameter (luoddb=28)
 
 
+      integer   luosurfwat
+      parameter (luosurfwat=155)
+
+      integer   luoweather
+      parameter (luoweather=156)
+
 !     new output units for general information
 
       integer   luoharvest_si

@@ -11,6 +11,8 @@
 
 !     Test code for internode_wt_bc code to compare with document
 
+      program tstinternode
+
 !     +++ FUNCTIONS CALLED+++
       real internode_wt_bc
      

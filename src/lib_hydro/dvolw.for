@@ -30,10 +30,13 @@
 
 !*** FUNCTION DECLARATIONS ***
 !      real unsatcond_bc
+      real internode_wtcond_bc
+      real internode_cond_bc
 !      real internode_wt_bc
 !      real vaporden, diffusive
 !      real airtempsin, satvappres
 !      real evapredu, matricpot_from_rh
+      real evap_dissag
 
 !*** INCLUDED COMMON BLOCKS ***
       include 'p1werm.inc'
@@ -44,8 +47,8 @@
 !*** LOCAL DECLARATIONS ***
       integer     lrx, imaxlay
       real theta(layrsn), wfluxr(layrsn+1)
-      real conda(layrsn), potm(layrsn), cond_wt
-      real intenspeak, diffua(layrsn), fluxv(layrsn), fluxw(layrsn)
+      real conda(layrsn), cond_wt
+      real intenspeak, diffua(layrsn)  !, fluxv(layrsn), fluxw(layrsn)
       real airtemp, airvappres, airsatvappres, airhumid, airvapden
       real rainduration, tday, max_infil_rate, frac_pond_area
       real max_evap_rate, soil_evap_rate, pond_evap_rate
@@ -55,9 +58,6 @@
 !     saved between calls
 !     cond(layrsn), swm(layrsn),
 !     soilrh(layrsn), soilvapden(layrsn), soildiffu(layrsn)
-
-      real pi
-      parameter( pi = 3.1415927 )
 
 !*** LOCAL DEFINITIONS ***
 !     locally, the soil layers go from 1 to layrsn. In the passed arrays,
@@ -69,8 +69,8 @@
 !     soil state
       imaxlay = layrsn + 5
       do lrx = 1,layrsn
+          theta(lrx) = volw(lrx+5)/tlay(lrx)
           if( volw(lrx+5).ne.lastvolw(lrx+5) ) then
-              theta(lrx) = volw(lrx+5)/tlay(lrx)
 !             Brooks and Corey soil properties
               call matricpot_bc(theta(lrx), thetar(lrx), thetas(lrx),   &
      &                      airentry(lrx), lambda(lrx), thetaw(lrx),    &
@@ -87,7 +87,20 @@
 
 !     calc the conductivity and rate of flow in for each layer
       do lrx = 2,layrsn
-       if (layer_weighting == 2) then
+       if (layer_weighting == 5) then
+         conda(lrx) = (cond(lrx-1)*cond(lrx))**0.5
+       else if (layer_weighting == 4) then
+         conda(lrx) = internode_wtcond_bc( theta(lrx-1), theta(lrx),    &
+     &          thetar(lrx-1), thetar(lrx), thetas(lrx-1), thetas(lrx), &
+     &          thetaw(lrx-1), thetaw(lrx), theta80rh(lrx-1),           &
+     &          theta80rh(lrx), soiltemp(lrx-1), soiltemp(lrx),         &
+     &          ksat(lrx-1), ksat(lrx), lambda(lrx-1), lambda(lrx),     &
+     &          tlay(lrx-1), tlay(lrx), airentry(lrx-1), airentry(lrx) )
+       else if (layer_weighting == 3) then
+         conda(lrx) = internode_cond_bc( potm(lrx-1), potm(lrx),        &
+     &          ksat(lrx-1), ksat(lrx), lambda(lrx-1), lambda(lrx),     &
+     &          tlay(lrx-1), tlay(lrx), airentry(lrx-1), airentry(lrx) )
+       else if (layer_weighting == 2) then
           ! internodal conductivity, darcian means
           cond_wt = internode_wt_bc( cond(lrx-1), cond(lrx),            &
      &        ksat(lrx-1), ksat(lrx), lambda(lrx-1), lambda(lrx),       &
@@ -171,15 +184,8 @@
 !     same day and lenday can be actual daylight hours
       ! evapamp accounts for 90% of daily evaporation
       ! 10% remaining is distributed over the remainder of the day
-      max_evap_rate = evapdaypot * 0.1 / 86400.0
-      if( tday.gt.sunrise.and.tday.lt.sunset ) then
-          ! evaporation ratio based on accumulation
-          ! (volw(3) must be maintained over multiple days, not zeroed daily
-!          max_evap_rate = evapamp * sin(pi*(tday-sunrise)/lenday)       &
-!     &       * evapredu(volw(3), evapendconstant, evaptrans, evapdaypot)
-          max_evap_rate = max_evap_rate                                 &
-     &                  + evapamp * sin(pi*(tday-sunrise)/lenday)
-      endif
+      max_evap_rate = evap_dissag(                                      &
+     &               tday, sunrise, sunset, lenday, evapamp, evapdaypot)
 
 !     find air relative humidity from diurnal air temperature
 !     and dewpoint temperature
@@ -235,7 +241,7 @@
 
 !     split evaporation between soil and pond
 !     fluxv(1) is negative since this is a loss to the soil layer
-!     consequently it mus be subtracted to make it an addition to evap.
+!     consequently it must be subtracted to make it an addition to evap.
       fluxv(1) = -soil_evap_rate * (1.0-frac_pond_area)
       pond_evap_rate = max_evap_rate * frac_pond_area
       wfluxn(3) = -fluxv(1) + pond_evap_rate
@@ -340,3 +346,30 @@
 !      return
 !      end
 !
+      real function evap_dissag(                                        &
+     &               tday, sunrise, sunset, lenday, evapamp, evapdaypot)
+
+      ! returns the potential evaporation rate (m/s) at the time tday (s)
+
+      real, intent(in) :: tday        ! time of day from midnight (s)
+      real, intent(in) :: sunrise     ! time of sunrise (s)
+      real, intent(in) :: sunset      ! time of sunset (s)
+      real, intent(in) :: lenday      ! length of day (s)
+      real, intent(in) :: evapamp     ! amplitude of diurnal evaporation (m/s)
+      real, intent(in) :: evapdaypot  ! daily total evaporation (m)
+
+      real evap_rate                  ! evaporation rate (m/s)
+
+      real pi
+      parameter( pi = 3.1415927 )
+
+      evap_rate = evapdaypot * 0.1 / 86400.0
+      if( (tday.gt.sunrise) .and. (tday.lt.sunset) ) then
+          evap_rate = evap_rate                                         &
+     &                  + evapamp * sin(pi*(tday-sunrise)/lenday)
+      endif
+
+      evap_dissag = evap_rate
+
+      return
+      end 

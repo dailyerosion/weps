@@ -171,12 +171,16 @@
       end do
       if( flag_set ) then
          allocate( luowater(nsubr), stat=alloc_stat )
+         allocate( luosurfwat(nsubr), stat=alloc_stat )
+         allocate( luoweather(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luowater array'
          end if
          do idx = 1, nsubr
             if ((am0hfl(idx) .eq. 2) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 3) .or. (am0hfl(idx) .eq. 7)) then
                call fopenk (luowater(idx), trim(rootp) // trim(subr_text(idx)) // 'water.out', 'unknown')
+               call fopenk (luosurfwat(idx), trim(rootp) // trim(subr_text(idx)) // 'surfwat.out', 'unknown')
+               call fopenk (luoweather(idx), trim(rootp) // trim(subr_text(idx)) // 'weather.out', 'unknown')
             end if
          end do
       end if

@@ -91,7 +91,7 @@
       end if
 
       if( bwzdpt .gt. 0.0 ) then
-          ! temperature check
+          ! temperature check (Note: Anderson (1976) uses T_wb less than 1 degree C as the snow point)
           if( t_air .le. 0.0 ) then
               ! added water is snow, adjust snow total water content,
               ! average temperature, fraction liquid ratio, and total depth
@@ -107,9 +107,9 @@
 
               ! set physical depth of new snow (use new snow density)
               ! units: kg/m^2 / kg/m^3 = m * mtomm = mm
-              if( t_wb .gt. -15.0 ) then
+              if( t_wb .gt. -14.99 ) then
                   if( t_wb .lt. 0.0 ) then
-                      snow_den = min_snow_den + 1.7 * (t_wb + 15.0)**1.5
+                      snow_den = min_snow_den + 1.723*(t_wb+14.99)**1.5
                   else
                       snow_den = 150.0
                   end if

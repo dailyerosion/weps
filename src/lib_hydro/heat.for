@@ -568,15 +568,15 @@
      &             / ( 1.0 + time_step * (thermt_up + thermt_dn)        &
      &             / (heat_cap_0 * lay_thick * mmtom) )
 
-          if( ((froz_beg .eq. 1.0) .and. (tlay_end .gt. 0.0)) .or.      &
+          if( (tlay_beg * tlay_end .lt. 0.0) ) then
+              ! crossing T=0, find time to reach T=0
+              time_brk_1 = - tlay_beg * heat_cap_0 * lay_thick * mmtom  &
+     &                   / diff_heat_0
+          else if( ((froz_beg .eq. 1.0) .and. (tlay_end .gt. 0.0)) .or. &
      &        ((froz_beg .eq. 0.0) .and. (tlay_end .lt. 0.0)) ) then
               ! layer is fully frozen or thawed, at zero degrees and
               ! will be changing phase, not temperature
               time_brk_1 = 0.0
-          else if( (tlay_beg * tlay_end .lt. 0.0) ) then
-              ! crossing T=0, find time to reach T=0
-              time_brk_1 = - tlay_beg * heat_cap_0 * lay_thick * mmtom  &
-     &                   / diff_heat_0
           else
               ! temperature change complete
               time_brk_1 = time_step
@@ -613,7 +613,7 @@
           if( time_brk_2 .ge. time_step ) then
               ! incomplete freezing or thawing, find new water frozen fraction
               tlay_end = 0.0
-              froz_end = froz_beg - diff_heat_0 * time_step             &
+              froz_end = froz_beg - diff_heat_0*(time_step - time_brk_1)&
      &                  / (vol_wat * heat_fusion * lay_thick)
           end if
       else

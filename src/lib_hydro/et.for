@@ -154,7 +154,7 @@
       vpd = vps - vpa                                    !h-25
       arho = 1000.*((bp/101.325)*((0.001293)/(1+(0.00367*tdavadj))))  !h-32
 
-      ! Jensen, M.E., R.D. Burman, R.G.Allen. 1989. Evapotranspiration and
+      ! Jensen, M.E., R.D. Burman, R.G.Allen. 1990. Evapotranspiration and
       ! Irrigation Water Requirements. ASCE Manuals and Reports on Engineering
       ! Practice No. 70, Page 91 states that the Bussinger-Van Bavel method does
       ! not work using aerodynamic roughness for momentum. Their estimate is that

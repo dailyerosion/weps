@@ -84,7 +84,7 @@
 
       rootp = './'        !default WEPS root directory
                           !Note that all paths MUST end with a "/" for now.
-      wc_type = 4         !default soil ifc file type (estimate Brooks and Corey from FC and WP)
+      wc_type = 4         !default soil ifc file type (use Rawls texture for full properties)
       ifc_format = 0      !default soil ifc file format type (uses IFC specified slope value)
       report_debug = 0    !default report debug printing (0=off, 1=on)
       saeinp_daysim = 0   !0 value skips creation of a stand alone erosion input file.
@@ -550,7 +550,7 @@
           !specify internodal conductivity layer weighting setting
           else if(argv(2:2) .eq. 'w') then
             read(argv(3:),*) cmd_iarg
-            if( cmd_iarg .gt. 2 ) then
+            if( cmd_iarg .gt. 5 ) then
               write(*,*)                                                &
      &           'Ignoring invalid layer_weighting option: ', trim(argv)
             else

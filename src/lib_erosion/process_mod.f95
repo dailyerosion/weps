@@ -315,7 +315,7 @@ module process_mod
       endif
 
       ! calc change in threshold vel with wetness
-      wet_rat = hrwc / hrwcw
+      wet_rat = min(88.721, hrwc / hrwcw)
       !  if ( wet_rat .gt. 0.3) then
       !  if ( wet_rat .gt. 0.25) then  ! triggers at 1/4 of the wilting pt
       if ( wet_rat .ge. 0.0) then
