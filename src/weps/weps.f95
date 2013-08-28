@@ -61,6 +61,7 @@
       use stir_report_mod, only: create_stir_accumulator, destroy_stir_accumulator
       use sci_report_mod
       use hydro_data_struct_defs
+      use wepp_param_mod
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -119,6 +120,7 @@
       type(reporting_report), dimension(:), target, allocatable :: rep_report
       type(reporting_update), dimension(:), target, allocatable :: rep_update
       type(hydro_derived_et), dimension(:), allocatable :: h1et   ! structure with reporting values for Evaporation/Transpiration
+      type(wepp_param), dimension(:), allocatable :: wp           ! structure for wepp parameters by subregion
 
       integer :: alloc_stat, sum_stat
 
@@ -294,7 +296,7 @@
       ! create sci and stir arrays (before input_ifc which needs them)
       call create_sci_soil_multiplier(nsubr)
       call create_stir_soil_multiplier(nsubr)
-      call create_stir_accumulator(nsubr, 400)   ! note, conceivably, the operation count could be tallied in advance, 400 for now.
+      call create_stir_accumulator(nsubr, 4000)   ! note, conceivably, the operation count could be tallied in advance, 400 for now.
 
       ! done before allocations which use layers
       do isr = 1, nsubr 
@@ -342,6 +344,8 @@
       sum_stat = sum_stat + alloc_stat
       allocate(h1et(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
+      allocate(wp(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
       if( sum_stat .gt. 0 ) then
          Write(*,*) 'ERROR: unable to allocate enough memory for weps main data arrays'
       end if
@@ -359,6 +363,7 @@
          decompfac(isr) = create_decomp_factors(nslay(isr))
          ! allocate layer and per/day in subregion surface state passed to erosion
          call create_subregionsurfacestate(nslay(isr), 24, subrsurf(isr))
+         wp(isr) = create_wepp_param(nslay(isr))
       end do
 
       ! allocate debug local arrays
@@ -485,7 +490,7 @@
          call sci_stir_init(isr)
 
         ! Initialize the water holding capacity variable
-        call hydrinit(isr, h1et(isr))
+        call hydrinit(isr, h1et(isr), wp(isr))
 
         ! initialize soil depth to bottom of layers (mm) from layer thickness (mm)
         call soilinit(isr)
@@ -538,7 +543,7 @@
          do isr=1,nsubr   ! do multiple subregion      
           ! isr = 1 !Note: we are no longer dealing with multiple subregions here
           call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
-     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr))
+     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
 
@@ -621,7 +626,7 @@
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
             call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),&
-     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr))
+     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
 
             call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
 
@@ -748,7 +753,7 @@
 
             do isr=1,nsubr   ! do multiple subregion     
                call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
-                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr))
+                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
             end do
 
             if (run_erosion > 0) then   ! Are we simulating erosion in this RUN
@@ -909,7 +914,7 @@
       end do
 
       if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
-          call weppsum(isr,simyrs)
+          call weppsum(isr,simyrs, wp(isr))
       endif
 
       ! close all open files
@@ -951,6 +956,7 @@
          call destroy_biototal(restot(isr))
          call destroy_biototal(biotot(isr))
          call destroy_decomp_factors(decompfac(isr))
+         call destroy_wepp_param(wp(isr))
       end do
       !remove main arrays
       sum_stat = 0
@@ -967,6 +973,8 @@
       deallocate(decompfac, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       deallocate(h1et, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(wp, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       if( sum_stat .gt. 0 ) then
          Write(*,*) 'ERROR: unable to deallocate crop and residue'

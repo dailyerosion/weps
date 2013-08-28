@@ -4,12 +4,13 @@
 !$HeadURL$
 
       subroutine submodels (isr, crop, residue, restot, croptot,        &
-     &                      biotot, decompfac, mandate, h1et)
+     &                      biotot, decompfac, mandate, h1et, wp)
 
       use weps_interface_defs
       use biomaterial, only: biomatter, biototal, decomp_factors
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et
+      use wepp_param_mod, only: wepp_param
 
       include 'p1werm.inc'
       include 'm1flag.inc'      !am0cropupfl
@@ -23,6 +24,7 @@
       type(decomp_factors), intent(inout) :: decompfac
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
+      type(wepp_param), intent(inout) :: wp
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     restot          - structure array containing summary residue pool amounts for all subregions
@@ -35,7 +37,7 @@
         call updres(isr, residue, restot)                 !update decomp residue pools
 
 !        write(*,*) "Start callhydr"
-        call callhydr(daysim, isr, crop, restot, biotot, h1et)      !call HYDROLOGY submodel
+        call callhydr(daysim, isr, crop, restot, biotot, h1et, wp)      !call HYDROLOGY submodel
         ! do not change order. Hydro may set irrigation amounts that
         ! will affect soil.
 

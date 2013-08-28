@@ -3,23 +3,24 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine weppsum(isr, years)
+      subroutine weppsum(isr, years, wp)
       
       use wepp_interface_defs
       use file_io_mod, only: luoweppplot, luoweppsum
+      use wepp_param_mod, only: wepp_param
 
       implicit none
 
-	include 'wepp_erosion.inc'
+      include 'wepp_erosion.inc'
       
       integer, intent(in) :: isr, years
-     
+      type(wepp_param), intent(inout) :: wp
 
-	integer i
-	real enrato, avsole, irdgdx
-	real FRCFLW(MXPART)
+      integer i
+      real enrato, avsole, irdgdx
+      real FRCFLW(MXPART)
 	
-	real dstot(1000), stdist(1000), ysdist(1000)
+      real dstot(1000), stdist(1000), ysdist(1000)
       real avedet,maxdet,ptdet
       real avedep,maxdep,ptdep
       real detpt1(100), detpt2(100), dtavls(100)
@@ -58,9 +59,9 @@
      & detmin, pdtmin, deppt1, deppt2, dpavls, depstd, depmax, pdpmax,  &
      & depmin, pdpmin,ndetach,ndepos)
      
-      call write_hydro_summary(luoweppsum(isr),wp_totalPrecip,          &
-     &   wp_precipEvents,wp_totalRunoff,wp_runoffEvents,                &
-     &   wp_totalSnowrunoff,wp_snowmeltEvents,years)
+      call write_hydro_summary(luoweppsum(isr),wp%totalPrecip,          &
+     &   wp%precipEvents,wp%totalRunoff,wp%runoffEvents,                &
+     &   wp%totalSnowrunoff,wp%snowmeltEvents,years)
      
       call write_main_event(luoweppsum(isr),-1, -1, -1, prcp,           &
      &     wp_runoff*1000,                                              &

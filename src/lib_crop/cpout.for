@@ -20,7 +20,7 @@
      &   leaf    store   store   fiber   stem    leaf    stem    height &
      & #stem   lai     eff_lai rootd  grainf tempst watstf  frost  ffa  &
      &  ffw   par     apar     massinc    p_rw   p_st   p_lf   p_rp  std&
-     &flt pdiam  parea  fpdiam fparea hu_del crop')
+     &flt pdiam  parea  fpdiam fparea hu_del frzhrd sai repstmd crop')
  2133 format ('#                           kg/m^2  kg/m^2  kg/m^2  kg/m^&
      &2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  meters &
      &         m^2/m^2 m^2/m^2 meters                                   &

@@ -19,7 +19,7 @@
       integer        mbeg  (mnsub+1)
       integer        mcur  (mnsub)
       integer        mcount(mnsub)
-      real           mversion
+      real           mversion(mnsub)
 !
       common / man4 / mbeg, mcur, mtbl, mcount, mversion
 !            

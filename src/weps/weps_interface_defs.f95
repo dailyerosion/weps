@@ -495,15 +495,17 @@
       real eratio      
       end function calctht0
 !---------------------------
-      subroutine callhydr(daysim, isr, crop, restot, biotot, h1et)
+      subroutine callhydr(daysim, isr, crop, restot, biotot, h1et, wp)
       use biomaterial, only: biototal, biomatter
       use hydro_data_struct_defs, only: am0hdb, hydro_derived_et
+      use wepp_param_mod, only: wepp_param
       integer daysim
       integer isr                   
       type(biomatter), intent(in) :: crop
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: biotot
       type(hydro_derived_et), intent(inout) :: h1et
+      type(wepp_param), intent(inout) :: wp
       end subroutine callhydr
 !---------------------------
       subroutine darcy(isr, daysim, numeq, bszlyt, bszlyd, bulkden,     &
@@ -651,10 +653,12 @@
       real bszlyd(*), bszlyt(*), vaptrans, evaplimit 
       end subroutine hinit
 !------------------------
-      subroutine hydrinit(isr, h1et)
+      subroutine hydrinit(isr, h1et, wp)
       use hydro_data_struct_defs, only: hydro_derived_et
+      use wepp_param_mod, only: wepp_param
       integer isr
       type(hydro_derived_et), intent(inout) :: h1et
+      type(wepp_param), intent(inout) :: wp
       end subroutine hydrinit
 !-------------------------
       subroutine hydro ( isr, layrsn, bmrslp, bbzht,                    &
@@ -687,9 +691,10 @@
      &                   cumprecip, cumrunoff, cumevap,                 &
      &                   cumtrans, cumdrain,                            &
      &                   presswc, pressnow, presday,                    &
-     &                   bhztranspdepth, restot, h1et )
+     &                   bhztranspdepth, restot, h1et, wp)
       use biomaterial, only: biototal
       use hydro_data_struct_defs, only: am0hfl, hydro_derived_et
+      use wepp_param_mod, only: wepp_param
       integer, intent(in) :: isr   ! subregion number
       integer layrsn
       real bmrslp
@@ -732,6 +737,7 @@
       real bhztranspdepth
       type(biototal), intent(in) :: restot
       type(hydro_derived_et), intent(inout) :: h1et
+      type(wepp_param), intent(inout) :: wp
       end subroutine hydro
 !-----------------------
       real function internode_wt_bc(cond_up, cond_low,                  &
@@ -1114,10 +1120,11 @@
       end subroutine spllay_ifc
 !--------------------------------
       subroutine submodels (isr, crop, residue, restot, croptot,        &
-     &                      biotot, decompfac, mandate, h1et)
+     &                      biotot, decompfac, mandate, h1et, wp)
       use biomaterial, only: biomatter, biototal, decomp_factors
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et
+      use wepp_param_mod, only: wepp_param
       integer isr
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
@@ -1125,6 +1132,7 @@
       type(decomp_factors), intent(inout) :: decompfac
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
+      type(wepp_param), intent(inout) :: wp
       end subroutine submodels
 !-------------------------------
       subroutine sumbio(isr, crop, residue, restot, croptot, biotot)
@@ -2186,7 +2194,8 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
      &                   bhzep, theta, thetadmx, bhrwc0,                &
      &                   bhzea, bhzper, bhzrun, bhzinf, bhzwid,         &
      &                   slen, cd, cm, cy, isr,                         &
-     &                   wepp_hydro,init_loop,calib_loop,bhfice)
+     &                   wepp_hydro, init_loop, calib_loop, bhfice, wp)
+      use wepp_param_mod, only: wepp_param
       integer, intent(in) :: layrsn
       real, intent(in) :: thetas(*), thetes(*), thetaf(*), thetaw(*)
       real, intent(in) :: bszlyt(*), bszlyd(*), satcond(*)
@@ -2203,6 +2212,7 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       integer, intent(in) :: cd, cm, cy, isr, wepp_hydro
       real, intent(inout) :: slen
       real, intent(in) :: bhfice(*)
+      type(wepp_param), intent(inout) :: wp
       end subroutine waterbal
 !-----------------------
       subroutine arraymerge( nr, dt, trf, rf, irrig, durirr,            &
@@ -2585,8 +2595,10 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       type(biototal), intent(in) :: restot, croptot
       end subroutine water_erosion
 !----------------------------------
-     subroutine weppsum(isr, years)
-      integer, intent(in) :: isr, years   
+      subroutine weppsum(isr, years, wp)
+      use wepp_param_mod, only: wepp_param
+      integer, intent(in) :: isr, years
+      type(wepp_param), intent(inout) :: wp
       end subroutine weppsum
 !-----------------------------------
       subroutine xcrit(a,b,c,tauc,xb,xe,xc1,xc2,mshear)

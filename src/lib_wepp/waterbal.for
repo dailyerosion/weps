@@ -13,13 +13,14 @@
      &                   bhzep, theta, thetadmx, bhrwc0,                &
      &                   bhzea, bhzper, bhzrun, bhzinf, bhzwid,         &
      &                   slen, cd, cm, cy, isr,                         &
-     &                   wepp_hydro,init_loop,calib_loop,bhfice)
+     &                   wepp_hydro, init_loop, calib_loop, bhfice, wp)
 
 !     + + + PURPOSE + + +
 !     Implements soil water balance using routines from WEPP
 
       use weps_interface_defs
       use file_io_mod, only: luowepphdrive
+      use wepp_param_mod, only: wepp_param
 
       implicit none
 
@@ -40,6 +41,7 @@
       integer, intent(in) :: cd, cm, cy, isr, wepp_hydro
       real, intent(inout) :: slen
       real, intent(in) :: bhfice(*)
+      type(wepp_param), intent(inout) :: wp
       
       include 'wepp_erosion.inc'
       
@@ -242,7 +244,7 @@
 !     durrun  - runoff duration
 !     effdrn  - effective runoff duration
 
-!     rkecum_update - wp_rkecum value to set for next day
+!     rkecum_update - wp%rkecum value to set for next day
 
 !     + + + SUBROUTINES CALLED + + +
 
@@ -345,9 +347,9 @@
       durirr = bhdurirr * hrtosec
 
       ! factors for crust effect on infiltration
-      if( bsfcr .lt. wp_prev_crust_frac ) then
+      if( bsfcr .lt. wp%prev_crust_frac ) then
           ! surface was disturbed, reset
-          wp_rkecum = 0.0
+          wp%rkecum = 0.0
       end if
 
       if(    (precip .gt. 0.0)                                          &
@@ -358,7 +360,7 @@
           call disag(nrain,trf, rf, precip, durpre, bwpeaktpt,bwpeakipt)
 
           ! accumulate rainfall kinetic energy for today
-          rkecum_update = wp_rkecum + rainenergy(nrain, trf, rf)
+          rkecum_update = wp%rkecum + rainenergy(nrain, trf, rf)
 
           ! merge infiltration, rainfall and irrigation "arrays"
           ! returns infiltation array dimension
@@ -428,14 +430,14 @@
           
           if (frdp.gt.0.0) then
              call frsoil(nsl,sscunf,LNfrst,ssc,sscv,dg,kfactor,slsic,   &
-     &         wp_saxfc,wp_saxwp,wp_saxA,wp_saxB,wp_saxpor,wp_saxenp,   &
-     &         wp_saxks)
+     &         wp%saxfc,wp%saxwp,wp%saxA,wp%saxB,wp%saxpor,wp%saxenp,   &
+     &         wp%saxks)
           endif
             
           call infparsub( nsl, ssc, sscv, layth, bsfcec, st,ul,slsic,   &
      &                    clay, sand, avbulkd, avporos, avrockvol,      &
      &                    wcon, bbffcv, bbfcancov, bbzht,               &
-     &                    ranrough, dsnow, prcp, wp_rkecum, bcdayap,    &
+     &                   ranrough, dsnow, prcp, wp%rkecum, bcdayap,     &
      &                    ks, sm, frdp )
    
           ! debugging output
@@ -443,7 +445,7 @@
 !              write(63,1500) cy, cm, cd, wepp_hydro, prcp, ks, sm,      &
 !     &                       depsto, ranrough, bmrslp, wcon
 !1500          format(1x, 4i6, 7E12.3)
-!              write(163,1510) cy, cm, cd, wepp_hydro, ks, wp_rkecum
+!              write(163,1510) cy, cm, cd, wepp_hydro, ks, wp%rkecum
 !1510          format(1x, 4i6, 2E12.3)
 !          end if
 
@@ -531,7 +533,7 @@
          tp(1) = 0.0
 
          ! rainfall kinetic energy for today unchanged
-         rkecum_update = wp_rkecum
+         rkecum_update = wp%rkecum
        end if
 
        if ((runoff .gt. 0.0) .and. (wepp_hydro .gt. 1)) then
@@ -817,22 +819,10 @@
       wp_effint = effint
       wp_effdrr = effdrr*hrtomin
       
-!     accumulate total amounts for WEPP
-   
-!      if (precip.gt.0) then
-!          wp_totalPrecip = wp_totalPrecip + (precip * mtomm)
-!          wp_precipEvents = wp_precipEvents + 1
-!      endif   
-       
-!      if (runoff.gt.0) then
-!          wp_totalRunoff = wp_totalRunoff + (runoff * mtomm)
-!          wp_runoffEvents = wp_runoffEvents + 1
-!      endif
-      
       ! update crust fraction value for next day
-      wp_prev_crust_frac = bsfcr
+      wp%prev_crust_frac = bsfcr
       ! set cumulative rainfall energy for next day
-      wp_rkecum = rkecum_update
+      wp%rkecum = rkecum_update
 
       ! surface water content is gravimetric (kg/kg)
       do idx = 1, 24

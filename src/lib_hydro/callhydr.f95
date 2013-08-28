@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine callhydr(daysim, isr, crop, restot, biotot, h1et)
+      subroutine callhydr(daysim, isr, crop, restot, biotot, h1et, wp)
 
 ! ***************************************************************** wjr
 ! Wrapper to call hydro
@@ -13,6 +13,7 @@
       use timer_mod, only: timer, TIMHYDR, TIMSTART, TIMSTOP
       use erosion_data_struct_defs, only: awudav
       use hydro_data_struct_defs, only: am0hdb, hydro_derived_et
+      use wepp_param_mod, only: wepp_param
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer daysim
@@ -21,6 +22,7 @@
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: biotot
       type(hydro_derived_et), intent(inout) :: h1et
+      type(wepp_param), intent(inout) :: wp
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     restot          - structure array containing summary residue pool amounts for all subregions
@@ -82,7 +84,7 @@
      &            cumprecip(isr), cumrunoff(isr), cumevap(isr),         &
      &            cumtrans(isr), cumdrain(isr),                         &
      &            presswc(isr), pressnow(isr), presday(isr),            &
-     &            ahztranspdepth(isr), restot, h1et )
+     &            ahztranspdepth(isr), restot, h1et, wp )
 
 ! removed from call: ah0cng(isr), ah0cnp(isr), 
 !                 initswc(isr), initsnow(isr), initday(isr)

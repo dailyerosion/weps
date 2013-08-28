@@ -128,18 +128,18 @@
       if (line (1:8).eq.'Version: ') then
 !       We have found the version # of the management file
 !       Read the version into the common block variable
-        read(line (10:13), *) mversion
+        read(line (10:13), *) mversion(sr)
 
 !       Report the version to stdout
-        write (6, *) 'Management file version: ', mversion
+        write (6, *) 'Management file version: ', mversion(sr)
 
 !       Test if the version is at least 1.4.  Version 1.5 adds the ability to test 
 !       mversion within the operations, groups and procs so that graceful upgrades 
 !       are possible.  This test version should not need to be updated as the format
 !       changes.  Upgrades can be handled within the dooper, dogroup and doproc subroutines.
-        if (mversion .lt. 1.40) then
+        if (mversion(sr) .lt. 1.40) then
 !        if (line(10:13).ne.'1.40') then
-           write(0,*) 'Management file version: ', mversion
+           write(0,*) 'Management file version: ', mversion(sr)
            write(0,*) 'Version >= 1.40 is required for this release.'
            write(0,*) 'You need to convert ', fname
            write(0,*) ' to the correct format.'

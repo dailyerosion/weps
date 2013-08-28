@@ -68,15 +68,15 @@
       integer jdx, i
 
       wp_npart = 5
-      
-      wp_totalRunoff = 0
-      wp_totalPrecip = 0
-      wp_totalSnowrunoff = 0
-      wp_precipEvents = 0
-      wp_runoffEvents = 0
-      wp_snowmeltEvents = 0
-      
-      
+
+!      initialized in hydrinit.
+!      wp_totalRunoff = 0
+!      wp_totalPrecip = 0
+!      wp_totalSnowrunoff = 0
+!      wp_precipEvents = 0
+!      wp_runoffEvents = 0
+!      wp_snowmeltEvents = 0
+
       if (afterWarmup.gt.0) then      
          return
       endif

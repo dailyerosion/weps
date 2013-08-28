@@ -66,7 +66,7 @@
 	  real wp_fall(mxpart), wp_rspace, wp_bconsd
 	  real  wp_frcff1(mxpart), wp_frcff2(mxpart)
 	  real wp_enrff1,wp_enrff2
-       real wp_rkecum, wp_prev_crust_frac
+!       real wp_rkecum, wp_prev_crust_frac
 
 !--------------------------------------------------------------------------
 !     Hillslope topography related
@@ -119,9 +119,10 @@
 !
       real wp_peakro,wp_qout,wp_qin
 	  real wp_effdrr, wp_effdrn, wp_effint, wp_qsout, wp_runoff
-	  real wp_totalRunoff,wp_totalPrecip,wp_totalSnowrunoff
-	  integer wp_runoffEvents,wp_precipEvents,wp_detailout
-	  integer wp_snowmeltEvents
+!	  real wp_totalRunoff,wp_totalPrecip,wp_totalSnowrunoff
+!	  integer wp_runoffEvents,wp_precipEvents
+          integer wp_detailout
+!	  integer wp_snowmeltEvents
 	  
 !-------------------------------------------------------------------
 !	  Winter Hydrology related
@@ -142,9 +143,9 @@
 !     wp_saxA, wp_saxB : moisture tension equition coefficients
 !     wp_saxks: saturated hydraulic conductivity (m/s) 
 !
-      real wp_saxwp(mxnsl),wp_saxfc(mxnsl),wp_saxenp(mxnsl)
-      real wp_saxpor(mxnsl)
-      real wp_saxA(mxnsl), wp_saxB(mxnsl), wp_saxks(mxnsl)   
+!      real wp_saxwp(mxnsl),wp_saxfc(mxnsl),wp_saxenp(mxnsl)
+!      real wp_saxpor(mxnsl)
+!      real wp_saxA(mxnsl), wp_saxB(mxnsl), wp_saxks(mxnsl)   
 
 !----------------------------------------------------------------------
 !     Erosion related
@@ -191,11 +192,15 @@
      & wp_effdrr, wp_effdrn, wp_effint, wp_qsout, wp_runoff,            &
      & wp_dsmon, wp_dsavg, wp_dsyear,                                   &
      & wp_avsolm, wp_avsoly, wp_avsolf, wp_frcff1, wp_frcff2,           &
-     & wp_enrff1, wp_enrff2, wp_rkecum, wp_prev_crust_frac, wp_xinput,  &
+     & wp_enrff1, wp_enrff2,                                            &
+!     & wp_rkecum, wp_prev_crust_frac,                                   &
+     & wp_xinput,                                                       &
      & wp_slpinp, wp_width, wp_rwflag,                                  &
-     & wp_precipEvents,wp_runoffEvents,wp_totalPrecip,wp_totalRunoff,   &
-     & wp_totalSnowrunoff, wp_detailout,wp_snowmeltEvents,              &
-     & wp_saxwp,wp_saxfc,wp_saxenp,wp_saxpor,wp_saxA,wp_saxB,wp_saxks
+!     & wp_precipEvents,wp_runoffEvents,wp_totalPrecip,wp_totalRunoff,   &
+!     & wp_totalSnowrunoff,                                              &
+     & wp_detailout
+!     & wp_snowmeltEvents,                                               &
+!     & wp_saxwp,wp_saxfc,wp_saxenp,wp_saxpor,wp_saxA,wp_saxB,wp_saxks
 
 
 

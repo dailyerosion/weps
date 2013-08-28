@@ -3,12 +3,13 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine hydrinit(isr, h1et)
+      subroutine hydrinit(isr, h1et, wp)
 
 ! Contains init code from main
 
       use weps_interface_defs
       use hydro_data_struct_defs, only: hydro_derived_et
+      use wepp_param_mod, only: wepp_param
 
       include 'p1werm.inc'
       include 'h1db1.inc'
@@ -31,6 +32,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
       type(hydro_derived_et), intent(inout) :: h1et
+      type(wepp_param), intent(inout) :: wp
 
       integer idx
       real ltheta(mnsz)
@@ -110,18 +112,18 @@
           orgmat(idx) = asfom(idx,isr)
       end do
 	
-      call saxpar(sand,clay,orgmat,nslay(isr),wp_saxwp,wp_saxfc,        &
-     &    wp_saxenp,wp_saxpor,wp_saxA, wp_saxB,wp_saxks)
+      call saxpar(sand,clay,orgmat,nslay(isr),wp%saxwp,wp%saxfc,        &
+     &    wp%saxenp,wp%saxpor,wp%saxA, wp%saxB,wp%saxks)
 
       ! Added for WEPP bookeeping      
-      wp_totalPrecip = 0.0
-      wp_totalRunoff = 0.0
-      wp_precipEvents = 0
-      wp_runoffEvents = 0
-      wp_snowmeltEvents = 0
-      wp_totalSnowrunoff = 0.0
-      wp_prev_crust_frac = -1.0
-      wp_rkecum = 0.0
+      wp%totalPrecip = 0.0
+      wp%totalRunoff = 0.0
+      wp%precipEvents = 0
+      wp%runoffEvents = 0
+      wp%snowmeltEvents = 0
+      wp%totalSnowrunoff = 0.0
+      wp%prev_crust_frac = -1.0
+      wp%rkecum = 0.0
       ! End WEPP addition      
 
       ahztranspdepth(isr) = 0.0

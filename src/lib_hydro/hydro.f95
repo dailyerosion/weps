@@ -33,7 +33,7 @@
      &                   cumprecip, cumrunoff, cumevap,                 &
      &                   cumtrans, cumdrain,                            &
      &                   presswc, pressnow, presday,                    &
-     &                   bhztranspdepth, restot, h1et )
+     &                   bhztranspdepth, restot, h1et, wp)
 
 !     + + + PURPOSE + + +
 !     This subroutine is the main (supervisory) program for the
@@ -54,6 +54,7 @@
       use Points_Mod, only: slen
       use wind_mod, only: sbzdisp, sbzo, biodrag
       use hydro_data_struct_defs, only: am0hfl, hydro_derived_et
+      use wepp_param_mod, only: wepp_param
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -98,6 +99,7 @@
       real bhztranspdepth
       type(biototal), intent(in) :: restot
       type(hydro_derived_et), intent(inout) :: h1et
+      type(wepp_param), intent(inout) :: wp
 
 !     + + +  ARGUMENT DEFINITIONS + + +
 !     layrsn   - Number of soil layers used in simulation
@@ -373,6 +375,16 @@
      &            bsfsan, bsfsil, bsfcla, bsfom, bsfcec,                &
      &            bszlyd, bszlyt, vaptrans, evaplimit)
 
+!      if( isr .eq. 2 ) then
+!        write(*,*) '7', bsdblk(7), bsdblk0(7), bsdpart(7), bsdwblk(7),  &
+!      &          bhrwc(7), bhrwcs(7), bhrwcf(7), bhrwcw(7), bhrwcr(7),  &
+!      &          bhrwca(7), bh0cb(7), bheaep(7), bhrsk(7), bhfredsat(7),&
+!      &          bsfsan(7), bsfsil(7), bsfcla(7), bsfom(7), bsfcec(7),  &
+!      &          bszlyd(7), bszlyt(7), vaptrans, evaplimit
+!        if( daysim .eq. 19 ) stop
+!      end if
+
+
 !     set accounting variables for water balance changes in this cycle
       swc = dot_product(theta(1:layrsn),bszlyt(1:layrsn))
       lswc = swc
@@ -645,6 +657,23 @@
          len_slope = slen(amxsim(1), amxsim(2)) / 2.0
          !write(*,*) 'daysim:', daysim
 
+!         if( (daysim .eq. 19) .and. (isr .eq. 1) ) then
+!           write(*,*) layrsn, thetas(7), thetes(7), thetaf(7), thetaw(7),          &
+!     &                   bszlyt(7), bszlyd(7), bhrsk(7),                         &
+!     &                   dprecip, bwdurpt, bwpeaktpt, bwpeakipt,        &
+!     &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
+!     &                   bhzsno, bslrr, bmrslp, bsfsan(1), bsfcla(1),         &
+!     &                   bsfcr, bsvroc(1), bsdblk(1), bsfcec(1),                 &
+!     &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
+!     &                   h1et%zep, theta(1), thetadmx(1), bhrwc0(1),                &
+!     &                   h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,         &
+!     &                   len_slope, day, mo, yr, isr,                   &
+!     &                   wepp_hydro, init_loop, calib_loop, bhfice(1)
+!         end if
+!      if( (daysim .eq. 7983) .and. (isr .eq. 3) ) then
+!        write(*,*) (theta(l), l=1,layrsn), (bszlyt(l), l=1,layrsn)
+!      end if
+
          call waterbal(layrsn, thetas, thetes, thetaf, thetaw,          &
      &                   bszlyt, bszlyd, bhrsk,                         &
      &                   dprecip, bwdurpt, bwpeaktpt, bwpeakipt,        &
@@ -655,7 +684,27 @@
      &                   h1et%zep, theta, thetadmx, bhrwc0,                &
      &                   h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,         &
      &                   len_slope, day, mo, yr, isr,                   &
-     &                   wepp_hydro, init_loop, calib_loop, bhfice)
+     &                   wepp_hydro, init_loop, calib_loop, bhfice, wp)
+
+!         if( (daysim .eq. 19) .and. (isr .eq. 1) ) then
+!           write(*,*) layrsn, thetas(7), thetes(7), thetaf(7), thetaw(7),          &
+!     &                   bszlyt(7), bszlyd(7), bhrsk(7),                         &
+!     &                   dprecip, bwdurpt, bwpeaktpt, bwpeakipt,        &
+!     &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
+!     &                   bhzsno, bslrr, bmrslp, bsfsan(1), bsfcla(1),         &
+!     &                   bsfcr, bsvroc(1), bsdblk(1), bsfcec(1),                 &
+!     &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
+!     &                   h1et%zep, theta(1), thetadmx(1), bhrwc0(1),                &
+!     &                   h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,         &
+!     &                   len_slope, day, mo, yr, isr,                   &
+!     &                   wepp_hydro, init_loop, calib_loop, bhfice(1)
+!           stop
+!         end if
+
+!      if( (daysim .eq. 7983) .and. (isr .eq. 3) ) then
+!        write(*,*) (theta(l), l=1,layrsn), (bszlyt(l), l=1,layrsn)
+!        stop
+!      end if
 
       end if
 
@@ -716,18 +765,18 @@
       presday = daysim
       
 !     Added for WEPP bookeeping      
-      wp_totalPrecip = wp_totalPrecip + bwzdpt
-      wp_totalRunoff = wp_totalRunoff + bhzrun
+      wp%totalPrecip = wp%totalPrecip + bwzdpt
+      wp%totalRunoff = wp%totalRunoff + bhzrun
       
       if (bwzdpt.gt.0) then
-         wp_precipEvents = wp_precipEvents + 1
+         wp%precipEvents = wp%precipEvents + 1
       endif
       
       if (bhzrun.gt.0) then
-         wp_runoffEvents = wp_runoffEvents + 1
+         wp%runoffEvents = wp%runoffEvents + 1
          if (bhzsmt .gt. 0.0) then    ! due to snowmelt
-            wp_snowmeltEvents = wp_snowmeltEvents + 1
-            wp_totalSnowrunoff = wp_totalSnowrunoff + bhzrun
+            wp%snowmeltEvents = wp%snowmeltEvents + 1
+            wp%totalSnowrunoff = wp%totalSnowrunoff + bhzrun
          endif
       endif
 !     End WEPP addition      

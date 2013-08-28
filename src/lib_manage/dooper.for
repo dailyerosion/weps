@@ -76,7 +76,7 @@
      &                  ospeed, odir, ostdspeed, ominspeed, omaxspeed
 
 !         Version 1.5 added ofuel
-          if (mversion .ge. 1.50) then
+          if (mversion(sr) .ge. 1.50) then
               ! get fuel line
               mcur(sr) = mcur(sr) + 1
               line = mtbl(mcur(sr))
@@ -95,7 +95,7 @@
           read(line(2:len_trim(line)), *, err=901) oenergyarea, ostir
 
 !         Version 1.5 added ofuel
-          if (mversion .ge. 1.50) then
+          if (mversion(sr) .ge. 1.50) then
               ! get fuel line
               mcur(sr) = mcur(sr) + 1
               line = mtbl(mcur(sr))

@@ -535,9 +535,20 @@
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)),* , err=901) mu
 
+!        if( sr .eq. 3 ) then
+!          write(*,*) mu,fracarea,tlayer,                                &
+!     &    asdblk(1,sr),asdsblk(1,sr),aszlyt(1,sr)
+!        end if
+
 !       do process
         call loosn(mu,fracarea,tlayer,                                  &
      &    asdblk(1,sr),asdsblk(1,sr),aszlyt(1,sr))
+
+!        if( sr .eq. 3 ) then
+!          write(*,*) mu,fracarea,tlayer,                                &
+!     &    asdblk(1,sr),asdsblk(1,sr),aszlyt(1,sr)
+!          stop
+!        end if
 
 !       post-process stuff
 
