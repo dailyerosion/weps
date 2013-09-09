@@ -235,6 +235,7 @@
       integer numeq
       real lswc, lsno
       real dprecip, dirrig
+      real durprecip, tptprecip
       real epart, vlh, vaptrans, evaplimit
       real rad_surf
       real eff_lai
@@ -268,6 +269,8 @@
 !                 makes it through the snow filter
 !     dirrig    - cumulative daily amount of water from surface irrigation
 !                 that makes it through the snow filter
+!     durprecip - duration of precipitation adjusted for snowmelt
+!     tptprecip - time to peak intensity of precipitation adjusted for snowmelt
 !     epart     - evaporation partitioning to plant (transpiration)
 !     vlh       - Latent heat of vaporization (mj/kg)
 !     vaptrans  - vapor transmissivity (mm/d^.5)
@@ -374,16 +377,6 @@
      &            bhrwca, bh0cb, bheaep, bhrsk, bhfredsat,              &
      &            bsfsan, bsfsil, bsfcla, bsfom, bsfcec,                &
      &            bszlyd, bszlyt, vaptrans, evaplimit)
-
-!      if( isr .eq. 2 ) then
-!        write(*,*) '7', bsdblk(7), bsdblk0(7), bsdpart(7), bsdwblk(7),  &
-!      &          bhrwc(7), bhrwcs(7), bhrwcf(7), bhrwcw(7), bhrwcr(7),  &
-!      &          bhrwca(7), bh0cb(7), bheaep(7), bhrsk(7), bhfredsat(7),&
-!      &          bsfsan(7), bsfsil(7), bsfcla(7), bsfom(7), bsfcec(7),  &
-!      &          bszlyd(7), bszlyt(7), vaptrans, evaplimit
-!        if( daysim .eq. 19 ) stop
-!      end if
-
 
 !     set accounting variables for water balance changes in this cycle
       swc = dot_product(theta(1:layrsn),bszlyt(1:layrsn))
@@ -529,8 +522,11 @@
       ! add snowmelt to precipitation water for infiltration
       if (bhzsmt .gt. 0.0) then
           dprecip = dprecip + bhzsmt
-          bwdurpt = max(bwdurpt,6.0)!we have no entry for snowmelt duration yet
-          bwpeaktpt = 0.5
+          durprecip = max(bwdurpt,6.0)!we have no entry for snowmelt duration yet
+          tptprecip = 0.5
+      else
+          durprecip = bwdurpt
+          tptprecip = bwpeaktpt
       endif
 
       ! replenish accumulated surface evaporation reservoir with applied suface water
@@ -643,7 +639,7 @@
      &       theta, thetadmx, thetas, thetaf, thetaw, thetar,           &
      &       bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav,               &
      &       bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext, bwtdpt,            &
-     &       rise, daylength, h1et%zep, dprecip, bwdurpt, bwpeaktpt,       &
+     &       rise, daylength, h1et%zep, dprecip, durprecip, tptprecip,       &
      &       dirrig, bhdurirr, bhlocirr, bhzoutflow,                    &
      &       bbdstm, bbffcv, bslrro, bslrr, bmzele, bhrwc0,             &
      &       h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,                     &
@@ -655,28 +651,32 @@
 
          ! use a representative slope lenght as half of the simregion diagonal distance
          len_slope = slen(amxsim(1), amxsim(2)) / 2.0
-         !write(*,*) 'daysim:', daysim
 
-!         if( (daysim .eq. 19) .and. (isr .eq. 1) ) then
-!           write(*,*) layrsn, thetas(7), thetes(7), thetaf(7), thetaw(7),          &
-!     &                   bszlyt(7), bszlyd(7), bhrsk(7),                         &
-!     &                   dprecip, bwdurpt, bwpeaktpt, bwpeakipt,        &
+!      if( isr .eq. 1 .and. daysim .eq. 7979 ) then
+!        write(*,*) isr, daysim
+!        write(*,*) dprecip, durprecip, tptprecip, bwpeakipt,        &
 !     &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
-!     &                   bhzsno, bslrr, bmrslp, bsfsan(1), bsfcla(1),         &
-!     &                   bsfcr, bsvroc(1), bsdblk(1), bsfcec(1),                 &
-!     &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
-!     &                   h1et%zep, theta(1), thetadmx(1), bhrwc0(1),                &
-!     &                   h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,         &
-!     &                   len_slope, day, mo, yr, isr,                   &
-!     &                   wepp_hydro, init_loop, calib_loop, bhfice(1)
-!         end if
-!      if( (daysim .eq. 7983) .and. (isr .eq. 3) ) then
-!        write(*,*) (theta(l), l=1,layrsn), (bszlyt(l), l=1,layrsn)
+!     &                   bhzsno, bslrr, bmrslp, bsfcr
+!        write(*,*) 'bsfsan', (bsfsan(l), l=1,layrsn)
+!        write(*,*) 'bsfcla', (bsfcla(l), l=1,layrsn)
+!        write(*,*) 'bsvroc', (bsvroc(l), l=1,layrsn)
+!        write(*,*) 'bsdblk', (bsdblk(l), l=1,layrsn)
+!        write(*,*) 'bsfcec', (bsfcec(l), l=1,layrsn)
+!        write(*,*) bbffcv, bbfcancov, bbzht, bcdayap, h1et%zep
+!        write(*,*) 'theta', (theta(l), l=1,layrsn)
+!        write(*,*) 'thetadmx', (thetadmx(l), l=1,layrsn)
+!        write(*,*) 'bhrwc0', (bhrwc0(l), l=1,layrsn)
+!        write(*,*) h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,         &
+!     &                   len_slope, wepp_hydro, init_loop, calib_loop
+!        write(*,*) 'bhfice', (bhfice(l), l=1,layrsn)
+!        write(*,*) 'wp', wp%totalRunoff, wp%totalPrecip, wp%totalSnowrunoff, &
+!                   wp%runoffEvents, wp%precipEvents, wp%snowmeltEvents, &
+!                   wp%rkecum, wp%prev_crust_frac
 !      end if
 
          call waterbal(layrsn, thetas, thetes, thetaf, thetaw,          &
      &                   bszlyt, bszlyd, bhrsk,                         &
-     &                   dprecip, bwdurpt, bwpeaktpt, bwpeakipt,        &
+     &                   dprecip, durprecip, tptprecip, bwpeakipt,        &
      &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
      &                   bhzsno, bslrr, bmrslp, bsfsan, bsfcla,         &
      &                   bsfcr, bsvroc, bsdblk, bsfcec,                 &
@@ -686,23 +686,26 @@
      &                   len_slope, day, mo, yr, isr,                   &
      &                   wepp_hydro, init_loop, calib_loop, bhfice, wp)
 
-!         if( (daysim .eq. 19) .and. (isr .eq. 1) ) then
-!           write(*,*) layrsn, thetas(7), thetes(7), thetaf(7), thetaw(7),          &
-!     &                   bszlyt(7), bszlyd(7), bhrsk(7),                         &
-!     &                   dprecip, bwdurpt, bwpeaktpt, bwpeakipt,        &
+!      if( isr .eq. 1 .and. daysim .eq. 7979 ) then
+!        write(*,*) isr, daysim
+!        write(*,*) dprecip, durprecip, tptprecip, bwpeakipt,        &
 !     &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
-!     &                   bhzsno, bslrr, bmrslp, bsfsan(1), bsfcla(1),         &
-!     &                   bsfcr, bsvroc(1), bsdblk(1), bsfcec(1),                 &
-!     &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
-!     &                   h1et%zep, theta(1), thetadmx(1), bhrwc0(1),                &
-!     &                   h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,         &
-!     &                   len_slope, day, mo, yr, isr,                   &
-!     &                   wepp_hydro, init_loop, calib_loop, bhfice(1)
-!           stop
-!         end if
-
-!      if( (daysim .eq. 7983) .and. (isr .eq. 3) ) then
-!        write(*,*) (theta(l), l=1,layrsn), (bszlyt(l), l=1,layrsn)
+!     &                   bhzsno, bslrr, bmrslp, bsfcr
+!        write(*,*) 'bsfsan', (bsfsan(l), l=1,layrsn)
+!        write(*,*) 'bsfcla', (bsfcla(l), l=1,layrsn)
+!        write(*,*) 'bsvroc', (bsvroc(l), l=1,layrsn)
+!        write(*,*) 'bsdblk', (bsdblk(l), l=1,layrsn)
+!        write(*,*) 'bsfcec', (bsfcec(l), l=1,layrsn)
+!        write(*,*) bbffcv, bbfcancov, bbzht, bcdayap, h1et%zep
+!        write(*,*) 'theta', (theta(l), l=1,layrsn)
+!        write(*,*) 'thetadmx', (thetadmx(l), l=1,layrsn)
+!        write(*,*) 'bhrwc0', (bhrwc0(l), l=1,layrsn)
+!        write(*,*) h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,         &
+!     &                   len_slope, wepp_hydro, init_loop, calib_loop
+!        write(*,*) 'bhfice', (bhfice(l), l=1,layrsn)
+!        write(*,*) 'wp', wp%totalRunoff, wp%totalPrecip, wp%totalSnowrunoff, &
+!                   wp%runoffEvents, wp%precipEvents, wp%snowmeltEvents, &
+!                   wp%rkecum, wp%prev_crust_frac
 !        stop
 !      end if
 

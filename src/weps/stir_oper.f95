@@ -6,6 +6,7 @@
 
       use weps_interface_defs
       use stir_report_mod, only: stircum, stir_report
+      use manage_data_struct_defs, only: lastoper
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
@@ -17,8 +18,8 @@
       include 'p1werm.inc'
       include 'command.inc'
       include 'm1flag.inc'
-      include 'main/main.inc' ! lopday, lopmon, lopyr
-      include 'manage/oper.inc' ! opname, ostir, oenergyarea, ofuel
+!      include 'main/main.inc' ! lopday, lopmon, lopyr
+!      include 'manage/oper.inc' ! opname, ostir, oenergyarea, ofuel
 
 !     + + + PURPOSE + + +
 !     each time it is called, it calculates the Soil Tillage Intensity Rating
@@ -40,14 +41,14 @@
       if( stircum(isr)%oper_cnt .gt. 1 ) then
           ! indicates multiple operations on the same day
           ! calculate stir and reset accumulators for this next operation
-          call stir_report(isr, .false., ostir, oenergyarea)
+          call stir_report(isr, .false., lastoper(isr)%stir, lastoper(isr)%energyarea)
       end if
 
-      stircum(isr)%phop(stircum(isr)%phopidx)%phopday = lopday
-      stircum(isr)%phop(stircum(isr)%phopidx)%phopmon = lopmon
-      stircum(isr)%phop(stircum(isr)%phopidx)%phopyr = lopyr
-      stircum(isr)%phop(stircum(isr)%phopidx)%stir_opname = opname
-      stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname = ofuel
+      stircum(isr)%phop(stircum(isr)%phopidx)%phopday = lastoper(isr)%day
+      stircum(isr)%phop(stircum(isr)%phopidx)%phopmon = lastoper(isr)%mon
+      stircum(isr)%phop(stircum(isr)%phopidx)%phopyr = lastoper(isr)%yr
+      stircum(isr)%phop(stircum(isr)%phopidx)%stir_opname = lastoper(isr)%name
+      stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname = lastoper(isr)%fuel
 
       return
       end

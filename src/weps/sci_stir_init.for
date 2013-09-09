@@ -25,7 +25,6 @@
 
 !     + + + LOCAL VARIABLES + + +
       integer idx
-      logical, save :: header_not_printed = .TRUE.
 
       ! only do if flag is set 
       if( soil_cond .eq. 0 ) return
@@ -59,16 +58,16 @@
           stircum(isr)%phop(idx)%last_harv = 0
       end do 
 
-      if (header_not_printed) then
+      if (stircum(isr)%header_not_printed) then
           ! write header to stir_energy.out file
           write(luostir(isr), '(4A)') '#dd/mm/yyyy | operation name',   &
      &       ' | crop name (optional) | fuel | stir',                   &
      &       ' | energy (L diesel/ha)',                                 &
      &       ' | crop sequence number | 1 if last harvest of crop'
           ! write number of years in management rotation
-          write(luostir(isr),'(i4,(A))') mperod(1),                     &
+          write(luostir(isr),'(i4,(A))') mperod(isr),                     &
      &              '  Number of years in WEPS management rotation file'
-         header_not_printed = .FALSE.
+         stircum(isr)%header_not_printed = .FALSE.
       end if
 
       return

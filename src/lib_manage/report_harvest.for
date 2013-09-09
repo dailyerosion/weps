@@ -11,6 +11,7 @@
       use file_io_mod, only: luoharvest_si, luoharvest_en
       use p1unconv_mod, only: KG_per_M2_to_LBS_per_ACRE
       use biomaterial, only: biomatter
+      use manage_data_struct_defs, only: lastoper
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
@@ -31,10 +32,10 @@
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'main/main.inc'
+!      include 'main/main.inc'
       include 'c1gen.inc'
       include 'c1report.inc'
-      include 'manage/oper.inc'
+!      include 'manage/oper.inc'
 
 !     + + + LOCAL DECLARATIONS + + +
       real tot_mass, harvest_index
@@ -73,7 +74,7 @@
         end if
 
         write(unit=luoharvest_si(sr),fmt=1000,advance='NO')             &
-     &      lopday, lopmon, lopyr,                                      &
+     &      lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr,        &
      &      trim(crop%bname),                                           &
      &      mass_rem, 'kg/m^2',                                         &
      &      mass_left, 'kg/m^2',                                        &
@@ -86,7 +87,7 @@
           ! the conversion is from dry mass to wet weight
           ! and from kg/m^2 to acynmu units
           write(unit=luoharvest_en(sr),fmt=1000,advance='NO')           &
-     &      lopday, lopmon, lopyr,                                      &
+     &      lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr,        &
      &      trim(crop%bname),                                           &
      &      mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',                &
      &      mass_left*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',               &
@@ -98,7 +99,7 @@
           ! the conversion is from dry mass to wet weight
           ! and from kg/m^2 to lbs/ac units
           write(unit=luoharvest_en(sr),fmt=1000,advance='NO')           &
-     &      lopday, lopmon, lopyr,                                      &
+     &      lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr,        &
      &      trim(crop%bname),                                           &
      &      mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',                &
      &      mass_left*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',               &
@@ -121,14 +122,14 @@
          IF (bmrotation .LE. 2) THEN   ! Need 2 cycles to get all crops
            match = .false.
            DO i = 1, size(mandate)
-             IF ((mandate(i)%d == lopday) .and.                         &
-     &           (mandate(i)%m == lopmon) .and.                         &
-     &           (mandate(i)%y == lopyr)) THEN
+             IF ((mandate(i)%d == lastoper(sr)%day) .and.               &
+     &           (mandate(i)%m == lastoper(sr)%mon) .and.               &
+     &           (mandate(i)%y == lastoper(sr)%yr)) THEN
 
-                   IF (trim(mandate(i)%opname) == trim(opname))  THEN
+               IF(trim(mandate(i)%opname)==trim(lastoper(sr)%name)) THEN
                        mandate(i)%cropname = trim(adjustl(crop%bname))
                        match = .true.
-                   END IF
+               END IF
               END IF
               IF (match) THEN
                  EXIT  ! leave do loop

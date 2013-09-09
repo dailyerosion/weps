@@ -14,6 +14,7 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
 
     USE calib_crop_m
     use biomaterial, only: biomatter
+    use manage_data_struct_defs, only: lastoper
 
     IMPLICIT NONE
 
@@ -35,7 +36,7 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
     include 'p1werm.inc'
     include 'm1flag.inc'
     include 'm1subr.inc'
-    include 'main/main.inc'
+!    include 'main/main.inc'
     include 'c1gen.inc'
     include 'c1db1.inc'
     include 'command.inc'
@@ -222,9 +223,9 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
     DO WHILE (LI_Associated(CLink))
        Calib_Crop = TRANSFER(CLink, Calib_Crop)
        IF (Calib_Crop%CP%CData%calib_crop_info%crop_name == trim(crop%bname) .and. &
-           Calib_Crop%CP%CData%calib_crop_info%harv_day == lopday .and.            &
-           Calib_Crop%CP%CData%calib_crop_info%harv_month == lopmon .and.          &
-           Calib_Crop%CP%CData%calib_crop_info%harv_rotyear == lopyr ) THEN
+           Calib_Crop%CP%CData%calib_crop_info%harv_day == lastoper(sr)%day .and. &
+           Calib_Crop%CP%CData%calib_crop_info%harv_month == lastoper(sr)%mon .and. &
+           Calib_Crop%CP%CData%calib_crop_info%harv_rotyear == lastoper(sr)%yr ) THEN
                Calib_Yield%YP%YData%calib_yield_info%crop_ptr => Calib_Crop%CP%CData%calib_crop_info 
        END IF
        CLink = LI_Get_Next(CLink)

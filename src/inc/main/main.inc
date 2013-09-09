@@ -33,9 +33,9 @@
       integer          ld
       integer          lm
       integer          ly
-      integer          lopday
-      integer          lopmon
-      integer          lopyr
+!      integer          lopday
+!      integer          lopmon
+!      integer          lopyr
       integer          ljday
       integer          maxper
       integer          ncycles
@@ -52,7 +52,7 @@
      &                  daysim,                                         &
      &                  id, im, iy, ijday,                              &
      &                  ld, lm, ly, ljday,                              &
-     &                  lopday, lopmon, lopyr,                          &
+!     &                  lopday, lopmon, lopyr,                          &
      &                  maxper, ncycles,                                &
      &                  outcnt, tyears,                                 &
 

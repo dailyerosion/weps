@@ -13,6 +13,7 @@ SUBROUTINE set_calib(sr, crop)
 
     USE calib_crop_m
     use biomaterial, only: biomatter
+    use manage_data_struct_defs, only: lastoper
 
     IMPLICIT NONE
 
@@ -27,7 +28,7 @@ SUBROUTINE set_calib(sr, crop)
 !   + + + PARAMETERS AND COMMON BLOCKS + + +
     include 'p1werm.inc'
     include 'm1flag.inc'
-    include 'main/main.inc'
+!    include 'main/main.inc'
     include 'c1gen.inc'
     include 'c1db1.inc'
 
@@ -45,9 +46,9 @@ SUBROUTINE set_calib(sr, crop)
     DO WHILE (LI_Associated(CLink))
        Calib_Crop = TRANSFER(CLink, Calib_Crop)
        IF (Calib_Crop%CP%CData%calib_crop_info%crop_name == trim(crop%bname) .and. &
-           Calib_Crop%CP%CData%calib_crop_info%plant_day == lopday .and. &
-           Calib_Crop%CP%CData%calib_crop_info%plant_month == lopmon .and. &
-           Calib_Crop%CP%CData%calib_crop_info%plant_rotyear == lopyr ) THEN
+           Calib_Crop%CP%CData%calib_crop_info%plant_day == lastoper(sr)%day .and. &
+           Calib_Crop%CP%CData%calib_crop_info%plant_month == lastoper(sr)%mon .and. &
+           Calib_Crop%CP%CData%calib_crop_info%plant_rotyear == lastoper(sr)%yr ) THEN
 
              c_no = Calib_Crop%CP%CData%calib_crop_info%idx
              IF (.not. ALLOCATED (first_full_cycle)) RETURN  ! Obviously can't be done with cycle 1 yet

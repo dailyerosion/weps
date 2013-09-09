@@ -16,7 +16,7 @@
       use grid_mod, only: imax, jmax
       use hydro_data_struct_defs, only: am0hfl
       use soil_data_struct_defs, only: am0sfl
-      use manage_data_struct_defs, only: am0tfl
+      use manage_data_struct_defs, only: am0tfl, lastoper
       use crop_data_struct_defs, only: am0cfl
       use decomp_data_struct_defs, only: am0dfl
 
@@ -43,7 +43,7 @@
       include 'w1clig.inc'
       include 'h1hydro.inc'
       include 'm1subr.inc'
-      include 'manage/oper.inc'
+!      include 'manage/oper.inc'
       include 'main/main.inc'
       include 'main/plot.inc'
 
@@ -137,9 +137,9 @@
         doy = get_simdate_doy()
 
         ! make operation name available for this day
-        if ((lopday .eq. day) .and. (lopmon .eq. month) .and.           &
-     &      (lopyr .eq. amnryr(sr))) then
-           operat = opname
+        if ((lastoper(sr)%day .eq. day) .and. (lastoper(sr)%mon .eq. month) .and.           &
+     &      (lastoper(sr)%yr .eq. amnryr(sr))) then
+           operat = lastoper(sr)%name
            crname = crop%bname
         else
            operat = '                                               '

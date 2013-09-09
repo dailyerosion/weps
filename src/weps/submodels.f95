@@ -14,7 +14,7 @@
 
       include 'p1werm.inc'
       include 'm1flag.inc'      !am0cropupfl
-      include 'main/main.inc'   !daysim, lopday, lopmon, lopyr, iy
+      include 'main/main.inc'   !daysim, iy
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
@@ -30,8 +30,7 @@
 !     restot          - structure array containing summary residue pool amounts for all subregions
 
 !        write(*,*) "Start manage"      !MANAGEment (tillage) submodel
-        call manage( isr, iy, lopday, lopmon, lopyr, crop, residue,     &
-     &               biotot,mandate )
+        call manage( isr, iy, crop, residue, biotot,mandate )
 
 !        write(*,*) "Start updres"
         call updres(isr, residue, restot)                 !update decomp residue pools

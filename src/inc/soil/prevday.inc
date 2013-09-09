@@ -3,10 +3,10 @@
 !$Revision$
 !$HeadURL$
 !     defines for soil conditions that are retained from the previous day
-      real bhtmx0(mnsz)
-      real bhrwc0(mnsz)
-      real bszrh0
-      real bszrr0
+      real bhtmx0(mnsz, mnsub)
+      real bhrwc0(mnsz, mnsub)
+      real bszrh0(mnsub)
+      real bszrr0(mnsub)
 
       common / prevday /                                                &
      & bhtmx0, bhrwc0, bszrh0, bszrr0

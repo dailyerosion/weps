@@ -33,9 +33,9 @@ module wind_mod
       real, intent(in) :: brcd   ! biomass drag coefficient
       integer, intent(in) :: wzoflg ! flag=0 - anemometer at station
                                     ! flag=1 - anemometer at field
-      real, intent(out) :: wzzo   ! aerodynamic roughness of surface below canopy (mm)
       real, intent(out) :: wzorg  ! aerodynamic roughness of ridge
       real, intent(out) :: wzorr  ! aerodynamic roughness of random roughness
+      real, intent(out) :: wzzo   ! aerodynamic roughness of surface below canopy (mm)
       real, intent(out) :: wzzov  ! aerodynamic roughness length of canopy (mm)
       real, intent(inout) :: awzzo  ! aerodynamic roughness at anemom. site (mm)
 

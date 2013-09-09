@@ -19,8 +19,10 @@ module file_io_mod
     integer :: luo_emit        ! For subdaily erosion summary
     integer :: luo_sgrd        ! For subdaily grid
 
-    integer :: luogui1         ! write "gui1_data.out"
     integer :: luoci           ! write "ci.out" for confidence interval
+
+    ! this is for whole region and subregions
+    integer, dimension(:), allocatable :: luogui1         ! write "gui1_data.out"
 
 ! subregion in scope, so require nsubr dimension for allocation
     ! submodel information (always on)

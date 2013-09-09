@@ -20,7 +20,7 @@
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
       use p1unconv_mod, only: mmtom
-      use manage_data_struct_defs, only: am0tfl, am0tdb
+      use manage_data_struct_defs, only: am0tfl, am0tdb, lastoper
       use crop_data_struct_defs, only: am0cfl
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
@@ -41,7 +41,7 @@
       include 'c1info.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
-      include 'manage/oper.inc'
+!      include 'manage/oper.inc'
       include 'manage/asd.inc'
       include 'manage/man.inc'
       include 'manage/mproc.inc'
@@ -956,10 +956,10 @@
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)),* , err=901)                        &
-     &    cutflg, cutht, pyieldf, pstalkf, rstandf
+     &    cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf
 
 !     do process
-        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf, &
+        call cut(cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf, &
      &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
      &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
      &       crop%geometry%zht, crop%geometry%grainf, crop%geometry%hyfg, &
@@ -1011,10 +1011,10 @@
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)),* , err=901)                        &
-     &    cutht, pyieldf, pstalkf, rstandf
+     &    lastoper(sr)%cutht, pyieldf, pstalkf, rstandf
 !     do process
         cutflg = 2
-        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf, &
+        call cut(cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf, &
      &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
      &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
      &       crop%geometry%zht, crop%geometry%grainf, crop%geometry%hyfg, &
@@ -1252,10 +1252,10 @@
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)),* , err=901)                        &
      &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
-     &      mature_warn_flg, cutflg, cutht, pyieldf, pstalkf, rstandf
+     &      mature_warn_flg, cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf
 
 !     do process
-        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf, &
+        call cut(cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf, &
      &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
      &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
      &       crop%geometry%zht, crop%geometry%grainf, crop%geometry%hyfg, &
@@ -1311,10 +1311,10 @@
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)),* , err=901)                        &
      &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
-     &      mature_warn_flg, cutht, pyieldf, pstalkf, rstandf
+     &      mature_warn_flg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf
 !     do process
         cutflg = 2
-        call cut(cutflg, cutht, pyieldf, pstalkf, rstandf,              &
+        call cut(cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf,              &
      &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
      &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
      &       crop%geometry%zht, crop%geometry%grainf, crop%geometry%hyfg,                       &
@@ -1703,9 +1703,9 @@
         end if
 
 !       set planting date vars (day, month, rotation year)
-        aplant_day(sr) = lopday
-        aplant_month(sr) = lopmon
-        aplant_rotyr(sr) = lopyr
+        aplant_day(sr) = lastoper(sr)%day
+        aplant_month(sr) = lastoper(sr)%mon
+        aplant_rotyr(sr) = lastoper(sr)%yr
 
         ! initialize transpiration depth parameters
         ahzfurcut(sr) = 0.0

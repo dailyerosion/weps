@@ -56,9 +56,10 @@
       end do
 
 !     these files are opened at all times
-      call fopenk (luogui1, rootp(1:len_trim(rootp)) // 'gui1_data.out', 'unknown')
 
       sum_stat = 0
+      allocate( luogui1(0:nsubr), stat=alloc_stat )
+      sum_stat = sum_stat + alloc_stat
       allocate( luomandate(0:nsubr), stat=alloc_stat )
       sum_stat = sum_stat + alloc_stat
       allocate( luoharvest_si(nsubr), stat=alloc_stat )
@@ -72,8 +73,10 @@
       if( sum_stat .gt. 0 ) then
          Write(*,*) 'ERROR: unable to allocate luomandate, luoharvest_, luohydrobal, luoseason arrays'
       end if
+      call fopenk (luogui1(0), trim(rootp) // 'gui1_data.out', 'unknown')
       call fopenk (luomandate(0), trim(rootp) // 'mandate.out', 'unknown')
       do idx = 1, nsubr
+         call fopenk (luogui1(idx), trim(rootp) // trim(subr_text(idx)) // 'gui1_data.out', 'unknown')
          call fopenk (luomandate(idx), trim(rootp) // trim(subr_text(idx)) // 'mandate.out', 'unknown')
          call fopenk (luoharvest_si(idx), trim(rootp) // trim(subr_text(idx)) // 'harvest_si.out', 'unknown')
          call fopenk (luoharvest_en(idx), trim(rootp) // trim(subr_text(idx)) // 'harvest_en.out', 'unknown')

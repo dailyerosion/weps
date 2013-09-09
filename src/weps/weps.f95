@@ -45,10 +45,11 @@
       use subregions_mod, only: subr_poly, acct_poly
       use barriers_mod, only: destroy_barrier, barrier
       use file_io_mod, only: luo_egrd, luo_erod, luo_emit, luo_sgrd
-      use file_io_mod, only: luomandate, luod_above, luod_below, makedir
+      use file_io_mod, only: luogui1, luomandate, luod_above, luod_below, makedir
       use biomaterial
       use debug_mod
       use mandate_mod
+      use manage_data_struct_defs, only: lastoper
       use erosion_mod, only: erosion, erodinit
       use erosion_data_struct_defs, only: create_subregionsurfacestate, subregionsurfacestate, threshold, cellsurfacestate, &
                                           erod_interval, awudmx, am0eif, am0efl
@@ -83,7 +84,7 @@
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
       include 'manage/man.inc'
-      include 'manage/oper.inc'
+!      include 'manage/oper.inc'
     
 !     + + + LOCAL VARIABLES + + +
       character(len=21) :: rundatetime
@@ -322,6 +323,8 @@
       ! allocate management data arrays for reports
       allocate(mandatbs(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
+      allocate(lastoper(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
 
       ! erosion subregion surface values array
       allocate(subrsurf(nsubr), stat=alloc_stat)
@@ -518,7 +521,9 @@
       if (init_cycle > 0) then   ! to avoid printing it when not being done
           write(6,*) "Starting initialization phase"
       else
-          lopyr = 1
+        do isr=1,nsubr   ! do multiple subregion      
+          lastoper(isr)%yr = 1
+        end do
       endif
 
 ! begin initialization simulation phase
@@ -558,10 +563,10 @@
             ! check if at end of subregion's rotation cycle
             if (mod(amnryr(isr),mperod(isr)) == 0) then
                amnryr(isr) = 1
-               lopyr = amnryr(isr)
+               lastoper(isr)%yr = amnryr(isr)
             else
                amnryr(isr) = amnryr(isr) + 1
-               lopyr = amnryr(isr)
+               lastoper(isr)%yr = amnryr(isr)
             end if
          end if
        end do  ! end for subregion loop
@@ -641,10 +646,10 @@
                ! check if at end of subregion's rotation cycle
                if (mod(amnryr(isr),mperod(isr)) == 0) then
                   amnryr(isr) = 1
-                  lopyr = amnryr(isr)
+                  lastoper(isr)%yr = amnryr(isr)
                else
                   amnryr(isr) = amnryr(isr) + 1
-                  lopyr = amnryr(isr)
+                  lastoper(isr)%yr = amnryr(isr)
                end if
             end if
            end do  ! end subregion
@@ -813,11 +818,11 @@
                   if (mod(amnryr(isr),mperod(isr)) == 0) then
                      ! end of management rotation cycle
                      amnryr(isr) = 1
-                     lopyr = amnryr(isr)
+                     lastoper(isr)%yr = amnryr(isr)
                   else
                      ! continue through rotation cycle
                      amnryr(isr) = amnryr(isr) + 1
-                     lopyr = amnryr(isr)
+                     lastoper(isr)%yr = amnryr(isr)
                   end if
                end if
             end do
@@ -909,7 +914,7 @@
               call print_yr_report_vars(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr)%yr_report)
           end if
           call sci_report( isr, cellstate )
-          call print_ui1_output(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr), mandatbs(0)%mandate) !Use for new WEPS gui
+          call print_ui1_output(luogui1(isr), nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr), mandatbs(0)%mandate) !Use for new WEPS gui
           call print_mandate_output(luomandate(isr), mandatbs(isr)%mperod, mandatbs(isr)%mandate)
       end do
 
@@ -958,8 +963,14 @@
          call destroy_decomp_factors(decompfac(isr))
          call destroy_wepp_param(wp(isr))
       end do
-      !remove main arrays
       sum_stat = 0
+      !deallocate management data arrays
+      deallocate(mandatbs, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(lastoper, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+
+      !remove main arrays
       deallocate(crop, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       deallocate(croptot, stat=alloc_stat)
@@ -994,6 +1005,6 @@
       call timer(0,TIMSTOP)
       call timer(0,TIMPRINT)
 
-      stop 'The WEPS simulation run is finished '
+      stop
       end program weps
 

@@ -1228,7 +1228,7 @@
     type(biomatter), intent(inout) :: crop    ! structure containing full crop description
     end subroutine get_calib_yield
 !--------------------------
-      subroutine manage( sr, syear, lopdd, lopmm, lopyy, crop, residue, biotot, mandate)
+      subroutine manage( sr, syear, crop, residue, biotot, mandate)
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
       integer sr, syear
@@ -1884,9 +1884,10 @@
     type (opercrop_date), dimension(:), intent(in) :: mandate
     end subroutine print_report_vars
 !-----------------------
-    SUBROUTINE print_ui1_output(nperiods, nrot_years, ncycles, rep_report, mandate)
+SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, mandate)
     USE pd_report_vars
     use mandate_mod, only: opercrop_date
+    integer, intent(in) :: luogui1         ! subregion number for output file selection
     INTEGER, INTENT (IN) :: nperiods
     INTEGER, INTENT (IN) :: nrot_years
     INTEGER, INTENT (IN) :: ncycles

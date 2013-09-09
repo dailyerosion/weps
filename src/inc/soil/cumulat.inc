@@ -6,7 +6,7 @@
       real cump
 
       common / cumulat /                                                &
-     & cump
+     & cump(mnsub)
 
       save :: /cumulat/
 

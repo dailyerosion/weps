@@ -45,10 +45,10 @@
 
 !     these files are opened at all times
 
-      close(luogui1)
-
+      close(luogui1(0))
       close(luomandate(0))
       do idx = 1, nsubr
+         close(luogui1(idx))
          close(luomandate(idx))
          close(luoharvest_si(idx))
          close(luoharvest_en(idx))

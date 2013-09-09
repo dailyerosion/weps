@@ -13,10 +13,11 @@
 !     tillage, operation, management
 
       use weps_interface_defs
+      use manage_data_struct_defs, only: lastoper
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'manage/oper.inc'
+!      include 'manage/oper.inc'
       include 'manage/man.inc'
       include 'manage/mproc.inc'
 
@@ -42,25 +43,25 @@
 !     + + + END SPECIFICATIONS + + +
 
 !      write(*,*) '*>dooper line |', mtbl(mcur(sr)), '|'
-      read(mtbl(mcur(sr)), 1001) opdumy, opcode, opname
+      read(mtbl(mcur(sr)), 1001) opdumy, lastoper(sr)%code, lastoper(sr)%name
  1001 format(a1,1x,i2,1x,a)
-      if( (opcode.eq.0).and.(mcount(sr).gt.0) ) then
-          opskip = 1
-          print*, 'SR',sr,' Skip operation', opcode,' ',opname
+      if( (lastoper(sr)%code.eq.0).and.(mcount(sr).gt.0) ) then
+          lastoper(sr)%skip = 1
+          print*, 'SR',sr,' Skip operation', lastoper(sr)%code,' ',lastoper(sr)%name
       else
-          print*, 'SR',sr,' Do operation', opcode,' ',opname
+          print*, 'SR',sr,' Do operation', lastoper(sr)%code,' ',lastoper(sr)%name
       end if
 
 
 
       ! assign default fuel as blank.  Treated as default in reports
-      ofuel = ''
+      lastoper(sr)%fuel = ''
 
-      select case (opcode)
+      select case (lastoper(sr)%code)
       case (1)  ! original ground engaging operation
           ! set energy and stir values to default
-          oenergyarea = -1
-          ostir = -1
+          lastoper(sr)%energyarea = -1
+          lastoper(sr)%stir = -1
 !         get additional line of data
           mcur(sr) = mcur(sr) + 1
           line = mtbl(mcur(sr))
@@ -72,7 +73,7 @@
           mcur(sr) = mcur(sr) + 1
           line = mtbl(mcur(sr))
 !         read tillage speed and direction
-          read(line(2:len_trim(line)), *, err=901) oenergyarea, ostir,  &
+          read(line(2:len_trim(line)), *, err=901) lastoper(sr)%energyarea, lastoper(sr)%stir,  &
      &                  ospeed, odir, ostdspeed, ominspeed, omaxspeed
 
 !         Version 1.5 added ofuel
@@ -81,18 +82,18 @@
               mcur(sr) = mcur(sr) + 1
               line = mtbl(mcur(sr))
               if(len_trim(line) .gt. 1) then !only read a line if it has characters after the +
-                  read(line(2:len_trim(line)), *) ofuel
+                  read(line(2:len_trim(line)), *) lastoper(sr)%fuel
               end if
           end if
-          !write(6,*) 'opname: ', opname
-          !write(6,*) 'ofuel: ', ofuel
+          !write(6,*) 'opname: ', lastoper(sr)%name
+          !write(6,*) 'ofuel: ', lastoper(sr)%fuel
 
       case (4) ! added energy and stir to O2
 !         get additional line of data
           mcur(sr) = mcur(sr) + 1
           line = mtbl(mcur(sr))
 !         read tillage speed and direction
-          read(line(2:len_trim(line)), *, err=901) oenergyarea, ostir
+          read(line(2:len_trim(line)), *, err=901) lastoper(sr)%energyarea, lastoper(sr)%stir
 
 !         Version 1.5 added ofuel
           if (mversion(sr) .ge. 1.50) then
@@ -100,18 +101,18 @@
               mcur(sr) = mcur(sr) + 1
               line = mtbl(mcur(sr))
               if(len_trim(line) .gt. 1) then !only read a line if it has characters after the +
-                  read(line(2:len_trim(line)), *) ofuel
+                  read(line(2:len_trim(line)), *) lastoper(sr)%fuel
               end if
           end if
-          !write(6,*) 'opname: ', opname
-          !write(6,*) 'ofuel: ', ofuel
+          !write(6,*) 'opname: ', lastoper(sr)%name
+          !write(6,*) 'ofuel: ', lastoper(sr)%fuel
 
       case default
           ! set energy and stir values to default
-          oenergyarea = -1
-          ostir = -1
+          lastoper(sr)%energyarea = -1
+          lastoper(sr)%stir = -1
           ! set fuel to blank (default)
-          ofuel = ''
+          lastoper(sr)%fuel = ''
       end select
 
       ! set up stir accounting.  Must be after op case so that fuel is correct.

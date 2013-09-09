@@ -6,6 +6,7 @@
       subroutine report_hydrobal( isr, bmrotation )
 
       use file_io_mod, only: luohydrobal
+      use manage_data_struct_defs, only: lastoper
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr, bmrotation
@@ -17,8 +18,8 @@
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'main/main.inc'
-      include 'manage/oper.inc'
+!      include 'main/main.inc'
+!      include 'manage/oper.inc'
       include 'h1balance.inc'
 
 !     + + + LOCAL VARIABLES + + +
@@ -55,8 +56,8 @@
         end if
 
         write(unit=luohydrobal(isr),fmt=1000, advance='NO')             &
-     &  lopday, lopmon, lopyr,                                          &
-     &  opname(1:len_trim(opname)),                                     &
+     &  lastoper(isr)%day, lastoper(isr)%mon, lastoper(isr)%yr,         &
+     &  trim(lastoper(isr)%name),                                       &
      &  'Start day,swc,snow', initday(isr), initswc(isr), initsnow(isr),&
      &  'End day,swc,snow', presday(isr), presswc(isr), pressnow(isr),  &
      &  'rain,runoff,evap,trans,drain,check,falloweff', cumprecip(isr), &

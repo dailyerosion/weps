@@ -3,8 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine manage( sr, syear, lopdd, lopmm, lopyy,                &
-     &                   crop, residue, biotot, mandate)
+      subroutine manage( sr, syear, crop, residue, biotot, mandate)
 
 !     + + + PURPOSE + + +
 !     This is the main routine of the MANAGEMENT submodel. The date passed
@@ -26,13 +25,13 @@
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
       use stir_report_mod, only: stir_report
-      use manage_data_struct_defs, only: am0tfl
+      use manage_data_struct_defs, only: am0tfl, lastoper
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'manage/man.inc'
       include 'manage/asd.inc'
-      include 'manage/oper.inc'
+!      include 'manage/oper.inc'
 
 ! for debugging
 ! ***      include 's1layr.inc'      
@@ -109,9 +108,12 @@
       endif
 
 !     pass date of operation to MAIN for output purposes, used by STIR also
-      lopdd = day
-      lopmm = month
-      lopyy = year
+      lastoper(0)%day = day
+      lastoper(0)%mon = month
+      lastoper(0)%yr = year
+      lastoper(sr)%day = day
+      lastoper(sr)%mon = month
+      lastoper(sr)%yr = year
 
 !     Move the tbl ptr to the first operation after the date
 
@@ -119,21 +121,21 @@
       line = mtbl(mcur(sr))
       select case (line(1:1))
       case ('O')
-        opskip = 0
+        lastoper(sr)%skip = 0
         call dooper(sr)
       case ('G')
-        if(opskip.eq.0) call dogroup(sr)
+        if(lastoper(sr)%skip.eq.0) call dogroup(sr)
       case ('P')
-        if(opskip.eq.0) then
+        if(lastoper(sr)%skip.eq.0) then
 
            call doproc(sr, mcount(sr), crop, residue, biotot, mandate)
         endif
       case ('D')
-        call stir_report(sr, .false., ostir, oenergyarea)
+        call stir_report(sr, .false., lastoper(sr)%stir, lastoper(sr)%energyarea)
         read (line (3:12),'(i2,1x,i2,1x,i4)', err=902) day,month,year
         if (difdat (dd,mm,myear,day,month,year).ne.0) return
       case ('*')
-        call stir_report(sr, .true., ostir, oenergyarea)
+        call stir_report(sr, .true., lastoper(sr)%stir, lastoper(sr)%energyarea)
         mcount(sr) = mcount(sr) + 1
         mcur(sr) = mbeg(sr)
   101   mcur(sr) = mcur(sr) + 1

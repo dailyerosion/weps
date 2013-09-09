@@ -13,6 +13,7 @@
 !     tillage, operation, management
 
       use weps_interface_defs
+      use manage_data_struct_defs, only: lastoper
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -21,7 +22,7 @@
       include 'c1db1.inc'
       include 'manage/man.inc'
       include 'manage/mproc.inc'
-      include 'manage/oper.inc'
+!      include 'manage/oper.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr
@@ -51,11 +52,12 @@
 !     + + + END SPECIFICATIONS + + +
 
       line = mtbl(mcur(sr))
-      read(line, 1001, err=901) grdumy, grcode, grname
+      read(line, 1001, err=901) grdumy, lastoper(sr)%grcode,            &
+     &                                  lastoper(sr)%grname
  1001 format(a1,1x,i2,1x,a)
-!***  print*, 'SR',sr,' Processing process:', grcode,' ',grname
+!***  print*, 'SR',sr,' Processing process:', lastoper(sr)%grcode,' ',lastoper(sr)%grname
 
-      select case (grcode)
+      select case (lastoper(sr)%grcode)
 
       case (1)
 !-----START tillage process (process code 01)

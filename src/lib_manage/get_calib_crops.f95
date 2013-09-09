@@ -14,6 +14,7 @@ SUBROUTINE get_calib_crops(sr, crop)
 
     USE calib_crop_m
     use biomaterial, only: biomatter
+    use manage_data_struct_defs, only: lastoper
 
     IMPLICIT NONE
 
@@ -28,7 +29,7 @@ SUBROUTINE get_calib_crops(sr, crop)
 !   + + + PARAMETERS AND COMMON BLOCKS + + +
     include 'p1werm.inc'
     include 'm1flag.inc'
-    include 'main/main.inc'
+!    include 'main/main.inc'
     include 'c1gen.inc'
     include 'c1db1.inc'
     include 'command.inc'
@@ -54,9 +55,9 @@ SUBROUTINE get_calib_crops(sr, crop)
     DO WHILE (LI_Associated(CLink))
        Calib_Crop = TRANSFER(CLink, Calib_Crop)
        IF (Calib_Crop%CP%CData%calib_crop_info%crop_name == trim(crop%bname) .and. &
-           Calib_Crop%CP%CData%calib_crop_info%harv_day == lopday .and.  &
-           Calib_Crop%CP%CData%calib_crop_info%harv_month == lopmon .and. &
-           Calib_Crop%CP%CData%calib_crop_info%harv_rotyear == lopyr ) THEN
+           Calib_Crop%CP%CData%calib_crop_info%harv_day == lastoper(sr)%day .and.  &
+           Calib_Crop%CP%CData%calib_crop_info%harv_month == lastoper(sr)%mon .and. &
+           Calib_Crop%CP%CData%calib_crop_info%harv_rotyear == lastoper(sr)%yr ) THEN
 
              ! Print out complete list of crops to be calibrated
              CLink = LI_Get_Head(Calib_Crop_List)
@@ -83,9 +84,9 @@ SUBROUTINE get_calib_crops(sr, crop)
     Calib_Crop%CP%CData%calib_crop_info%plant_day = aplant_day(sr)
     Calib_Crop%CP%CData%calib_crop_info%plant_month = aplant_month(sr)
     Calib_Crop%CP%CData%calib_crop_info%plant_rotyear = aplant_rotyr(sr)
-    Calib_Crop%CP%CData%calib_crop_info%harv_day = lopday
-    Calib_Crop%CP%CData%calib_crop_info%harv_month = lopmon
-    Calib_Crop%CP%CData%calib_crop_info%harv_rotyear = lopyr
+    Calib_Crop%CP%CData%calib_crop_info%harv_day = lastoper(sr)%day
+    Calib_Crop%CP%CData%calib_crop_info%harv_month = lastoper(sr)%mon
+    Calib_Crop%CP%CData%calib_crop_info%harv_rotyear = lastoper(sr)%yr
     Calib_Crop%CP%CData%calib_crop_info%bio_adj_val = acbaf(sr)
     Calib_Crop%CP%CData%calib_crop_info%target_yield = (acytgt(sr)/acycon(sr)) * (1.0-(acywct(sr)/100.0))
     CLink = TRANSFER (Calib_Crop, CLink)

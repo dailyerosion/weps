@@ -186,9 +186,9 @@
      &                 bhtsmx, bhrwc, bsfom, bszlyt,                    &
      &                 bslay, bsfsan, bsfsil, bsfcla,                   &
      &                 bszrgh, bszrr, bsfcce, bsfcec,                   &
-     &                 cump, dcump, bsk4d,                              &
-     &                 bhtmx0, bhrwc0, szlyd(0),                        &
-     &                 bszrr0, bszrh0,                                  &
+     &                 cump(isr), dcump, bsk4d,                         &
+     &                 bhtmx0(1,isr), bhrwc0(1,isr), szlyd(0),          &
+     &                 bszrr0(isr), bszrh0(isr),                        &
      &                 bseagm, bseagmn, bseagmx,                        &
      &                 bslmin, bslmax,                                  &
      &                 rain, snow, sprink,                              &
@@ -220,10 +220,10 @@
 !  skip layer update on first simulation day
       if (daysim .ge. 2)                                                &
      &  call updlay( daysim, szlyd,                                     &
-     &  bhrwc0, bhrwc, bhrwcdmx,                                        &
+     &  bhrwc0(1,isr), bhrwc, bhrwcdmx,                                 &
      &  bseagmx, bseagmn, bseags,                                       &
      &  bhrwca, bhrwcw, bhrwcs,                                         &
-     &  bhtsmn, bhtmx0, bhtsmx,                                         &
+     &  bhtsmn, bhtmx0(1,isr), bhtsmx,                                  &
      &  bsecr,                                                          &
      &  bsk4d, bslmin, bslmax,                                          &
      &  bslagm,                                                         &
@@ -233,12 +233,12 @@
 
 !     Assign today's values to 'yesterday storage'
       do ldx = 1,bslay
-          bhtmx0(ldx) = bhtsmx(ldx)
-          bhrwc0(ldx) = bhrwc(ldx)
+          bhtmx0(ldx,isr) = bhtsmx(ldx)
+          bhrwc0(ldx,isr) = bhrwc(ldx)
       end do
 
-      bszrr0 = bszrr
-      bszrh0 = bszrgh
+      bszrr0(isr) = bszrr
+      bszrh0(isr) = bszrgh
 
 !     + + + OUTPUT FORMATS + + +
  2100 format('#daysim idoy yr cump dcump bszrgh bsxrgs bszrr bszcr bsfcr&
@@ -271,7 +271,7 @@
              write(luosoillay(isr),*)
          end if
 
-         write(luosoilsurf(isr), 2200) daysim, idoy, yr, cump, dcump,   &
+         write(luosoilsurf(isr), 2200) daysim,idoy,yr, cump(isr), dcump,&
      &        bszrgh, bsxrgs, bszrr, bszcr, bsfcr, bsecr, bsmlos, bsflos
 
 ! output new values by layer to the soil output file.

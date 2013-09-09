@@ -26,6 +26,7 @@
 
       use weps_interface_defs
       use file_io_mod, only: fopenk
+      use manage_data_struct_defs, only: lastoper
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1flag.inc'
@@ -44,7 +45,7 @@
 !     + + + LOCAL VARIABLES + + +
       integer           linidx, eofidx, endidx
       character*256      line
-      integer           idx,idy
+      integer           idx
       integer           luimandate   ! unit number for reading in management file
 
 !     + + + SUBROUTINES CALLED + + +
@@ -66,33 +67,34 @@
 
       ! initialize the manage/tcrop.inc variables
 
-      do idy = 1,mnsub
-         atmstandstem(idy) = 0.0
-         atmstandleaf(idy) = 0.0
-         atmstandstore(idy) = 0.0
+      atmstandstem(sr) = 0.0
+      atmstandleaf(sr) = 0.0
+      atmstandstore(sr) = 0.0
 
-         atmflatstem(idy) = 0.0
-         atmflatleaf(idy) = 0.0
-         atmflatstore(idy) = 0.0
+      atmflatstem(sr) = 0.0
+      atmflatleaf(sr) = 0.0
+      atmflatstore(sr) = 0.0
 
-         atmflatrootstore(idy) = 0.0
-         atmflatrootfiber(idy) = 0.0
+      atmflatrootstore(sr) = 0.0
+      atmflatrootfiber(sr) = 0.0
 
-         atzht(idy) = 0.0
-         atdstm(idy) = 0.0
-         atxstmrep(idy) = 0.0
-         atzrtd(idy) = 0.0
-         atgrainf(idy) = 0.0
+      atzht(sr) = 0.0
+      atdstm(sr) = 0.0
+      atxstmrep(sr) = 0.0
+      atzrtd(sr) = 0.0
+      atgrainf(sr) = 0.0
 
-         do idx = 1,mnsz
-            atmbgstemz(idx,idy) = 0.0
-            atmbgleafz(idx,idy) = 0.0
-            atmbgstorez(idx,idy) = 0.0
+      do idx = 1,mnsz
+         atmbgstemz(idx,sr) = 0.0
+         atmbgleafz(idx,sr) = 0.0
+         atmbgstorez(idx,sr) = 0.0
 
-            atmbgrootstorez(idx,idy) = 0.0
-            atmbgrootfiberz(idx,idy) = 0.0
-         end do
+         atmbgrootstorez(idx,sr) = 0.0
+         atmbgrootfiberz(idx,sr) = 0.0
       end do
+      lastoper(sr)%day = 0
+      lastoper(sr)%mon = 0
+      lastoper(sr)%yr = 0
 
 !     + + + END SPECIFICATIONS + + +
 

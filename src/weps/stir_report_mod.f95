@@ -20,6 +20,7 @@ module stir_report_mod
    end type stir_operation_vars
 
    type stir_accumulators
+      logical header_not_printed  ! flag to keep from printing multiple headers to stir report file
       integer oper_cnt       ! stir count of operations, used to trigger accumulation
       integer proc_cnt       ! stir count of processes, used in averaging
       logical done_flg       ! flag to indicate that stir had completed second pass through management file
@@ -56,6 +57,10 @@ module stir_report_mod
 
         if( sum_stat .gt. 0 ) then
            write(*,*) 'ERROR: unable to allocate memory for stir accumulators'
+        else
+           do isr = 1, nsubr
+              stircum(isr)%header_not_printed = .TRUE.
+           end do
         end if
     end subroutine create_stir_accumulator
 

@@ -24,19 +24,19 @@
 ! All non-CAP key definitions refer to calendar year info
 ! (rotation years are combined, eg. rotation year 1 and 2 monthly info combined)
 
-SUBROUTINE print_ui1_output(nperiods, nrot_years, ncycles, rep_report, mandate)
+SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, mandate)
 
     USE pd_dates_vars
     USE pd_report_vars
 
     USE pd_var_tables
     use mandate_mod, only: opercrop_date
-    use file_io_mod, only: luogui1
 
     IMPLICIT NONE
 
     INCLUDE 'p1werm.inc'
 
+    integer, intent(in) :: luogui1         ! output file unit number
     INTEGER, INTENT (IN) :: nperiods
     INTEGER, INTENT (IN) :: nrot_years
     INTEGER, INTENT (IN) :: ncycles

@@ -28,10 +28,6 @@
       daysim = 0                 ! main/main.inc
       outcnt = 0                 ! main/main.inc
       maxper = 1                 ! main/main.inc
-      lopday = 0                 ! main/main.inc
-      lopmon = 0                 ! main/main.inc
-      lopyr = 0                  ! main/main.inc
-
 
       ! set initialization flags
       am0dif = .true.            ! m1flag.inc
