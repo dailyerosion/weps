@@ -38,7 +38,7 @@
       character*30 :: dec_text ! decomposition detail age pool output file name text string
       logical :: flag_set
 
-      ! use allocation of resiude array for number of subregions
+      ! use allocation of residue array for number of subregions
       nsubr = size(residue,2)
 
       ! allocate the subregion name, number combination text for subregions

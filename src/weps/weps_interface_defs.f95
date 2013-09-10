@@ -1077,6 +1077,11 @@
       type(biomatter), dimension(:,:), intent(out) :: residue
       end subroutine openfils
 !--------------------------------
+      subroutine closefils(residue)
+      use biomaterial, only: biomatter
+      type(biomatter), dimension(:,:), intent(in) :: residue
+      end subroutine closefils
+!--------------------------------
       subroutine plotdata(sr, crop, restot, croptot, biotot, noerod, cellstate)
       use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: threshold

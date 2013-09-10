@@ -25,7 +25,6 @@ SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cell
 
     include "h1db1.inc"         ! ahzsnd(s) snow depth in mm
 
-    INTEGER :: s                ! local variable (subregion)
     INTEGER :: i,j              ! local loop variables
     INTEGER :: ngdpt            ! number of simulation grid datapoints
     REAL    :: gdpt_area        ! area of a grid cell (point) in m^2
@@ -305,10 +304,9 @@ END IF  !Have_Erosion flag
   CALL run_ave(monthly_update(Dryness_ratio), h1et%drat, 1)
   CALL run_ave(mrot_update(Dryness_ratio,cm), h1et%drat, 1)
 
-  s = 1  !currently have only one subregion
   ! Note that the 20mm depth should be a global parameter
   ! It is currently stuck in erosion.for as a local parameter there
-  IF (ahzsnd(s) > snow_depth_thresh) THEN
+  IF (ahzsnd(isr) > snow_depth_thresh) THEN
      CALL run_ave(monthly_update(Snow_cover), 1.0, 1)
      CALL run_ave(mrot_update(Snow_cover,cm), 1.0, 1)
   ELSE

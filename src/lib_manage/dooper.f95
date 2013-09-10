@@ -17,7 +17,6 @@
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
-!      include 'manage/oper.inc'
       include 'manage/man.inc'
       include 'manage/mproc.inc'
 

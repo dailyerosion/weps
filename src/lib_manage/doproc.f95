@@ -41,14 +41,13 @@
       include 'c1info.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
-!      include 'manage/oper.inc'
       include 'manage/asd.inc'
       include 'manage/man.inc'
       include 'manage/mproc.inc'
 !     rdgflag  - flag indicating whether ridge modifications are needed
 !     imprs  - implement ridge spacing (can be used to set row spacing)
       include 'manage/tcrop.inc'
-      include 'main/main.inc'
+!      include 'main/main.inc'
       include 'crop/prevstate.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +

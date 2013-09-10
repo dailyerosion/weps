@@ -18,8 +18,6 @@
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1flag.inc'
-!      include 'main/main.inc'
-!      include 'manage/oper.inc'
       include 'h1balance.inc'
 
 !     + + + LOCAL VARIABLES + + +

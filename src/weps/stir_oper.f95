@@ -18,8 +18,6 @@
       include 'p1werm.inc'
       include 'command.inc'
       include 'm1flag.inc'
-!      include 'main/main.inc' ! lopday, lopmon, lopyr
-!      include 'manage/oper.inc' ! opname, ostir, oenergyarea, ofuel
 
 !     + + + PURPOSE + + +
 !     each time it is called, it calculates the Soil Tillage Intensity Rating

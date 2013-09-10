@@ -22,7 +22,6 @@
       include 'c1db1.inc'
       include 'manage/man.inc'
       include 'manage/mproc.inc'
-!      include 'manage/oper.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr

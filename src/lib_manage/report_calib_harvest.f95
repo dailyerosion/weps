@@ -28,11 +28,9 @@
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1flag.inc'
-!      include 'main/main.inc'
       include 'c1gen.inc'
       include 'c1db1.inc'
       include 'c1report.inc'
-!      include 'manage/oper.inc'
 
 !     + + + LOCAL DECLARATIONS + + +
       real tot_mass, harvest_index

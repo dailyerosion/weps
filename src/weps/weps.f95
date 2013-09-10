@@ -84,7 +84,6 @@
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
       include 'manage/man.inc'
-!      include 'manage/oper.inc'
     
 !     + + + LOCAL VARIABLES + + +
       character(len=21) :: rundatetime
@@ -923,7 +922,7 @@
       endif
 
       ! close all open files
-      call closefils
+      call closefils(residue)
 
       ! deallocate accounting region polygon storage, no longer needed
       do isr = 1, size(acct_poly)

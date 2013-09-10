@@ -31,7 +31,6 @@
       include 'p1werm.inc'
       include 'manage/man.inc'
       include 'manage/asd.inc'
-!      include 'manage/oper.inc'
 
 ! for debugging
 ! ***      include 's1layr.inc'      

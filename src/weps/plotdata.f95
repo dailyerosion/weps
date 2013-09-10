@@ -43,7 +43,6 @@
       include 'w1clig.inc'
       include 'h1hydro.inc'
       include 'm1subr.inc'
-!      include 'manage/oper.inc'
       include 'main/main.inc'
       include 'main/plot.inc'
 
