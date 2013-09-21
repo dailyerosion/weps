@@ -658,12 +658,12 @@ module sweep_io_mod
         barrier(ibr)%points(ipol)%x = pt_x2
         barrier(ibr)%points(ipol)%y = pt_y2
 
-        ! barrier height, width, porosity
+        ! barrier height, porosity, width
         line = getline(i_unit)
         ipol = 1
-        read (line,*) barrier(ibr)%param(ipol)%amzbr, barrier(ibr)%param(ipol)%amxbrw, barrier(ibr)%param(ipol)%ampbr
+        read (line,*) barrier(ibr)%param(ipol)%amzbr, barrier(ibr)%param(ipol)%ampbr, barrier(ibr)%param(ipol)%amxbrw
         ipol = 2
-        read (line,*) barrier(ibr)%param(ipol)%amzbr, barrier(ibr)%param(ipol)%amxbrw, barrier(ibr)%param(ipol)%ampbr
+        read (line,*) barrier(ibr)%param(ipol)%amzbr, barrier(ibr)%param(ipol)%ampbr, barrier(ibr)%param(ipol)%amxbrw
         if( barrier(ibr)%param(ipol)%amzbr .le. 0.0 ) then
            write(*,*) 'ERROR: Barrier height must be > 0'
            write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol
