@@ -34,13 +34,14 @@ module p1unconv_mod
       real             pi
 
 !     + + + VARIABLE DECLARATIONS + + +
+      parameter (pi = 3.14159274)
       parameter (mtomm  = 1000.0)
       parameter (mmtom  = 0.001)
       parameter (hrday  = 24)
       parameter (hrtosec = 3600.0)
       parameter (daytosec = 86400.0)
-      parameter (degtorad = 0.017453293) !pi/180
-      parameter (radtodeg = 57.2957795) !180/pi
+      parameter (degtorad = pi/180.0) !pi/180
+      parameter (radtodeg = 180.0/pi) !180/pi
       parameter (hatom2 = 10000.0) ! hectare to square meters
       parameter (mgtokg = 0.000001) ! milligram to kilogram
       parameter (fractopercent = 100.0)
@@ -50,7 +51,6 @@ module p1unconv_mod
       parameter (secperday = 86400.0)
       parameter (SEC_PER_DAY = 3600*24)  !number of seconds per day
       parameter (KG_per_M2_to_LBS_per_ACRE = 8921.791)
-      parameter (pi = 3.1415927)
 
 !     + + + VARIABLE DEFINITIONS + + +
 !     mtomm  - Unit conversion constant (mm/m)

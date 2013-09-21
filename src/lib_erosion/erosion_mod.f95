@@ -21,7 +21,7 @@ module erosion_mod
       use file_io_mod, only: fopenk, makenamnum, luo_erod, luo_egrd, luo_emit, luo_sgrd
       use erosion_data_struct_defs
       use sae_in_out_mod, only: mksaeinp, mksaeout, saeinp, daily_erodout, sb1out, sb2out, sbemit
-      use p1unconv_mod, only: SEC_PER_DAY
+      use p1unconv_mod, only: SEC_PER_DAY, degtorad
       use timer_mod, only: timer, TIMEROS, TIMSBEROD, TIMSBWIND, TIMSTART, TIMSTOP
       use barriers_mod, only: sbbr
       use grid_mod, only: sbdirini
@@ -39,8 +39,6 @@ module erosion_mod
 !     +++ PARAMETER +++
       real SNODEP                !Minimum snow depth to prevent erosion
       parameter (SNODEP = 20.0)  !No erosion when snow depth >= 20mm
-      real  PID180
-      parameter(PID180 = 3.14159/180.)
 
 !     +++ LOCAL VARIABLES +++
       logical :: first_emit  ! pass to sbemit on first entry to zero out daily accumulators
@@ -140,7 +138,7 @@ module erosion_mod
 
           ! calc. ridge spacing parallel the wind
           if (subrsurf(icsr)%aszrgh > 5.0) then
-            sina = abs(sin(PID180*abs(subday(i)%awdir - subrsurf(icsr)%asargo)))
+            sina = abs(sin(degtorad*abs(subday(i)%awdir - subrsurf(icsr)%asargo)))
             sina = max(0.10, sina)
             subrsurf(icsr)%sxprg = subrsurf(icsr)%asxrgs/sina
               if (subrsurf(icsr)%asxdks > subrsurf(icsr)%asxrgs/3.) then
