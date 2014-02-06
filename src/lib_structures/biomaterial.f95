@@ -266,9 +266,9 @@ contains
      allocate(biomat%deriv%mbgz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
-     allocate(biomat%deriv%rsaz(nsoillay), stat=alloc_stat)
+     allocate(biomat%deriv%rsaz(ncanlay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(biomat%deriv%rlaz(nsoillay), stat=alloc_stat)
+     allocate(biomat%deriv%rlaz(ncanlay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
      if( sum_stat .gt. 0 ) then
@@ -331,9 +331,9 @@ contains
      allocate(biotot%mbgz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
-     allocate(biotot%rsaz(nsoillay), stat=alloc_stat)
+     allocate(biotot%rsaz(ncanlay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(biotot%rlaz(nsoillay), stat=alloc_stat)
+     allocate(biotot%rlaz(ncanlay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
      if( sum_stat .gt. 0 ) then
