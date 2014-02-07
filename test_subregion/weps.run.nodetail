@@ -39,7 +39,7 @@ win_gen.win
 none
 # --WEPS OUTPUT OPTIONS
 #   RFD-ErosionSubmodelOutput
-15
+0
 #   RFD-OutputFile
 # null  (hasn't been used in years, so eliminate it now)
 #   RFD-ReportForm
@@ -96,9 +96,9 @@ none
 #   RFD-SubregionNo
 # 1
 #   RFD-SubmodelOutput
-7 1 1 1 3
+0 0 0 0 0
 #   RFD-DebugOutput
-1 1 1 1 1
+0 0 0 0 0
 #
 #   Subregion polygon coordinates (meters)
 # number of coordinates
@@ -122,9 +122,9 @@ WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
 #   RFD-SubregionNo
 # 2
 #   RFD-SubmodelOutput
-7 1 1 1 3
+0 0 0 0 0
 #   RFD-DebugOutput
-1 1 1 1 1
+0 0 0 0 0
 #
 #   Subregion polygon coordinates (meters)
 # number of coordinates
@@ -148,9 +148,9 @@ Alfalfa, fall seed, 3yr-Potato-WWheat, circle irr CMZ49.man
 #   RFD-SubregionNo
 # 3
 #   RFD-SubmodelOutput
-7 1 1 1 3
+0 0 0 0 0
 #   RFD-DebugOutput
-1 1 1 1 1
+0 0 0 0 0
 #
 #   Subregion region coordinates (meters)
 # number of coordinates
@@ -174,9 +174,9 @@ Wheat,winter,after fallow,conv.,CMZ50.man
 #   RFD-SubregionNo
 # 4
 #   RFD-SubmodelOutput
-7 1 1 1 3
+0 0 0 0 0
 #   RFD-DebugOutput
-1 1 1 1 1
+0 0 0 0 0
 #
 #   Subregion region coordinates (meters)
 # number of coordinates

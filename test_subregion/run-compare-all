@@ -1,0 +1,189 @@
+#!/bin/bash
+
+subd1[1]="sub_alf_wht_can_pot"
+subd1[2]="sub_pot_alf_wht_can"
+subd1[3]="sub_can_pot_alf_wht"
+subd1[4]="sub_wht_can_pot_alf"
+
+subd2[1]="sub_alf_wht_can_pot"
+subd2[2]="sub_pot_alf_wht_can"
+subd2[3]="sub_can_pot_alf_wht"
+subd2[4]="sub_wht_can_pot_alf"
+
+sing[1]="sing_alf"
+sing[2]="sing_pot"
+sing[3]="sing_can"
+sing[4]="sing_wht"
+
+# unlike normal weps, these runs are set up to use files in the main directory, to avoid
+# copying large file sinto the run directories. Each weps.run prepends file names with ../
+
+# create and run each single and multi subregion run
+for runindex in $( seq 1 4 )
+do
+  # does run directory exist
+  if [ ! -e subd1[runindex] ]
+  then
+    # if not then create
+    mkdir subd1[runindex]
+  fi
+
+  # copy run file to directory
+  cp weps.run.${subd1[runindex]} ${subd1[runindex]}/weps.run
+
+  # make run
+  ../dist/lf95-optimize/weps.exe -W1 -t1 -I0 -u0 -P${subd1[runindex]}
+
+  if [ ! -e sing[runindex] ]
+  then
+    # if not then create
+    mkdir sing[runindex]
+  fi
+
+  # copy run file to directory
+  cp weps.run.${sing[runindex]} ${sing[runindex]}/weps.run
+
+  # make run
+  ../dist/lf95-optimize/weps.exe -W1 -t1 -I0 -u0 -P${sing[runindex]}
+
+done
+
+
+for filename in bio1.btmp crop.out dabove.out decomp.out harvest_en.out harvest_si.out hlayers.out hydro.out \
+                hydrobal.out inpt.out mandate.out plot.out sci_energy.out season.out shoot.out soillay.out soilsurf.out stir_energy.out \
+                dbelow.out dec3.btmp dec1.btmp dec4.btmp gui1_data.out dec2.btmp dec5.btmp
+do 
+  for num1 in $( seq 1 4 )
+  do
+    for num2 in $( seq 1 4 )
+    do
+      if [ ${num2} -gt ${num1} ]
+      then
+        # compare alf
+        if [ "${subd1[num1]}" == "sub_alf_wht_can_pot" ]
+        then
+          subr1="subregion1"
+        elif [ "${subd1[num1]}" == "sub_pot_alf_wht_can" ]
+        then
+          subr1="subregion2"
+        elif [ "${subd1[num1]}" == "sub_can_pot_alf_wht" ]
+        then
+          subr1="subregion3"
+        elif [ "${subd1[num1]}" == "sub_wht_can_pot_alf" ]
+        then
+          subr1="subregion4"
+        fi
+        if [ "${subd2[num2]}" == "sub_alf_wht_can_pot" ]
+        then
+          subr2="subregion1"
+        elif [ "${subd2[num2]}" == "sub_pot_alf_wht_can" ]
+        then
+          subr2="subregion2"
+        elif [ "${subd2[num2]}" == "sub_can_pot_alf_wht" ]
+        then
+          subr2="subregion3"
+        elif [ "${subd2[num2]}" == "sub_wht_can_pot_alf" ]
+        then
+          subr2="subregion4"
+        fi
+        # do the comparisons
+        echo ${subd1[num1]}/${subr1}/${filename} vs ${subd2[num2]}/${subr2}/${filename}
+        diff -a ${subd1[num1]}/${subr1}/${filename} ${subd2[num2]}/${subr2}/${filename} | head -n1 | awk '{print $1}'
+
+        # compare wht
+        if [ "${subd1[num1]}" == "sub_alf_wht_can_pot" ]
+        then
+          subr1="subregion2"
+        elif [ "${subd1[num1]}" == "sub_pot_alf_wht_can" ]
+        then
+          subr1="subregion3"
+        elif [ "${subd1[num1]}" == "sub_can_pot_alf_wht" ]
+        then
+          subr1="subregion4"
+        elif [ "${subd1[num1]}" == "sub_wht_can_pot_alf" ]
+        then
+          subr1="subregion1"
+        fi
+        if [ "${subd2[num2]}" == "sub_alf_wht_can_pot" ]
+        then
+          subr2="subregion2"
+        elif [ "${subd2[num2]}" == "sub_pot_alf_wht_can" ]
+        then
+          subr2="subregion3"
+        elif [ "${subd2[num2]}" == "sub_can_pot_alf_wht" ]
+        then
+          subr2="subregion4"
+        elif [ "${subd2[num2]}" == "sub_wht_can_pot_alf" ]
+        then
+          subr2="subregion1"
+        fi
+        # do the comparisons
+        echo ${subd1[num1]}/${subr1}/${filename} vs ${subd2[num2]}/${subr2}/${filename}
+        diff -a ${subd1[num1]}/${subr1}/${filename} ${subd2[num2]}/${subr2}/${filename} | head -n1 | awk '{print $1}'
+
+        # compare can
+        if [ "${subd1[num1]}" == "sub_alf_wht_can_pot" ]
+        then
+          subr1="subregion3"
+        elif [ "${subd1[num1]}" == "sub_pot_alf_wht_can" ]
+        then
+          subr1="subregion4"
+        elif [ "${subd1[num1]}" == "sub_can_pot_alf_wht" ]
+        then
+          subr1="subregion1"
+        elif [ "${subd1[num1]}" == "sub_wht_can_pot_alf" ]
+        then
+          subr1="subregion2"
+        fi
+        if [ "${subd2[num2]}" == "sub_alf_wht_can_pot" ]
+        then
+          subr2="subregion3"
+        elif [ "${subd2[num2]}" == "sub_pot_alf_wht_can" ]
+        then
+          subr2="subregion4"
+        elif [ "${subd2[num2]}" == "sub_can_pot_alf_wht" ]
+        then
+          subr2="subregion1"
+        elif [ "${subd2[num2]}" == "sub_wht_can_pot_alf" ]
+        then
+          subr2="subregion2"
+        fi
+        # do the comparisons
+        echo ${subd1[num1]}/${subr1}/${filename} vs ${subd2[num2]}/${subr2}/${filename}
+        diff -a ${subd1[num1]}/${subr1}/${filename} ${subd2[num2]}/${subr2}/${filename} | head -n1 | awk '{print $1}'
+
+        # compare pot
+        if [ "${subd1[num1]}" == "sub_alf_wht_can_pot" ]
+        then
+          subr1="subregion4"
+        elif [ "${subd1[num1]}" == "sub_pot_alf_wht_can" ]
+        then
+          subr1="subregion1"
+        elif [ "${subd1[num1]}" == "sub_can_pot_alf_wht" ]
+        then
+          subr1="subregion2"
+        elif [ "${subd1[num1]}" == "sub_wht_can_pot_alf" ]
+        then
+          subr1="subregion3"
+        fi
+        if [ "${subd2[num2]}" == "sub_alf_wht_can_pot" ]
+        then
+          subr2="subregion4"
+        elif [ "${subd2[num2]}" == "sub_pot_alf_wht_can" ]
+        then
+          subr2="subregion1"
+        elif [ "${subd2[num2]}" == "sub_can_pot_alf_wht" ]
+        then
+          subr2="subregion2"
+        elif [ "${subd2[num2]}" == "sub_wht_can_pot_alf" ]
+        then
+          subr2="subregion3"
+        fi
+        # do the comparisons
+        echo ${subd1[num1]}/${subr1}/${filename} vs ${subd2[num2]}/${subr2}/${filename}
+        diff -a ${subd1[num1]}/${subr1}/${filename} ${subd2[num2]}/${subr2}/${filename} | head -n1 | awk '{print $1}'
+
+      fi
+    done
+  done
+done
