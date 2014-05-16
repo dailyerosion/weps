@@ -21,7 +21,8 @@
      &                   bhlocirr, bhminirr, bm0monirr,                 &
      &                   bhmadirr, bhndayirr, bhmintirr,                &
      &                   bhzoutflow, bhzrun, bhzinf,                    &
-     &                   bhzsno, bhtsno, bhfsnfrz, bhzsnd,              &
+!     &                   bhzsno, bhtsno, bhfsnfrz, bhzsnd,              &
+     &                   bhzsno, bhtsno, bhfsnfrz,              &
      &                   bhzsmt, bhfice, bhrsk,                         &
      &                   bhtsmx, bhtsmn, bhrwc0,                        &
      &                   daysim, bsfald, bsfalw, bszlyt,                &
@@ -43,7 +44,10 @@
 !     + + + KEY WORDS + + +
 !     hydrology
 
-      use weps_interface_defs
+      use weps_interface_defs, only: hinit, heat, store, et
+      use weps_interface_defs, only: darcy, transp
+      use weps_interface_defs, only: dawn, daylen, radnet, availwc
+      use weps_interface_defs, only: plant_wat_t, movewind, volwatadsorb
       use datetime_mod, only: get_simdate, get_simdate_doy
       use file_io_mod, only: luohydro, luohlayers, luosurfwat, luoweather
       use biomaterial, only: biototal
@@ -83,7 +87,8 @@
       real bhmadirr
       integer bhndayirr, bhmintirr
       real bhzoutflow, bhzrun, bhzinf
-      real bhzsno, bhtsno, bhfsnfrz, bhzsnd
+!      real bhzsno, bhtsno, bhfsnfrz, bhzsnd
+      real bhzsno, bhtsno, bhfsnfrz
       real bhzsmt, bhfice(*), bhrsk(*)
       real bhtsmx(*), bhtsmn(*), bhrwc0(*)
       integer daysim
@@ -352,7 +357,7 @@
 !     &      ,t122,'theta'/,
 !     *  /, t16,34('-'),'mm',33('-')/1x, 100('-'))
  2080 format('# daysim doy yr  h1et%zetp  h1et%zep h1et%zptp  h1et%zea h1et%zpta bhzper&
-     & bhzirr bwzdpt  dprec bhzrun bhzinf   lswc   swc  bhzsnd bhzsno  c&
+     & bhzirr bwzdpt  dprec bhzrun bhzinf   lswc   swc  h1et%zsnd bhzsno  c&
      &heck cropdp rootwc rootwcap bhfwsf surfdry bwtdav vaptrans evaplim&
      &it st_evapr fl_evapr to_evapr')
  2090 format(1x,i5,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),       &
@@ -486,10 +491,10 @@
       ! returned value reflects how much was left behind
       call addsnow(dprecip, dirrig, bwzdpt, bhzirr, bhlocirr,           &
      &             bwtdmn, bwtdmx, bwtdpt, bmzele,                      &
-     &             bhzsno, bhtsno, bhfsnfrz, bhzsnd)
+     &             bhzsno, bhtsno, bhfsnfrz, h1et%zsnd)
 
       ! Convert global to net radiation
-      rn = radnet(bcrlai,bweirr, bhzsno, bhzsnd, bwtdmx, bwtdmn, amalat,&
+      rn = radnet(bcrlai,bweirr, bhzsno, h1et%zsnd, bwtdmx, bwtdmn, amalat,&
      &                 bsfalw, bsfald, idoy, bwtdpt )
 
       ! partition radiation between canopy and surface
@@ -516,7 +521,7 @@
      &           bsfsan, bsfsil, bsfcla, bsfom, bsdblk,                 &
      &           bwtdmn, bwtdmx, bwtyav, rad_surf, bdmres,              &
      &           bhtsmn, bhtsmx, bhtsav, bhfice,                        &
-     &           bhzsno, bhtsno, bhfsnfrz, bhzsnd,                      &
+     &           bhzsno, bhtsno, bhfsnfrz, h1et%zsnd,                      &
      &           bhzsmt, g_soil )
 
       ! add snowmelt to precipitation water for infiltration
@@ -797,7 +802,7 @@
 ! 2090 format(1x,i5,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),1x,f7.3,11(1x,f6.2))
          write(luohydro(isr),2090) daysim,idoy,yr,h1et%zetp, h1et%zep, h1et%zptp,&
      &       h1et%zea, h1et%zpta, bhzper, bhzirr, bwzdpt, dprecip, bhzrun,    &
-     &       bhzinf, lswc, swc, bhzsnd, bhzsno, accheck, cropdp,        &
+     &       bhzinf, lswc, swc, h1et%zsnd, bhzsno, accheck, cropdp,        &
      &      plant_wat_t(0.0,cropdp*mtomm,theta(1),thetaw,bszlyd,layrsn),&
      &       plant_wat_t(0.0,cropdp*mtomm,thetaf,thetaw,bszlyd,layrsn), &
      &       bhfwsf, bhrwc0(12)/bhrwcw(1), bwtdav, vaptrans, evaplimit, &

@@ -15,8 +15,8 @@
       use datetime_mod, only: update_system_time, get_systime_string, julday
       use file_io_mod, only: fopenk, luo_erod, luo_egrd, luo_emit, luo_sgrd
       use erosion_mod, only: erosion, erodinit
-      use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, awzypt, &
-                                          subday, am0eif, am0efl
+      use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, &
+                                          am0eif, am0efl
       use barriers_mod, only: minht_barriers
       use wind_mod, only: anemometer_init
       use grid_mod, only: sbgrid, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim

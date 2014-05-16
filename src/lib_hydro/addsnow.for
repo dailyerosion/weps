@@ -12,7 +12,7 @@
 !     properly adjusts the snow water content, depth, frozen to liquid
 !     ratio and temperature
 
-      use weps_interface_defs
+      use weps_interface_defs, only: wetbulb, statesnow
       use p1unconv_mod, only: mtomm
 
 !     + + + KEY WORDS + + +

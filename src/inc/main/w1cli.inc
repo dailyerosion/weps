@@ -17,7 +17,7 @@
       integer  n_header
       integer  daycdx
       integer  newyrcdx
-      logical  cwrnflg
+!      logical  cwrnflg
       
       real     wwzdpt(mndayr) 
       real     wwdurpt(mndayr)
@@ -34,7 +34,8 @@
       common   /w1cli/                                                  &
      &  wwzdpt, wwtdmx, wwtdmn, wgrad,                                  &
      &  wwtdpt, wwdurpt, wwpeaktpt, wwpeakipt,                          &
-     &  wcd, wcm, wcy, n_header, daycdx, newyrcdx, cwrnflg
+!     &  wcd, wcm, wcy, n_header, daycdx, newyrcdx, cwrnflg
+     &  wcd, wcm, wcy, n_header, daycdx, newyrcdx
 
       save :: /w1cli/
       

@@ -679,7 +679,8 @@
      &                   bhlocirr, bhminirr, bm0monirr,                 &
      &                   bhmadirr, bhndayirr, bhmintirr,                &
      &                   bhzoutflow, bhzrun, bhzinf,                    &
-     &                   bhzsno, bhtsno, bhfsnfrz, bhzsnd,              &
+!     &                   bhzsno, bhtsno, bhfsnfrz, bhzsnd,              &
+     &                   bhzsno, bhtsno, bhfsnfrz, &
      &                   bhzsmt, bhfice, bhrsk,                         &
      &                   bhtsmx, bhtsmn, bhrwc0,                        &
      &                   daysim, bsfald, bsfalw, bszlyt,                &
@@ -1000,9 +1001,6 @@
       type(decomp_factors), intent(in) :: decompfac
       end subroutine bpools
 !------------------------------
-      subroutine cliginit()
-      end subroutine cliginit
-!------------------------------
       subroutine   cmdline()
       end subroutine cmdline
 !------------------------------
@@ -1020,13 +1018,15 @@
       character*(*) filnam
       end subroutine dmpall
 !------------------------------
-    subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
+    subroutine erodsubr_update( sr, restot, croptot, biotot, h1et, subrsurf )
     use biomaterial, only: biototal
+    use hydro_data_struct_defs, only: hydro_derived_et
     use erosion_data_struct_defs, only: subregionsurfacestate
     integer sr                               ! subregion index (eventually obsolete)
     type(biototal), intent(in) :: restot
     type(biototal), intent(in) :: croptot
     type(biototal), intent(in) :: biotot
+    type(hydro_derived_et), intent(in) :: h1et
     type(subregionsurfacestate) :: subrsurf  ! subregion surface conditions (erosion specific set)
     end subroutine erodsubr_update
 !-----------------------------
@@ -1040,20 +1040,6 @@
         type(opercrop_date), dimension(:), intent(in) :: mandate ! array of mandates from management file
         end function get_nperiods
 !-------------------------------
-      subroutine getcli(ccd, ccm, ccy)
-
-      integer ccd,ccm,ccy
-      end subroutine getcli
-!-------------------------------
-      subroutine getwin(cwd,cwm,cwy)
-
-      integer cwd,cwm,cwy  
-      end subroutine getwin
-!--------------------------------
-      subroutine inprun( n_rot_cycles )
-      integer, intent(out) :: n_rot_cycles
-      end subroutine inprun
-!--------------------------------
       subroutine inpsub (isr)
       integer isr
       end subroutine inpsub
@@ -2305,6 +2291,14 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       real, intent(in)  :: fc(*),ul(*), hk(*), ssc(*)
       real, intent(inout) :: st(*), sep
       end subroutine purk
+!-----------------------
+      subroutine saxpar(sand,clay,orgmat,nsl,saxwp,saxfc,saxenp,saxpor, &
+     &                  saxA,saxB,saxks)
+      real, intent(in) :: sand(*),clay(*),orgmat(*)
+      integer, intent(in) :: nsl
+      real, intent(out) :: saxwp(*),saxfc(*),saxenp(*)
+      real, intent(out) :: saxpor(*),saxA(*),saxB(*),saxks(*)
+      end subroutine saxpar
 !-----------------------
       subroutine usdatx( sand, clay, class)
       integer class

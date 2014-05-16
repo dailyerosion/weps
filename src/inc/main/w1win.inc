@@ -19,7 +19,7 @@
       integer  wwy(mndayr)
       integer  daywdx
       integer  newyrwdx
-      logical  wwrnflg
+!      logical  wwrnflg
       
       real     wwadir(mndayr) 
       real     wwudmx(mndayr)
@@ -35,7 +35,8 @@
       common   /w1win/                                                  &
      &  wwadir, wwudmx, wwudmn, wwhrmx,                                 &
      &  wawu, wewudav, wawudav, twe,                                    &
-     &  wwd, wwm, wwy, daywdx, newyrwdx, wwrnflg
+!     &  wwd, wwm, wwy, daywdx, newyrwdx, wwrnflg
+     &  wwd, wwm, wwy, daywdx, newyrwdx
 
       save :: /w1win/
 

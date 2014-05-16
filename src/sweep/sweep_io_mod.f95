@@ -1077,10 +1077,9 @@ module sweep_io_mod
        !        specfied here is appended to the sweep.eplt file.
 
       use file_io_mod, only: fopenk
-      use erosion_data_struct_defs, only: subregionsurfacestate, awdair, anemht, awzzo, wzoflg, &
-                                          ntstep, awadir, awudmx, subday, am0eif
+      use erosion_data_struct_defs, only: subregionsurfacestate
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
-      use grid_mod, only: amasim, amxsim
+      use grid_mod, only: amxsim
 
 
       type(subregionsurfacestate), dimension(:), allocatable :: subrsurf

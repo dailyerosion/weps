@@ -44,8 +44,7 @@
       use Polygons_Mod, only: destroy_polygon
       use subregions_mod, only: subr_poly, acct_poly
       use barriers_mod, only: destroy_barrier, barrier
-      use file_io_mod, only: luo_egrd, luo_erod, luo_emit, luo_sgrd
-      use file_io_mod, only: luogui1, luomandate, luod_above, luod_below, makedir
+      use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir
       use biomaterial
       use debug_mod
       use mandate_mod
@@ -63,6 +62,7 @@
       use sci_report_mod
       use hydro_data_struct_defs
       use wepp_param_mod
+      use climate_input_mod, only: cliginit, getcli
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -764,7 +764,7 @@
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
                   ! transfer data values from submodel structures into erosion input structure
                   do isr=1,nsubr   ! do multiple subregion     
-                     call erodsubr_update( isr, restot(isr), croptot(isr), biotot(isr), subrsurf(isr) )
+                     call erodsubr_update( isr, restot(isr), croptot(isr), biotot(isr), h1et(isr), subrsurf(isr) )
                   end do
                   ! write(*,*) "Start calcwu"
                   call calcwu
@@ -913,7 +913,7 @@
               call print_yr_report_vars(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr)%yr_report)
           end if
           call sci_report( isr, cellstate )
-          call print_ui1_output(luogui1(isr), nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr), mandatbs(0)%mandate) !Use for new WEPS gui
+          call print_ui1_output(luogui1(isr),nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr), mandatbs(0)%mandate) !Use for new WEPS gui
           call print_mandate_output(luomandate(isr), mandatbs(isr)%mperod, mandatbs(isr)%mandate)
       end do
 

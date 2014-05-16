@@ -23,7 +23,7 @@
 !     wp_inrcov - interrill cover (0-1, unitless)
 !
       integer wp_daydis
-	  real wp_inrcov
+      real wp_inrcov
 
 !---------------------------------------------------------
 !     Soil related
@@ -92,9 +92,9 @@
 !     wp_x - ?
 !
       integer wp_nslpts
-	  real wp_efflen, wp_fwidth, wp_avgslp, wp_slplen
-	  real wp_a(mxslp),wp_b(mxslp), wp_xu(mxslp), wp_xl(mxslp)
-	  real wp_y(101),wp_xinput(mxslp),wp_slpinp(mxslp)
+      real wp_efflen, wp_fwidth, wp_avgslp, wp_slplen
+      real wp_a(mxslp),wp_b(mxslp), wp_xu(mxslp), wp_xl(mxslp)
+      real wp_y(101),wp_xinput(mxslp),wp_slpinp(mxslp)
       real wp_x(101)
 
 !---------------------------------------------------------------------
@@ -118,10 +118,10 @@
 !     wp_detailout - detailed event out(1) or only average annual(0)
 !
       real wp_peakro,wp_qout,wp_qin
-	  real wp_effdrr, wp_effdrn, wp_effint, wp_qsout, wp_runoff
-!	  real wp_totalRunoff,wp_totalPrecip,wp_totalSnowrunoff
-!	  integer wp_runoffEvents,wp_precipEvents
-          integer wp_detailout
+      real wp_effdrr, wp_effdrn, wp_effint, wp_qsout, wp_runoff
+!      real wp_totalRunoff,wp_totalPrecip,wp_totalSnowrunoff
+!      integer wp_runoffEvents,wp_precipEvents
+      integer wp_detailout
 !	  integer wp_snowmeltEvents
 	  
 !-------------------------------------------------------------------

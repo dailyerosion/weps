@@ -5,7 +5,7 @@
 
 SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot, cellstate)
 
-    use weps_interface_defs
+    use weps_interface_defs, ignore_me=>update_period_update_vars
     USE pd_var_tables
     USE pd_var_type_def
     use biomaterial, only: biototal

@@ -8,7 +8,7 @@
 ! ***************************************************************** wjr
 ! Wrapper to call hydro
 
-      use weps_interface_defs
+      use weps_interface_defs, only: hdbug, hydro
       use biomaterial, only: biototal, biomatter
       use timer_mod, only: timer, TIMHYDR, TIMSTART, TIMSTOP
       use erosion_data_struct_defs, only: awudav
@@ -71,7 +71,7 @@
      &            ahlocirr(isr), ahminirr(isr), am0monirr(isr),         &
      &            ahmadirr(isr), ahndayirr(isr), ahmintirr(isr),        &
      &            ahzoutflow(isr), ahzrun(isr), ahzinf(isr),            &
-     &            ahzsno(isr), ahtsno(isr), ahfsnfrz(isr), ahzsnd(isr), &
+     &            ahzsno(isr), ahtsno(isr), ahfsnfrz(isr), &
      &            ahzsmt(isr), ahfice(1, isr), ahrsk(1, isr),           &
      &            ahtsmx(1, isr), ahtsmn(1, isr),                       &
      &            ahrwc0(1, isr), daysim,                               &

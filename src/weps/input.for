@@ -26,7 +26,7 @@
 !     WEPS, cligen, windgen
 
 !     + + + GLOBAL COMMON BLOCKS + + +
-      use weps_interface_defs
+      use input_run_mod, only: inprun
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(out) :: n_rot_cycles

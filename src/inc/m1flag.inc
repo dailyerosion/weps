@@ -33,8 +33,8 @@
       integer          am0defoliatefl
       integer          am0kilfl
       integer          am0cropupfl
-      integer          wind_gen_fmt_flag
-      integer          cli_gen_fmt_flag
+!      integer          wind_gen_fmt_flag
+!      integer          cli_gen_fmt_flag
 
       integer          wind_max_flag
 
@@ -54,7 +54,7 @@
      &                  am0oif, am0sif,                                 &
      &                  init_loop, calib_loop, report_loop, calib_done, &
      &                  max_calib_cycles, calib_cycle,                  &
-     &                  wind_gen_fmt_flag, cli_gen_fmt_flag,            &
+!     &                  wind_gen_fmt_flag, cli_gen_fmt_flag,            &
      &                  wind_max_flag
 
       save :: /m1flag/

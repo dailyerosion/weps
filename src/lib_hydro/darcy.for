@@ -21,7 +21,12 @@
 !     + + + KEYWORDS + + +
 !     soil water redistribution, evaporation, runoff, deep percolation
 
-      use weps_interface_defs
+      use weps_interface_defs, only: dvolw, jac, volwatadsorb
+      use weps_interface_defs, only: volwat_matpot_bc, atmpreselev
+      use weps_interface_defs, only: depstore, fricfact, store, calctht0
+      use weps_interface_defs, only: evapredu, availwc
+      use weps_interface_defs, only: unsatcond_bc, intersect
+      use weps_interface_defs, only: diffusive, vaporden
       use file_io_mod, only: luowater
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use p1unconv_mod, only: pi, hrtosec, mtomm, mmtom

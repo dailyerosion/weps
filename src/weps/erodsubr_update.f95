@@ -3,15 +3,15 @@
 !$Revision$
 !$HeadURL$
 
-subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
+subroutine erodsubr_update( sr, restot, croptot, biotot, h1et, subrsurf )
 
 !     +++ PURPOSE +++
 !     print out input file for stand alone erosion
 
 !     + + + Modules Used + + +
-    use weps_interface_defs
     use subregions_mod
     use biomaterial, only: biototal
+    use hydro_data_struct_defs, only: hydro_derived_et
     use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     +++ ARGUMENT DECLARATIONS +++
@@ -19,6 +19,7 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
     type(biototal), intent(in) :: restot
     type(biototal), intent(in) :: croptot
     type(biototal), intent(in) :: biotot
+    type(hydro_derived_et), intent(in) :: h1et
     type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
 
 !     +++ ARGUMENT DEFINITIONS +++
@@ -89,7 +90,7 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
     subrsurf%asxrgw = asxrgw(sr)
     subrsurf%asargo = asargo(sr)
     subrsurf%asxdks = asxdks(sr)
-    subrsurf%ahzsnd = ahzsnd(sr)
+    subrsurf%ahzsnd = h1et%zsnd
 
     do idx = 1, 24
         subrsurf%ahrwc0(idx) = ahrwc0(idx,sr)

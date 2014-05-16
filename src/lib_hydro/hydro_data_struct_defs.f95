@@ -29,6 +29,8 @@ module hydro_data_struct_defs
        real :: zpta ! Actual plant transpiration (mm/day)
        real :: zptp ! potential plant transpiration (mm/day)
        real :: drat ! dryness ratio
+       real :: zsnd ! snow depth (mm)
+       real :: snow_protect ! snow cover greater than snow_depth_thresh
     end type hydro_derived_et
 
   contains
@@ -39,6 +41,7 @@ module hydro_data_struct_defs
 
        integer :: isr, nsubr
        real :: tot_area
+       REAL, PARAMETER :: snow_depth_thresh = 20.0
 
        nsubr = size(subr_poly)
 
@@ -55,6 +58,8 @@ module hydro_data_struct_defs
        h1et(0)%zpta = 0.0
        h1et(0)%zptp = 0.0
        h1et(0)%drat = 0.0
+       h1et(0)%zsnd = 0.0
+       h1et(0)%snow_protect = 0.0
 
        do isr = 1, nsubr
           h1et(0)%zea  = h1et(0)%zea  + h1et(isr)%zea  * subr_poly(isr)%area / tot_area
@@ -64,6 +69,18 @@ module hydro_data_struct_defs
           h1et(0)%zpta = h1et(0)%zpta + h1et(isr)%zpta * subr_poly(isr)%area / tot_area
           h1et(0)%zptp = h1et(0)%zptp + h1et(isr)%zptp * subr_poly(isr)%area / tot_area
           h1et(0)%drat = h1et(0)%drat + h1et(isr)%drat * subr_poly(isr)%area / tot_area
+          h1et(0)%zsnd = h1et(0)%zsnd + h1et(isr)%zsnd * subr_poly(isr)%area / tot_area
+          ! Note that the 20mm depth should be a global parameter
+          ! It is currently stuck in erosion.for as a local parameter there
+          ! this makes the 0 element of the snow cover array the fraction of the total area 
+          ! which is protected from erosion by snow cover (the intent of the reporting code?)
+          IF (h1et(isr)%zsnd > snow_depth_thresh) THEN
+             h1et(isr)%snow_protect = 1.0
+          else
+             h1et(isr)%snow_protect = 0.0
+          end if
+          h1et(0)%snow_protect = h1et(0)%snow_protect + h1et(isr)%snow_protect * subr_poly(isr)%area / tot_area
+
        end do
 
     end subroutine sim_area_ave_h1et

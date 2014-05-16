@@ -7,7 +7,7 @@
 
 ! Contains init code from main
 
-      use weps_interface_defs
+      use weps_interface_defs, only: saxpar
       use hydro_data_struct_defs, only: hydro_derived_et
       use wepp_param_mod, only: wepp_param
 
@@ -58,7 +58,6 @@
       ahzsno(isr) = 0.0
       ahtsno(isr) = 0.0
       ahfsnfrz(isr) = 0.0
-      ahzsnd(isr) = 0.0
 
       ! set hydrologic balance variables
       initswc(isr) = dot_product(ltheta(1:nslay(isr)),                  &
@@ -138,6 +137,7 @@
       h1et%zetp = 0.0
       h1et%zpta = 0.0
       h1et%zptp = 0.0
-
+      h1et%zsnd = 0.0
+      h1et%snow_protect = 0.0
       return
       end

@@ -579,8 +579,9 @@
      &  write(*,*) 'day ',day,' ahrwc0(',idx,') ', ahrwc0(idx, sr)
   140 continue     
 !
-      if (ahzsnd(sr).lt.0.0.or.ahzsnd(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ahzsnd ', ahzsnd(sr)
+! h1et
+!      if (ahzsnd(sr).lt.0.0.or.ahzsnd(sr).gt.tstmax)                    &
+!     &  write(*,*) 'day ',day,' ahzsnd ', ahzsnd(sr)
 
 ! p1werm
 

@@ -16,6 +16,7 @@
       use file_io_mod, only: luiwin
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx,       &
      &                                    awudmn, awudav, subday, ntstep
+      use climate_input_mod, only: wind_gen_fmt_flag, wwrnflg
 
       include 'p1werm.inc'
       include 'm1flag.inc'
@@ -223,7 +224,7 @@
         if( (isleap(cwy) .eqv. .false.) .and. (wwd(daywdx) .eq. 29)     &
      &      .and. (wwm(daywdx) .eq. 2) ) then
           daywdx = daywdx + 1
-        elseif (wwrnflg) then
+        elseif (wwrnflg.gt.0) then
           write (*,*) 'Warning, Simulation date: ',                     &
      &                 cwd, '/', cwm, '/', cwy,                         &
      &                 ' does not match WINDGEN date: ',                &

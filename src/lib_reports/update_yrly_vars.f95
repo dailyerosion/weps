@@ -23,8 +23,6 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
 
-    include "h1db1.inc"         ! ahzsnd(s) snow depth in mm
-
     INTEGER :: i,j              ! local loop variables
     INTEGER :: ngdpt            ! number of simulation grid datapoints
     REAL    :: gdpt_area        ! area of a grid cell (point) in m^2
@@ -44,8 +42,6 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
 
     ! Threshold value for determining erosive wind energy (m/s)
     REAL, PARAMETER :: wind_energy_thresh = 8.0
-    ! Threshold value for determining protective snow depth (mm)
-    REAL, PARAMETER :: snow_depth_thresh = 20.0
 
     ! Threshold value for determining erosion loss and deposition regions
     REAL, PARAMETER :: eros_thresh = 0.025 !kg/m^2
@@ -392,17 +388,9 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
   CALL run_ave(yrot_update(Dryness_ratio), h1et%drat, 1)
   CALL run_ave(yr_update(Dryness_ratio), h1et%drat, 1)
 
-  ! Note that the 20mm depth should be a global parameter
-  ! It is currently stuck in erosion.for as a local parameter there
-  IF (ahzsnd(isr) > snow_depth_thresh) THEN
-     CALL run_ave(yrly_update(Snow_cover), 1.0, 1)
-     CALL run_ave(yrot_update(Snow_cover), 1.0, 1)
-     CALL run_ave(yr_update(Snow_cover), 1.0, 1)
-  ELSE
-     CALL run_ave(yrly_update(Snow_cover), 0.0, 1)
-     CALL run_ave(yrot_update(Snow_cover), 0.0, 1)
-     CALL run_ave(yr_update(Snow_cover), 0.0, 1)
-  END IF
+  CALL run_ave(yrly_update(Snow_cover), h1et%snow_protect, 1)
+  CALL run_ave(yrot_update(Snow_cover), h1et%snow_protect, 1)
+  CALL run_ave(yr_update(Snow_cover), h1et%snow_protect, 1)
 
 END SUBROUTINE update_yrly_update_vars
 
