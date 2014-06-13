@@ -12,7 +12,7 @@
 
       use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: awdair, awadir, awhrmx, awudmx, awudmn, awudav, subday, ntstep
-      use climate_input_mod, only: cli_today, cli_mav, cli_tyav
+      use climate_input_mod, only: cli_today, cli_tyav
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: day
@@ -40,7 +40,6 @@
       include 'c1gen.inc'
       include 'c1db1.inc'
       include 'c1db2.inc'
-      include 'w1pavg.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -173,39 +172,8 @@
 ! w1pagv
 !
 ! wjr,  test values based on definition
-      if (awtmmx.lt.-10.0.or.awtmmx.gt.40.0)                            &
-     &  write(*,*) 'day ',day,' awtmmx ', awtmmx
-!
-! wjr,  test values based on definition
-      if (awtmmn.lt.-20.0.or.awtmmn.gt.30.0)                            &
-     &  write(*,*) 'day ',day,' awtmmn ', awtmmn
-!
-! wjr,  test values based on definition
       if (awdair.lt.0.0.or.awdair.gt.tstmax)                            &
      &  write(*,*) 'day ',day,' awdair ', awdair
-!
-! wjr,  test values based on definition
-      if (awztpt.lt.0.0.or.awztpt.gt.500.0)                             &
-     &  write(*,*) 'day ',day,' awztpt ', awztpt
-!
-! wjr,  test values based on definition
-      if (awtpav.lt.-20.0.or.awtpav.gt.40)                              &
-     &  write(*,*) 'day ',day,' awtpav ', awtpav
-!
-! ***      if (awepir.lt.tstmin.or.awepir.gt.tstmax)
-! ***     *  write(*,*) 'day ',day,' awepir ', awepir
-!
-! wjr,  test values based on definition
-      if (awupav.lt.0.0.or.awupav.gt.30.0)                              &
-     &  write(*,*) 'day ',day,' awupav ', awupav
-!
-! wjr,  test values based on definition
-      if (awnuet.lt.0.or.awnuet.gt.31.0)                                &
-     &  write(*,*) 'day ',day,' awnuet ', awnuet
-!
-! wjr,  test values based on definition
-      if (aweuet.lt.0.0.or.aweuet.gt.tstmax)                            &
-     &  write(*,*) 'day ',day,' aweuet ', aweuet
 !
 ! b1geom
 !

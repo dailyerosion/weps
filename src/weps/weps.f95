@@ -62,7 +62,7 @@
       use sci_report_mod
       use hydro_data_struct_defs
       use wepp_param_mod
-      use climate_input_mod, only: cliginit, getcli
+      use climate_input_mod, only: cliginit, getcli, windinit, getwin
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -504,7 +504,8 @@
 ! Subregion running loop
 ! move the subregion loop into dailly loop by JG
 !      do isr=1,nsubr   ! do multiple subregion      
-      call cliginit     !read "yearly average info" from cligen header
+      call cliginit     ! read "yearly average info" from cligen header
+      call windinit     ! allocate memory for reading subdaily wind velocities from windgen format input file
 
 !     calculate first and last Julian dates for simulation
       ijday = julday(id, im, iy)

@@ -67,8 +67,6 @@ contains
       character*80     awwisn   ! made local since not used anywhere else
 
       logical :: old_run_file
-      ! used for reading in barrier placeholders in old run file format
-      real :: discard1, discard2
 
 !     + + + Local Variable Definitions + + +
 !     isr - subregion index counter
@@ -112,15 +110,15 @@ contains
 
       if( wepsrun_version .lt. 1.1 ) then
          old_run_file = .true.
+         write(*,*) 'WEPS run file not subregion enabled, reading old single region formats'
       else
          old_run_file = .false.
       end if
-
+       
       ! read simulation run file
   100 linnum = linnum + 1
 
       if( old_run_file ) then
-         write(*,*) 'WEPS run file not subregion enabled, reading old single region formats'
          if( wepsrun_version .lt. 1.0 ) then
             if( typidx .eq. 39 ) go to 200
          else if( wepsrun_version .ge. 1.02 ) then
@@ -604,8 +602,12 @@ contains
       case (29)
          if( old_run_file ) then
             read (line,*,err=80) isr
+            ! read in sub-region data (currently only 1 allowed)
             isr = 1
-            ! read in sub-region data (currently only 1 allowed), 
+            ! set subregion polygon point count
+            poly_np = 5
+            ! create polygon container for the single subregion
+            subr_poly(isr) = create_polygon(poly_np)
          else
             read (line,*,err=80) SoilRockFragments(isr)
             write(6,*) 'SoilRockFragments = ', SoilRockFragments(isr)
@@ -718,9 +720,6 @@ contains
                ! read first point pair
                ipol = 1
                read (line,*,err=80) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
-            else
-               ! read line and discard values
-               read (line,*,err=80) discard1, discard2
             end if
          else
             ! number of points in barrier polyline
@@ -737,9 +736,6 @@ contains
                ! read second point pair
                ipol = 2
                read (line,*,err=80) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
-            else
-               ! read line and discard values
-               read (line,*,err=80) discard1, discard2
             end if
          else
             ! read point pair
@@ -750,9 +746,6 @@ contains
          if( old_run_file ) then
             if( nbr .ge. 1 ) then
                read (line,*,err=80) barrier(ibr)%amzbt
-            else
-               ! read line and discard values
-               read (line,*,err=80) discard1
             end if
          else
             ! barrier height
@@ -778,9 +771,6 @@ contains
                ! set second point value to same
                ipol = 2
                barrier(ibr)%param(ipol)%amzbr = barrier(ibr)%param(1)%amzbr
-            else
-               ! read line and discard value
-               read (line,*,err=80) discard1
             end if
          else
             ! barrier width
@@ -796,9 +786,6 @@ contains
                ! set second point value to same
                ipol = 2
                barrier(ibr)%param(ipol)%amxbrw = barrier(ibr)%param(1)%amxbrw
-            else
-               ! read line and discard value
-               read (line,*,err=80) discard1
             end if
          else
             ! barrier porosity
@@ -820,9 +807,6 @@ contains
                ! set second point value to same
                ipol = 2
                barrier(ibr)%param(ipol)%ampbr = barrier(ibr)%param(1)%ampbr
-            else
-               ! read line and discard value
-               read (line,*,err=80) discard1
             end if
          else
             ! barrier type character string

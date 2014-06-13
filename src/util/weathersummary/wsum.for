@@ -25,7 +25,6 @@
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'w1pavg.inc'
       include 'm1sim.inc'
 
 !     + + + LOCAL COMMON BLACKS + + +
@@ -42,6 +41,7 @@
       real wdir, wvel, winde, xmav
       real ysumpt, ysumdt, ysumpi, ysumu, yavedt, yavepi
       real ysumwe, yavewe
+      real awupav
 
 !     + + + LOCAL DEFINITIONS + + +
 
@@ -93,12 +93,6 @@
 !   yavedt    - average of yearly temperature.
 !   yavepi    - average of yearly global radiation.
 !   yrfl      - flag set to record the current year.
-
-!     + + + FUNCTIONS CALLED + + +
-!       lstday
-
-!     + + + FUNCTIONS DECLARATIONS + + +
-       integer  lstday
 
 !     + + + DATA INITIALIZATIONS + + +
 !     set initialization flags

@@ -227,10 +227,10 @@
 #
 #     +++ WEATHER +++
 #
-#     awdair, R, (w1pavg.inc) Air density (kg/m^3)
+#     awdair, R, Air density (kg/m^3)
  1.2
 #
-#     awadir, R, (w1wind.inc) Wind direction (deg)
+#     awadir, R, Wind direction (deg)
  270
 #
 #     ntstep, I, (local variable) Number of intervals/day to run EROSION
