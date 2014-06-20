@@ -10,7 +10,7 @@ module biomaterial
   type biostate_mass
      real :: standstem      ! standing stem mass (kg/m^2)
      real :: standleaf      ! standing leaf mass (kg/m^2)
-     real :: standstore     ! standing storage mass (kg/m^2)
+     real :: standstore     ! standing storage mass (kg/m^2) (head with seed, or vegetative head (cabbage, pineapple))
      real :: flatstem       ! flat stem mass (kg/m^2)
      real :: flatleaf       ! flat leaf mass (kg/m^2)
      real :: flatstore      ! flat storage mass (kg/m^2)
@@ -22,6 +22,7 @@ module biomaterial
      real, dimension(:), pointer :: leafz          ! buried leaf mass by layer (kg/m^2)
      real, dimension(:), pointer :: storez         ! buried (from above ground) storage mass by layer (kg/m^2)
      real, dimension(:), pointer :: rootstorez     ! buried storage root mass by layer (kg/m^2)
+                                                   ! tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts)
      real, dimension(:), pointer :: rootfiberz     ! buried fibrous root mass by layer (kg/m^2)
   end type biostate_mass
 
@@ -87,6 +88,8 @@ module biomaterial
      real :: mbgstore     ! buried residue storage mass (kg/m^2)
 
      real :: mbgrootstore ! buried storage root mass (kg/m^2)
+                          ! tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts)
+
      real :: mbgrootfiber ! buried fibrous root mass (kg/m^2)
 
      real :: m            ! Total mass (standing + flat + roots + buried) (kg/m^2)
@@ -106,12 +109,11 @@ module biomaterial
                           ! (combination of leaf area and stem area indices)
      real :: ffcv         ! biomass cover - flat (m^2/m^2)
      real :: fscv         ! biomass cover - standing (m^2/m^2)
-     real :: ftcv         ! biomass cover - total (m^2/m^2)
-                          ! (ffcv + fscv)
+     real :: ftcv         ! biomass cover - total (m^2/m^2) (ffcv + fscv)
      real :: fcancov      ! fraction of soil surface covered by canopy (m^2/m^2)
   end type bioderived
 
-  type biodatabase_decomp ! from c1db1.inc
+  type biodatabase ! from c1db1.inc, c1gen.inc
      real, dimension(1:5) :: dkrate ! array of decomposition rate parameters
                                     ! acdkrate(1) - standing residue mass decomposition rate (d<1) (g/g/day)
                                     ! acdkrate(2) - flat residue mass decomposition rate (d<1) (g/g/day)
@@ -131,7 +133,7 @@ module biomaterial
                           ! 3   o Non fragile-med (corn) residue
                           ! 4   o Woody-large residue
                           ! 5   o Gravel-rock
-  end type biodatabase_decomp
+  end type biodatabase
 
   type bio_output_units
      integer :: dec
@@ -145,7 +147,7 @@ module biomaterial
      type(biostate_growth) :: growth
      type(biostate_decomp) :: decomp
      type(bioderived) :: deriv
-     type(biodatabase_decomp) :: database
+     type(biodatabase) :: database
   end type biomatter
 
 
@@ -187,7 +189,7 @@ module biomaterial
      real :: evapredu     ! composite evaporation reduction from across pools (ea/ep ratio)
 
      real :: xrow         ! row spacing (m)
-     integer :: c0rg          ! seeding location in relation to ridge, 0 - plant in furrow, 1 - plant on ridge
+     integer :: c0rg      ! seeding location in relation to ridge, 0 - plant in furrow, 1 - plant on ridge
 
 !     abdstm - Total number of stems (#/m^2) (live and dead) May be a weighted summation.
 !     abzht  - Composite weighted average biomass height (m)
@@ -235,6 +237,32 @@ module biomaterial
   end type decomp_factors
 
 contains
+
+  subroutine print_biomatter(biomat)
+     type(biomatter), intent(in) :: biomat
+
+     integer :: idx
+
+     write(*,*) 'biomatter name: ', trim(adjustl(biomat%bname))
+     write(*,*) 'output unit:    ', biomat%luo%dec
+     write(*,*) 'mass standing   ', biomat%mass%standstem, biomat%mass%standleaf, biomat%mass%standstore
+     write(*,*) 'mass flat       ', biomat%mass%flatstem, biomat%mass%flatleaf, biomat%mass%flatstore, &
+                                    biomat%mass%flatrootstore, biomat%mass%flatrootfiber
+     do idx = 1, size(biomat%mass%rootstorez)
+        write(*,*) 'mass buried ', idx, biomat%mass%stemz(idx), biomat%mass%leafz(idx), biomat%mass%storez(idx), &
+                                        biomat%mass%rootstorez(idx), biomat%mass%rootfiberz(idx)
+     end do
+     !write(*,*) '', biomat%geometry
+     !write(*,*) '', biomat%growth
+     !write(*,*) '', biomat%decomp
+     !write(*,*) '', biomat%deriv
+     !write(*,*) '', biomat%database
+  end subroutine print_biomatter
+
+  subroutine print_biototal(biotot)
+     type(biomatter), intent(in) :: biotot
+
+  end subroutine print_biototal
 
   function create_biomatter(nsoillay, ncanlay) result(biomat)
      integer, intent(in) :: nsoillay

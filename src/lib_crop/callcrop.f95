@@ -134,22 +134,12 @@
 
       ! update all derived globals for crop global variables
       call cropupdate(                                                  &
-     &      crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
-     &      crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
-     &      crop%mass%stemz, &
-     &      crop%mass%rootstorez,crop%mass%rootfiberz, &
-     &      crop%geometry%zht, crop%geometry%dstm, crop%geometry%zrtd, &
-     &      crop%deriv%mbgstem, &
-     &      crop%deriv%mbgrootstore, crop%deriv%mbgrootfiber, crop%geometry%xstmrep, &
-     &      crop%deriv%m, crop%deriv%mst, crop%deriv%mf, crop%deriv%mrt, crop%deriv%mrtz, &
-     &      crop%deriv%rcd, aszrgh(sr), aszlyd(1,sr), &
-     &      crop%deriv%rsai, crop%deriv%rlai, crop%deriv%rsaz, crop%deriv%rlaz, &
-     &      crop%deriv%ffcv, crop%deriv%fscv, crop%deriv%ftcv, crop%deriv%fcancov, &
+     &      aszrgh(sr), aszlyd(1,sr), &
      &      ac0rg(sr), acxrow(sr), &
-     &      nslay(sr), ac0ssa(sr), ac0ssb(sr), crop%database%sla,              &
-     &      crop%database%covfact, crop%database%ck, crop%database%xstm, acdpop(sr), &
+     &      nslay(sr), ac0ssa(sr), ac0ssb(sr), &
+     &      acdpop(sr), &
      &      ahztranspdepth(sr), ahzfurcut(sr),                          &
-     &      ahztransprtmin(sr), ahztransprtmax(sr), croptot  )
+     &      ahztransprtmin(sr), ahztransprtmax(sr), crop, croptot  )
 
       ! dependent variables have been updated
       am0cropupfl = 0

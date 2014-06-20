@@ -37,11 +37,14 @@
       crop%mass%flatstem = 0.0
       crop%mass%flatleaf = 0.0
       crop%mass%flatstore = 0.0
-
+      crop%mass%flatrootstore = 0.0
+      crop%mass%flatrootfiber = 0.0
       do idx = 1, size(crop%mass%rootstorez)
+          crop%mass%stemz(idx) = 0.0
+          crop%mass%leafz(idx) = 0.0
+          crop%mass%storez(idx) = 0.0
           crop%mass%rootstorez(idx) = 0.0
           crop%mass%rootfiberz(idx) = 0.0
-          crop%mass%stemz(idx) = 0.0
       end do
 
       acxrow(isr) = 0.0

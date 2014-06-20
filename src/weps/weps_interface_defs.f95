@@ -1138,42 +1138,25 @@
 
 !--------------- MANAGE Subroutines --------------------------
       subroutine cropupdate(                                            &
-     &      bcmstandstem, bcmstandleaf, bcmstandstore,                  &
-     &      bcmflatstem, bcmflatleaf, bcmflatstore,                     &
-     &      bcmbgstemz,                                                 &
-     &      bcmrootstorez, bcmrootfiberz,                               &
-     &      bczht, bcdstm, bczrtd,                                      &
-     &      bcmbgstem,                                                  &
-     &      bcmrootstore, bcmrootfiber, bcxstmrep,                      &
-     &      bcm, bcmst, bcmf, bcmrt, bcmrtz,                            &
-     &      bcrcd, bszrgh, bszlyd,                                      &
-     &      bcrsai, bcrlai, bcrsaz, bcrlaz,                             &
-     &      bcffcv, bcfscv, bcftcv, bcfcancov,                          &
+     &      bszrgh, bszlyd,                                             &
      &      bc0rg, bcxrow,                                              &
-     &      bnslay, bc0ssa, bc0ssb, bc0sla,                             &
-     &      bcovfact, bc0ck, bcxstm, bcdpop,                            &
+     &      bnslay, bc0ssa, bc0ssb,                                     &
+     &      bcdpop,                                                     &
      &      bhztranspdepth, bhzfurcut,                                  &
-     &      bhztransprtmin, bhztransprtmax, croptot )
+     &      bhztransprtmin, bhztransprtmax, crop, croptot )
       use biomaterial, only: biomatter, biototal
-      real bcmstandstem, bcmstandleaf, bcmstandstore
-      real bcmflatstem, bcmflatleaf, bcmflatstore
-      real bcmbgstemz(*)
-      real bcmrootstorez(*), bcmrootfiberz(*)
-      real bczht, bcdstm, bczrtd
+      use p1unconv_mod, only: pi
+      use wind_mod, only: biodrag
       real bszrgh, bszlyd(*)
       integer bc0rg
       real bcxrow
-      real bcmbgstem, bcmrootstore, bcmrootfiber, bcxstmrep
-      real bcm, bcmst, bcmf, bcmrt, bcmrtz(*)
-      real bcrcd
-      real bcrsai, bcrlai, bcrsaz(*), bcrlaz(*)
-      real bcffcv, bcfscv, bcftcv, bcfcancov
+      integer bnslay
+      real bc0ssa, bc0ssb
+      real bcdpop
       real bhztranspdepth, bhzfurcut
       real bhztransprtmin, bhztransprtmax
-      type(biototal), intent(inout) :: croptot
-      integer bnslay
-      real bc0ssa, bc0ssb, bc0sla
-      real bcovfact, bc0ck, bcxstm, bcdpop
+      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
+      type(biototal), intent(inout) :: croptot  ! structure containing derived variables
       end subroutine cropupdate
 !----------------------
       subroutine   dogroup (sr)      

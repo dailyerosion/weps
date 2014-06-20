@@ -473,10 +473,10 @@
       am0gdf = .true.
 
       do isr = 1, nsubr
-          ! this prints header to plot.out file
-          call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
-          ! this prints header to decomp.out file
-          call bpools( isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr) )
+         ! this prints header to plot.out file
+         call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
+         ! this prints header to decomp.out file
+         call bpools( isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr) )
       end do
 
 !     Initializations unique to particular submodels
@@ -488,18 +488,22 @@
          call cropinit(isr, crop(isr))
          ! initialize all dependent variables
          call updres(isr, residue(1:size(residue,1), isr), restot(isr))
-         call sumbio(isr, crop(isr), residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))
          call sci_stir_init(isr)
+         ! Initialize the water holding capacity variable
+         call hydrinit(isr, h1et(isr), wp(isr))
+         ! initialize soil depth to bottom of layers (mm) from layer thickness (mm)
+         call soilinit(isr)
+         ! initialize croptot variables
+         call cropupdate( aszrgh(isr), aszlyd(1,isr), ac0rg(isr), acxrow(isr), nslay(isr), ac0ssa(isr), ac0ssb(isr), &
+                          acdpop(isr), ahztranspdepth(isr), ahzfurcut(isr), ahztransprtmin(isr), ahztransprtmax(isr), &
+                          crop(isr), croptot(isr) )
+         call sumbio(isr, crop(isr), residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))
 
-        ! Initialize the water holding capacity variable
-        call hydrinit(isr, h1et(isr), wp(isr))
+      !write(*,*) 'biotot, croptot, restot', biotot(isr), croptot(isr), restot(isr)
 
-        ! initialize soil depth to bottom of layers (mm) from layer thickness (mm)
-        call soilinit(isr)
-
-        if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
-           call init_wepp(isr, 0)        ! specific wepp initializations
-        end if
+         if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
+            call init_wepp(isr, 0)        ! specific wepp initializations
+         end if
       end do
 ! Subregion running loop
 ! move the subregion loop into dailly loop by JG
