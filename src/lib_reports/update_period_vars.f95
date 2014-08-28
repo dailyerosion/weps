@@ -264,6 +264,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
              period_update(Salt_loss)%val = period_update(Salt_loss)%val + (cellstate(i,j)%egt - cellstate(i,j)%egtss)/ngdpt
              period_update(Susp_loss)%val = period_update(Susp_loss)%val + cellstate(i,j)%egtss/ngdpt
              period_update(PM10_loss)%val = period_update(PM10_loss)%val + cellstate(i,j)%egt10/ngdpt
+             period_update(PM2_5_loss)%val = period_update(PM2_5_loss)%val + cellstate(i,j)%egt2_5/ngdpt
           end if
        END DO
     END DO
@@ -271,6 +272,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
     period_update(Salt_loss)%cnt = period_update(Salt_loss)%cnt + 1
     period_update(Susp_loss)%cnt = period_update(Susp_loss)%cnt + 1
     period_update(PM10_loss)%cnt = period_update(PM10_loss)%cnt + 1
+    period_update(PM2_5_loss)%cnt = period_update(PM2_5_loss)%cnt + 1
 
      IF (Have_Erosion) THEN !We have erosion somewhere
        period_update(N_eros_events)%val = period_update(N_eros_events)%val + 1.0  ! Count the erosion events

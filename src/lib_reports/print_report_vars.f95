@@ -51,11 +51,12 @@ SUBROUTINE print_report_vars(nperiods, nrot_yrs, rep_report, mandate)
 
     print *,""
     write (UNIT=6,FMT="(A)",ADVANCE="NO") &
-          "  yr   Erosion     Salt     Susp     PM10   "
+          "  yr   Erosion     Salt     Susp     PM10     PM2.5  "
     write (UNIT=6,FMT="(3(A))",ADVANCE="YES") &
           "Salt_1   Salt_2   Salt_3   Salt_4   ", &
           "Susp_1   Susp_2   Susp_3   Susp_4   ", &
-          "PM10_1   PM10_2   PM10_3   PM10_4"
+          "PM10_1   PM10_2   PM10_3   PM10_4   ", &
+          "PM2.5_1  PM2.5_2  PM2.5_3  PM2.5_4"
     write (UNIT=6,FMT="(4(A))",ADVANCE="YES") &
           "--------------------------------------------", &
           "------------------------------------",         &
@@ -64,11 +65,12 @@ SUBROUTINE print_report_vars(nperiods, nrot_yrs, rep_report, mandate)
 
     do y = 0, nrot_yrs
           write (UNIT=6,FMT="(i5)",ADVANCE="NO") y
-          write (UNIT=6,FMT="(16(f9.2))",ADVANCE="YES")                 &
+          write (UNIT=6,FMT="(21(f9.2))",ADVANCE="YES")                 &
                       rep_report%yrly_report(Eros_loss,y)%val,                     &
                       rep_report%yrly_report(Salt_loss,y)%val,                     &
                       rep_report%yrly_report(Susp_loss,y)%val,                     &
                       rep_report%yrly_report(PM10_loss,y)%val,                     &
+                      rep_report%yrly_report(PM2_5_loss,y)%val,                    &
                       rep_report%yrly_report(Salt_1,y)%val,                        &
                       rep_report%yrly_report(Salt_2,y)%val,                        &
                       rep_report%yrly_report(Salt_3,y)%val,                        &
@@ -80,7 +82,11 @@ SUBROUTINE print_report_vars(nperiods, nrot_yrs, rep_report, mandate)
                       rep_report%yrly_report(PM10_1,y)%val,                        &
                       rep_report%yrly_report(PM10_2,y)%val,                        &
                       rep_report%yrly_report(PM10_3,y)%val,                        &
-                      rep_report%yrly_report(PM10_4,y)%val
+                      rep_report%yrly_report(PM10_4,y)%val,                        &
+                      rep_report%yrly_report(PM2_5_1,y)%val,                       &
+                      rep_report%yrly_report(PM2_5_2,y)%val,                       &
+                      rep_report%yrly_report(PM2_5_3,y)%val,                       &
+                      rep_report%yrly_report(PM2_5_4,y)%val
 
     end do
     write (UNIT=6,FMT="(4(A))",ADVANCE="YES") &
@@ -162,11 +168,12 @@ SUBROUTINE print_report_vars(nperiods, nrot_yrs, rep_report, mandate)
 
     print *,""
     write (UNIT=6,FMT="(A)",ADVANCE="NO") &
-          " yr mn  Erosion     Salt     Susp     PM10   " 
+          " yr mn  Erosion     Salt     Susp     PM10     PM2.5  " 
     write (UNIT=6,FMT="(3(A))",ADVANCE="YES") &
           "Salt_1   Salt_2   Salt_3   Salt_4   ", &
           "Susp_1   Susp_2   Susp_3   Susp_4   ", &
-          "PM10_1   PM10_2   PM10_3   PM10_4"
+          "PM10_1   PM10_2   PM10_3   PM10_4   ", &
+          "PM2.5_1  PM2.5_2  PM2.5_3  PM2.5_4"
     write (UNIT=6,FMT="(5(A))",ADVANCE="YES") &
           " --------------------------------------------", &
           "------------------------------------",          &
@@ -176,11 +183,12 @@ SUBROUTINE print_report_vars(nperiods, nrot_yrs, rep_report, mandate)
     do y = 0, nrot_yrs
        do m = 1, 12
           write (UNIT=6,FMT="(i3,i3)",ADVANCE="NO") y,m
-          write (UNIT=6,FMT="(16(f9.2))",ADVANCE="YES")                &
+          write (UNIT=6,FMT="(21(f9.2))",ADVANCE="YES")                &
                       rep_report%monthly_report(Eros_loss,m,y)%val,               &
                       rep_report%monthly_report(Salt_loss,m,y)%val,               &
                       rep_report%monthly_report(Susp_loss,m,y)%val,               &
                       rep_report%monthly_report(PM10_loss,m,y)%val,               &
+                      rep_report%monthly_report(PM2_5_loss,m,y)%val,              &
                       rep_report%monthly_report(Salt_1,m,y)%val,                  &
                       rep_report%monthly_report(Salt_2,m,y)%val,                  &
                       rep_report%monthly_report(Salt_3,m,y)%val,                  &
@@ -192,7 +200,11 @@ SUBROUTINE print_report_vars(nperiods, nrot_yrs, rep_report, mandate)
                       rep_report%monthly_report(PM10_1,m,y)%val,                  &
                       rep_report%monthly_report(PM10_2,m,y)%val,                  &
                       rep_report%monthly_report(PM10_3,m,y)%val,                  &
-                      rep_report%monthly_report(PM10_4,m,y)%val
+                      rep_report%monthly_report(PM10_4,m,y)%val,                  &
+                      rep_report%monthly_report(PM2_5_1,m,y)%val,                 &
+                      rep_report%monthly_report(PM2_5_2,m,y)%val,                 &
+                      rep_report%monthly_report(PM2_5_3,m,y)%val,                 &
+                      rep_report%monthly_report(PM2_5_4,m,y)%val
 
        end do
     end do
@@ -318,11 +330,12 @@ SUBROUTINE print_report_vars(nperiods, nrot_yrs, rep_report, mandate)
 
     print *,""
     write (UNIT=6,FMT="(A)",ADVANCE="NO") &
-          "  pd   Erosion     Salt     Susp     PM10   " 
+          "  pd   Erosion     Salt     Susp     PM10     PM2.5  " 
     write (UNIT=6,FMT="(3(A))",ADVANCE="YES") &
           "Salt_1   Salt_2   Salt_3   Salt_4   ", &
           "Susp_1   Susp_2   Susp_3   Susp_4   ", &
-          "PM10_1   PM10_2   PM10_3   PM10_4"
+          "PM10_1   PM10_2   PM10_3   PM10_4   ", &
+          "PM2.5_1  PM2.5_2  PM2.5_3  PM2.5_4"
     write (UNIT=6,FMT="(5(A))",ADVANCE="YES") &
           "--------------------------------------------", &
           "------------------------------------",         &
@@ -331,11 +344,12 @@ SUBROUTINE print_report_vars(nperiods, nrot_yrs, rep_report, mandate)
 
     do p = 1, nperiods
           write (UNIT=6,FMT="(i5)",ADVANCE="NO") p
-          write (UNIT=6,FMT="(16(f9.2))",ADVANCE="YES")                &
+          write (UNIT=6,FMT="(21(f9.2))",ADVANCE="YES")                &
                       rep_report%period_report(Eros_loss,p)%val,                     &
                       rep_report%period_report(Salt_loss,p)%val,                     &
                       rep_report%period_report(Susp_loss,p)%val,                     &
                       rep_report%period_report(PM10_loss,p)%val,                     &
+                      rep_report%period_report(PM2_5_loss,p)%val,                    &
                       rep_report%period_report(Salt_1,p)%val,                        &
                       rep_report%period_report(Salt_2,p)%val,                        &
                       rep_report%period_report(Salt_3,p)%val,                        &
@@ -347,7 +361,11 @@ SUBROUTINE print_report_vars(nperiods, nrot_yrs, rep_report, mandate)
                       rep_report%period_report(PM10_1,p)%val,                        &
                       rep_report%period_report(PM10_2,p)%val,                        &
                       rep_report%period_report(PM10_3,p)%val,                        &
-                      rep_report%period_report(PM10_4,p)%val
+                      rep_report%period_report(PM10_4,p)%val,                        &
+                      rep_report%period_report(PM2_5_1,p)%val,                       &
+                      rep_report%period_report(PM2_5_2,p)%val,                       &
+                      rep_report%period_report(PM2_5_3,p)%val,                       &
+                      rep_report%period_report(PM2_5_4,p)%val
 
     end do
     write (UNIT=6,FMT="(5(A))",ADVANCE="YES") &

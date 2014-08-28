@@ -58,6 +58,12 @@ module sberod_mod
       real :: q10x(0:imax, 0:jmax)  ! discharge in x direction (pm10)
       real :: q10y(0:imax, 0:jmax)  ! discharge in y direction (pm10)
 
+      ! pm2.5 is a fixed fraction of pm10
+      ! ref: Hongli Lia, John Tatarko, Matthew Kucharski, and Zhi Dong. 2014.
+      ! PM-2.5 and PM-10 Emission from Agricultural Soils by Wind Erosion, Aeolian Research (Draft)
+      real, parameter :: pm2_5_pm10 = 0.1693
+
+
 !     +++ END SPECIFICATIONS +++
 
       ! set initial conditions to zero
@@ -133,6 +139,7 @@ module sberod_mod
           cellstate(i,j)%egt   = cellstate(i,j)%egt + eg + egss
           cellstate(i,j)%egtss = cellstate(i,j)%egtss + egss
           cellstate(i,j)%egt10 = cellstate(i,j)%egt10 + eg10
+          cellstate(i,j)%egt2_5 = pm2_5_pm10 * cellstate(i,j)%egt10
 
           !* update discharge scalars
           aa = abs(-ix*cos_awa)
@@ -168,6 +175,7 @@ module sberod_mod
             if (qssx(i,j) .gt. 1.0e-10) then
               cellstate(i2+i3,j)%egtss = cellstate(i2+i3,j)%egtss + time*qssx(i2, j)
               cellstate(i2+i3,j)%egt10 = cellstate(i2+i3,j)%egt10 + time*q10x(i2, j)
+              cellstate(i2+i3,j)%egt2_5 = pm2_5_pm10 * cellstate(i2+i3,j)%egt10
             endif
           endif
           if (j .eq. i5) then
@@ -177,6 +185,7 @@ module sberod_mod
             if (qssy(i,j) .gt. 1.0e-10) then
               cellstate(i,i5+i6)%egtss = cellstate(i,i5+i6)%egtss + time*qssy(i,i5)
               cellstate(i,i5+i6)%egt10 = cellstate(i,i5+i6)%egt10 + time*q10y(i,i5)
+              cellstate(i,i5+i6)%egt2_5 = pm2_5_pm10 * cellstate(i,i5+i6)%egt10
             endif
           endif
 

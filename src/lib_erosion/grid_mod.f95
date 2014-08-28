@@ -141,6 +141,7 @@ module grid_mod
             cellstate(i,j)%egtcs = 0.0
             cellstate(i,j)%egtss = 0.0
             cellstate(i,j)%egt10 = 0.0
+            cellstate(i,j)%egt2_5 = 0.0
          end do
       end do
       

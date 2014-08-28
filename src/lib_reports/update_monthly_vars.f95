@@ -106,11 +106,13 @@ SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cell
              monthly_update(Salt_loss)%val = monthly_update(Salt_loss)%val + (cellstate(i,j)%egt - cellstate(i,j)%egtss)/ngdpt
              monthly_update(Susp_loss)%val = monthly_update(Susp_loss)%val + cellstate(i,j)%egtss/ngdpt
              monthly_update(PM10_loss)%val = monthly_update(PM10_loss)%val + cellstate(i,j)%egt10/ngdpt
+             monthly_update(PM2_5_loss)%val = monthly_update(PM2_5_loss)%val + cellstate(i,j)%egt2_5/ngdpt
 
              mrot_update(Eros_loss,cm)%val = mrot_update(Eros_loss,cm)%val + cellstate(i,j)%egt/ngdpt
              mrot_update(Salt_loss,cm)%val = mrot_update(Salt_loss,cm)%val + (cellstate(i,j)%egt - cellstate(i,j)%egtss)/ngdpt
              mrot_update(Susp_loss,cm)%val = mrot_update(Susp_loss,cm)%val + cellstate(i,j)%egtss/ngdpt
              mrot_update(PM10_loss,cm)%val = mrot_update(PM10_loss,cm)%val + cellstate(i,j)%egt10/ngdpt
+             mrot_update(PM2_5_loss,cm)%val = mrot_update(PM2_5_loss,cm)%val + cellstate(i,j)%egt2_5/ngdpt
           end if
        END DO
     END DO
@@ -118,11 +120,13 @@ SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cell
     monthly_update(Salt_loss)%cnt = monthly_update(Salt_loss)%cnt + 1
     monthly_update(Susp_loss)%cnt = monthly_update(Susp_loss)%cnt + 1
     monthly_update(PM10_loss)%cnt = monthly_update(PM10_loss)%cnt + 1
+    monthly_update(PM2_5_loss)%cnt = monthly_update(PM2_5_loss)%cnt + 1
 
     mrot_update(Eros_loss,cm)%cnt = mrot_update(Eros_loss,cm)%cnt + 1
     mrot_update(Salt_loss,cm)%cnt = mrot_update(Salt_loss,cm)%cnt + 1
     mrot_update(Susp_loss,cm)%cnt = mrot_update(Susp_loss,cm)%cnt + 1
     mrot_update(PM10_loss,cm)%cnt = mrot_update(PM10_loss,cm)%cnt + 1
+    mrot_update(PM2_5_loss,cm)%cnt = mrot_update(PM2_5_loss,cm)%cnt + 1
 
     IF (Have_Erosion) THEN !We have erosion somewhere
        monthly_update(N_eros_events)%val = monthly_update(N_eros_events)%val + 1.0  ! Count the erosion events
@@ -233,6 +237,8 @@ END IF  !Have_Erosion flag
     monthly_update(Susp_3)%val = monthly_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
     monthly_update(PM10_1)%val = monthly_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
     monthly_update(PM10_3)%val = monthly_update(PM10_3)%val + cellstate(i,jmax)%egt10/(imax-1)
+    monthly_update(PM2_5_1)%val = monthly_update(PM2_5_1)%val + cellstate(i,0)%egt2_5/(imax-1)
+    monthly_update(PM2_5_3)%val = monthly_update(PM2_5_3)%val + cellstate(i,jmax)%egt2_5/(imax-1)
 
     mrot_update(Salt_1,cm)%val = mrot_update(Salt_1,cm)%val + cellstate(i,0)%egt/(imax-1)
     mrot_update(Salt_3,cm)%val = mrot_update(Salt_3,cm)%val + cellstate(i,jmax)%egt/(imax-1)
@@ -240,6 +246,8 @@ END IF  !Have_Erosion flag
     mrot_update(Susp_3,cm)%val = mrot_update(Susp_3,cm)%val + cellstate(i,jmax)%egtss/(imax-1)
     mrot_update(PM10_1,cm)%val = mrot_update(PM10_1,cm)%val + cellstate(i,0)%egt10/(imax-1)
     mrot_update(PM10_3,cm)%val = mrot_update(PM10_3,cm)%val + cellstate(i,jmax)%egt10/(imax-1)
+    mrot_update(PM2_5_1,cm)%val = mrot_update(PM2_5_1,cm)%val + cellstate(i,0)%egt2_5/(imax-1)
+    mrot_update(PM2_5_3,cm)%val = mrot_update(PM2_5_3,cm)%val + cellstate(i,jmax)%egt2_5/(imax-1)
   END DO
   monthly_update(Salt_1)%cnt = monthly_update(Salt_1)%cnt + 1
   monthly_update(Salt_3)%cnt = monthly_update(Salt_3)%cnt + 1
@@ -247,6 +255,8 @@ END IF  !Have_Erosion flag
   monthly_update(Susp_3)%cnt = monthly_update(Susp_3)%cnt + 1
   monthly_update(PM10_1)%cnt = monthly_update(PM10_1)%cnt + 1
   monthly_update(PM10_3)%cnt = monthly_update(PM10_3)%cnt + 1
+  monthly_update(PM2_5_1)%cnt = monthly_update(PM2_5_1)%cnt + 1
+  monthly_update(PM2_5_3)%cnt = monthly_update(PM2_5_3)%cnt + 1
 
   mrot_update(Salt_1,cm)%cnt = mrot_update(Salt_1,cm)%cnt + 1
   mrot_update(Salt_3,cm)%cnt = mrot_update(Salt_3,cm)%cnt + 1
@@ -254,6 +264,8 @@ END IF  !Have_Erosion flag
   mrot_update(Susp_3,cm)%cnt = mrot_update(Susp_3,cm)%cnt + 1
   mrot_update(PM10_1,cm)%cnt = mrot_update(PM10_1,cm)%cnt + 1
   mrot_update(PM10_3,cm)%cnt = mrot_update(PM10_3,cm)%cnt + 1
+  mrot_update(PM2_5_1,cm)%cnt = mrot_update(PM2_5_1,cm)%cnt + 1
+  mrot_update(PM2_5_3,cm)%cnt = mrot_update(PM2_5_3,cm)%cnt + 1
 
   DO j = 0, jmax 
     ! Note that egt contains creep+saltation not total soil loss on boundary
@@ -263,6 +275,8 @@ END IF  !Have_Erosion flag
     monthly_update(Susp_4)%val = monthly_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
     monthly_update(PM10_2)%val = monthly_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)
     monthly_update(PM10_4)%val = monthly_update(PM10_4)%val + cellstate(imax,j)%egt10/(jmax-1)
+    monthly_update(PM2_5_2)%val = monthly_update(PM2_5_2)%val + cellstate(0,j)%egt2_5/(jmax-1)
+    monthly_update(PM2_5_4)%val = monthly_update(PM2_5_4)%val + cellstate(imax,j)%egt2_5/(jmax-1)
 
     mrot_update(Salt_2,cm)%val = mrot_update(Salt_2,cm)%val + cellstate(0,j)%egt/(jmax-1)
     mrot_update(Salt_4,cm)%val = mrot_update(Salt_4,cm)%val + cellstate(imax,j)%egt/(jmax-1)
@@ -270,6 +284,8 @@ END IF  !Have_Erosion flag
     mrot_update(Susp_4,cm)%val = mrot_update(Susp_4,cm)%val + cellstate(imax,j)%egtss/(jmax-1)
     mrot_update(PM10_2,cm)%val = mrot_update(PM10_2,cm)%val + cellstate(0,j)%egt10/(jmax-1)
     mrot_update(PM10_4,cm)%val = mrot_update(PM10_4,cm)%val + cellstate(imax,j)%egt10/(jmax-1)
+    mrot_update(PM2_5_2,cm)%val = mrot_update(PM2_5_2,cm)%val + cellstate(0,j)%egt2_5/(jmax-1)
+    mrot_update(PM2_5_4,cm)%val = mrot_update(PM2_5_4,cm)%val + cellstate(imax,j)%egt2_5/(jmax-1)
   END DO
   monthly_update(Salt_2)%cnt = monthly_update(Salt_2)%cnt + 1
   monthly_update(Salt_4)%cnt = monthly_update(Salt_4)%cnt + 1
@@ -277,6 +293,8 @@ END IF  !Have_Erosion flag
   monthly_update(Susp_4)%cnt = monthly_update(Susp_4)%cnt + 1
   monthly_update(PM10_2)%cnt = monthly_update(PM10_2)%cnt + 1
   monthly_update(PM10_4)%cnt = monthly_update(PM10_4)%cnt + 1
+  monthly_update(PM2_5_2)%cnt = monthly_update(PM2_5_2)%cnt + 1
+  monthly_update(PM2_5_4)%cnt = monthly_update(PM2_5_4)%cnt + 1
 
   mrot_update(Salt_2,cm)%cnt = mrot_update(Salt_2,cm)%cnt + 1
   mrot_update(Salt_4,cm)%cnt = mrot_update(Salt_4,cm)%cnt + 1
@@ -284,6 +302,8 @@ END IF  !Have_Erosion flag
   mrot_update(Susp_4,cm)%cnt = mrot_update(Susp_4,cm)%cnt + 1
   mrot_update(PM10_2,cm)%cnt = mrot_update(PM10_2,cm)%cnt + 1
   mrot_update(PM10_4,cm)%cnt = mrot_update(PM10_4,cm)%cnt + 1
+  mrot_update(PM2_5_2,cm)%cnt = mrot_update(PM2_5_2,cm)%cnt + 1
+  mrot_update(PM2_5_4,cm)%cnt = mrot_update(PM2_5_4,cm)%cnt + 1
 
   !variables running averaged for period
   we = 0.0

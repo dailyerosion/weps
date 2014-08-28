@@ -109,17 +109,20 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
              yrly_update(Salt_loss)%val = yrly_update(Salt_loss)%val + (cellstate(i,j)%egt - cellstate(i,j)%egtss)/ngdpt
              yrly_update(Susp_loss)%val = yrly_update(Susp_loss)%val + cellstate(i,j)%egtss/ngdpt
              yrly_update(PM10_loss)%val = yrly_update(PM10_loss)%val + cellstate(i,j)%egt10/ngdpt
+             yrly_update(PM2_5_loss)%val = yrly_update(PM2_5_loss)%val + cellstate(i,j)%egt2_5/ngdpt
 
              yrot_update(Eros_loss)%val = yrot_update(Eros_loss)%val + cellstate(i,j)%egt/ngdpt
              yrot_update(Salt_loss)%val = yrot_update(Salt_loss)%val + (cellstate(i,j)%egt - cellstate(i,j)%egtss)/ngdpt
              yrot_update(Susp_loss)%val = yrot_update(Susp_loss)%val + cellstate(i,j)%egtss/ngdpt
              yrot_update(PM10_loss)%val = yrot_update(PM10_loss)%val + cellstate(i,j)%egt10/ngdpt
+             yrot_update(PM2_5_loss)%val = yrot_update(PM2_5_loss)%val + cellstate(i,j)%egt2_5/ngdpt
 
              ! For a year by year report of yearly (and rotation year) averaged variables
              yr_update(Eros_loss)%val = yr_update(Eros_loss)%val + cellstate(i,j)%egt/ngdpt
              yr_update(Salt_loss)%val = yr_update(Salt_loss)%val + (cellstate(i,j)%egt - cellstate(i,j)%egtss)/ngdpt
              yr_update(Susp_loss)%val = yr_update(Susp_loss)%val + cellstate(i,j)%egtss/ngdpt
              yr_update(PM10_loss)%val = yr_update(PM10_loss)%val + cellstate(i,j)%egt10/ngdpt
+             yr_update(PM2_5_loss)%val = yr_update(PM2_5_loss)%val + cellstate(i,j)%egt10/ngdpt
           end if
        END DO
     END DO
@@ -127,17 +130,20 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     yrly_update(Salt_loss)%cnt = yrly_update(Salt_loss)%cnt + 1
     yrly_update(Susp_loss)%cnt = yrly_update(Susp_loss)%cnt + 1
     yrly_update(PM10_loss)%cnt = yrly_update(PM10_loss)%cnt + 1
+    yrly_update(PM2_5_loss)%cnt = yrly_update(PM2_5_loss)%cnt + 1
 
     yrot_update(Eros_loss)%cnt = yrot_update(Eros_loss)%cnt + 1
     yrot_update(Salt_loss)%cnt = yrot_update(Salt_loss)%cnt + 1
     yrot_update(Susp_loss)%cnt = yrot_update(Susp_loss)%cnt + 1
     yrot_update(PM10_loss)%cnt = yrot_update(PM10_loss)%cnt + 1
+    yrot_update(PM2_5_loss)%cnt = yrot_update(PM2_5_loss)%cnt + 1
 
     ! For a year by year report of yearly (and rotation year) averaged variables
     yr_update(Eros_loss)%cnt = yr_update(Eros_loss)%cnt + 1
     yr_update(Salt_loss)%cnt = yr_update(Salt_loss)%cnt + 1
     yr_update(Susp_loss)%cnt = yr_update(Susp_loss)%cnt + 1
     yr_update(PM10_loss)%cnt = yr_update(PM10_loss)%cnt + 1
+    yr_update(PM2_5_loss)%cnt = yr_update(PM2_5_loss)%cnt + 1
 
     IF (Have_Erosion) THEN !We have erosion somewhere
        yrly_update(N_eros_events)%val = yrly_update(N_eros_events)%val + 1.0  ! Count the erosion events
@@ -286,6 +292,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     yrly_update(Susp_3)%val = yrly_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
     yrly_update(PM10_1)%val = yrly_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
     yrly_update(PM10_3)%val = yrly_update(PM10_3)%val + cellstate(i,jmax)%egt10/(imax-1)
+    yrly_update(PM2_5_1)%val = yrly_update(PM2_5_1)%val + cellstate(i,0)%egt2_5/(imax-1)
+    yrly_update(PM2_5_3)%val = yrly_update(PM2_5_3)%val + cellstate(i,jmax)%egt2_5/(imax-1)
 
     yrot_update(Salt_1)%val = yrot_update(Salt_1)%val + cellstate(i,0)%egt/(imax-1)
     yrot_update(Salt_3)%val = yrot_update(Salt_3)%val + cellstate(i,jmax)%egt/(imax-1)
@@ -293,6 +301,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     yrot_update(Susp_3)%val = yrot_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
     yrot_update(PM10_1)%val = yrot_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
     yrot_update(PM10_3)%val = yrot_update(PM10_3)%val + cellstate(i,jmax)%egt10/(imax-1)
+    yrot_update(PM2_5_1)%val = yrot_update(PM2_5_1)%val + cellstate(i,0)%egt2_5/(imax-1)
+    yrot_update(PM2_5_3)%val = yrot_update(PM2_5_3)%val + cellstate(i,jmax)%egt2_5/(imax-1)
 
     ! For a year by year report of yearly (and rotation year) averaged variables
     yr_update(Salt_1)%val = yr_update(Salt_1)%val + cellstate(i,0)%egt/(imax-1)
@@ -301,6 +311,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     yr_update(Susp_3)%val = yr_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
     yr_update(PM10_1)%val = yr_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
     yr_update(PM10_3)%val = yr_update(PM10_3)%val + cellstate(i,jmax)%egt10/(imax-1)
+    yr_update(PM2_5_1)%val = yr_update(PM2_5_1)%val + cellstate(i,0)%egt2_5/(imax-1)
+    yr_update(PM2_5_3)%val = yr_update(PM2_5_3)%val + cellstate(i,jmax)%egt2_5/(imax-1)
   END DO
   yrly_update(Salt_1)%cnt = yrly_update(Salt_1)%cnt + 1
   yrly_update(Salt_3)%cnt = yrly_update(Salt_3)%cnt + 1
@@ -308,6 +320,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
   yrly_update(Susp_3)%cnt = yrly_update(Susp_3)%cnt + 1
   yrly_update(PM10_1)%cnt = yrly_update(PM10_1)%cnt + 1
   yrly_update(PM10_3)%cnt = yrly_update(PM10_3)%cnt + 1
+  yrly_update(PM2_5_1)%cnt = yrly_update(PM2_5_1)%cnt + 1
+  yrly_update(PM2_5_3)%cnt = yrly_update(PM2_5_3)%cnt + 1
 
   yrot_update(Salt_1)%cnt = yrot_update(Salt_1)%cnt + 1
   yrot_update(Salt_3)%cnt = yrot_update(Salt_3)%cnt + 1
@@ -315,6 +329,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
   yrot_update(Susp_3)%cnt = yrot_update(Susp_3)%cnt + 1
   yrot_update(PM10_1)%cnt = yrot_update(PM10_1)%cnt + 1
   yrot_update(PM10_3)%cnt = yrot_update(PM10_3)%cnt + 1
+  yrot_update(PM2_5_1)%cnt = yrot_update(PM2_5_1)%cnt + 1
+  yrot_update(PM2_5_3)%cnt = yrot_update(PM2_5_3)%cnt + 1
 
   ! For a year by year report of yearly (and rotation year) averaged variables
   yr_update(Salt_1)%cnt = yr_update(Salt_1)%cnt + 1
@@ -323,6 +339,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
   yr_update(Susp_3)%cnt = yr_update(Susp_3)%cnt + 1
   yr_update(PM10_1)%cnt = yr_update(PM10_1)%cnt + 1
   yr_update(PM10_3)%cnt = yr_update(PM10_3)%cnt + 1
+  yr_update(PM2_5_1)%cnt = yr_update(PM2_5_1)%cnt + 1
+  yr_update(PM2_5_3)%cnt = yr_update(PM2_5_3)%cnt + 1
 
   DO j = 0, jmax 
     ! Note that egt contains creep+saltation not total soil loss on boundary
@@ -332,6 +350,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     yrly_update(Susp_4)%val = yrly_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
     yrly_update(PM10_2)%val = yrly_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)
     yrly_update(PM10_4)%val = yrly_update(PM10_4)%val + cellstate(imax,j)%egt10/(jmax-1)
+    yrly_update(PM2_5_2)%val = yrly_update(PM2_5_2)%val + cellstate(0,j)%egt2_5/(jmax-1)
+    yrly_update(PM2_5_4)%val = yrly_update(PM2_5_4)%val + cellstate(imax,j)%egt2_5/(jmax-1)
 
     yrot_update(Salt_2)%val = yrot_update(Salt_2)%val + cellstate(0,j)%egt/(jmax-1)
     yrot_update(Salt_4)%val = yrot_update(Salt_4)%val + cellstate(imax,j)%egt/(jmax-1)
@@ -339,6 +359,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     yrot_update(Susp_4)%val = yrot_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
     yrot_update(PM10_2)%val = yrot_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)
     yrot_update(PM10_4)%val = yrot_update(PM10_4)%val + cellstate(imax,j)%egt10/(jmax-1)
+    yrot_update(PM2_5_2)%val = yrot_update(PM2_5_2)%val + cellstate(0,j)%egt2_5/(jmax-1)
+    yrot_update(PM2_5_4)%val = yrot_update(PM2_5_4)%val + cellstate(imax,j)%egt2_5/(jmax-1)
 
     ! For a year by year report of yearly (and rotation year) averaged variables
     yr_update(Salt_2)%val = yr_update(Salt_2)%val + cellstate(0,j)%egt/(jmax-1)
@@ -347,6 +369,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     yr_update(Susp_4)%val = yr_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
     yr_update(PM10_2)%val = yr_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)
     yr_update(PM10_4)%val = yr_update(PM10_4)%val + cellstate(imax,j)%egt10/(jmax-1)
+    yr_update(PM2_5_2)%val = yr_update(PM2_5_2)%val + cellstate(0,j)%egt2_5/(jmax-1)
+    yr_update(PM2_5_4)%val = yr_update(PM2_5_4)%val + cellstate(imax,j)%egt2_5/(jmax-1)
   END DO
   yrly_update(Salt_2)%cnt = yrly_update(Salt_2)%cnt + 1
   yrly_update(Salt_4)%cnt = yrly_update(Salt_4)%cnt + 1
@@ -354,6 +378,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
   yrly_update(Susp_4)%cnt = yrly_update(Susp_4)%cnt + 1
   yrly_update(PM10_2)%cnt = yrly_update(PM10_2)%cnt + 1
   yrly_update(PM10_4)%cnt = yrly_update(PM10_4)%cnt + 1
+  yrly_update(PM2_5_2)%cnt = yrly_update(PM2_5_2)%cnt + 1
+  yrly_update(PM2_5_4)%cnt = yrly_update(PM2_5_4)%cnt + 1
 
   yrot_update(Salt_2)%cnt = yrot_update(Salt_2)%cnt + 1
   yrot_update(Salt_4)%cnt = yrot_update(Salt_4)%cnt + 1
@@ -361,6 +387,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
   yrot_update(Susp_4)%cnt = yrot_update(Susp_4)%cnt + 1
   yrot_update(PM10_2)%cnt = yrot_update(PM10_2)%cnt + 1
   yrot_update(PM10_4)%cnt = yrot_update(PM10_4)%cnt + 1
+  yrot_update(PM2_5_2)%cnt = yrot_update(PM2_5_2)%cnt + 1
+  yrot_update(PM2_5_4)%cnt = yrot_update(PM2_5_4)%cnt + 1
 
   ! For a year by year report of yearly (and rotation year) averaged variables
   yr_update(Salt_2)%cnt = yr_update(Salt_2)%cnt + 1
@@ -369,6 +397,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
   yr_update(Susp_4)%cnt = yr_update(Susp_4)%cnt + 1
   yr_update(PM10_2)%cnt = yr_update(PM10_2)%cnt + 1
   yr_update(PM10_4)%cnt = yr_update(PM10_4)%cnt + 1
+  yr_update(PM2_5_2)%cnt = yr_update(PM2_5_2)%cnt + 1
+  yr_update(PM2_5_4)%cnt = yr_update(PM2_5_4)%cnt + 1
 
   !variables running averaged for period
   we = 0.0

@@ -66,11 +66,12 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
     write (UNIT=luogui1,FMT="(1(A))",ADVANCE="NO") 'gloss_per_evnt|'
     write (UNIT=luogui1,FMT="(1(A))",ADVANCE="NO") 'nloss_per_evnt|'
     write (UNIT=luogui1,FMT="(1(A))",ADVANCE="NO") 'gross_loss|'
-    write (UNIT=luogui1,FMT="(16(A))",ADVANCE="NO")                     &
-              '  tot_loss|','  crp+salt|','    suspen|','      pm10|',  &
+    write (UNIT=luogui1,FMT="(21(A))",ADVANCE="NO")                     &
+              '  tot_loss|','  crp+salt|','    suspen|','      pm10|','     pm2.5|',  &
               '       cs1|','       cs2|','       cs3|','       cs4|',  &
               '       ss1|','       ss2|','       ss3|','       ss4|',  &
-              '       pm1|','       pm2|','       pm3|','       pm4|'
+              '    pm10_1|','    pm10_2|','    pm10_3|','    pm10_4|',  &
+              '   pm2.5_1|','   pm2.5_2|','   pm2.5_3|','   pm2.5_4|'
     write (UNIT=luogui1,FMT="(11(A))",ADVANCE="NO")                     &
               ' salt_loss|',' loss_area|',' loss_frac|',                &
               '  salt_dep|','  dep_area|','  dep_frac|',                &
@@ -178,11 +179,12 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                       rep_report%period_report(Eros_loss,p)%val -                  &
                                   rep_report%period_report(Salt_dep2,p)%val
 
-             write (UNIT=luogui1,FMT="(16(f10.4,'|'))",ADVANCE="NO")    &
+             write (UNIT=luogui1,FMT="(21(f10.4,'|'))",ADVANCE="NO")    &
                       rep_report%period_report(Eros_loss,p)%val,                   &
                       rep_report%period_report(Salt_loss,p)%val,                   &
                       rep_report%period_report(Susp_loss,p)%val,                   &
                       rep_report%period_report(PM10_loss,p)%val,                   &
+                      rep_report%period_report(PM2_5_loss,p)%val,                  &
                       rep_report%period_report(Salt_1,p)%val,                      &
                       rep_report%period_report(Salt_2,p)%val,                      &
                       rep_report%period_report(Salt_3,p)%val,                      &
@@ -194,7 +196,11 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                       rep_report%period_report(PM10_1,p)%val,                      &
                       rep_report%period_report(PM10_2,p)%val,                      &
                       rep_report%period_report(PM10_3,p)%val,                      &
-                      rep_report%period_report(PM10_4,p)%val
+                      rep_report%period_report(PM10_4,p)%val,                      &
+                      rep_report%period_report(PM2_5_1,p)%val,                     &
+                      rep_report%period_report(PM2_5_2,p)%val,                     &
+                      rep_report%period_report(PM2_5_3,p)%val,                     &
+                      rep_report%period_report(PM2_5_4,p)%val
 
              write (UNIT=luogui1,FMT="(11(f10.4,'|'))",ADVANCE="NO")    &
                       rep_report%period_report(Salt_loss2_rate,p)%val,             &
@@ -315,11 +321,12 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                       rep_report%yrly_report(Eros_loss,y)%val -                    &
                                rep_report%yrly_report(Salt_dep2,y)%val
 
-       write (UNIT=luogui1,FMT="(16(f10.4,'|'))",ADVANCE="NO")          &
+       write (UNIT=luogui1,FMT="(21(f10.4,'|'))",ADVANCE="NO")          &
                       rep_report%yrly_report(Eros_loss,y)%val,                     &
                       rep_report%yrly_report(Salt_loss,y)%val,                     &
                       rep_report%yrly_report(Susp_loss,y)%val,                     &
                       rep_report%yrly_report(PM10_loss,y)%val,                     &
+                      rep_report%yrly_report(PM2_5_loss,y)%val,                    &
                       rep_report%yrly_report(Salt_1,y)%val,                        &
                       rep_report%yrly_report(Salt_2,y)%val,                        &
                       rep_report%yrly_report(Salt_3,y)%val,                        &
@@ -331,7 +338,11 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                       rep_report%yrly_report(PM10_1,y)%val,                        &
                       rep_report%yrly_report(PM10_2,y)%val,                        &
                       rep_report%yrly_report(PM10_3,y)%val,                        &
-                      rep_report%yrly_report(PM10_4,y)%val
+                      rep_report%yrly_report(PM10_4,y)%val,                        &
+                      rep_report%yrly_report(PM2_5_1,y)%val,                       &
+                      rep_report%yrly_report(PM2_5_2,y)%val,                       &
+                      rep_report%yrly_report(PM2_5_3,y)%val,                       &
+                      rep_report%yrly_report(PM2_5_4,y)%val
 
              write (UNIT=luogui1,FMT="(11(f10.4,'|'))",ADVANCE="NO")    &
                       rep_report%yrly_report(Salt_loss2_rate,y)%val,               &
@@ -396,11 +407,12 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                       rep_report%monthly_report(Eros_loss,m,y)%val -               &
                                 rep_report%monthly_report(Salt_dep2,m,y)%val
 
-       write (UNIT=luogui1,FMT="(16(f10.4,'|'))",ADVANCE="NO")          &
+       write (UNIT=luogui1,FMT="(21(f10.4,'|'))",ADVANCE="NO")          &
                       rep_report%monthly_report(Eros_loss,m,y)%val,                &
                       rep_report%monthly_report(Salt_loss,m,y)%val,                &
                       rep_report%monthly_report(Susp_loss,m,y)%val,                &
                       rep_report%monthly_report(PM10_loss,m,y)%val,                &
+                      rep_report%monthly_report(PM2_5_loss,m,y)%val,               &
                       rep_report%monthly_report(Salt_1,m,y)%val,                   &
                       rep_report%monthly_report(Salt_2,m,y)%val,                   &
                       rep_report%monthly_report(Salt_3,m,y)%val,                   &
@@ -412,7 +424,11 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                       rep_report%monthly_report(PM10_1,m,y)%val,                   &
                       rep_report%monthly_report(PM10_2,m,y)%val,                   &
                       rep_report%monthly_report(PM10_3,m,y)%val,                   &
-                      rep_report%monthly_report(PM10_4,m,y)%val
+                      rep_report%monthly_report(PM10_4,m,y)%val,                   &
+                      rep_report%monthly_report(PM2_5_1,m,y)%val,                  &
+                      rep_report%monthly_report(PM2_5_2,m,y)%val,                  &
+                      rep_report%monthly_report(PM2_5_3,m,y)%val,                  &
+                      rep_report%monthly_report(PM2_5_4,m,y)%val
 
              write (UNIT=luogui1,FMT="(11(f10.4,'|'))",ADVANCE="NO")    &
                       rep_report%monthly_report(Salt_loss2_rate,m,y)%val,          &
@@ -476,11 +492,12 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                           rep_report%yr_report(Eros_loss,y)%val -                    &
                                  rep_report%yr_report(Salt_dep2,y)%val
 
-        write (UNIT=luogui1,FMT="(16(f10.4,'|'))",ADVANCE="NO")           &
+        write (UNIT=luogui1,FMT="(21(f10.4,'|'))",ADVANCE="NO")           &
                           rep_report%yr_report(Eros_loss,y)%val,                     &
                           rep_report%yr_report(Salt_loss,y)%val,                     &
                           rep_report%yr_report(Susp_loss,y)%val,                     &
                           rep_report%yr_report(PM10_loss,y)%val,                     &
+                          rep_report%yr_report(PM2_5_loss,y)%val,                    &
                           rep_report%yr_report(Salt_1,y)%val,                        &
                           rep_report%yr_report(Salt_2,y)%val,                        &
                           rep_report%yr_report(Salt_3,y)%val,                        &
@@ -492,7 +509,11 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                           rep_report%yr_report(PM10_1,y)%val,                        &
                           rep_report%yr_report(PM10_2,y)%val,                        &
                           rep_report%yr_report(PM10_3,y)%val,                        &
-                          rep_report%yr_report(PM10_4,y)%val
+                          rep_report%yr_report(PM10_4,y)%val,                        &
+                          rep_report%yr_report(PM2_5_1,y)%val,                       &
+                          rep_report%yr_report(PM2_5_2,y)%val,                       &
+                          rep_report%yr_report(PM2_5_3,y)%val,                       &
+                          rep_report%yr_report(PM2_5_4,y)%val
     
         write (UNIT=luogui1,FMT="(11(f10.4,'|'))",ADVANCE="NO")           &
                           rep_report%yr_report(Salt_loss2_rate,y)%val,               &
@@ -555,11 +576,12 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                       rep_report%yrly_report(Eros_loss,y)%val -                    &
                             rep_report%yrly_report(Salt_dep2,y)%val
 
-    write (UNIT=luogui1,FMT="(16(f10.4,'|'))",ADVANCE="NO")             &
+    write (UNIT=luogui1,FMT="(21(f10.4,'|'))",ADVANCE="NO")             &
                       rep_report%yrly_report(Eros_loss,y)%val,                     &
                       rep_report%yrly_report(Salt_loss,y)%val,                     &
                       rep_report%yrly_report(Susp_loss,y)%val,                     &
                       rep_report%yrly_report(PM10_loss,y)%val,                     &
+                      rep_report%yrly_report(PM2_5_loss,y)%val,                    &
                       rep_report%yrly_report(Salt_1,y)%val,                        &
                       rep_report%yrly_report(Salt_2,y)%val,                        &
                       rep_report%yrly_report(Salt_3,y)%val,                        &
@@ -571,7 +593,11 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                       rep_report%yrly_report(PM10_1,y)%val,                        &
                       rep_report%yrly_report(PM10_2,y)%val,                        &
                       rep_report%yrly_report(PM10_3,y)%val,                        &
-                      rep_report%yrly_report(PM10_4,y)%val
+                      rep_report%yrly_report(PM10_4,y)%val,                        &
+                      rep_report%yrly_report(PM2_5_1,y)%val,                       &
+                      rep_report%yrly_report(PM2_5_2,y)%val,                       &
+                      rep_report%yrly_report(PM2_5_3,y)%val,                       &
+                      rep_report%yrly_report(PM2_5_4,y)%val
 
     write (UNIT=luogui1,FMT="(11(f10.4,'|'))",ADVANCE="NO")             &
                       rep_report%yrly_report(Salt_loss2_rate,y)%val,               &

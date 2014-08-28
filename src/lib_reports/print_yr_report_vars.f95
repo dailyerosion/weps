@@ -47,11 +47,12 @@ SUBROUTINE print_yr_report_vars(nperiods, nrot_yrs, ncycles, yr_report)
 
     print *,""
     write (UNIT=6,FMT="(A)",ADVANCE="NO") &
-          "  yr   Erosion     Salt     Susp     PM10   "
+          "  yr   Erosion     Salt     Susp     PM10     PM2.5  "
     write (UNIT=6,FMT="(3(A))",ADVANCE="YES") &
           "Salt_1   Salt_2   Salt_3   Salt_4   ", &
           "Susp_1   Susp_2   Susp_3   Susp_4   ", &
-          "PM10_1   PM10_2   PM10_3   PM10_4"
+          "PM10_1   PM10_2   PM10_3   PM10_4   ", &
+          "PM2.5_1  PM2.5_2  PM2.5_3  PM2.5_4"
     write (UNIT=6,FMT="(4(A))",ADVANCE="YES") &
           "--------------------------------------------", &
           "------------------------------------",         &
@@ -60,11 +61,12 @@ SUBROUTINE print_yr_report_vars(nperiods, nrot_yrs, ncycles, yr_report)
 
     do y = 1, nrot_yrs*ncycles
           write (UNIT=6,FMT="(i5)",ADVANCE="NO") y
-          write (UNIT=6,FMT="(16(f9.2))",ADVANCE="YES")                 &
+          write (UNIT=6,FMT="(21(f9.2))",ADVANCE="YES")                 &
                       yr_report(Eros_loss,y)%val,                     &
                       yr_report(Salt_loss,y)%val,                     &
                       yr_report(Susp_loss,y)%val,                     &
                       yr_report(PM10_loss,y)%val,                     &
+                      yr_report(PM2_5_loss,y)%val,                    &
                       yr_report(Salt_1,y)%val,                        &
                       yr_report(Salt_2,y)%val,                        &
                       yr_report(Salt_3,y)%val,                        &
@@ -76,7 +78,11 @@ SUBROUTINE print_yr_report_vars(nperiods, nrot_yrs, ncycles, yr_report)
                       yr_report(PM10_1,y)%val,                        &
                       yr_report(PM10_2,y)%val,                        &
                       yr_report(PM10_3,y)%val,                        &
-                      yr_report(PM10_4,y)%val
+                      yr_report(PM10_4,y)%val,                        &
+                      yr_report(PM2_5_1,y)%val,                       &
+                      yr_report(PM2_5_2,y)%val,                       &
+                      yr_report(PM2_5_3,y)%val,                       &
+                      yr_report(PM2_5_4,y)%val
 
     end do
     write (UNIT=6,FMT="(4(A))",ADVANCE="YES") &

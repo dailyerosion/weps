@@ -38,6 +38,7 @@ module erosion_data_struct_defs
      real :: egtcs        ! Total creep and saltation soil loss at grid point accumulated for a time period (kg/m^2)
      real :: egtss        ! Total suspension soil loss at grid point accumulated for a time period (kg/m^2)
      real :: egt10        ! Total < 10 micron soil loss at grid point accumulated for a time period (kg/m^2)
+     real :: egt2_5       ! Total < 2.5 micron soil loss at grid point accumulated for a time period (kg/m^2)
      real :: wus          ! Soil surface friction velocity (m/s)
      real :: wust         ! Soil surface threshold friction velocity for emission (m/s)
      real :: wusto        ! Soil surface threshold friction velocity for emission (bare, smooth surface with sf84ic, wus minus flat biomass and wetness effects) (m/s)
