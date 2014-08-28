@@ -53,6 +53,8 @@ none
 0.0  0.0
 #    RFD-XLength(meters)  RFD-YLength(meters)
 365.76  365.76
+#   RFD-XGrid(integer) RFD-YGrid(integer)  Grid resolution
+0 0
 #   RFD-Scales(place holder line - needed for older versions of WEPS)
 5.5 5.5
 #
@@ -122,9 +124,9 @@ WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
 #   RFD-SubregionNo
 # 2
 #   RFD-SubmodelOutput
-7 1 1 1 3 15
+7 1 1 1 3
 #   RFD-DebugOutput
-1 1 1 1 1 1
+1 1 1 1 1
 #
 #   Subregion polygon coordinates (meters)
 # number of coordinates
@@ -148,9 +150,9 @@ Alfalfa, fall seed, 3yr-Potato-WWheat, circle irr CMZ49.man
 #   RFD-SubregionNo
 # 3
 #   RFD-SubmodelOutput
-7 1 1 1 3 15
+7 1 1 1 3
 #   RFD-DebugOutput
-1 1 1 1 1 1
+1 1 1 1 1
 #
 #   Subregion region coordinates (meters)
 # number of coordinates
@@ -174,9 +176,9 @@ Wheat,winter,after fallow,conv.,CMZ50.man
 #   RFD-SubregionNo
 # 4
 #   RFD-SubmodelOutput
-7 1 1 1 3 15
+7 1 1 1 3
 #   RFD-DebugOutput
-1 1 1 1 1 1
+1 1 1 1 1
 #
 #   Subregion region coordinates (meters)
 # number of coordinates
