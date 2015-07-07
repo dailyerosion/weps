@@ -185,23 +185,26 @@ program test_compaction
     
   if( proc_serdp ) then
     ! open output file
+    call fopenk (luo1, 'Veg_BD_all_norm.dat', 'replace')
+    write(luo1,'(a)',ADVANCE="NO") 'data.num SoilCode TrackCode Plot Rep Pass Loc soil.name BD.settled BD.proc Paticle.den '
+    write(luo1,'(a)',ADVANCE="NO") 'BD.proc.wc.0.5cm BD.proc.wc.5.10cm BD.proc.wc.10.15cm '
+    write(luo1,'(a)',ADVANCE="NO") 'bsdbd_0_5cm bsdbd_5_10cm bsdbd_10_15cm '
+    write(luo1,*) 'BD.norm.wc.0.5cm BD.norm.wc.5.10cm BD.norm.wc.10.15cm'
+    do idx = 1, nsoil
+      proc_wc_0_5 = setbdproc_wc( bsfcla(idx), bsfsan(idx), bsfom(idx), bsdpart(idx), bhrwc_0_5(idx))
+      proc_wc_5_10 = setbdproc_wc( bsfcla(idx), bsfsan(idx), bsfom(idx), bsdpart(idx), bhrwc_5_10(idx))
+      proc_wc_10_15 = setbdproc_wc( bsfcla(idx), bsfsan(idx), bsfom(idx), bsdpart(idx), bhrwc_10_15(idx))
+      BD_norm_0_5 = (bsdbd_0_5(idx) - bsdsblk(idx)) / (proc_wc_0_5 - bsdsblk(idx))
+      BD_norm_5_10 = (bsdbd_5_10(idx) - bsdsblk(idx)) / (proc_wc_5_10 - bsdsblk(idx))
+      BD_norm_10_15 = (bsdbd_10_15(idx) - bsdsblk(idx)) / (proc_wc_10_15 - bsdsblk(idx))
+      write(luo1,*) datanumber(idx), soilcode(idx), trackcode(idx), plotnumber(idx), rep_number(idx), passnumber(idx), &
+                    loc_code(idx), soilname(idx), bsdsblk(idx), bsdprocblk(idx), bsdpart(idx), &
+                    proc_wc_0_5, proc_wc_5_10, proc_wc_10_15, &
+                    bsdbd_0_5(idx), bsdbd_5_10(idx), bsdbd_10_15(idx), &
+                    BD_norm_0_5, BD_norm_5_10, BD_norm_10_15
+    end do
+    close(luo1)
     call fopenk (luo1, 'Veg_BD_norm.dat', 'replace')
-    !write(luo1,'(a)',ADVANCE="NO") 'data.num SoilCode TrackCode Plot Rep Pass Loc soil.name BD.settled BD.proc Paticle.den '
-    !write(luo1,'(a)',ADVANCE="NO") 'BD.proc.wc.0.5cm BD.proc.wc.5.10cm BD.proc.wc.10.15cm '
-    !write(luo1,'(a)',ADVANCE="NO") 'bsdbd_0_5cm bsdbd_5_10cm bsdbd_10_15cm '
-    !write(luo1,*) 'BD.norm.wc.0.5cm BD.norm.wc.5.10cm BD.norm.wc.10.15cm'
-    !do idx = 1, nsoil
-    !  proc_wc_0_5 = setbdproc_wc( bsfcla(idx), bsfsan(idx), bsfom(idx), bsdpart(idx), bhrwc_0_5(idx))
-    !  proc_wc_5_10 = setbdproc_wc( bsfcla(idx), bsfsan(idx), bsfom(idx), bsdpart(idx), bhrwc_5_10(idx))
-    !  proc_wc_10_15 = setbdproc_wc( bsfcla(idx), bsfsan(idx), bsfom(idx), bsdpart(idx), bhrwc_10_15(idx))
-    !  BD_norm_0_5 = (bsdbd_0_5(idx) - bsdsblk(idx)) / (proc_wc_0_5 - bsdsblk(idx))
-    !  BD_norm_5_10 = (bsdbd_5_10(idx) - bsdsblk(idx)) / (proc_wc_5_10 - bsdsblk(idx))
-    !  BD_norm_10_15 = (bsdbd_10_15(idx) - bsdsblk(idx)) / (proc_wc_10_15 - bsdsblk(idx))
-    !  write(luo1,*) datanumber(idx), soilcode(idx), trackcode(idx), plotnumber(idx), rep_number(idx), passnumber(idx), &
-    !                loc_code(idx), soilname(idx), bsdsblk(idx), bsdprocblk(idx), bsdpart(idx), &
-    !                proc_wc_0_5, proc_wc_5_10, proc_wc_10_15, &
-    !                bsdbd_0_5(idx), bsdbd_5_10(idx), bsdbd_10_15(idx), &
-    !                BD_norm_0_5, BD_norm_5_10, BD_norm_10_15
     write(luo1,'(a)',ADVANCE="NO") 'SoilCode TrackCode Plot Rep Pass Loc '
     write(luo1,*) 'BD.norm.wc.0.5cm BD.norm.wc.5.10cm BD.norm.wc.10.15cm '
     do idx = 1, nsoil
