@@ -52,11 +52,12 @@
 
 !     daily update density for other forces -- long term
 !     only if current bulk density is less than settled bd
-      if (csdblk.lt.csdsblk) then
+      ! removed restriction to allow compaction condition with slow amelioration
+      !if (csdblk.lt.csdsblk) then
         dsdblk = csdblk + 0.01*(csdsblk - csdblk)
-      else
-        dsdblk = csdblk
-      endif
+      !else
+      ! dsdblk = csdblk
+      !endif
 
 ! if water has infiltrated into the layer
       if (chzwid .gt. 0) then

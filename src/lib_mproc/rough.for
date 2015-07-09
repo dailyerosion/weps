@@ -51,12 +51,13 @@
       parameter ( rrmin = 6.096 ) !(mm) = 0.24 inches
 !
 !     + + + LOCAL VARIABLES + + +
-      integer laycnt
+      integer laycnt, laymax
       real    rradj, soiladj
       real    biomass
 !
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     laycnt   - counter for layers
+!     laymax   - maximum layer index
 !     rradj    - adjusted implement random roughness
 !     soiladj  - soil texture adjustment multiplier
 !     biomass  - total biomass in the tillage zone
@@ -68,7 +69,7 @@
 !     needed before performing the calculation. 
 !
 !     adjust the input random roughness value based on flag
-!     roughflg.eq.0 does nothing
+!     roughflg.eq.0 does not adjust the implement random roughness for soil type or biomass amount
       rradj = rrimpl
       if( (roughflg.eq.1).or.(roughflg.eq.2)) then
 !         adjust for soil type
@@ -76,6 +77,11 @@
           soiladj = max(0.6,soiladj)
           rradj = rradj * soiladj
       endif
+
+      ! random roughness for a non tillage operation (tillay=0) (roller, wheel traffic)
+      ! is still adjusted for soil type and biomass in the first layer
+      ! since tillage group process is still required tillf and till_i will be set
+      laymax = max(tillay, 1)
 
       if( (roughflg.eq.1).or.(roughflg.eq.3)) then
 !         adjust for buried residue amounts, handbook 703, eq 5-17
@@ -87,12 +93,12 @@
 !         sum up total biomass in the tillage depth
           if( rrimpl.gt.rrmin ) then
               biomass = 0.0
-              do 100 laycnt=1,tillay
+              do 100 laycnt=1,laymax
                   biomass = biomass + rootmass(laycnt)
                   biomass = biomass + resmass(laycnt)
  100          continue
 !             make it kg/m^2/mm
-              biomass = biomass / ldepth(tillay)          
+              biomass = biomass / ldepth(laymax)          
 !             if value is below min, don't adjust since it would
 !             increase it with less residue. 
               if(rradj.gt.rrmin) then

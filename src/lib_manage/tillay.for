@@ -1,4 +1,3 @@
-!
 !$Author$
 !$Date$
 !$Revision$
@@ -20,10 +19,13 @@
       integer i
       real    d
 
-      if (tdepth .lt. lthick(1)) then
+      if (tdepth .eq. 0.0) then
+        tillay = 0
+        goto 1000
+      else if (tdepth .le. lthick(1)) then
         tillay = 1
         goto 1000
-	  endif
+      endif
       d = lthick(1)
       do 100 i=2, nlay
         d = d + lthick(i)

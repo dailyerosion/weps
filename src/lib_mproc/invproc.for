@@ -54,16 +54,18 @@
         othick(idx) = thick(idx)
    10 continue
 
-      idx = 1
-      odx = 1
+      if( nlay .gt. 0 ) then
+        idx = 1
+        odx = 1
 
-   20 dthick = min(ithick(idx), othick(odx))
-      xcomp(odx) = xcomp(odx) + ixcomp(idx) * dthick
-      ithick(idx) = ithick(idx) - dthick
-      othick(odx) = othick(odx) - dthick
-      if (ithick(idx).eq.0.0) idx = idx + 1
-      if (othick(odx).eq.0.0) odx = odx + 1
-      if (idx.le.nlay.and.odx.le.nlay) goto 20
+   20   dthick = min(ithick(idx), othick(odx))
+        xcomp(odx) = xcomp(odx) + ixcomp(idx) * dthick
+        ithick(idx) = ithick(idx) - dthick
+        othick(odx) = othick(odx) - dthick
+        if (ithick(idx).eq.0.0) idx = idx + 1
+        if (othick(odx).eq.0.0) odx = odx + 1
+        if (idx.le.nlay.and.odx.le.nlay) goto 20
+      end if
 
       do 30 odx = 1, nlay
         xcomp(odx) = xcomp(odx) / thick(odx)

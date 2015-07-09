@@ -31,6 +31,7 @@
       integer          SEC_PER_DAY
       real             KG_per_M2_to_LBS_per_ACRE
       real             pi
+      real             MgtoN
 
 !     + + + VARIABLE DECLARATIONS + + +
       parameter (mtomm  = 1000.0)
@@ -49,6 +50,7 @@
       parameter (SEC_PER_DAY = 3600*24)  !number of seconds per day
       parameter (KG_per_M2_to_LBS_per_ACRE = 8921.791)
       parameter (pi = 3.1415927)
+      parameter (MgtoN = 9806.65)
 
 !     + + + VARIABLE DEFINITIONS + + +
 !     mtomm  - Unit conversion constant (mm/m)

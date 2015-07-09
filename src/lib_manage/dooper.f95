@@ -51,7 +51,9 @@
           print*, 'SR',sr,' Do operation', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
       end if
 
-
+      ! set value of tlayer to zero before operation begins. Compaction occurs from tlayer
+      ! downward, so operations without tillage need this set to zero to model surface compaction.
+      tlayer = 0
 
       ! assign default fuel as blank.  Treated as default in reports
       lastoper(sr)%fuel = ''

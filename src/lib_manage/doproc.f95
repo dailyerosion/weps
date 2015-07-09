@@ -22,6 +22,7 @@
       use p1unconv_mod, only: mmtom
       use manage_data_struct_defs, only: am0tfl, am0tdb, lastoper
       use crop_data_struct_defs, only: am0cfl
+      use soilden_mod, only: setbdproc_wc
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'command.inc'
@@ -152,6 +153,7 @@
       real    t0sla, t0ck
       ! temporary crop parameter values for process 66 only
       real    manure_buried_fraction, manure_total_mass
+      real :: compact_load  ! 
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 
@@ -298,8 +300,6 @@
       else
           temp_present = 0
       end if
-
-      
 
       line = mtbl(mcur(sr))
 
@@ -558,7 +558,7 @@
           ! use texture based calculations from Rawls to set all soil
           ! water properties.
           call param_prop_bc(                                           &
-     &        nslay(sr), aszlyd(1,sr), asdblk(1,sr), asdpart(1,sr),     &
+     &        tlayer, aszlyd(1,sr), asdblk(1,sr), asdpart(1,sr),        &
      &        asfcla(1,sr), asfsan(1,sr), asfom(1,sr), asfcec(1,sr),    &
      &        ahrwcs(1,sr), ahrwcf(1,sr), ahrwcw(1,sr),ahrwcr(1,sr),    &
      &        ahrwca(1,sr), ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),     &
@@ -701,17 +701,60 @@
           call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END inversion process (process code 14)
-!
+
       case (21)
-!-----START Change Bulk Density (process code 21)
-!     pre-process stuff
-!     do process
-!     post-process stuff
+        !-----START Compaction (process code 21)
+        ! pre-process stuff
+        if (am0tdb(sr) .eq. 1) then
+          write (luotdb(sr),*)
+          write (luotdb(sr),*) '//Before compaction process//'
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
+        end if
+        if( aslagm(5,sr).gt.aslagx(5,sr) ) then
+            write (*,*) 'before compaction:',aslagm(5,sr),aslagx(5,sr)
+        end if
+
+        ! read the compaction parameter for the implement
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) start_depth
-!-----END Change Bulk Density (process code 21)
-!
+        read(line(2:len_trim(line)),* , err=901) mu, compact_load
+
+        ! do process
+        ! compaction occurs below the tlayer depth
+        ! find maximum bulk density (soil water content)
+        ! find depth of compaction using water content adjusted proctor density
+        call compact( mu, compact_load, fracarea, tlayer+1, nslay(sr), asdblk(1,sr), asdsblk(1,sr), &
+                      setbdproc_wc( asfcla(1,sr), asfsan(1,sr), asfom(1,sr), asdpart(1,sr), ahrwc(1,sr) ), &
+                      asdprocblk(1,sr), aszlyt(1,sr) )
+
+        ! post-process stuff
+        ! recalculate  depth to bottom of soil layer
+        call depthini( nslay(sr), aszlyt(1,sr), aszlyd(1,sr) )
+
+        if( wc_type.eq.4 ) then
+          ! use texture based calculations from Rawls to set all soil
+          ! water properties.
+          call param_prop_bc(                                           &
+     &        nslay(sr), aszlyd(1,sr), asdblk(1,sr), asdpart(1,sr),     &
+     &        asfcla(1,sr), asfsan(1,sr), asfom(1,sr), asfcec(1,sr),    &
+     &        ahrwcs(1,sr), ahrwcf(1,sr), ahrwcw(1,sr),ahrwcr(1,sr),    &
+     &        ahrwca(1,sr), ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),     &
+     &        ahfredsat(1,sr) )
+
+        else
+          ! adjust soil hydraulic properties for change in density
+          call param_blkden_adj( nslay(sr), asdblk(1,sr), asdblk0(1,sr), &
+     &       asdpart(1,sr), ahrwcf(1,sr), ahrwcw(1,sr), ahrwca(1,sr),   &
+     &       asfcla(1,sr), asfom(1,sr),                                 &
+     &       ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr) )
+        end if
+
+        if (am0tdb(sr) .eq. 1) then
+          write (luotdb(sr),*) '//After compaction process//'
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
+        end if
+        !-----END Compaction (process code 21)
+
       case (24)
 !-----START flatten process variable toughness (process code 24)
 !     pre-process stuff
@@ -768,13 +811,15 @@
      &             tdepth,tstddepth,tmindepth,tmaxdepth)
 
 !     do process
-        call mburyvt(mfvt,fracarea,crop%database%rbc, burydistflg,   &
+        if( tlayer .gt. 0 ) then
+          call mburyvt(mfvt,fracarea,crop%database%rbc, burydistflg,    &
      &             tlayer,aszlyt(1,sr),aszlyd(1,sr),                    &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atmflatrootstore(sr), atmflatrootfiber(sr),                &
      &       atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),     &
      &       atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),              &
      &       residue, bioflg)
+        end if 
 
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
@@ -801,7 +846,9 @@
       bioflg = 0
 
 !     do process
-        call liftvt(mfvt, fracarea, tlayer, residue, resurf_roots, bioflg)
+        if( tlayer .gt. 0 ) then
+          call liftvt(mfvt, fracarea, tlayer, residue, resurf_roots, bioflg)
+        end if
 
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
