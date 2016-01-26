@@ -72,7 +72,7 @@ contains
 
 !     + + + PURPOSE + + +
 !     to calculate the fraction of open field friction velocity
-!     in from up wind and down wind sources of shelter at all interior nodes
+!     from up wind and down wind sources of shelter at all interior nodes
 
       use erosion_data_struct_defs, only: cellsurfacestate
       use grid_mod, only: imax, jmax, ix, jy, amxsim, awa
