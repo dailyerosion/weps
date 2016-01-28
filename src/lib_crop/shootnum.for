@@ -32,8 +32,8 @@
 !            - Note: bcdstm/bcdpop gives number of stems per plant
 !     bc0shoot - mass from root storage required for each shoot (mg/shoot)
 !     bcdmaxshoot - maximum number of shoots possible from each plant
-!     bcmtotshoot - total mass of shoot growing from root storage biomass (kg/m^2)
-!                   in the period from beginning to completion of emegence heat units
+!     bcmtotshoot - total mass released from root storage biomass (kg/m^2)
+!                   in the period from beginning to completion of emergence heat units
 !     bcmrootstorez - crop root storage mass by soil layer (kg/m^2)
 !                   (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
 !     bcdstm - Number of crop stems per unit area (#/m^2)
@@ -55,6 +55,8 @@
 !     + + + PARAMETER DEFINITIONS + + +
 !     per_release - fraction of available root stoage mass released to
 !                   grow new shoots. Default is set to 90% of available
+!     stage_release - fraction of available root stoage mass released to
+!                   grow new shoots for cropID type 8.
 
       ! Find number of shoots (stems) that can be supported from
       ! root storage mass up to the maximum

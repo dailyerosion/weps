@@ -73,7 +73,7 @@
       if( (bhzirr .gt. 0.0) .and. (bhlocirr .gt. 0.0) ) then
           ! irrigation water applied above or within snow layer
           ! add as liquid water at air temperature (0 and above)
-          ! set mass of added liquid. units as above
+          ! set mass of added liquid. units mm*(1m/1000mm)*1000kg/m^3 = kg/m^2
           new_mass = bhzirr
 
           ! calculate energy content of new water. units as above

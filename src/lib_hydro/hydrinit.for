@@ -69,6 +69,7 @@
       presday(isr) = initday(isr)
 
       cumprecip(isr) = 0.0
+      cumirrig(isr) = 0.0
       cumrunoff(isr) = 0.0
       cumevap(isr) = 0.0
       cumtrans(isr) = 0.0

@@ -5,7 +5,7 @@
 
       SUBROUTINE water_erosion(isr, cd, cm, cy, restot, croptot)
       
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>water_erosion
       use biomaterial, only: biototal
       use file_io_mod, only: luowepperod, luoweppsum
 

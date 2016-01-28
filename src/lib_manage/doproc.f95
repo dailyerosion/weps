@@ -252,7 +252,7 @@
 !                 or from the soil to the surface (deals with decomp
 !                 pools only
 !     crush     - the crushing process
-!     crust     - destroys a cursted surface depending on the operation that
+!     crust     - destroys a crusted surface depending on the operation that
 !                 is performed
 !     invert    - performs an inversion of the vertical soil layers
 !     loosn     - performs the loosen/compact process
@@ -1741,7 +1741,7 @@
                     ! not be possible
                     write(*,*) 'Error: crop named (', trim(cropname),   &
      &         ') has bad grain fraction and residue yield ratio values'
-                    write(*,*) 'Error: grf*(ryrat+1-mc)/mc must be > 1',&
+                    write(*,*) 'Error: grf*(ryrat+1-mc)/(1-mc) must be > 1',&
      &                         ', Value is: ',acyld_coef(sr)*acgrf(sr)
                     stop
                 end if

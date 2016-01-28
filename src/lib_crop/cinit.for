@@ -80,8 +80,8 @@
 !                this is a "breakout" mass and does not represent a unique pool
 !                since this mass is destributed into below ground stem and
 !                standing stem as each increment of the shoot is added
-!     bcmtotshoot - total mass of shoot growing from root storage biomass (kg/m^2)
-!                   in the period from beginning to completion of emegence heat units
+!     bcmtotshoot - total mass released from root storage biomass (kg/m^2)
+!                   in the period from beginning to completion of emergence heat units
 !     bcmbgstemz - crop stem mass below soil surface by soil layer (kg/m^2)
 !     bcmrootstorez - crop root storage mass by soil layer (kg/m^2)
 !                   (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))

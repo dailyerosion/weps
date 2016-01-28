@@ -77,7 +77,8 @@
      &            asfald(isr), asfalw(isr), aszlyt(1,isr),              &
      &            awudav, ahzwid(isr),                  &
      &            ahzeasurf(isr),                                       &
-     &            cumprecip(isr), cumrunoff(isr), cumevap(isr),         &
+     &            cumprecip(isr), cumirrig(isr), &
+     &            cumrunoff(isr), cumevap(isr),         &
      &            cumtrans(isr), cumdrain(isr),                         &
      &            presswc(isr), pressnow(isr), presday(isr),            &
      &            ahztranspdepth(isr), restot, h1et, wp )

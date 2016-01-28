@@ -57,8 +57,8 @@
       thetae = 0.24308 + 1.37918 / (1.0+EXP(-(eratio-0.44882)/0.081))        !h-85
       theter = thetae * thetaw(1)
 
-      calctht0 = min( thetax, theter )
-      !calctht0 = theter
+      !calctht0 = min( thetax, theter )
+      calctht0 = theter
 
       return
       end 

@@ -49,11 +49,14 @@ fc_mod_case	= lower;
 ld				= [fc];
 ld_version		= [fc_version];
 
-#if [or [in [os system] Linux ] [in [os system] SunOS ] ]
-	ld_flags		= "-static";
-#else
-	ld_flags		=;	/* Windows PC's (Cygwin) won't link with the "-static" option for some reason - LEW */
-#endif
+/* #if [or [in [os system] Linux ] [in [os system] SunOS ] ]	*/
+/*	ld_flags		= "-static";			*/
+/* #else							*/
+/*	ld_flags		= ; */	/* Windows PC's (Cygwin) won't link with the "-static" option for some reason - LEW */
+/* #endif							*/
+/* works fine in TDM-GCC-64 version of gcc/gfortran (it is not a cygwin install) */
+ld_flags		= "-static";
+
 
 ld_out_flag		= "-o ";
 

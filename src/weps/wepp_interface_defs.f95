@@ -345,6 +345,12 @@
       real, intent(inout) :: factor, expon
       end subroutine undflo
 !----------------------------------
+      SUBROUTINE water_erosion(isr, cd, cm, cy, restot, croptot)
+      use biomaterial, only: biototal
+      integer, intent(in):: isr,cd,cm,cy
+      type(biototal), intent(in) :: restot, croptot
+      end subroutine water_erosion
+!----------------------------------
 
       subroutine write_main_event(sumfile,cd, cm, cy, precp,            &
      &        runoff,                                                   &

@@ -5,7 +5,7 @@
 
       subroutine yalin(effsh,tottc,sand,dia,spg,tcf1,npart,frac)
       
-      use wepp_interface_defs, only: shield
+      use wepp_interface_defs, ignore_me=>yalin
       
       implicit none
 !                                                                   

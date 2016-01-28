@@ -110,7 +110,7 @@
       soil_cond = 1       !default is set to output soil conditioning index file
       resurf_roots = 1    !default is set to resurface buried roots (process 26)
       calc_confidence = 0 !default is set to not calculate confidence intervals.
-      frac_frst_mass_lost = 0.85 !default is set to 85% loss of young leaf freeze damaged mass
+      frac_frst_mass_lost = 0.0 !default is set to 0.0 fraction loss of young leaf freeze damaged mass
       transpiration_depth = 0 !default is set to not set transpiration depth to more than root depth.
 
 ! ----Determine Number of Command Line Arguments.

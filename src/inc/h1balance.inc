@@ -8,16 +8,16 @@
 
 !     Parameter include files:  p1werm.inc
 
-      real cumprecip(mnsub), cumrunoff(mnsub), cumevap(mnsub)
-      real cumtrans(mnsub), cumdrain(mnsub)
+      real cumprecip(mnsub), cumirrig(mnsub), cumrunoff(mnsub)
+      real cumevap(mnsub), cumtrans(mnsub), cumdrain(mnsub)
       real initswc(mnsub), initsnow(mnsub), initday(mnsub)
       real presswc(mnsub), pressnow(mnsub), presday(mnsub)
 
       integer hprevrotation(mnsub)
 
       common /balance/                                                  &
-     &     cumprecip, cumrunoff, cumevap,                               &
-     &     cumtrans, cumdrain,                                          &
+     &     cumprecip, cumirrig, cumrunoff,                              &
+     &     cumevap, cumtrans, cumdrain,                                 &
      &     initswc, initsnow, initday,                                  &
      &     presswc, pressnow, presday,                                  &
      &     hprevrotation
@@ -27,7 +27,8 @@
 !     + + + LOCAL DEFINITIONS + + +
 
 !     cumprecip - accumulation of rainfall (mm)
-!     cumrunoff - accumulation of runoff (mm) (mm)
+!     cumirrig  - accumulation of irrigation (mm)
+!     cumrunoff - accumulation of runoff (mm)
 !     cumevap   - accumulation of evaporation (mm)
 !     cumtrans  - accumulation of transpiration (mm)
 !     cumdrain  - accumulation of drainage (mm)

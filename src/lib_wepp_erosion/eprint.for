@@ -6,6 +6,8 @@
       subroutine eprint(slplen,avgslp,runoff,peakro,effdrn,efflen,      &
      &    effint,effdrr)
      
+      use wepp_interface_defs, ignore_me=>eprint
+
       implicit none
 !
 !     + + + purpose + + +

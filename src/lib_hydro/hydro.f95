@@ -27,7 +27,8 @@
      &                   daysim, bsfald, bsfalw, bszlyt,                &
      &                   bwudav, bhzwid, &
      &                   bhzeasurf,                                     &
-     &                   cumprecip, cumrunoff, cumevap,                 &
+     &                   cumprecip, cumirrig, &
+     &                   cumrunoff, cumevap, &
      &                   cumtrans, cumdrain,                            &
      &                   presswc, pressnow, presday,                    &
      &                   bhztranspdepth, restot, h1et, wp)
@@ -91,7 +92,8 @@
       real bsfald, bsfalw, bszlyt(*)
       real bwudav, bhzwid
       real bhzeasurf
-      real cumprecip, cumrunoff, cumevap
+      real cumprecip, cumirrig
+      real cumrunoff, cumevap
       real cumtrans, cumdrain
       real presswc, pressnow, presday
       real bhztranspdepth
@@ -184,6 +186,7 @@
 !     bhzwid   - Water infiltration depth (mm)
 !     bhzeasurf - accumulated surface evaporation since last complete rewetting (mm)
 !     cumprecip - accumulation of rainfall (mm)
+!     cumirrig  - accumulation of irrigation (mm)
 !     cumrunoff - accumulation of runoff (mm) (mm)
 !     cumevap   - accumulation of evaporation (mm)
 !     cumtrans  - accumulation of transpiration (mm)
@@ -277,7 +280,7 @@
 !     standevapredu  -  evaporation reduction factor attributed to standing mass
 !     totalevapredu  -  combined (standing and flat) evaporation reduction factor
 !     paw       - plant available water (fraction field cap - wilting point)
-!     slen      - slope length(m)
+!     len_slope - slope length(m)
 !     cropdp - depth into soil layering that a plant extracts water
 !                  This is either bczrtd or bhztranspdepth depending on
 !                  the command line flag transpiration_depth
@@ -442,6 +445,7 @@
      &                        bsfcla(l), bsfom(l),                      &
      &                        claygrav80rh, orggrav80rh )
           end do
+          ! note: as written, the potential Transpiration is from previous day
           call transp (layrsn, 0, bszlyd, bszlyt, cropdp*mtomm,         &
      &                 theta, thetas, thetaf, thetaw,                   &
      &                 theta80rh, thetar, airentry, lambda,             &
@@ -634,7 +638,7 @@
          ! use WEPP infiltration, evaporation, redistribution
          ! passing in reduced saturation instead of full saturation
 
-         ! use a representative slope lenght as half of the simregion diagonal distance
+         ! use a representative slope length as half of the simregion diagonal distance
          len_slope = slen(amxsim(1), amxsim(2)) / 2.0
 
 !      if( isr .eq. 1 .and. daysim .eq. 7979 ) then
@@ -743,7 +747,8 @@
 
 !     update cumulative variables
       swc = dot_product(theta(1:layrsn),bszlyt(1:layrsn))
-      cumprecip = cumprecip + bhzirr + cli_today%zdpt
+      cumprecip = cumprecip + cli_today%zdpt
+      cumirrig = cumirrig + bhzirr
       cumrunoff = cumrunoff + bhzrun
       cumevap = cumevap + h1et%zea
       cumtrans = cumtrans + h1et%zpta

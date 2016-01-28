@@ -170,7 +170,7 @@
              wup = 0.0
          end if
 
-         ! get acutal layer water use
+         ! get actual layer water use
          wua = acplwu(awcr, awcr_crit, wup)
          ! update soil water content in layer
          ! prevent going beyond wilting point

@@ -1,9 +1,10 @@
-!
 !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
-!
+
+! Taken from Press, W.H., B.P. Flannery, S.A. Teukoosky, W.T. Vetterling. 1986.
+! Numberical Recipes: the Art of Scientific Computing. Cambridge University Press, Cambridge
 
       subroutine splint(xa,ya,y2a,n,x,y)
 

@@ -231,7 +231,8 @@
 !     &         ' deep percolation)')
 ! 2100    format('darcy: lrx, wc, wct, wfluxn, deltim, wfluxr(top), wflu &
 !     &xr(bottom)',/,i2,7f11.3,/,7f11.3)
- 3000 format('# sec daysim doy yr var depth volw netflux numeq = ',i3)
+ 3000 format('# sec daysim doy yr var depth volw netflux theta fluxv flu&
+     &xw swm cond numeq = ',i3)
  3010 format(1x,f8.1,1x,i5,1x,i3,1x,i4,1x,i3,8(1x,g11.4))
 
 !     + + + END SPECIFICATIONS + + +
@@ -718,12 +719,12 @@
      &    .or. ((dirrig .gt. 0.0) .and. (bhlocirr .ge. 0.0)) ) then
         if( raindepth .gt. 0.0 ) then
           if(     (tout .ge. max(rainend, surface_end))                 &
-     &      .and. (bhzwid. le. 0.0) ) then
+     &      .and. (bhzwid .le. 0.0) ) then
             bhzwid = store( iminlay, imaxlay, prevvolw, volw, bszlyd )
           end if
         else
           if(     (tout .ge. surface_end)                               &
-     &      .and. (bhzwid. le. 0.0) ) then
+     &      .and. (bhzwid .le. 0.0) ) then
             bhzwid = store( iminlay, imaxlay, prevvolw, volw, bszlyd )
           end if
         end if

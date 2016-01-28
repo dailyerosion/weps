@@ -48,7 +48,8 @@
         end do
 
         if ( cumprecip(isr) .gt. 0.0 ) then
-            fallow_eff = ( presswc(isr)-initswc(isr) ) / cumprecip(isr)
+            fallow_eff = (presswc(isr) - initswc(isr) - cumirrig(isr))  &
+     &                 / cumprecip(isr)
         else
             fallow_eff = 0.0
         end if
@@ -58,14 +59,15 @@
      &  trim(lastoper(isr)%name),                                       &
      &  'Start day,swc,snow', initday(isr), initswc(isr), initsnow(isr),&
      &  'End day,swc,snow', presday(isr), presswc(isr), pressnow(isr),  &
-     &  'rain,runoff,evap,trans,drain,check,falloweff', cumprecip(isr), &
-     &  cumrunoff(isr),cumevap(isr), cumtrans(isr), cumdrain(isr),      &
+     &  'rain,irrigation,runoff,evap,trans,drain,check,falloweff',      &
+     &  cumprecip(isr), cumirrig(isr),                                  &
+     &  cumrunoff(isr), cumevap(isr), cumtrans(isr), cumdrain(isr),     &
      &  initswc(isr) - presswc(isr) + initsnow(isr) - pressnow(isr)     &
-     &  + cumprecip(isr) - cumrunoff(isr) - cumevap(isr)                &
+     &  + cumprecip(isr) + cumirrig(isr) - cumrunoff(isr) - cumevap(isr)&
      &  - cumtrans(isr) - cumdrain(isr), fallow_eff
 
  1000 format(1x,i2,'/',i2,'/',i2,'|',a,'|',a,'|',f7.0,'|',2(f9.3,'|'),  &
-     &       a,'|',f7.0,'|',2(f9.3,'|'),a,'|',7(f9.3,'|'))
+     &       a,'|',f7.0,'|',2(f9.3,'|'),a,'|',8(f9.3,'|'))
  1001 format(a)
 
         hprevrotation(isr) = bmrotation
@@ -77,6 +79,7 @@
       initswc(isr) = presswc(isr)
       initsnow(isr) = pressnow(isr)
       cumprecip(isr) = 0.0
+      cumirrig(isr) = 0.0
       cumrunoff(isr) = 0.0
       cumevap(isr) = 0.0
       cumtrans(isr) = 0.0

@@ -397,7 +397,7 @@
       pddm = parea * cc0be * apar / hatom2                                          ! C-4
 
 !     biomass adjustment factor applied
-      ! apply to both biomass converstion efficiency and water stress factor, see below
+      ! apply to both biomass conversion efficiency and water stress factor, see below
       pddm = pddm * bcbaf
 
       ! These were attempts at compensating for low yield as a result of
@@ -535,9 +535,10 @@
      &             bcdmaxshoot, temptotshoot, bcmrootstorez, tempdstm )
           ! compare to maximum shoot number
           if( tempdstm .ge. 5.0 * bcdmaxshoot * bcdpop ) then
+              ! one of these must be non-zero or regrowth will never occur
               adjleaf2stor = 0.0
               adjstem2stor = 0.0
-              adjstor2stor = 0.0
+              adjstor2stor = 0.0000001
           end if
       end if
 
@@ -550,8 +551,8 @@
       drpwt = drpwt * (1.0-bcfstor2stor)
 
       ! senescence is done on a whole plant mass basis not incremental mass
-      ! This starts scencescence before the entered heat unit index for
-      ! the start of scencscence. For most leaf partitioning functions
+      ! This starts senescence before the entered heat unit index for
+      ! the start of senscence. For most leaf partitioning functions
       ! the coefficients draw a curve that approaches 1 around -0.5 but
       ! the value at zero, raised to fractional powers is still very small
       hui0f=bcehu0-bcehu0*.1

@@ -71,10 +71,10 @@
 
 !     bcmshoot - crop shoot mass grown from root storage (kg/m^2)
 !                this is a "breakout" mass and does not represent a unique pool
-!                since this mass is destributed into below ground stem and
-!                standing stem as each increment of the shoot is added
-!     bcmtotshoot - total mass of shoot growing from root storage biomass (kg/m^2)
-!                   in the period from beginning to completion of emegence heat units
+!                since this mass is destributed into below ground stem, above ground
+!                standing and flat stem and leaf as each increment of the shoot is added
+!     bcmtotshoot - total mass released from root storage biomass (kg/m^2)
+!                   in the period from beginning to completion of emergence heat units
 !     bcmbgstemz - crop stem mass below soil surface by layer (kg/m^2)
 
 !     bcmrootstorez - crop root storage mass by soil layer (kg/m^2)
@@ -113,12 +113,12 @@
       real shoot_hui, shoot_huiy
       real fexp_hui, fexp_huiy
       real d_shoot_mass, d_stem_mass, d_leaf_mass, d_root_mass
-      real d_s_root_mass, tot_mass_req, red_mass_rat, diff_mass
+      real d_s_root_mass, tot_mass_req, red_mass_rat
       real end_root_mass, end_shoot_mass, end_stem_mass
       real end_stem_area, end_shoot_len, yesterday_len
       real stem_propor
       real ag_stem, bg_stem, flat_stem, stand_stem
-      real f_root_sum, s_root_sum
+      real f_root_sum, s_root_sum, avail_mass
       real lost_mass, dlfwt, dstwt, drpwt, drswt
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
@@ -136,7 +136,6 @@
 !     d_s_root_mass - mass increment removed from storage roots for the present day (mg/shoot)
 !     tot_mass_req - mass required from root mass for one shoot (mg/shoot)
 !     red_mass_rat - ratio of reduced mass available for stem growth to expected mass available
-!     diff_mass - mass difference for adjustment
 !     end_root_mass - total root mass at end of shoot growth period (mg/shoot)
 !     end_shoot_mass - total shoot mass at end of shoot growth period (mg/shoot)
 !     end_stem_mass - total stem mass at end of shoot growth period (mg/shoot)
@@ -150,6 +149,7 @@
 !     stand_stem - standing stem mass (mg/shoot)
 !     f_root_sum - fibrous root mass sum (total in all layers) (kg/m^2)
 !     s_root_sum - storage root mass sum (total in all layers) (kg/m^2)
+!     avail_mass - storage root mass sum in (mg/shoot)
 !     lost_mass - passed into cook yield, is simply set to zero
 !     dlfwt - increment in leaf dry weight (kg/m^2)
 !     dstwt - increment in dry weight of stem (kg/m^2)
@@ -219,10 +219,11 @@
 
       ! check that sufficient storage root mass is available
       ! units: mg/shoot = kg/m^2 / (kg/mg * shoot/m^2)
-      diff_mass = d_s_root_mass - s_root_sum  / (bcdstm * mgtokg)
-      if( diff_mass .gt. 0.0 ) then
+      avail_mass = s_root_sum  / (bcdstm * mgtokg)
+      if( (d_s_root_mass .gt. avail_mass)                               &
+     &   .and. (d_s_root_mass .gt. 0) ) then
           ! reduce removal to match available storage
-          red_mass_rat = d_s_root_mass / (diff_mass + d_s_root_mass)
+          red_mass_rat = avail_mass / d_s_root_mass
           ! adjust root increment to match
           d_root_mass = d_root_mass * red_mass_rat
           ! adjust shoot increment to match
@@ -242,7 +243,7 @@
       ! length of shoot when completely developed, use the mass of stem per plant
       ! (mg stem/shoot)*(kg/mg)*(#stem/m^2)/(#plants/m^2) = kg stem/plant
       ! inserted into stem area index equation to get stem area in m^2 per plant
-      ! and then conversted back to m^2 per stem
+      ! and then converted back to m^2 per stem
       end_stem_area = bc0ssa                                            &
      &              * (end_stem_mass*mgtokg*bcdstm/bcdpop)**bc0ssb      &
      &              * bcdpop / bcdstm
@@ -293,7 +294,7 @@
      &            / (bczshoot - yesterday_len)
       end if
 
-      !convert to from mg/shoot to kg/m^2
+      !convert from mg/shoot to kg/m^2
       dlfwt = d_leaf_mass * mgtokg * bcdstm
       dstwt = ag_stem * mgtokg * bcdstm
       drpwt = 0.0
@@ -317,7 +318,7 @@
       end if
 
       ! divide above ground stem between standing and flat
-      stem_propor = min(1.0, bczmxc/bc0diammax)
+      stem_propor = min(1.0, bczmxc/bc0diammax) 
       stand_stem = dstwt * stem_propor
       flat_stem = dstwt * (1.0 - stem_propor)
 
@@ -332,7 +333,7 @@
 
       ! leaf mass is added even if below ground
       ! leaf has very low mass (small effect) and some light interaction
-      ! does occur as emergence apporaches (if problem can be changed easily)
+      ! does occur as emergence approaches (if problem can be changed easily)
       if( (bcmstandleaf + dlfwt) .gt. 0.0 ) then
           ! added leaf mass adjusts live leaf fraction, otherwise no change
           bcfliveleaf = (bcfliveleaf*bcmstandleaf+dlfwt)                &

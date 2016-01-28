@@ -193,10 +193,10 @@
             if (tsfsacl.gt.40) tsfsacl = 40.
 ! *** convert organic carbon to organic matter by dividing by 1.724
             if ((bsfsan(ldx) .ge. .15).and.(bsfcla(ldx) .le. 0.25)) then
-              sf84m(ldx)  = 0.2909 + 0.5*bsfsan(ldx) + 0.17*bsfsil(ldx) &
+              sf84m(ldx)  = 0.2909 + 0.31*bsfsan(ldx) + 0.17*bsfsil(ldx) &
      &                + 0.01*tsfsacl - 4.66*tsfom/1.724 - 0.95*tsfcce
             else
-              sf84m(ldx)  = 0.2909 + 0.5*bsfsan(ldx) + 0.17*bsfsil(ldx) &
+              sf84m(ldx)  = 0.2909 + 0.31*bsfsan(ldx) + 0.17*bsfsil(ldx) &
      &                + 0.0033*tsfsacl - 4.66*tsfom/1.724 - 0.95*tsfcce
             end if
 ! *** eodf

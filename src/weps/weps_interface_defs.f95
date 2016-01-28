@@ -682,7 +682,8 @@
      &                   daysim, bsfald, bsfalw, bszlyt,                &
      &                   bwudav, bhzwid, &
      &                   bhzeasurf,                                     &
-     &                   cumprecip, cumrunoff, cumevap,                 &
+     &                   cumprecip, cumirrig,                           &
+     &                   cumrunoff, cumevap,                            &
      &                   cumtrans, cumdrain,                            &
      &                   presswc, pressnow, presday,                    &
      &                   bhztranspdepth, restot, h1et, wp)
@@ -722,7 +723,8 @@
       real bsfald, bsfalw, bszlyt(*)
       real bwudav, bhzwid
       real bhzeasurf
-      real cumprecip, cumrunoff, cumevap
+      real cumprecip, cumirrig
+      real cumrunoff, cumevap
       real cumtrans, cumdrain
       real presswc, pressnow, presday
       real bhztranspdepth

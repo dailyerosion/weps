@@ -32,6 +32,7 @@
 
 !*** FUNCTION DECLARATIONS ***
 !      real unsatcond_bc
+      real unsatcond_pot_bc
       real internode_wtcond_bc
       real internode_cond_bc
 !      real internode_wt_bc
@@ -60,6 +61,7 @@
 !     saved between calls
 !     cond(layrsn), swm(layrsn),
 !     soilrh(layrsn), soilvapden(layrsn), soildiffu(layrsn)
+      real t_potm, t_ksat, t_airentry, t_lambda
 
 !*** LOCAL DEFINITIONS ***
 !     locally, the soil layers go from 1 to layrsn. In the passed arrays,
@@ -90,7 +92,14 @@
 !     calc the conductivity and rate of flow in for each layer
       do lrx = 2,layrsn
        if (layer_weighting == 5) then
-         conda(lrx) = (cond(lrx-1)*cond(lrx))**0.5
+         ! geometric mean
+         ! conda(lrx) = (cond(lrx-1)*cond(lrx))**0.5
+         t_potm = -(potm(lrx-1)*potm(lrx))**0.5
+         t_ksat = (ksat(lrx-1)*ksat(lrx))**0.5
+         t_airentry = -(airentry(lrx-1)*airentry(lrx))**0.5
+         t_lambda = (lambda(lrx-1)*lambda(lrx))**0.5
+         conda(lrx) = unsatcond_pot_bc(t_potm, t_ksat, t_airentry,      &
+     &                                 t_lambda)
        else if (layer_weighting == 4) then
          conda(lrx) = internode_wtcond_bc( theta(lrx-1), theta(lrx),    &
      &          thetar(lrx-1), thetar(lrx), thetas(lrx-1), thetas(lrx), &
