@@ -1,4 +1,5 @@
 #VERSION=1.10
+# (note: version check is numeric, not text)
 #------------ WEPS SIMULATION RUN FILE ------------
 # Note: Lines beginning with '#' are comment lines.
 #       Lines beginning with '#   RFD' are comments used by the interface.
@@ -58,8 +59,11 @@ none
 #   RFD-Scales(place holder line - needed for older versions of WEPS)
 5.5 5.5
 #
-#   RFD-AccNo
-4
+#
+# === BEGIN ACCOUNTING REGION SECTION ===
+#
+#   RFD-AccNo Number of accounting regions (zero allowed, then put no coordinate entries here)
+3
 #   Accounting region coordinates (meters)
 # number of coordinates
 4
@@ -84,19 +88,17 @@ none
 366  0.0
 366  183
 183  183
-#   Accounting region coordinates (meters)
-# number of coordinates
-4
-# list of coordinates
-183  183
-366  183
-366  366
-183  366
 #
-#  number of subregions
+# === END ACCOUNTING REGION SECTION ===
+#
+#
+# === BEGIN SUBREGION SECTION ===
+#
+#   RFD-SubregionNo (number of subregions)
 4
-#   RFD-SubregionNo
-# 1
+#
+# first subregion
+#
 #   RFD-SubmodelOutput
 7 1 1 1 3
 #   RFD-DebugOutput
@@ -121,8 +123,8 @@ WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
 #   RFD-WaterErosionLoss
 0.0000
 #
-#   RFD-SubregionNo
-# 2
+# second subregion
+#
 #   RFD-SubmodelOutput
 7 1 1 1 3
 #   RFD-DebugOutput
@@ -147,8 +149,8 @@ Alfalfa, fall seed, 3yr-Potato-WWheat, circle irr CMZ49.man
 #   RFD-WaterErosionLoss
 0.0000
 #
-#   RFD-SubregionNo
-# 3
+# third Subregion
+#
 #   RFD-SubmodelOutput
 7 1 1 1 3
 #   RFD-DebugOutput
@@ -173,8 +175,8 @@ Wheat,winter,after fallow,conv.,CMZ50.man
 #   RFD-WaterErosionLoss
 0.0000
 #
-#   RFD-SubregionNo
-# 4
+# fourth Subregion
+#
 #   RFD-SubmodelOutput
 7 1 1 1 3
 #   RFD-DebugOutput
@@ -201,21 +203,28 @@ Canola, fall; Fallow_ Wheat, winter; Fallow; mulch till, Z50.man
 #
 # End Subregion Section
 #
-#   RFD-BarrierNo
+#   RFD-BarrierNo (number of barriers)
 1
-#   RFD-BarrierS coordinates (meters) | height (meters) | width (meters) | porosity
-#   Note: subregion mod included skipping reading barriers if there are 0. No placeholder necessary.
+#   Note: subregion mod allows 0 barriers.
+#         If zero, then put no barrier entries here.
 # number of coordinates
 2
+#   RFD-BarrierS coordinates (meters) | height (meters) | width (meters) | porosity
 # first coordinate pair and data
 0 366 
+# first height (meters)
 2
+# first width (meters)
 2
+# first porosity
 0.7
 # second coordinate pair and data
 366 366
+# second height (meters)
 2
+# second width (meters)
 2
+# second porosity
 0.7
 #   RFD-BarrierT  type 
 Shrubs 1row leafoff

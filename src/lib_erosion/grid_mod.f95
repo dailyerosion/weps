@@ -193,9 +193,9 @@ module grid_mod
           end if
           ! do same assignment check for accounting regions
           do sr = 1, size(acct_poly)
-            ! Check if it is inside subregion polygon
+            ! Check if it is inside accounting region polygon
             if( pnpoly(centroid, acct_poly(sr)) .ge. 0) then
-               ! centroid of grid cell is inside or on edge of subregion polygon
+               ! centroid of grid cell is inside or on edge of accounting region polygon
                ! set accounting region index
                cellstate(i,j)%car = sr
                ! default to first polygon if on edge by exiting the accounting region do loop
