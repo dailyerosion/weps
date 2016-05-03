@@ -98,12 +98,8 @@ contains
 
 !     + + + END SPECIFICATIONS + + +
 
-      ! cannot use size if array not allocated
-      if( allocated(barrier) ) then
-        nbr = size(barrier)
-      else
-        nbr = 0
-      end if
+      ! discover number of barriers
+      nbr = size(barrier)
 
       ! update interior nodes
       do i = 1, imax-1
@@ -205,16 +201,12 @@ contains
 
     integer :: i   ! do loop index
 
-    if( allocated(barrier) ) then
-      ! barriers exist
-      ! find shortest barrier height
-      do i = 1, size(barrier)
-         minht = minval(barrier(i)%param(1:size(barrier(i)%param))%amzbr)
-      end do
-    else
-      ! no barriers, so set height to zero
-      minht = 0.0
-    endif
+    ! default no barriers, so set height to zero
+    minht = 0.0
+    ! when barriers exist, find shortest barrier height
+    do i = 1, size(barrier)
+       minht = minval(barrier(i)%param(1:size(barrier(i)%param))%amzbr)
+    end do
 
   end function minht_barriers
 

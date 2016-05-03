@@ -490,14 +490,13 @@ contains
             ! old run files could have 0 barriers but still always read info in for 1.
             read (line,*,err=80) nbr
             ! write(6,*) ' reading barriers ', nbr
-            ibr = 1
-            if( nbr .ge. 1 ) then
-               ! allocate structure for barriers
-               allocate(barrier(nbr), stat = alloc_stat)
-               if( alloc_stat .gt. 0 ) then
-                  write(*,*) 'ERROR: memory alloc., barriers'
-               end if
+            ! allocate structure for barriers (nbr .lt. 1 gives zero size array)
+            allocate(barrier(nbr), stat = alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+               write(*,*) 'ERROR: memory alloc., barriers'
             end if
+            ! initialize counter for reading barrier parameters
+            ibr = 1
 
          case (34)
             if( nbr .ge. 1 ) then
@@ -961,17 +960,17 @@ contains
             ! read in barrier info
             read (line,*,err=80) nbr
             ! write(6,*) ' reading barriers ', nbr
+            ! allocate structure for barriers (nbr .lt. 1 gives zero size array)
+            allocate(barrier(nbr), stat = alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+               write(*,*) 'ERROR: memory alloc., barriers'
+            end if
             if( nbr .lt. 1 ) then
                ! skip reading barrier information
                typidx = typidx + 6
             else
                ! set index for first barrier
                ibr = 1
-               ! allocate structure for barriers
-               allocate(barrier(nbr), stat = alloc_stat)
-               if( alloc_stat .gt. 0 ) then
-                  write(*,*) 'ERROR: memory alloc., barriers'
-               end if
             end if
 
          case (35)

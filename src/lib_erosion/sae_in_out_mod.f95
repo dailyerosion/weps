@@ -175,12 +175,7 @@ module sae_in_out_mod
       '# +++ BARRIERS +++',/, &
       '#',/, &
       '#     nbr, I, Number of barriers (0-5) ')
-      ! cannot use size if array not allocated
-      if( allocated(barrier) ) then
-        nbr = size(barrier)
-      else
-        nbr = 0
-      end if
+      nbr = size(barrier)
       write(luo_saeinp,*) nbr
       write(luo_saeinp,2122)
  2122 format ('#',/, &

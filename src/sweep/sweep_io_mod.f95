@@ -127,6 +127,7 @@ module sweep_io_mod
          Write(*,*) 'ERROR: memory allocation, acct_poly'
       end if
 
+      ! NOTE: accounting region data must not be in the input file if "nacctr = 0"
       do 20  a = 1, nacctr
         ! read accounting region polygon point count
         line = getline(i_unit)
@@ -147,15 +148,13 @@ module sweep_io_mod
       line = getline(i_unit)
       read (line,*) nbr
 
-      ! NOTE: Barrier data must not be in the input file if "nbr = 0"
-      if( nbr .gt. 0 ) then
-        ! allocate structure for barriers
-        allocate(barrier(nbr), stat = alloc_stat)
-        if( alloc_stat .gt. 0 ) then
-           Write(*,*) 'ERROR: memory alloc., barriers'
-        end if
+      ! allocate structure for barriers (nbr .lt. 1 gives zero size array)
+      allocate(barrier(nbr), stat = alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: memory alloc., barriers'
       end if
 
+      ! NOTE: Barrier data must not be in the input file if "nbr = 0"
       do ibr = 1, nbr
         ! number of points in barrier polyline
         line = getline(i_unit)
@@ -636,15 +635,13 @@ module sweep_io_mod
       line = getline(i_unit)
       read (line,*) nbr
 
-      ! NOTE: Barrier data must not be in the input file if "nbr = 0"
-      if( nbr .gt. 0 ) then
-        ! allocate structure for barriers
-        allocate(barrier(nbr), stat = alloc_stat)
-        if( alloc_stat .gt. 0 ) then
-           Write(*,*) 'ERROR: memory alloc., barriers'
-        end if
+      ! allocate structure for barriers (nbr .lt. 1 gives zero size array)
+      allocate(barrier(nbr), stat = alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: memory alloc., barriers'
       end if
 
+      ! NOTE: Barrier data must not be in the input file if "nbr = 0"
       do ibr = 1, nbr
 !       Barrier linear endpoints (x1,y1) and (x2,y2)
         line = getline(i_unit)
