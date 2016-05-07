@@ -423,12 +423,14 @@
       type(decomp_factors), intent(inout) :: decompfac
       end subroutine decoinit
 !---------------------------
-      subroutine decomp(isr, crop, residue, decompfac)
+      subroutine decomp(isr, crop, residue, decompfac, h1et)
       use biomaterial, only: biomatter, decomp_factors
+      use hydro_data_struct_defs, only: hydro_derived_et
       integer, intent(in) :: isr
       type(biomatter), intent(inout) :: crop
       type(biomatter), dimension(:), intent(inout) :: residue
       type(decomp_factors), intent(inout) :: decompfac
+      type(hydro_derived_et), intent(in) :: h1et
       end subroutine decomp
 !---------------------------
       subroutine decopen(isr)
@@ -672,11 +674,10 @@
      &                   bhtsav, bbdstm, bbffcv,                        &
      &                   bsxrgs, bszrgh, bsfcr,                         &
      &                   bslrro, bslrr, bmzele,                         &
-     &                   bhzper,                                        &
-     &                   bhzirr, bhzdmaxirr, bhratirr, bhdurirr,        &
+     &                   bhzdmaxirr, bhratirr, bhdurirr,                &
      &                   bhlocirr, bhminirr, bm0monirr,                 &
      &                   bhmadirr, bhndayirr, bhmintirr,                &
-     &                   bhzoutflow, bhzrun, bhzinf,                    &
+     &                   bhzoutflow, bhzinf,                    &
      &                   bhzsno, bhtsno, bhfsnfrz, &
      &                   bhzsmt, bhfice, bhrsk,                         &
      &                   bhtsmx, bhtsmn, bhrwc0,                        &
@@ -710,13 +711,12 @@
       real bhtsav(*), bbdstm, bbffcv
       real bsxrgs, bszrgh, bsfcr
       real bslrro, bslrr, bmzele
-      real bhzper
-      real bhzirr, bhzdmaxirr, bhratirr, bhdurirr
+      real bhzdmaxirr, bhratirr, bhdurirr
       real bhlocirr, bhminirr
       integer bm0monirr
       real bhmadirr
       integer bhndayirr, bhmintirr
-      real bhzoutflow, bhzrun, bhzinf
+      real bhzoutflow, bhzinf
       real bhzsno, bhtsno, bhfsnfrz, bhzsnd
       real bhzsmt, bhfice(*), bhrsk(*)
       real bhtsmx(*), bhtsmn(*), bhrwc0(*)
@@ -1172,14 +1172,16 @@
       integer sr
       end subroutine dooper
 !---------------------------
-      subroutine   doproc (sr, bmrotation, crop, residue, biotot, mandate)
+      subroutine   doproc (sr, bmrotation, crop, residue, biotot, mandate, h1et)
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
+      use hydro_data_struct_defs, only: hydro_derived_et
       integer sr, bmrotation
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
+      type(hydro_derived_et), intent(inout) :: h1et
       end subroutine doproc
 !--------------------------
     SUBROUTINE get_calib_crops(sr, crop)
@@ -1197,15 +1199,17 @@
     type(biomatter), intent(inout) :: crop    ! structure containing full crop description
     end subroutine get_calib_yield
 !--------------------------
-      subroutine manage( sr, syear, crop, residue, biotot, mandate)
+      subroutine manage( sr, syear, crop, residue, biotot, mandate, h1et)
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
+      use hydro_data_struct_defs, only: hydro_derived_et
       integer sr, syear
       integer lopdd, lopmm, lopyy
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
+      type(hydro_derived_et), intent(inout) :: h1et
       end subroutine manage
 !-------------------------
       subroutine mfinit (sr, fname)
@@ -1213,8 +1217,8 @@
       character fname*(*)
       end subroutine mfinit
 !--------------------------
-      subroutine mgdreset (sr)
-      integer sr
+      subroutine mgdreset (bhzirr)
+      real :: bhzirr   ! daily irrigation amount
       end subroutine mgdreset
 !---------------------------
       real function poolmass( nslay,                                    &
@@ -1928,17 +1932,19 @@ SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_u
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:,0:), intent(inout) :: monthly_report
     end SUBROUTINE update_monthly_report_vars
 !------------------------
-SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot, cellstate)
+SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot, cellstate, h1et)
     USE pd_var_tables
     USE pd_var_type_def
     use biomaterial, only: biototal
     use erosion_data_struct_defs, only: cellsurfacestate
+    use hydro_data_struct_defs, only: hydro_derived_et
     INTEGER :: sbr              ! current subregion
     TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update
     type(biototal), intent(in) :: restot  ! contains:
     type(biototal), intent(in) :: croptot  ! contains:
     type(biototal), intent(in) :: biotot  ! contains:
     type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10
+    type(hydro_derived_et), intent(in) :: h1et
     end subroutine  update_period_update_vars
 !-------------------------
 SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update, period_report)
@@ -2002,11 +2008,13 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       real cslagx, se0, se1
       end subroutine asd
 !-------------         
-      subroutine callsoil(daysim, isr, croptot, biotot)
+      subroutine callsoil(daysim, isr, croptot, biotot, h1et)
       use biomaterial, only: biototal
+      use hydro_data_struct_defs, only: hydro_derived_et
       integer daysim
       integer isr                   
       type(biototal), intent(in) :: croptot, biotot
+      type(hydro_derived_et), intent(inout) :: h1et
       end subroutine callsoil 
 !-------------
       subroutine cru(bszcr,cumpa,csfcla,dcump,bsfcr,bhzsmt,             &
@@ -2043,10 +2051,12 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       real cumpa, dcump, bsvroc(*)  
       end subroutine rid
 !------------------
-      subroutine  sdbug(isr,slay, croptot, biotot)
+      subroutine  sdbug(isr,slay, croptot, biotot, h1et)
       use biomaterial, only: biototal
+      use hydro_data_struct_defs, only: hydro_derived_et
       integer isr, slay
       type(biototal), intent(in) :: croptot, biotot
+      type(hydro_derived_et), intent(inout) :: h1et
       end subroutine sdbug
 !------------------
       subroutine sinit (daysim,                                         &
@@ -2610,14 +2620,16 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       character*(*) val
       end function begtrm
 !----------------------------------
-      subroutine dbgdmp(day, sr, crop, residue, croptot, biotot)
+      subroutine dbgdmp(day, sr, crop, residue, croptot, biotot, h1et)
       use biomaterial, only: biomatter, biototal
+      use hydro_data_struct_defs, only: hydro_derived_et
       integer, intent(in) :: day
       integer, intent(in) :: sr
       type(biomatter), intent(in) :: crop
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
+      type(hydro_derived_et), intent(inout) :: h1et
       end subroutine dbgdmp
 !------------------------------------
       subroutine distriblay( nlay, bszlyd, bszlyt, layval, insertval, begind, endd )

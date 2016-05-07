@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine mgdreset (sr)
+      subroutine mgdreset (bhzirr)
 
 !     + + + PURPOSE + + +
 !     mgdreset is called before any management operations for the day are 
@@ -15,27 +15,15 @@
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
 
       include 'p1werm.inc'
-      include 'h1hydro.inc'
       include 'm1flag.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer sr
-!
-!     + + + ARGUMENT DEFINITIONS + + +
-!     sr - current subregion
-!
-!     + + + LOCAL VARIABLES + + +
-!
-!     + + + SUBROUTINES CALLED + + +
-!
-!     + + + FUNCTION DECLARATONS + + +
-
-!     + + + DATA INITIALIZATIONS + + +
+      real :: bhzirr   ! daily irrigation amount
 
 !     + + + END SPECIFICATIONS + + +
 
       am0til = .false.
-      ahzirr(sr) = 0.0   ! zero out irrig amount from previous day
+      bhzirr = 0.0   ! zero out irrig amount from previous day
 
       return
       end

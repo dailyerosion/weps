@@ -159,7 +159,7 @@ contains
     IF (.not. ALLOCATED (monthly_dates)) then
         ALLOCATE (monthly_dates(1:12,0:nrot_yrs), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating monthly_dates(,1:12,0:nrot_yrs)"
+            print *, "Error allocating monthly_dates(1:12,0:nrot_yrs)"
             ret_status = ret_status + alloc_status
         END IF
     END IF

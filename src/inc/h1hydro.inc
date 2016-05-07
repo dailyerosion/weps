@@ -19,7 +19,7 @@
       real             ahzsno(mnsub)
       real             ahtsno(mnsub)
       real             ahfsnfrz(mnsub)
-      real             ahzirr(mnsub)
+!      real             ahzirr(mnsub)
       real             ahzdmaxirr(mnsub)
       real             ahratirr(mnsub)
       real             ahdurirr(mnsub)
@@ -30,8 +30,8 @@
       integer          ahndayirr(mnsub)
       integer          ahmintirr(mnsub)
       real             ahzoutflow(mnsub)
-      real             ahzper(mnsub)
-      real             ahzrun(mnsub)
+!      real             ahzper(mnsub)
+!      real             ahzrun(mnsub)
       real             ahzinf(mnsub)
       real             ahzsmt(mnsub)
       real             ahzwid(mnsub)
@@ -44,10 +44,12 @@
       common / h1hydro /                                                &
      &                  ahrwc, ahrwcdmx, aheaep, ah0cb, ahrsk, ahfwsf,  &
      &                  ahzsno, ahtsno, ahfsnfrz,                       &
-     &                  ahzirr, ahzdmaxirr, ahratirr, ahdurirr,         &
+     &                  ahzdmaxirr, ahratirr, ahdurirr,                 &
+!     &                  ahzirr, ahzdmaxirr, ahratirr, ahdurirr,         &
      &                  ahlocirr, ahminirr, am0monirr, ahmadirr,        &
      &                  ahndayirr, ahmintirr, ahzoutflow,               &
-     &                  ahzper, ahzrun, ahzinf,                         &
+     &                  ahzinf,                                         &
+!     &                  ahzper, ahzrun, ahzinf,                         &
      &                  ahzsmt, ahzwid, ahzeasurf, ahztranspdepth,      &
      &                  ahzfurcut, ahztransprtmin, ahztransprtmax
 

@@ -16,11 +16,10 @@
      &                   bhtsav, bbdstm, bbffcv,                        &
      &                   bsxrgs, bszrgh, bsfcr,                         &
      &                   bslrro, bslrr, bmzele,                         &
-     &                   bhzper,                                        &
-     &                   bhzirr, bhzdmaxirr, bhratirr, bhdurirr,        &
+     &                   bhzdmaxirr, bhratirr, bhdurirr,                &
      &                   bhlocirr, bhminirr, bm0monirr,                 &
      &                   bhmadirr, bhndayirr, bhmintirr,                &
-     &                   bhzoutflow, bhzrun, bhzinf,                    &
+     &                   bhzoutflow, bhzinf,                    &
      &                   bhzsno, bhtsno, bhfsnfrz,                      &
      &                   bhzsmt, bhfice, bhrsk,                         &
      &                   bhtsmx, bhtsmn, bhrwc0,                        &
@@ -78,13 +77,12 @@
       real bhtsav(*), bbdstm, bbffcv
       real bsxrgs, bszrgh, bsfcr
       real bslrro, bslrr, bmzele
-      real bhzper
-      real bhzirr, bhzdmaxirr, bhratirr, bhdurirr
+      real bhzdmaxirr, bhratirr, bhdurirr
       real bhlocirr, bhminirr
       integer bm0monirr
       real bhmadirr
       integer bhndayirr, bhmintirr
-      real bhzoutflow, bhzrun, bhzinf
+      real bhzoutflow, bhzinf
       real bhzsno, bhtsno, bhfsnfrz
       real bhzsmt, bhfice(*), bhrsk(*)
       real bhtsmx(*), bhtsmn(*), bhrwc0(*)
@@ -147,8 +145,6 @@
 !     bslrro   - original random roughness height, after tillage, mm
 !     bslrr    - Allmaras random roughness parameter (mm)
 !     bmzele   - Average site elevation (m)
-!     bhzper   - Daily deep percolation (mm/day)
-!     bhzirr   - Daily irrigation (mm)
 !     bhzdmaxirr - characteristic maximum irrigation system application depth (mm)
 !     bhratirr - characteristic irrigation system application rate (mm/hour)
 !     bhdurirr - duration of irrigation water application (hours) 
@@ -167,7 +163,6 @@
 !     bhndayirr - the next simulation day on which an irrigation can occur (day)
 !     bhmintirr - minimum interval for irrigation application (days)
 !     bhzoutflow - height of runoff outlet above field surface (m)
-!     bhzrun   - Daily surface runoff (mm/day)
 !     bhzsno   - depth of water in snow layer (mm)
 !     bhtsno   - temperature of snow layer (C)
 !     bhfsnfrz   - fraction of snow layer water content which is frozen
@@ -321,8 +316,8 @@
 ! 2070 format (/'#',19x,5('*'),' daily soil water balance data ',        &
 !     &       5('*'))
 ! *** 2080 format (1x,82('-')/1x,'sr    date',t17,'etp',t23,'ep',t29,'tp',t36
-! ***     &      ,'ea',t43,'ta',t47,'bhzper',t54,'bhzirr',t61,'dprec',t67,
-! ***     *      'bhzrun'
+! ***     &      ,'ea',t43,'ta',t47,'h1et%zper',t54,'bhzirr',t61,'dprec',t67,
+! ***     *      'h1et%zrun'
 ! ***     &      ,t74,'swc',t79,'bhfwsf',' check '/,t16,31('-'),'mm',30('-')/1x,
 ! ***     *      82('-'))
 ! 2080 format (1x,82('-')/
@@ -339,8 +334,8 @@
 !     &      ,t80,'swc',t87,'*hfwsf',t101,'*czrtd',t115,'*snwc'
 !     &      ,t122,'theta'/,
 !     *  /, t16,34('-'),'mm',33('-')/1x, 100('-'))
- 2080 format('# daysim doy yr  h1et%zetp  h1et%zep h1et%zptp  h1et%zea h1et%zpta bhzper&
-     & bhzirr cli_today%zdpt  dprec bhzrun bhzinf   lswc   swc  h1et%zsnd bhzsno  c&
+ 2080 format('# daysim doy yr  h1et%zetp  h1et%zep h1et%zptp  h1et%zea h1et%zpta h1et%zper&
+     & h1et%zirr cli_today%zdpt  dprec h1et%zrun bhzinf   lswc   swc  h1et%zsnd bhzsno  c&
      &heck cropdp rootwc rootwcap bhfwsf surfdry tdav vaptrans evaplim&
      &it st_evapr fl_evapr to_evapr')
  2090 format(1x,i5,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),       &
@@ -457,23 +452,23 @@
      &        .and. (daysim .ge. bhndayirr) ) then
               ! add irrigation
               ! maximum of single day value and root zone deficit
-              bhzirr = max( bhzirr, rootz_p_cap - rootz_p_con )
+              h1et%zirr = max( h1et%zirr, rootz_p_cap - rootz_p_con )
               ! limit value based on system characterisitic maximum and minimum depths
-              bhzirr = min( bhzdmaxirr, max( bhzirr, bhminirr ) )
+              h1et%zirr = min( bhzdmaxirr, max( h1et%zirr, bhminirr ) )
               ! set duration based on depth and rate
-              call ratedura(bhzirr, bhratirr, bhdurirr)
+              call ratedura(h1et%zirr, bhratirr, bhdurirr)
 
           end if
       end if
 
-      if( bhzirr .gt. 0.0 ) then
+      if( h1et%zirr .gt. 0.0 ) then
           ! irrigation applied, set next irrigation day
           bhndayirr = daysim + bhmintirr
       end if
 
       ! run daily precipitation and irrigation through the snow filter
       ! returned value reflects how much was left behind
-      call addsnow(dprecip, dirrig, cli_today%zdpt, bhzirr, bhlocirr,           &
+      call addsnow(dprecip, dirrig, cli_today%zdpt, h1et%zirr, bhlocirr,           &
      &             cli_today%tdmn, cli_today%tdmx, cli_today%tdpt, bmzele,                      &
      &             bhzsno, bhtsno, bhfsnfrz, h1et%zsnd)
 
@@ -631,7 +626,7 @@
      &       rise, daylength, h1et%zep, dprecip, durprecip, tptprecip,       &
      &       dirrig, bhdurirr, bhlocirr, bhzoutflow,                    &
      &       bbdstm, bbffcv, bslrro, bslrr, bmzele, bhrwc0,             &
-     &       h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,                     &
+     &       h1et%zea, h1et%zper, h1et%zrun, bhzinf, bhzwid,                     &
      &       bhzeasurf, evaplimit, vaptrans, bmrslp )
 
       else
@@ -655,7 +650,7 @@
 !        write(*,*) 'theta', (theta(l), l=1,layrsn)
 !        write(*,*) 'thetadmx', (thetadmx(l), l=1,layrsn)
 !        write(*,*) 'bhrwc0', (bhrwc0(l), l=1,layrsn)
-!        write(*,*) h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,         &
+!        write(*,*) h1et%zea, h1et%zper, h1et%zrun, bhzinf, bhzwid,         &
 !     &                   len_slope, wepp_hydro, init_loop, calib_loop
 !        write(*,*) 'bhfice', (bhfice(l), l=1,layrsn)
 !        write(*,*) 'wp', wp%totalRunoff, wp%totalPrecip, wp%totalSnowrunoff, &
@@ -671,7 +666,7 @@
      &                   bsfcr, bsvroc, bsdblk, bsfcec,                 &
      &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
      &                   h1et%zep, theta, thetadmx, bhrwc0,                &
-     &                   h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,         &
+     &                   h1et%zea, h1et%zper, h1et%zrun, bhzinf, bhzwid,         &
      &                   len_slope, day, mo, yr, isr,                   &
      &                   wepp_hydro, init_loop, calib_loop, bhfice, wp)
 
@@ -689,7 +684,7 @@
 !        write(*,*) 'theta', (theta(l), l=1,layrsn)
 !        write(*,*) 'thetadmx', (thetadmx(l), l=1,layrsn)
 !        write(*,*) 'bhrwc0', (bhrwc0(l), l=1,layrsn)
-!        write(*,*) h1et%zea, bhzper, bhzrun, bhzinf, bhzwid,         &
+!        write(*,*) h1et%zea, h1et%zper, h1et%zrun, bhzinf, bhzwid,         &
 !     &                   len_slope, wepp_hydro, init_loop, calib_loop
 !        write(*,*) 'bhfice', (bhfice(l), l=1,layrsn)
 !        write(*,*) 'wp', wp%totalRunoff, wp%totalPrecip, wp%totalSnowrunoff, &
@@ -748,28 +743,28 @@
 !     update cumulative variables
       swc = dot_product(theta(1:layrsn),bszlyt(1:layrsn))
       cumprecip = cumprecip + cli_today%zdpt
-      cumirrig = cumirrig + bhzirr
-      cumrunoff = cumrunoff + bhzrun
+      cumirrig = cumirrig + h1et%zirr
+      cumrunoff = cumrunoff + h1et%zrun
       cumevap = cumevap + h1et%zea
       cumtrans = cumtrans + h1et%zpta
-      cumdrain = cumdrain + bhzper
+      cumdrain = cumdrain + h1et%zper
       presswc = swc
       pressnow = bhzsno
       presday = daysim
       
 !     Added for WEPP bookeeping      
       wp%totalPrecip = wp%totalPrecip + cli_today%zdpt
-      wp%totalRunoff = wp%totalRunoff + bhzrun
+      wp%totalRunoff = wp%totalRunoff + h1et%zrun
       
       if (cli_today%zdpt.gt.0) then
          wp%precipEvents = wp%precipEvents + 1
       endif
       
-      if (bhzrun.gt.0) then
+      if (h1et%zrun.gt.0) then
          wp%runoffEvents = wp%runoffEvents + 1
          if (bhzsmt .gt. 0.0) then    ! due to snowmelt
             wp%snowmeltEvents = wp%snowmeltEvents + 1
-            wp%totalSnowrunoff = wp%totalSnowrunoff + bhzrun
+            wp%totalSnowrunoff = wp%totalSnowrunoff + h1et%zrun
          endif
       endif
 !     End WEPP addition      
@@ -782,11 +777,11 @@
              write(luohydro(isr),*)
              write(luohydro(isr),*)
          end if
-         accheck = lswc - swc + lsno - bhzsno + bhzirr + cli_today%zdpt         &
-     &           - h1et%zea - h1et%zpta - bhzper - bhzrun
+         accheck = lswc - swc + lsno - bhzsno + h1et%zirr + cli_today%zdpt         &
+     &           - h1et%zea - h1et%zpta - h1et%zper - h1et%zrun
 ! 2090 format(1x,i5,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),1x,f7.3,11(1x,f6.2))
          write(luohydro(isr),2090) daysim,idoy,yr,h1et%zetp, h1et%zep, h1et%zptp,&
-     &       h1et%zea, h1et%zpta, bhzper, bhzirr, cli_today%zdpt, dprecip, bhzrun,    &
+     &       h1et%zea, h1et%zpta, h1et%zper, h1et%zirr, cli_today%zdpt, dprecip, h1et%zrun,    &
      &       bhzinf, lswc, swc, h1et%zsnd, bhzsno, accheck, cropdp,        &
      &      plant_wat_t(0.0,cropdp*mtomm,theta(1),thetaw,bszlyd,layrsn),&
      &       plant_wat_t(0.0,cropdp*mtomm,thetaf,thetaw,bszlyd,layrsn), &

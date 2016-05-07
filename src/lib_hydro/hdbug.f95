@@ -103,7 +103,7 @@
      &        ' crop%geometry%zrtd(',i2,') restot%mftot(',i2,') ahfwsf(',i2,')',    &
      &        ' ahzper(',i2,')')
  2051 format (2f10.2,2f10.5,2x,f10.2,f10.2,f12.2)
- 2052 format ('ahzrun(',i2,') ahzirr(',i2,') ahzsno(',i2,')',           &
+ 2052 format ('ahzrun(',i2,') h1et%zirr(',i2,') ahzsno(',i2,')',           &
      &        ' ahzsmt(',i2,')  h1et%zeta      h1et%zetp     ',               &
      &        ' h1et%zpta ')
  2053 format (5f10.2,2f12.2)
@@ -136,9 +136,9 @@
 
       write(luohdb(isr),2050) isr, isr, isr, isr, isr, isr, isr
       write(luohdb(isr),2051) amrslp(isr), crop%deriv%ftcv, crop%deriv%rlai, &
-                    crop%geometry%zrtd, restot%mftot, ahfwsf(isr), ahzper(isr)
+                    crop%geometry%zrtd, restot%mftot, ahfwsf(isr), h1et%zper
       write(luohdb(isr),2052) isr, isr, isr, isr
-      write(luohdb(isr),2053) ahzrun(isr), ahzirr(isr), ahzsno(isr), &
+      write(luohdb(isr),2053) h1et%zrun, h1et%zirr, ahzsno(isr), &
                     ahzsmt(isr), h1et%zeta, h1et%zetp, h1et%zpta
       write(luohdb(isr),2054) isr, isr, isr, isr
       write(luohdb(isr),2055) h1et%zea, h1et%zep, h1et%zptp, ah0cng(isr), &

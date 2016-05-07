@@ -2,7 +2,7 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine callsoil(daysim, isr, croptot, biotot)
+      subroutine callsoil(daysim, isr, croptot, biotot, h1et)
 ! ***************************************************************** wjr
 ! Wrapper to call soil
 
@@ -10,11 +10,13 @@
       use biomaterial, only: biototal
       use timer_mod, only: timer, TIMSOIL, TIMSTART, TIMSTOP
       use soil_data_struct_defs, only: am0sdb
+      use hydro_data_struct_defs, only: hydro_derived_et
 
 ! Arguments
       integer daysim
       integer isr                   
       type(biototal), intent(in) :: croptot, biotot
+      type(hydro_derived_et), intent(inout) :: h1et
 
 ! Includes
       include 'p1werm.inc'
@@ -34,9 +36,9 @@
       call timer(TIMSOIL,TIMSTART)      
 
             if (am0sdb(isr) .eq. 1) then
-               call sdbug(isr, nslay(isr), croptot, biotot)
+               call sdbug(isr, nslay(isr), croptot, biotot, h1et)
             end if
-            call soil(isr,daysim,ahlocirr(isr),ahzirr(isr), ahzsmt(isr),&
+            call soil(isr,daysim,ahlocirr(isr),h1et%zirr, ahzsmt(isr),  &
      &                 ahtsmx(1,isr), ahtsmn(1,isr),                    &
      &                 ahrwc(1,isr), ahrwcdmx(1,isr), ahrwca(1,isr),    &
      &                 ahrwcw(1,isr), ahrwcs(1,isr),                    &
@@ -57,7 +59,7 @@
      &                 asfcce(1,isr), asfcec(1,isr),                    &
      &                 ahzinf(isr), ahzwid(isr))
             if (am0sdb(isr) .eq. 1) then
-               call sdbug(isr, nslay(isr), croptot, biotot)
+               call sdbug(isr, nslay(isr), croptot, biotot, h1et)
             end if
 
       ! recalculate  depth to bottom of soil layer

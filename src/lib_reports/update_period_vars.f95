@@ -3,13 +3,14 @@
 !$Revision$
 !$HeadURL$
 
-SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot, cellstate)
+SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot, cellstate, h1et)
 
     use weps_interface_defs, ignore_me=>update_period_update_vars
     USE pd_var_tables
     USE pd_var_type_def
     use biomaterial, only: biototal
     use erosion_data_struct_defs, only: cellsurfacestate
+    use hydro_data_struct_defs, only: hydro_derived_et
     use grid_mod, only: imax, jmax, sim_area
     use process_mod, only: sbsfdi
 
@@ -37,6 +38,9 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
                                 ! abmf(isr)       all flat mass
                                 ! abmst(isr)      all standing mass
     type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10
+    type(hydro_derived_et), intent(in) :: h1et  ! contains:
+                                ! ahzpta(isr)     daily transpiration (mm)
+                                ! ahzpta(isr)     daily evaporation (mm)
 
     include "p1werm.inc"        ! needed by other include files
 
@@ -55,6 +59,8 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
                                 ! asecr (stability of crust)
                                 ! ascancr(crust coeff. of abrasion)
                                 ! ascanag (agg. coeff. of abrasion)
+
+    include "h1balance.inc"     ! pressswc(isr)  daily surface water content in all soil layers (mm)
 
 !    REAL :: biodrag		! biodrag() function in util/misc/biodrag.for
 
@@ -148,6 +154,10 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
 
     period_update(Surface_Cr_CA)%val = acancr(isr)  !Surface Crust Coeff. of abrasion (1/m)
     period_update(Surface_Cr_CA)%cnt = period_update(Surface_Cr_CA)%cnt + 1
+
+! Soil Water
+    period_update(Soil_Water)%val = presswc(isr)  !Soil Water content in full soil profile (mm)
+    period_update(Soil_Water)%cnt = period_update(Soil_Water)%cnt + 1
 
 ! Crop vars
     period_update(Crop_canopy_cov)%val = croptot%ftcancov
@@ -257,6 +267,19 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
 ! ------------------------------------------------------------------------------------------------------------------
 
 !variables summed for period
+
+    period_update(Crop_Transp)%val = period_update(Crop_Transp)%val + h1et%zpta
+    period_update(Crop_Transp)%cnt = period_update(Crop_Transp)%cnt + 1
+
+    period_update(Evaporation)%val = period_update(Evaporation)%val + h1et%zea
+    period_update(Evaporation)%cnt = period_update(Evaporation)%cnt + 1
+
+    period_update(Runoff)%val = period_update(Runoff)%val + h1et%zrun
+    period_update(Runoff)%cnt = period_update(Runoff)%cnt + 1
+
+    period_update(Drainage)%val = period_update(Drainage)%val + h1et%zper
+    period_update(Drainage)%cnt = period_update(Drainage)%cnt + 1
+
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then

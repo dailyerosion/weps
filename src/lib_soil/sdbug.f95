@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine  sdbug(isr,slay, croptot, biotot)
+      subroutine  sdbug(isr,slay, croptot, biotot, h1et)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -22,6 +22,7 @@
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use climate_input_mod, only: cli_today
+      use hydro_data_struct_defs, only: hydro_derived_et
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -48,6 +49,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr, slay
       type(biototal), intent(in) :: croptot, biotot
+      type(hydro_derived_et), intent(inout) :: h1et
 
 !     + + + LOCAL VARIABLES + + +
       integer cd, cm, cy, l
@@ -94,7 +96,7 @@
      &      ' croptot%zrtd(',i2,') biotot%mftot(',i2,') ahfwsf(',i2,')',&
      &      ' ahzper(',i2,')')
  2051 format (2f10.2,2f10.5,2x,f10.2,f10.2,f12.2)
- 2052 format ('ahzrun(',i2,') ahzirr(',i2,') ahzsno(',i2,')',           &
+ 2052 format ('ahzrun(',i2,') h1et%zirr(',i2,') ahzsno(',i2,')',           &
      &        ' ahzsmt(',i2,') asxrgs(',i2,') aszrgh(',i2,')',          &
      &        ' aslrr(',i2,')')
  2053 format (5f10.2,2f12.2)
@@ -126,9 +128,9 @@
 
       write(luosdb(isr),2051) amrslp(isr), croptot%ftcvtot,             &
      &              croptot%rlaitot,                                    &
-     &              croptot%zrtd, biotot%mftot, ahfwsf(isr), ahzper(isr)
+     &              croptot%zrtd, biotot%mftot, ahfwsf(isr), h1et%zper
       write(luosdb(isr),2052) isr,isr,isr,isr,isr,isr,isr
-      write(luosdb(isr),2053) ahzrun(isr),ahzirr(isr),ahzsno(isr),      &
+      write(luosdb(isr),2053) h1et%zrun,h1et%zirr,ahzsno(isr),      &
      &               ahzsmt(isr), asxrgs(isr),aszrgh(isr),aslrr(isr)
       write(luosdb(isr),2054) isr,isr,isr,isr,isr,isr,isr
       write(luosdb(isr),2055) asfcr(isr), asecr(isr), asmlos(isr),      &

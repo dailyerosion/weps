@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine manage( sr, syear, crop, residue, biotot, mandate)
+      subroutine manage( sr, syear, crop, residue, biotot, mandate, h1et)
 
 !     + + + PURPOSE + + +
 !     This is the main routine of the MANAGEMENT submodel. The date passed
@@ -26,6 +26,7 @@
       use mandate_mod, only: opercrop_date
       use stir_report_mod, only: stir_report
       use manage_data_struct_defs, only: am0tfl, lastoper
+      use hydro_data_struct_defs, only: hydro_derived_et
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -42,6 +43,7 @@
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
+      type(hydro_derived_et), intent(inout) :: h1et
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !        sr - the subregion number
@@ -84,7 +86,7 @@
 
       ! reset any global variables whose setting should only be valid
       ! for one day
-      call mgdreset(sr)
+      call mgdreset(h1et%zirr)
 
       line = mtbl(mcur(sr))
 
@@ -127,7 +129,7 @@
       case ('P')
         if(lastoper(sr)%skip.eq.0) then
 
-           call doproc(sr, mcount(sr), crop, residue, biotot, mandate)
+           call doproc(sr, mcount(sr), crop, residue, biotot, mandate, h1et)
         endif
       case ('D')
         call stir_report(sr, .false., lastoper(sr)%stir, lastoper(sr)%energyarea)

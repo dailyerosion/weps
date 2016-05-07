@@ -22,6 +22,9 @@ SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cell
     type(hydro_derived_et), intent(in) :: h1et
 
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
+    include "h1hydro.inc"       ! ahzirr(s) irrigation depth in mm
+                                ! ahzrun(s)    daily surface water runoff (mm)
+                                ! ahzper(s)    daily drainage "soil loss out the bottom soil layer" (mm)
 
     INTEGER :: i,j              ! local loop variables
     INTEGER :: ngdpt            ! number of simulation grid datapoints
@@ -65,6 +68,10 @@ SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cell
     mrot_update(Precipi,cm)%val = mrot_update(Precipi,cm)%val + cli_today%zdpt
     mrot_update(Precipi,cm)%cnt = mrot_update(Precipi,cm)%cnt + 1
 
+    monthly_update(Irrigation)%val = monthly_update(Irrigation)%val + h1et%zirr
+    monthly_update(Irrigation)%cnt = monthly_update(Irrigation)%cnt + 1
+    mrot_update(Irrigation,cm)%val = mrot_update(Irrigation,cm)%val + h1et%zirr
+    mrot_update(Irrigation,cm)%cnt = mrot_update(Irrigation,cm)%cnt + 1
 ! ------------------------------------------------------------------------------------------------------------------
     ! Determine if we have any net soil loss occurring from any grid cell (erosion)
     ! We assume that we don't have any net suspension loss if we don't have any net salt/creep loss
@@ -98,6 +105,26 @@ SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cell
     END DO
     IF (cnt_dep /= 0) Have_Deposition = .TRUE.  !We have deposition occurring, set flag for use later
 ! ------------------------------------------------------------------------------------------------------------------
+
+    monthly_update(Crop_Transp)%val = monthly_update(Crop_Transp)%val + h1et%zpta
+    monthly_update(Crop_Transp)%cnt = monthly_update(Crop_Transp)%cnt + 1
+    mrot_update(Crop_Transp,cm)%val = mrot_update(Crop_Transp,cm)%val + h1et%zpta
+    mrot_update(Crop_Transp,cm)%cnt = mrot_update(Crop_Transp,cm)%cnt + 1
+
+    monthly_update(Evaporation)%val = monthly_update(Evaporation)%val + h1et%zea
+    monthly_update(Evaporation)%cnt = monthly_update(Evaporation)%cnt + 1
+    mrot_update(Evaporation,cm)%val = mrot_update(Evaporation,cm)%val + h1et%zea
+    mrot_update(Evaporation,cm)%cnt = mrot_update(Evaporation,cm)%cnt + 1
+
+    monthly_update(Runoff)%val = monthly_update(Runoff)%val + h1et%zrun
+    monthly_update(Runoff)%cnt = monthly_update(Runoff)%cnt + 1
+    mrot_update(Runoff,cm)%val = mrot_update(Runoff,cm)%val + h1et%zrun
+    mrot_update(Runoff,cm)%cnt = mrot_update(Runoff,cm)%cnt + 1
+
+    monthly_update(Drainage)%val = monthly_update(Drainage)%val + h1et%zper
+    monthly_update(Drainage)%cnt = monthly_update(Drainage)%cnt + 1
+    mrot_update(Drainage,cm)%val = mrot_update(Drainage,cm)%val + h1et%zper
+    mrot_update(Drainage,cm)%cnt = mrot_update(Drainage,cm)%cnt + 1
 
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
@@ -325,7 +352,7 @@ END IF  !Have_Erosion flag
 
 END SUBROUTINE update_monthly_update_vars
 
-
+! Update both monthly and rot_month reporting variables
 SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_update, mrot_update, monthly_report)
 
     USE pd_dates_vars
@@ -347,6 +374,8 @@ SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_u
     REAL, PARAMETER :: m2_to_ha = 10000.0  ! m^2 in a ha
 
     rot_y = mod(cur_year-1,nrot_years)+1
+
+    ! Compute monthly reporting variables here
 
     !variables averaged for reporting period
     DO i=Min_cli_vars, Max_cli_vars
@@ -401,7 +430,7 @@ SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_u
 
        !variables averaged for reporting period
        DO i=Min_cli_vars, Max_cli_vars
-          IF (i == Precipi) THEN  ! These have only been "summed"
+          IF (i == Precipi .OR. i==Irrigation) THEN  ! These have only been "summed"
              CALL run_ave (monthly_report(i,cur_month,0), mrot_update(i,cur_month)%val, nrot_years)
           ELSE  !These have already been "running averaged"
              CALL run_ave (monthly_report(i,cur_month,0), mrot_update(i,cur_month)%val, 1)
@@ -465,7 +494,7 @@ SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_u
     END DO
     monthly_dates(cur_month,rot_y)%ey = monthly_dates(cur_month,rot_y)%ey + 1
 
-    ! reset monthly rotation update vars
+    ! reset monthly rotation (mrot) update vars
     IF (rot_y == nrot_years) THEN
        DO i=Min_monthly_vars,Max_monthly_vars
           mrot_update(i,cur_month)%cnt = 0

@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   doproc (sr, bmrotation, crop, residue, biotot, mandate)
+      subroutine   doproc (sr, bmrotation, crop, residue, biotot, mandate, h1et)
 
 !     + + + PURPOSE + + +
 !     Doproc is called when a processline is found in the management file
@@ -23,6 +23,7 @@
       use manage_data_struct_defs, only: am0tfl, am0tdb, lastoper
       use crop_data_struct_defs, only: am0cfl
       use soilden_mod, only: setbdproc_wc
+      use hydro_data_struct_defs, only: hydro_derived_et
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'command.inc'
@@ -57,6 +58,7 @@
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
+      type(hydro_derived_et), intent(inout) :: h1et
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr - the subregion being processed
@@ -2235,11 +2237,11 @@
         else
             ahlocirr(sr) = 0.0
         end if
-        ahzirr(sr) = ahzirr(sr) + irrig
+        h1et%zirr = h1et%zirr + irrig
         ! make sure rate and duration are consistent
         ! these values are not set in this process but may have been set
         ! in process 72, if this is used in conjunction with it
-        call ratedura(ahzirr(sr), ahratirr(sr), ahdurirr(sr))
+        call ratedura(h1et%zirr, ahratirr(sr), ahdurirr(sr))
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After irrigate process//'
@@ -2288,9 +2290,9 @@
      &    irrig, ahratirr(sr), ahdurirr(sr), ahlocirr(sr)
 !     do process
         ! add this irrigation event to any previous event on this same day
-        ahzirr(sr) = ahzirr(sr) + irrig
+        h1et%zirr = h1et%zirr + irrig
         ! use inputs to set the irrigation rate, if 
-        call ratedura(ahzirr(sr), ahratirr(sr), ahdurirr(sr))
+        call ratedura(h1et%zirr, ahratirr(sr), ahdurirr(sr))
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After single event irrigation process//'
           !call tdbug(sr, nslay(sr), prcode, crop, residue)

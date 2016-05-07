@@ -21,6 +21,7 @@ SUBROUTINE update_hmonth_update_vars(isr, cd, cm, hmonth_update, hmrot_update, h
     type(hydro_derived_et), intent(in) :: h1et
 
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
+    include "h1hydro.inc"       ! ahzirr(s) irrigation depth in mm
 
     INTEGER :: i                ! local loop variables
 
@@ -39,6 +40,8 @@ SUBROUTINE update_hmonth_update_vars(isr, cd, cm, hmonth_update, hmrot_update, h
     !variables summed for period
     hmonth_update(Precipi)%val = hmonth_update(Precipi)%val + cli_today%zdpt
     hmonth_update(Precipi)%cnt = hmonth_update(Precipi)%cnt + 1
+    hmonth_update(Irrigation)%val = hmonth_update(Irrigation)%val + h1et%zirr
+    hmonth_update(Irrigation)%cnt = hmonth_update(Irrigation)%cnt + 1
 
     !variables running averaged for period
     we = 0.0

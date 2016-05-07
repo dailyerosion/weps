@@ -2,12 +2,13 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine decomp(isr, crop, residue, decompfac)
+      subroutine decomp(isr, crop, residue, decompfac, h1et)
 
       use weps_interface_defs, ignore_me=>decomp
       use biomaterial, only: biomatter, decomp_factors
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_today
+      use hydro_data_struct_defs, only: hydro_derived_et
 
 !     +++ PURPOSE + + +
 
@@ -41,6 +42,7 @@
       type(biomatter), intent(inout) :: crop  ! structure containing biomatter state and parameters
       type(biomatter), dimension(:), intent(inout) :: residue  ! structure containing biomatter state and parameters
       type(decomp_factors), intent(inout) :: decompfac
+      type(hydro_derived_et), intent(in) :: h1et
 
 !     + + +  VARIABLES MAINTAINED BY SUBREGION + + +
 !
@@ -106,7 +108,7 @@
 ! sum rain, irr, snow melt
 
       if (dbgflg) write(*,*) 'decomp 2'
-      decompfac%aqua = cli_today%zdpt + ahzirr(isr) + ahzsmt(isr)
+      decompfac%aqua = cli_today%zdpt + h1et%zirr + ahzsmt(isr)
 
 ! Test for water input day.
 

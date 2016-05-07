@@ -757,8 +757,8 @@
                call flush(6)
             end if
 
-!           if (am0jd.eq.ijday+1) call dbgdmp(daysim, isr, crop(isr), residue(isr), croptot(isr), biotot(isr))
-!           if (am0jd.eq.ljday) call dbgdmp(daysim, isr, crop(isr), residue(isr), croptot(isr), biotot(isr))
+!           if (am0jd.eq.ijday+1) call dbgdmp(daysim, isr, crop(isr), residue(isr), croptot(isr), biotot(isr), h1et(isr))
+!           if (am0jd.eq.ljday) call dbgdmp(daysim, isr, crop(isr), residue(isr), croptot(isr), biotot(isr), h1et(isr))
 
             do isr=1,nsubr   ! do multiple subregion     
                call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
@@ -871,7 +871,8 @@
                end if
 
                ! Compute period values
-               call update_period_update_vars(isr, rep_update(isr)%period_update, restot(isr), croptot(isr), biotot(isr), cellstate)
+               call update_period_update_vars(isr, rep_update(isr)%period_update, restot(isr), croptot(isr), biotot(isr), &
+                                              cellstate, h1et(isr))
                ! print *, pd, "  ",cy,cm,cd,"  ", period_dates(pd(isr))
 
             end do

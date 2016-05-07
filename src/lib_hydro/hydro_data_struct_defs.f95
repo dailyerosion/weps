@@ -31,6 +31,9 @@ module hydro_data_struct_defs
        real :: drat ! dryness ratio
        real :: zsnd ! snow depth (mm)
        real :: snow_protect ! snow cover greater than snow_depth_thresh
+       real :: zirr ! Single day irrigation water applied (mm)
+       real :: zper ! daily deep percolation (mm/day)
+       real :: zrun ! daily surface runoff (mm/day)
     end type hydro_derived_et
 
   contains

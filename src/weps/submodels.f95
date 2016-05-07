@@ -30,7 +30,7 @@
 !     restot          - structure array containing summary residue pool amounts for all subregions
 
 !        write(*,*) "Start manage"      !MANAGEment (tillage) submodel
-        call manage( isr, iy, crop, residue, biotot,mandate )
+        call manage(isr, iy, crop, residue, biotot, mandate, h1et)
 
 !        write(*,*) "Start updres"
         call updres(isr, residue, restot)                 !update decomp residue pools
@@ -41,7 +41,7 @@
         ! will affect soil.
 
 !        write(*,*) "Start callsoil"
-        call callsoil(daysim, isr, croptot, biotot)       !SOIL submodel
+        call callsoil(daysim, isr, croptot, biotot, h1et)       !SOIL submodel
 
 !        write(*,*) "Start callcrop"     !CROP submodel
         ! Crop growth flag indicates growing crop
@@ -54,7 +54,7 @@
         end if
 
 !        write(*,*) "Start decomp"
-        call decomp(isr, crop, residue, decompfac)         !DECOMPosition submodel
+        call decomp(isr, crop, residue, decompfac, h1et)         !DECOMPosition submodel
 
 !        write(*,*) "Start updres"
         call updres(isr, residue, restot)

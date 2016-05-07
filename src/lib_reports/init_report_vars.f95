@@ -409,12 +409,17 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
          print *, "rep_update%yrot_update(",i,")%val,cnt,date", rep_update%yrot_update(i)%val,   &
                   rep_update%yrot_update(i)%cnt, rep_update%yrot_update(i)%date
      END DO
+!hmm, this doesn't look correct here for "mrot_update" data - LEW
+!Ok, we aren't necessarily printing out all the mrot vars by rot year here, only the 1st 12 in the first year
      DO i=Min_monthly_vars,Max_monthly_vars
        DO m=1,12
          print *, "rep_update%mrot_update(",i,",",m,")%val,cnt,date", rep_update%mrot_update(i,m)%val,   &
               rep_update%mrot_update(i,m)%cnt, rep_update%mrot_update(i,m)%date
        END DO
      END DO
+
+!hmm, this doesn't look correct here for "hmrot_update" data - LEW
+!Ok, we aren't necessarily printing out all the hmrot vars by rot year here, only the 1st 24 in the 1st year
      DO i=Min_hmonth_vars,Max_hmonth_vars
        DO hm=1,24
          print *, "rep_update%hmrot_update(",i,",",hm,")%val,cnt,date", rep_update%hmrot_update(i,hm)%val,   &
@@ -431,6 +436,7 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
     ! print out SOME (not all) of the info for the "report" variables
     if( report_debug == 3 ) then
 
+     ! Note that we are intentionally evaluating only one variable here for debugging purposes - LEW
      DO i=Min_yrly_vars,Min_yrly_vars
        DO y=0,nrot_yrs
          IF (.not. ASSOCIATED(rep_report%yrly_report(i,y)%date,yrly_dates(y))) THEN
@@ -441,6 +447,7 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
          END IF
        END DO
      END DO
+     ! Note that we are intentionally evaluating only one variable here for debugging purposes - LEW
      DO i=Max_yrly_vars,Max_yrly_vars
        DO y=0,nrot_yrs
          IF (.not. ASSOCIATED(rep_report%yrly_report(i,y)%date,yrly_dates(y))) THEN
@@ -452,8 +459,10 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
        END DO
      END DO
 
+     ! Note that we are intentionally evaluating only one variable here for debugging purposes - LEW
      DO i=Min_monthly_vars,Min_monthly_vars
        DO y=0,nrot_yrs
+         ! Note that we are intentionally evaluating only one m period here for debugging purposes - LEW
          DO m=1,1
            IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
              print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
@@ -462,6 +471,7 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
                   rep_report%monthly_report(i,m,y)%cnt, rep_report%monthly_report(i,m,y)%date
            END IF
          END DO
+         ! Note that we are intentionally evaluating only one m period here for debugging purposes - LEW
          DO m=12,12
            IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
              print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
@@ -472,8 +482,11 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
          END DO
        END DO
      END DO
+
+     ! Note that we are intentionally evaluating only one variable here for debugging purposes - LEW
      DO i=Max_monthly_vars,Max_monthly_vars
        DO y=0,nrot_yrs
+         ! Note that we are intentionally evaluating only one m period here for debugging purposes - LEW
          DO m=1,1
            IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
              print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
@@ -482,6 +495,7 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
                   rep_report%monthly_report(i,m,y)%cnt, rep_report%monthly_report(i,m,y)%date
            END IF
          END DO
+         ! Note that we are intentionally evaluating only one m period here for debugging purposes - LEW
          DO m=12,12
            IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
              print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
@@ -493,8 +507,10 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
        END DO
      END DO
 
+     ! Note that we are intentionally evaluating only one variable here for debugging purposes - LEW
      DO i=Min_hmonth_vars,Min_hmonth_vars
        DO y=0,nrot_yrs
+         ! Note that we are intentionally evaluating only one hm period here for debugging purposes - LEW
          DO hm=1,1
            IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
                print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
@@ -503,6 +519,7 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
                   rep_report%hmonth_report(i,hm,y)%cnt, rep_report%hmonth_report(i,hm,y)%date
            END IF
          END DO
+         ! Note that we are intentionally evaluating only one hm period here for debugging purposes - LEW
          DO hm=24,24
            IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
                print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
@@ -513,8 +530,10 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
          END DO
        END DO
      END DO
+     ! Note that we are intentionally evaluating only one variable here for debugging purposes - LEW
      DO i=Max_hmonth_vars,Max_hmonth_vars
        DO y=0,nrot_yrs
+         ! Note that we are intentionally evaluating only one hm period here for debugging purposes - LEW
          DO hm=1,1
            IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
                print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
@@ -523,6 +542,7 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
                   rep_report%hmonth_report(i,hm,y)%cnt, rep_report%hmonth_report(i,hm,y)%date
            END IF
          END DO
+         ! Note that we are intentionally evaluating only one hm period here for debugging purposes - LEW
          DO hm=24,24
            IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
                print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
@@ -534,7 +554,9 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
        END DO
      END DO
 
+     ! Note that we are intentionally evaluating only one variable here for debugging purposes - LEW
      DO i=Min_period_vars,Min_period_vars
+         ! Note that we are intentionally evaluating only one period here for debugging purposes - LEW
          DO p=1,1
            IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
               print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
@@ -543,6 +565,7 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
                  rep_report%period_report(i,p)%cnt,rep_report%period_report(i,p)%date
            END IF
          END DO
+         ! Note that we are intentionally evaluating only one period here for debugging purposes - LEW
          DO p=nperiods,nperiods
            IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
               print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
@@ -552,7 +575,9 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
            END IF
          END DO
      END DO
+     ! Note that we are intentionally evaluating only one variable here for debugging purposes - LEW
      DO i=Max_period_vars,Max_period_vars
+         ! Note that we are intentionally evaluating only one period here for debugging purposes - LEW
          DO p=1,1
            IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
               print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
@@ -561,6 +586,7 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
                  rep_report%period_report(i,p)%cnt,rep_report%period_report(i,p)%date
            END IF
          END DO
+         ! Note that we are intentionally evaluating only one period here for debugging purposes - LEW
          DO p=nperiods,nperiods
            IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
               print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
@@ -572,6 +598,7 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
      END DO
 
      ! For a year by year report of yearly (and rotation year) averaged variables
+     ! Note that we are intentionally evaluating only one variable here for debugging purposes - LEW
      DO i=Min_yrly_vars,Min_yrly_vars
        DO y=1,nrot_yrs*ncycles
          IF (.not. ASSOCIATED(rep_report%yr_report(i,y)%date,yr_dates(y))) THEN

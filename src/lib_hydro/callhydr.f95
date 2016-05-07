@@ -65,11 +65,10 @@
      &            ahtsav(1,isr), biotot%dstmtot, biotot%ffcvtot,        &
      &            asxrgs(isr), aszrgh(isr), asfcr(isr),                 &
      &            aslrro(isr), aslrr(isr), amzele,                      &
-     &            ahzper(isr),                                          &
-     &       ahzirr(isr), ahzdmaxirr(isr), ahratirr(isr), ahdurirr(isr),&
+     &            ahzdmaxirr(isr), ahratirr(isr), ahdurirr(isr),        &
      &            ahlocirr(isr), ahminirr(isr), am0monirr(isr),         &
      &            ahmadirr(isr), ahndayirr(isr), ahmintirr(isr),        &
-     &            ahzoutflow(isr), ahzrun(isr), ahzinf(isr),            &
+     &            ahzoutflow(isr), ahzinf(isr),            &
      &            ahzsno(isr), ahtsno(isr), ahfsnfrz(isr), &
      &            ahzsmt(isr), ahfice(1, isr), ahrsk(1, isr),           &
      &            ahtsmx(1, isr), ahtsmn(1, isr),                       &

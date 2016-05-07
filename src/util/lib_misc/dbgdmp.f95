@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine dbgdmp(day, sr, crop, residue, croptot, biotot)
+      subroutine dbgdmp(day, sr, crop, residue, croptot, biotot, h1et)
 ! ****************************************************************** wjr
 !     The dumps variables that have gone out of range
 
@@ -13,6 +13,7 @@
       use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: awdair, awadir, awhrmx, awudmx, awudmn, awudav, subday, ntstep
       use climate_input_mod, only: cli_today, cli_tyav
+      use hydro_data_struct_defs, only: hydro_derived_et
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: day
@@ -21,6 +22,7 @@
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
+      type(hydro_derived_et), intent(inout) :: h1et
 
 !     + + + GLOBAL COMMON BLOCKS + + +
 
@@ -492,14 +494,14 @@
       if (ahzsno(sr).lt.0.0.or.ahzsno(sr).gt.tstmax)                    &
      &  write(*,*) 'day ',day,' ahzsno ', ahzsno(sr)
 !
-      if (ahzirr(sr).lt.0.0.or.ahzirr(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ahzirr ', ahzirr(sr)
+      if (h1et%zirr.lt.0.0.or.h1et%zirr.gt.tstmax)                    &
+     &  write(*,*) 'day ',day,' h1et%zirr ', h1et%zirr
 !
-      if (ahzper(sr).lt.0.0.or.ahzper(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ahzper ', ahzper(sr)
+      if (h1et%zper.lt.0.0.or.h1et%zper.gt.tstmax)                    &
+     &  write(*,*) 'day ',day,' h1et%zper ', h1et%zper
 !
-      if (ahzrun(sr).lt.0.0.or.ahzrun(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ahzrun ', ahzrun(sr)
+      if (h1et%zrun.lt.0.0.or.h1et%zrun.gt.tstmax)                    &
+     &  write(*,*) 'day ',day,' h1et%zrun ', h1et%zrun
 !
       if (ahzsmt(sr).lt.0.0.or.ahzsmt(sr).gt.tstmax)                    &
      &  write(*,*) 'day ',day,' ahzsmt ', ahzsmt(sr)

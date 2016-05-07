@@ -78,7 +78,7 @@
 
 !     Initialize irrigation type and depth so values are set if no
 !     irrigation processes are invoked
-      ahzirr(isr) = 0.0
+      h1et%zirr = 0.0
       ahratirr(isr) = 0.0
       ahdurirr(isr) = 0.0
       ahlocirr(isr) = 0.0
@@ -88,12 +88,12 @@
       ahndayirr(isr) = 0
       ahmintirr(isr) = 0
 
-      ahzrun(isr) = 0.0
+      h1et%zrun = 0.0
       ahzsmt(isr) = 0.0
       ah0cng(isr) = 0.0
       ah0cnp(isr) = 0.0
       ahfwsf(isr) = 1.0
-      ahzper(isr) = 0.0
+      h1et%zper = 0.0
 
       do idx = 1, nslay(isr)
           ahtsmx(idx, isr) = 0.0

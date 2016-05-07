@@ -50,14 +50,13 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
     INTEGER :: match_no = 0
     CHARACTER(len=256) :: opname, cropname
 
-!   format for header of ui1 output report file
-
+    ! Print out the header for ui1 output report file
     write (UNIT=luogui1,FMT="(1(A))",ADVANCE="NO")                      &
               'key|'
     write (UNIT=luogui1,FMT="(1(A))",ADVANCE="NO")                      &
               'sd ed mo yr|'
-    write (UNIT=luogui1,FMT="(1x,A,A85,'|')",ADVANCE="NO") 'operation ',""
-    write (UNIT=luogui1,FMT="(1x,A,A85,'|')",ADVANCE="NO") 'crop      ',""
+    write (UNIT=luogui1,FMT="(1x,A,A115,'|')",ADVANCE="NO") 'operation ',""
+    write (UNIT=luogui1,FMT="(1x,A,A115,'|')",ADVANCE="NO") 'crop      ',""
 !    write (UNIT=luogui1,FMT="(2(A))",ADVANCE="NO")                      &
 !         ' operation'                                             |',   &
 !         ' crop                                                   |'
@@ -77,8 +76,9 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
               '  salt_dep|','  dep_area|','  dep_frac|',                &
               ' flux_rate|',' flux_area|',' flux_frac|',                &
                             'shelt_area|','shelt_frac|'
-    write (UNIT=luogui1,FMT="(3(A))",ADVANCE="NO")                      &
-              '    precip|','  w_energy|','snow_cover|'
+   write (UNIT=luogui1,FMT="(4(A))",ADVANCE="NO")                      &
+              '    precip|','  w_energy|','snow_cover|','     irrig|'
+!              '    precip|','  w_energy|','snow_cover|'
 !              '    precip|','  w_energy|','snow_cover|','   dry_idx|'
     write (UNIT=luogui1,FMT="(6(A))",ADVANCE="NO")                      &
               ' l_can_cov|','l_sil_area|',' l_st_mass|',' l_rt_mass|',  &
@@ -95,15 +95,18 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
               '   surf_84|','  surf_AS|','surf_ag_den|','surf_ag_CA|'
     write (UNIT=luogui1,FMT="(4(A))",ADVANCE="NO")                      &
               ' surf_crust|',' crust_AS|',' crust_LM|','crust_thick|'
-    write (UNIT=luogui1,FMT="(3(A))",ADVANCE="YES")                     &
+    write (UNIT=luogui1,FMT="(3(A))",ADVANCE="NO")                      &
               '  crust_den|',' crust_LF|','  crust_CA|'
+    write (UNIT=luogui1,FMT="(5(A))",ADVANCE="YES")                     &
+              'soil_water|','crop_trans|','  evaporat|','    runoff|',  &
+              '  drainage|'
 
+    ! Set outer loop for nrot_years
     DO y = 1, nrot_years
 
+       ! Print out the "P" rows here
        x = 1
-
        DO p = 1, nperiods
-
           IF (period_dates(p)%sy == y) THEN
              write (UNIT=luogui1,FMT="(' P |')",ADVANCE="NO")
              write (UNIT=luogui1,FMT="(i2, '-',i2,'/',i2,'/',i2,'|')",ADVANCE="NO") &
@@ -133,23 +136,23 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
              END DO
 
              IF (match) THEN
-                IF (len_trim(opname) .lt. 95) THEN
-                   write (UNIT=luogui1,FMT="(1x,A95,'|')",ADVANCE="NO") &
+                IF (len_trim(opname) .lt. 125) THEN
+                   write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") &
                           trim(opname)
                 ELSE   ! long name, write it all out
                    write (UNIT=luogui1,FMT="(1x,A,'|')",ADVANCE="NO")   &
                           trim(opname)
                 END IF
-                IF (len_trim(cropname) .lt. 95) THEN
-                   write (UNIT=luogui1,FMT="(1x,A95,'|')",ADVANCE="NO") &
+                IF (len_trim(cropname) .lt. 125) THEN
+                   write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") &
                           trim(cropname)
                 ELSE   ! long name, write it all out
                    write (UNIT=luogui1,FMT="(1x,A,'|')",ADVANCE="NO")   &
                           trim(cropname)
                 END IF
              ELSE   ! No operation or crop on this date
-                 write (UNIT=luogui1,FMT="(1x,A95,'|')",ADVANCE="NO") ""
-                 write (UNIT=luogui1,FMT="(1x,A95,'|')",ADVANCE="NO") ""
+                 write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") ""
+                 write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") ""
              END IF
 
              write (UNIT=luogui1,FMT="(1(f10.4,'|'))",ADVANCE="NO")     & !Ave cnt
@@ -226,16 +229,16 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                     (hmonth_dates(hm,y)%ey == period_dates(p)%ey)) THEN
                    match = .true.
                    x = hm 
-                   write (UNIT=luogui1,FMT="(3(f10.4,'|'))",ADVANCE="NO") &
-                         rep_report%hmonth_report(Precipi,x,y)%val,                  &
-                         rep_report%hmonth_report(Wind_energy,x,y)%val,              &
-                         rep_report%hmonth_report(Snow_cover,x,y)%val
-!                         rep_report%hmonth_report(Dryness_ratio,x,y)%val
+                   write (UNIT=luogui1,FMT="(4(f10.4,'|'))",ADVANCE="NO") &
+                         rep_report%hmonth_report(Precipi,hm,y)%val,                  &
+                         rep_report%hmonth_report(Wind_energy,hm,y)%val,              &
+                         rep_report%hmonth_report(Snow_cover,hm,y)%val,               &
+                         rep_report%hmonth_report(Irrigation,hm,y)%val
                    GOTO 20
                 END IF
              END DO
 20           IF (.not. match) THEN  ! No climate info on this date
-                 write (UNIT=luogui1,FMT="(3(A10,'|'))",ADVANCE="NO") "","",""
+                 write (UNIT=luogui1,FMT="(4(A10,'|'))",ADVANCE="NO") "","","",""
              END IF
 
              write (UNIT=luogui1,FMT="(6(f10.4,'|'))",ADVANCE="NO")    &
@@ -273,7 +276,7 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                       rep_report%period_report(Surface_Ag_DN,p)%val,               &
                       rep_report%period_report(Surface_Ag_CA,p)%val
 
-             write (UNIT=luogui1,FMT="(7(f10.4,'|'))",ADVANCE="YES")    &
+             write (UNIT=luogui1,FMT="(7(f10.4,'|'))",ADVANCE="NO")     &
                       rep_report%period_report(Surface_Cr,p)%val,                  &
                       rep_report%period_report(Surface_Cr_AS,p)%val,               &
                       rep_report%period_report(Surface_Cr_LM,p)%val,               &
@@ -282,17 +285,21 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                       rep_report%period_report(Surface_Cr_LF,p)%val,               &
                       rep_report%period_report(Surface_Cr_CA,p)%val
 
-
-
-          END IF
-
+            write (UNIT=luogui1,FMT="(5(f10.4,'|'))",ADVANCE="YES")     &
+                      rep_report%period_report(Soil_Water,p)%val,                  &
+                      rep_report%period_report(Crop_Transp,p)%val,                 &
+                      rep_report%period_report(Evaporation,p)%val,                 &
+                      rep_report%period_report(Runoff,p)%val,                      &
+                      rep_report%period_report(Drainage,p)%val               
+         END IF
        END DO
-       ! print the rotation yearly values here
+
+       ! Print out the "Y" rows (rotation yearly values) here
        write (UNIT=luogui1,FMT="(' Y |')",ADVANCE="NO")
        write (UNIT=luogui1,FMT="(1('Rot. yr: ',i2,'|'))",ADVANCE="NO")  &
               yrly_dates(y)%sy
-       write (UNIT=luogui1,FMT="(1x,A95,'|')",ADVANCE="NO") "" !skip op field
-       write (UNIT=luogui1,FMT="(1x,A95,'|')",ADVANCE="NO") "" !skip crop field
+       write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip op field
+       write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip crop field
 
        write (UNIT=luogui1,FMT="(1(f10.4,'|'))",ADVANCE="NO")     & !Ave cnt
                  rep_report%yrly_report(N_eros_events,y)%val
@@ -357,28 +364,35 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                       rep_report%yrly_report(Sheltered_area,y)%val,                &
                       rep_report%yrly_report(Sheltered_frac,y)%val
 
-        write (UNIT=luogui1,FMT="(3(f10.4,'|'))",ADVANCE="NO")          &
+        write (UNIT=luogui1,FMT="(4(f10.4,'|'))",ADVANCE="NO")          &
                          rep_report%yrly_report(Precipi,y)%val,                    &
                          rep_report%yrly_report(Wind_energy,y)%val,                &
-                         rep_report%yrly_report(Snow_cover,y)%val
-!                         rep_report%yrly_report(Dryness_ratio,y)%val
+                         rep_report%yrly_report(Snow_cover,y)%val,                 &
+                         rep_report%yrly_report(Irrigation,y)%val
 
        DO i = 1, N_eop_vars !skip veg/surf fields
          write (UNIT=luogui1,FMT="(A7,'N/A|')",ADVANCE="NO") ""
        END DO
+
+            write (UNIT=luogui1,FMT="(4(f10.4,'|'))",ADVANCE="NO")      &
+                      rep_report%yrly_report(Crop_Transp,y)%val,                   &
+                      rep_report%yrly_report(Evaporation,y)%val,                   &
+                      rep_report%yrly_report(Runoff,y)%val,                        &
+                      rep_report%yrly_report(Drainage,y)%val 
+              
        write (UNIT=luogui1,FMT="(A)",ADVANCE="YES") ""
     END DO
 
 
-    ! print the monthly values here
+    ! Print out the "m" rows (monthly values) here
     y = 0
     DO m = 1, 12
        write (UNIT=luogui1,FMT="(' m |')",ADVANCE="NO")
        write (UNIT=luogui1,FMT="(A,i3,A)",ADVANCE="NO")                      &
                  'Month:  ',m,'|'
               
-       write (UNIT=luogui1,FMT="(1x,A95,'|')",ADVANCE="NO") "" !skip op field
-       write (UNIT=luogui1,FMT="(1x,A95,'|')",ADVANCE="NO") "" !skip crop field
+       write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip op field
+       write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip crop field
 
        write (UNIT=luogui1,FMT="(1(f10.4,'|'))",ADVANCE="NO")     & !Ave cnt
                  rep_report%monthly_report(N_eros_events,m,y)%val
@@ -443,27 +457,35 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                       rep_report%monthly_report(Sheltered_area,m,y)%val,           &
                       rep_report%monthly_report(Sheltered_frac,m,y)%val
 
-        write (UNIT=luogui1,FMT="(3(f10.4,'|'))",ADVANCE="NO")          &
+        write (UNIT=luogui1,FMT="(4(f10.4,'|'))",ADVANCE="NO")          &
                          rep_report%monthly_report(Precipi,m,y)%val,               &
                          rep_report%monthly_report(Wind_energy,m,y)%val,           &
-                         rep_report%monthly_report(Snow_cover,m,y)%val
-!                         rep_report%monthly_report(Dryness_ratio,m,y)%val
+                         rep_report%monthly_report(Snow_cover,m,y)%val,            &
+                         rep_report%monthly_report(Irrigation,m,y)%val
 
 
         DO i = 1, N_eop_vars !skip veg/surf fields
            write (UNIT=luogui1,FMT="(A7,'N/A|')",ADVANCE="NO") ""
         END DO
+
+            write (UNIT=luogui1,FMT="(4(f10.4,'|'))",ADVANCE="NO")      &
+                      rep_report%monthly_report(Crop_Transp,m,y)%val,              &
+                      rep_report%monthly_report(Evaporation,m,y)%val,              &
+                      rep_report%monthly_report(Runoff,m,y)%val,                   &
+                      rep_report%monthly_report(Drainage,m,y)%val 
+
         write (UNIT=luogui1,FMT="(A)",ADVANCE="YES") ""
 
     END DO
 
+    ! Print out the "y" rows (averaged individual year) values here
     DO y = 1, nrot_years*ncycles
         ! print the simulation run individual yearly ave values here
         write (UNIT=luogui1,FMT="(' y |')",ADVANCE="NO")
         write (UNIT=luogui1,FMT="(A,i4,A)",ADVANCE="NO")                      &
                  'Year:  ',y,'|'
-        write (UNIT=luogui1,FMT="(1x,A95,'|')",ADVANCE="NO") "" !skip op field
-        write (UNIT=luogui1,FMT="(1x,A95,'|')",ADVANCE="NO") "" !skip crop field
+        write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip op field
+        write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip crop field
 
        write (UNIT=luogui1,FMT="(1(f10.4,'|'))",ADVANCE="NO")     & !Ave cnt
                  rep_report%yr_report(N_eros_events,y)%val
@@ -529,24 +551,32 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                           rep_report%yr_report(Sheltered_frac,y)%val
     
     
-        write (UNIT=luogui1,FMT="(3(f10.4,'|'))",ADVANCE="NO")            &
+        write (UNIT=luogui1,FMT="(4(f10.4,'|'))",ADVANCE="NO")            &
                              rep_report%yr_report(Precipi,y)%val,                    &
                              rep_report%yr_report(Wind_energy,y)%val,                &
-                             rep_report%yr_report(Snow_cover,y)%val
-    !                         rep_report%yr_report(Dryness_ratio,y)%val
-    
+                             rep_report%yr_report(Snow_cover,y)%val,                 &
+                             rep_report%yr_report(Irrigation,y)%val
+   
         DO i = 1, N_eop_vars !skip veg/surf fields
           write (UNIT=luogui1,FMT="(A7,'N/A|')",ADVANCE="NO") ""
         END DO
+
+           write (UNIT=luogui1,FMT="(4(f10.4,'|'))",ADVANCE="NO")        &
+                      rep_report%yr_report(Crop_Transp,y)%val,                      &
+                      rep_report%yr_report(Evaporation,y)%val,                      &
+                      rep_report%yr_report(Runoff,y)%val,                           &
+                      rep_report%yr_report(Drainage,y)%val 
+
         write (UNIT=luogui1,FMT="(A)",ADVANCE="YES") ""
     END DO
 
+    ! Print out the "T" row (total rotation average yearly) values here
     ! print the simulation run yearly average values here
     write (UNIT=luogui1,FMT="(' T |')",ADVANCE="NO")
     write (UNIT=luogui1,FMT="(2(A))",ADVANCE="NO")                      &
              'Ave. Annual','|'
-    write (UNIT=luogui1,FMT="(1x,A95,'|')",ADVANCE="NO") "" !skip op field
-    write (UNIT=luogui1,FMT="(1x,A95,'|')",ADVANCE="NO") "" !skip crop field
+    write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip op field
+    write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip crop field
     y = 0
 
     write (UNIT=luogui1,FMT="(1(f10.4,'|'))",ADVANCE="NO")     & !Ave cnt
@@ -612,16 +642,22 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
                       rep_report%yrly_report(Sheltered_area,y)%val,                &
                       rep_report%yrly_report(Sheltered_frac,y)%val
 
-
-    write (UNIT=luogui1,FMT="(3(f10.4,'|'))",ADVANCE="NO")              &
+    write (UNIT=luogui1,FMT="(4(f10.4,'|'))",ADVANCE="NO")              &
                          rep_report%yrly_report(Precipi,y)%val,                    &
                          rep_report%yrly_report(Wind_energy,y)%val,                &
-                         rep_report%yrly_report(Snow_cover,y)%val
-!                         rep_report%yrly_report(Dryness_ratio,y)%val
+                         rep_report%yrly_report(Snow_cover,y)%val,                 &
+                         rep_report%yrly_report(Irrigation,y)%val
 
     DO i = 1, N_eop_vars !skip veg/surf fields
       write (UNIT=luogui1,FMT="(A7,'N/A|')",ADVANCE="NO") ""
     END DO
+
+           write (UNIT=luogui1,FMT="(4(f10.4,'|'))",ADVANCE="NO")      &
+                      rep_report%yrly_report(Crop_Transp,y)%val,                  &
+                      rep_report%yrly_report(Evaporation,y)%val,                  &
+                      rep_report%yrly_report(Runoff,y)%val,                       &
+                      rep_report%yrly_report(Drainage,y)%val 
+
     write (UNIT=luogui1,FMT="(A)",ADVANCE="YES") ""
 
 END SUBROUTINE print_ui1_output

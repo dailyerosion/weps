@@ -22,6 +22,9 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     type(hydro_derived_et), intent(in) :: h1et
 
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
+    include "h1hydro.inc"       ! ahzirr(s) irrigation depth in mm
+                                ! ahzrun(sbr)    daily surface water runoff (mm)
+                                ! ahzper(sbr)    daily drainage "soil loss out the bottom soil layer" (mm)
 
     INTEGER :: i,j              ! local loop variables
     INTEGER :: ngdpt            ! number of simulation grid datapoints
@@ -64,10 +67,18 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     yrly_update(Precipi)%cnt = yrly_update(Precipi)%cnt + 1
     yrot_update(Precipi)%val = yrot_update(Precipi)%val + cli_today%zdpt
     yrot_update(Precipi)%cnt = yrot_update(Precipi)%cnt + 1
+
+    yrly_update(Irrigation)%val = yrly_update(Irrigation)%val + h1et%zirr
+    yrly_update(Irrigation)%cnt = yrly_update(Irrigation)%cnt + 1
+    yrot_update(Irrigation)%val = yrot_update(Irrigation)%val + h1et%zirr
+    yrot_update(Irrigation)%cnt = yrot_update(Irrigation)%cnt + 1
+
     ! For a year by year report of yearly (and rotation year) averaged variables
     yr_update(Precipi)%val = yr_update(Precipi)%val + cli_today%zdpt
     yr_update(Precipi)%cnt = yr_update(Precipi)%cnt + 1
 
+    yr_update(Irrigation)%val = yr_update(Irrigation)%val + h1et%zirr
+    yr_update(Irrigation)%cnt = yr_update(Irrigation)%cnt + 1
 ! ------------------------------------------------------------------------------------------------------------------
     ! Determine if we have any net soil loss occurring from any grid cell (erosion)
     ! We assume that we don't have any net suspension loss if we don't have any net salt/creep loss
@@ -101,6 +112,34 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     END DO
     IF (cnt_dep /= 0) Have_Deposition = .TRUE.  !We have deposition occurring, set flag for use later
 ! ------------------------------------------------------------------------------------------------------------------
+
+    yrly_update(Crop_Transp)%val = yrly_update(Crop_Transp)%val + h1et%zpta
+    yrly_update(Crop_Transp)%cnt = yrly_update(Crop_Transp)%cnt + 1
+    yrot_update(Crop_Transp)%val = yrot_update(Crop_Transp)%val + h1et%zpta
+    yrot_update(Crop_Transp)%cnt = yrot_update(Crop_Transp)%cnt + 1
+    yr_update(Crop_Transp)%val = yr_update(Crop_Transp)%val + h1et%zpta
+    yr_update(Crop_Transp)%cnt = yr_update(Crop_Transp)%cnt + 1
+
+    yrly_update(Evaporation)%val = yrly_update(Evaporation)%val + h1et%zea
+    yrly_update(Evaporation)%cnt = yrly_update(Evaporation)%cnt + 1
+    yrot_update(Evaporation)%val = yrot_update(Evaporation)%val + h1et%zea
+    yrot_update(Evaporation)%cnt = yrot_update(Evaporation)%cnt + 1
+    yr_update(Evaporation)%val = yr_update(Evaporation)%val + h1et%zea
+    yr_update(Evaporation)%cnt = yr_update(Evaporation)%cnt + 1
+
+    yrly_update(Runoff)%val = yrly_update(Runoff)%val + h1et%zrun
+    yrly_update(Runoff)%cnt = yrly_update(Runoff)%cnt + 1
+    yrot_update(Runoff)%val = yrot_update(Runoff)%val + h1et%zrun
+    yrot_update(Runoff)%cnt = yrot_update(Runoff)%cnt + 1
+    yr_update(Runoff)%val = yr_update(Runoff)%val + h1et%zrun
+    yr_update(Runoff)%cnt = yr_update(Runoff)%cnt + 1
+
+    yrly_update(Drainage)%val = yrly_update(Drainage)%val + h1et%zper
+    yrly_update(Drainage)%cnt = yrly_update(Drainage)%cnt + 1
+    yrot_update(Drainage)%val = yrot_update(Drainage)%val + h1et%zper
+    yrot_update(Drainage)%cnt = yrot_update(Drainage)%cnt + 1
+    yr_update(Drainage)%val = yr_update(Drainage)%val + h1et%zper
+    yr_update(Drainage)%cnt = yr_update(Drainage)%cnt + 1
 
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
