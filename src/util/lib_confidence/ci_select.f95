@@ -148,6 +148,10 @@ subroutine ci_logwithzeros(value, nval, nzero, ngtz, prob, mean, ci_hi, ci_low)
        psi_hi = 10.0
     else
        psi_hi = real(x(1))
+       if( psi_hi .gt. 10.0 ) then
+           psi_hi = 10.0
+           write(*,*) "# WARNING, confidence interval high value out of range, ", nval, "values."
+       end if
     end if
     !write(*,*) "psi-cox-hi, psi-hi, fvec, nfev ", psihat+norm_dev, psi_hi, fvec(1), nfev
 
