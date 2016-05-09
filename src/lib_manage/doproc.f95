@@ -1823,7 +1823,7 @@
 
 !       do process
 !       do not initialize crop if no crop is present
-        if( acdpop(sr) .gt. 0.0 ) then
+        if( (acdpop(sr) .gt. 0.0) .and. (ac0idc(sr) .gt. 0) ) then
 !         set flag for crop initialization - jt
           crop%growth%am0cif = .true.
 !         set crop growth flag on - jt

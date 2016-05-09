@@ -51,7 +51,10 @@
 ! to be disabled, we won't worry about it right now.  LEW - 04/23/99
 
       ! check for a valid growing crop
-      if( (ac0shoot(sr) .le. 0.0) .or. (acdpop(sr) .le. 0.0) ) then
+      if(      (ac0shoot(sr) .le. 0.0) &
+          .or. (acdpop(sr) .le. 0.0) &
+          .or. (ac0idc(sr) .eq. 0) ) then
+          ! this is not a valid growing crop
           crop%growth%am0cgf = .false.
       end if
 
