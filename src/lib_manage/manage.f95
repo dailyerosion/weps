@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine manage( sr, syear, crop, residue, biotot, mandate, h1et)
+      subroutine manage( sr, startyr, crop, residue, biotot, mandate, h1et)
 
 !     + + + PURPOSE + + +
 !     This is the main routine of the MANAGEMENT submodel. The date passed
@@ -37,8 +37,7 @@
 ! ***      include 's1layr.inc'      
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer sr, syear
-      integer lopdd, lopmm, lopyy
+      integer sr, startyr
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
@@ -47,22 +46,19 @@
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !        sr - the subregion number
-!     syear - starting year of the simulation run
-!     lopdd - day of last operation
-!     lopmm - month of last operation
-!     lopyy - year of last operation
+!     startyr - starting year of the simulation run
 
 !     + + + LOCAL VARIABLES + + +
-      integer dd, mm, yyyy, myear, month, day, year
+      integer simdd, simmm, simyr, mansimyr, manmon, manday, manyr
       character*256   line
 
-!        dd - current simulation day
-!        mm - current simulation month
-!      yyyy - current simulation year
-!     myear - determines the "year offset" within a period of years
-!     month - month from the management file
-!       day - day from the management file
-!      year - year from the management file
+!        simdd - current simulation day
+!        simmm - current simulation month
+!        simyr - current simulation year
+!     mansimyr - the simulation year which corresponds to the year from the management file
+!       manmon - month from the management file
+!       manday - day from the management file
+!        manyr - year from the management file
 
 !     + + + SUBROUTINES CALLED + + +
 !     dooper - DO OPERation is called when dates match
@@ -82,7 +78,7 @@
       endif
 
       ! get current simulation day, month, year
-      call get_simdate( dd, mm, yyyy )
+      call get_simdate( simdd, simmm, simyr )
 
       ! reset any global variables whose setting should only be valid
       ! for one day
@@ -94,27 +90,29 @@
       
       if (line(1:1).ne.'D') goto 901
 
-      myear=mod (yyyy-syear, mperod(sr))+1
-
 !     Must be a space between 'D' and date in dd/mm/yyyy format
-      read (line (3:12),'(i2,1x,i2,1x,i4)', err=902) day,month,year
+      read (line (3:12),'(i2,1x,i2,1x,i4)', err=902) manday,manmon,manyr
 
-!     if not today then return
+      ! find simulation year to which management year corresponds
+      mansimyr = simyr - mod (simyr-startyr, mperod(sr)) + manyr - 1
 
-      if (difdat (dd,mm,myear,day,month,year).ne.0) return
+      if (difdat (simdd,simmm,mansimyr,manday,manmon,mansimyr).ne.0) then
+        ! management date does not match simulation date
+        return
+      end if
 
       if (am0tfl(sr) .eq. 1) then
         write (luomanage(sr),*)
-        write (luomanage(sr),2015) dd,mm,yyyy,year,sr
+        write (luomanage(sr),2015) simdd,simmm,simyr,manyr,sr
       endif
 
 !     pass date of operation to MAIN for output purposes, used by STIR also
-      lastoper(0)%day = day
-      lastoper(0)%mon = month
-      lastoper(0)%yr = year
-      lastoper(sr)%day = day
-      lastoper(sr)%mon = month
-      lastoper(sr)%yr = year
+      lastoper(0)%day = manday
+      lastoper(0)%mon = manmon
+      lastoper(0)%yr = manyr
+      lastoper(sr)%day = manday
+      lastoper(sr)%mon = manmon
+      lastoper(sr)%yr = manyr
 
 !     Move the tbl ptr to the first operation after the date
 
@@ -133,8 +131,10 @@
         endif
       case ('D')
         call stir_report(sr, .false., lastoper(sr)%stir, lastoper(sr)%energyarea)
-        read (line (3:12),'(i2,1x,i2,1x,i4)', err=902) day,month,year
-        if (difdat (dd,mm,myear,day,month,year).ne.0) return
+        read (line (3:12),'(i2,1x,i2,1x,i4)', err=902) manday,manmon,manyr
+        ! find simulation year to which management year corresponds
+        mansimyr = simyr - mod (simyr-startyr, mperod(sr)) + manyr - 1
+        if (difdat (simdd,simmm,mansimyr,manday,manmon,mansimyr).ne.0) return
       case ('*')
         call stir_report(sr, .true., lastoper(sr)%stir, lastoper(sr)%energyarea)
         mcount(sr) = mcount(sr) + 1
