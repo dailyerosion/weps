@@ -124,6 +124,9 @@
       imprs = 0.0
       rdgflag = 0
 
+      ! initialize end of season / hydrobal reporting flag to true to generate a report
+      rpt_season_flg = .true.
+
       return
 ! Error stops
   901 write(0,9901) mtbl(mcur(sr))

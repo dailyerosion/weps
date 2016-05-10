@@ -971,18 +971,22 @@
      &           atmbgstemz(1,sr),                                      &
      &           atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr),      &
      &           atgrainf(sr) )
-            call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
-     &        acthum(sr), crop%geometry%xstmrep, &
-     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
-     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
-     &        prevbgstemz(1,sr),                                        &
-     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
-     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
-     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
-     &        prevdayspring(sr), mature_warn_flg )
+             if( rpt_season_flg ) then
+               call report_hydrobal( sr, bmrotation )
+               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
+     &         nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &         acthum(sr), crop%geometry%xstmrep, &
+     &         prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
+     &         prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
+     &         prevbgstemz(1,sr),                                        &
+     &         prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
+     &         prevht(sr), prevstm(sr), prevrtd(sr),                     &
+     &         prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
+     &         prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &         prevdayspring(sr), mature_warn_flg )
+               ! set to stop additional report in this operation
+               rpt_season_flg = .false.
+             end if
           else if( am0kilfl .eq. 3 ) then
              ! defoliate by dropping all crop leaf mass into crop flat pool
              crop%mass%flatleaf = crop%mass%flatleaf + crop%mass%standleaf
@@ -1044,7 +1048,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
      &           mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            if( am0kilfl.eq.0 ) then
+            if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1058,6 +1062,8 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+              ! set to stop additional report in this operation
+              rpt_season_flg = .false.
             end if
         endif
 !-----END cutting to height process (process code 32)
@@ -1101,7 +1107,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
      &           mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            if( am0kilfl.eq.0 ) then
+            if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1115,6 +1121,8 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+              ! set to stop additional report in this operation
+              rpt_season_flg = .false.
             end if
         end if
 !-----END cutting by fraction process (process code 33)
@@ -1193,7 +1201,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
       &          mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            if( am0kilfl.eq.0 ) then
+            if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1207,6 +1215,8 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+              ! set to stop additional report in this operation
+              rpt_season_flg = .false.
             end if
         end if
 !-----END thinning to population process (process code 37)
@@ -1250,7 +1260,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
      &           mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            if( am0kilfl.eq.0 ) then
+            if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1264,6 +1274,8 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+              ! set to stop additional report in this operation
+              rpt_season_flg = .false.
             end if
         end if
 !-----END thinning by fraction process (process code 38)
@@ -1354,7 +1366,7 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
-            if( am0kilfl.eq.0 ) then
+            if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1368,6 +1380,8 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+              ! set to stop additional report in this operation
+              rpt_season_flg = .false.
             end if
           end if
         endif
@@ -1415,7 +1429,7 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
-            if( am0kilfl.eq.0 ) then
+            if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1429,6 +1443,8 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+              ! set to stop additional report in this operation
+              rpt_season_flg = .false.
             end if
           end if
         end if
@@ -1477,7 +1493,7 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
-            if( am0kilfl.eq.0 ) then
+            if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1491,6 +1507,8 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+              ! set to stop additional report in this operation
+              rpt_season_flg = .false.
             end if
           end if
         end if
@@ -1538,7 +1556,7 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left, &
      &                           harv_unit_flg, mandate, crop )
-            if( am0kilfl.eq.0 ) then
+            if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1552,6 +1570,8 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+              ! set to stop additional report in this operation
+              rpt_season_flg = .false.
             end if
           end if
         end if
@@ -1681,6 +1701,19 @@
      &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg,  &
      &      crop%database%resevapa, crop%database%resevapb, &
      &      nslay(sr), residue )
+          call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        acthum(sr), crop%geometry%xstmrep, &
+     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
+     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
+     &        prevbgstemz(1,sr),                                        &
+     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
+     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
+     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevdayspring(sr), mature_warn_flg )
+          ! set to guarantee corresponding report hydrolbal at end of planting
+          rpt_season_flg = .true.
       endif
       ! crop pool state has been changed, force dependent variable update  
       am0cropupfl = 1
@@ -1838,7 +1871,7 @@
           call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
         call set_calib(sr, crop)
-        if( am0kilfl.eq.0 ) then
+        if( rpt_season_flg ) then
           ! not reported by the kill process in this
           call report_hydrobal( sr, bmrotation )
         end if
@@ -1894,7 +1927,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
      &           mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            if( am0kilfl.eq.0 ) then
+            if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1908,6 +1941,8 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+              ! set to stop additional report in this operation
+              rpt_season_flg = .false.
             end if
         end if
 !-----END biomass remove process (process code 61)
@@ -1964,7 +1999,7 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
-            if( am0kilfl.eq.0 ) then
+            if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1978,6 +2013,8 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+              ! set to stop additional report in this operation
+              rpt_season_flg = .false.
             end if
           end if
         end if

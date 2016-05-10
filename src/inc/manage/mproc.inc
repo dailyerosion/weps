@@ -19,6 +19,7 @@
 
       real             fracarea
       integer          bioflg
+      logical          rpt_season_flg
 
       integer          cropno
       character*80     cropname
@@ -29,7 +30,7 @@
      &                tdepth, tlayer, ti,                               &
      &                tstddepth, tmindepth, tmaxdepth,                  &
      &                rdgflag, imprs
-      common / bio / bioflg, fracarea
+      common / bio / bioflg, fracarea, rpt_season_flg
 
       common / mproc / cropno, cropname
 
@@ -42,6 +43,16 @@
 !     + + + VARIABLE DEFINITIONS + + +
 !     cropno - number that identifies the crop to be grown
 !     fracarea - fraction of area tilled (not implement but field?) (m*m)
+!     bioflg - flag indicating what to manipulate
+!       0 - All standing material is manipulated (both crop and residue)
+!       1 - Crop
+!       2 - 1'st residue pool
+!       4 - 2'nd residue pool
+!       ....
+!       2**n - nth residue pool
+!     rpt_season_flg - flag to limit end of season / hydrobal reporting to once per operation
+!                      true  - generate report in this operation
+!                      false - report has already been generated in this operation
 !     tdepth - tillage depth (mm)
 !     rdgflag - tillage ridge flag
 !     imprs  - implement ridge spacing (can be used to set row spacing)
