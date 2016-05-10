@@ -63,7 +63,7 @@ module process_mod
 !     +++ PARAMETERS +++
       real, parameter :: cmp = 0.0001  ! mixing parameter coef.
       real, parameter :: ctf = 1.2     ! ridge trapping fraction
-      real, parameter :: cdp = 0.02    ! deposition coef. for saltation
+      real, parameter :: cdp = 0.005   ! deposition coef. for suspension
       real, parameter :: c10dp = 0.001 ! deposition coef. for pm10
 
 !     +++ LOCAL VARIABLES +++

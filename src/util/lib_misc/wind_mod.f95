@@ -240,10 +240,8 @@ module wind_mod
               red_sai = red_sai * red_fac
 
               ! check for row width effect
-              if( bcxrow .gt. bczht*5.0 ) then
-                  red_fac = 1.0/(0.92 + 0.021 * bcxrow / (bczht - fur_dis * bszrgh * mmtom) )
-                  red_lai = red_lai * red_fac
-              end if
+              red_fac = min( 1.0, 1.0/(0.92 + 0.021 * bcxrow / (bczht - fur_dis * bszrgh * mmtom) ) )
+              red_lai = red_lai * red_fac
 
           else
               ! not tall enough to do anything
@@ -255,10 +253,8 @@ module wind_mod
           ! test plant height and ridge height for minimums
           if( bczht .gt. 0.0 ) then
               ! check for row width effect
-              if( bcxrow .gt. bczht*5.0 ) then
-                  red_fac = 1.0 / (0.92 + 0.021 * bcxrow / bczht)
-                  red_lai = red_lai * red_fac
-              end if
+              red_fac = min( 1.0, 1.0 / (0.92 + 0.021 * bcxrow / bczht))
+              red_lai = red_lai * red_fac
           else
               ! not tall enough to do anything
               red_lai = 0.0
