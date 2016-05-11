@@ -38,17 +38,17 @@
      &        '(mg/shoot)    (m^2/shoot)   (m)           (m)      ',    &
      &        '(kg/m^2) (#/m^2)')
 
- 2033 format('#                                                    stand&
-     &ing                flat                    root                   &
-     &                  root')
- 2034 format('#dy mo year crop_name                                stem &
-     &   leaf    store   stem    leaf    store   stem   store   fiber   &
-     &height stemcount depth   grainf  stmrepd dapl chill  hucum   mxhu &
-     &huind dafm spring')
- 2035 format('#                                                    kg/m^&
-     &2  -------------------------------------------------------------  &
-     & meter  #/m^2     meter   ------  meter  ----  deg_C  deg_C  deg_C&
-     & ----- ---- ------')
+ 2033 format('#          |                                        |stand&
+     &ing|      |       |flat   |       |       |root  |       |       |&
+     &      |         |root')
+ 2034 format('#dy mo year|crop_name                               |stem &
+     &  |leaf   |store  |stem   |leaf   |store  |stem  |store  |fiber  |&
+     &height|stemcount|depth  |grainf |stmrepd|dapl|chill |hucum  |mxhu|&
+     &huind|dafm|spring')
+ 2035 format('#          |                                        |kg/m^&
+     &2 |-------|-------|-------|-------|-------|------|-------|------ |&
+     & meter |#/m^2    |meter  |------ |meter |---- |deg_C |deg_C |deg_C&
+     &|-----|----|------')
 
  6000 format('#plant harvest 0=days_mat calc_d_mat db_d_mat calc_heatu d&
      &b_heatu')
