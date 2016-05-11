@@ -973,6 +973,8 @@
      &           atgrainf(sr) )
              if( rpt_season_flg ) then
                call report_hydrobal( sr, bmrotation )
+               ! This may be harvest or non-harvest termination, allow early harvest warnings
+               mature_warn_flg = 1
                call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
      &         nslay(sr), ac0idc(sr), crop%growth%dayam, &
      &         acthum(sr), crop%geometry%xstmrep, &
@@ -1701,6 +1703,8 @@
      &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg,  &
      &      crop%database%resevapa, crop%database%resevapb, &
      &      nslay(sr), residue )
+          ! non-harvest termination, suppress early harvest warnings
+          mature_warn_flg = 0
           call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
      &        acthum(sr), crop%geometry%xstmrep, &
