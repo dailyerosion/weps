@@ -15,7 +15,15 @@
 !     Reference in User Guide: Saxton K.E. and Rawls W.J., 2006. 
 !     Soil water characteristics estimates by texture and organic matter for hydraologic solution.
 !     Soil SCI. SOC. AM. J., 70, 1569--1578
-!
+
+!     After viewing the web page by Saxton http://hrsl.ba.ars.usda.gov/soilwater/Index.htm
+!     the minimum clay content modeled is around 5%, making the maximum sand content around 95%
+!     It also shows the maximum clay content to be around 60%. Clamping the input values to
+!     remain within these ranges, and adjusting the other components accordingly would prevent
+!     out of range errors such as wilting point becoming less than zero, but does not answer the
+!     question of what the values really should be for these extremes. For now, the wilting point
+!     value is prevented from going to zero.
+
 !     Version: 2008.
 !     Date recoded: Febuary 19, 2008
 !     Verified by: Joan Wu, WSU 
@@ -70,7 +78,7 @@
      &            + 0.068*sand(i)*clay(i)                               &
      &            + 0.031
 !
-          saxwp(i) = sw1500 + 0.14*sw1500 - 0.02
+          saxwp(i) = max( 1.0e-5, (sw1500 + 0.14*sw1500 - 0.02) )
 !
 !      equation 2
          sw33 =   - 0.251*sand(i)                                       &
