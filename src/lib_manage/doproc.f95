@@ -561,7 +561,7 @@
           ! use texture based calculations from Rawls to set all soil
           ! water properties.
           call param_prop_bc(                                           &
-     &        tlayer, aszlyd(1,sr), asdblk(1,sr), asdpart(1,sr),        &
+     &        nslay(sr), aszlyd(1,sr), asdblk(1,sr), asdpart(1,sr),     &
      &        asfcla(1,sr), asfsan(1,sr), asfom(1,sr), asfcec(1,sr),    &
      &        ahrwcs(1,sr), ahrwcf(1,sr), ahrwcw(1,sr),ahrwcr(1,sr),    &
      &        ahrwca(1,sr), ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),     &
