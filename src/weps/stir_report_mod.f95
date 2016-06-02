@@ -126,13 +126,15 @@ module stir_report_mod
       ! only do if flag is set, before done flag set
       if( (soil_cond .eq. 0) .or. stircum(isr)%done_flg ) return
 
-      ! check for first time at end of managment file
-      if( (.not. stircum(isr)%man_eof) .and. end_of_file ) then
-          stircum(isr)%man_eof = end_of_file
+      if( end_of_file .and. ( .not. report_loop ) ) then
           ! used in stir_crop, which requires at least two passes to work
           ! reset the plant harvest array index for second pass
           stircum(isr)%phopidx = 0
-          return
+      end if
+
+      ! check for first time at end of managment file
+      if( (.not. stircum(isr)%man_eof) .and. end_of_file ) then
+          stircum(isr)%man_eof = end_of_file
       end if
 
       ! only go through stir calculation once (see done flag above)
