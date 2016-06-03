@@ -23,6 +23,7 @@
 
       use datetime_mod, only: get_simdate, julday, caldat
       use file_io_mod, only: luoseason
+      use manage_data_struct_defs, only: lastoper
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -96,7 +97,7 @@
 !     root_fiber_sum - sum of root fiber 
 
 !     + + + OUTPUT FORMATS + + +
- 2010 format(1x,i2,'/',i2,'/',i4,'|',1x,i2,'/',i2,'/',i4,'|',a40,'|',   &
+ 2010 format(1x,i2,'/',i2,'/',i2,'|',1x,i2,'/',i2,'/',i2,'|',a40,'|',   &
      &       10(f7.3,'|'),f7.2,'|',2(f7.3,'|'),f7.5,'|',f7.3,'|',i4,'|',&
      &       3(f6.1,'|'),f5.3,'|',i4,'|',i6,'|')
  2020 format(a)
@@ -128,6 +129,9 @@
       pjday = julday(dd, mm, yy) - bprevdayap - bcdayam
       call caldat( pjday, pday, pmon, pyr )
 
+      ! convert planting year from simulation years to rotation years (less than zero allowed)
+      pyr = lastoper(isr)%yr - (yy - pyr)
+
       ! end of season print statements when crop submodel output flag set
       ! added initialization flag to prevent printing if crop not yet initialized
 
@@ -148,8 +152,8 @@
             root_fiber_sum = root_fiber_sum + bprevrootfiberz(lay)
         end do
 
-        write(UNIT=luoseason(isr),FMT=2010,advance='NO')                &
-     &    pday, pmon, pyr, dd, mm, yy, bc0nam,                          &
+        write(UNIT=luoseason(isr),FMT=2010,advance='NO')pday, pmon, pyr,&
+     &   lastoper(isr)%day, lastoper(isr)%mon, lastoper(isr)%yr, bc0nam,&
      &    bprevstandstem, bprevstandleaf, bprevstandstore,              &
      &    bprevflatstem, bprevflatleaf, bprevflatstore,                 &
      &    bg_stem_sum, root_store_sum, root_fiber_sum,                  &

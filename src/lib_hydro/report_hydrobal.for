@@ -7,7 +7,6 @@
 
       use file_io_mod, only: luohydrobal
       use manage_data_struct_defs, only: lastoper
-      use datetime_mod, only: get_simdate
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr, bmrotation
@@ -25,7 +24,6 @@
       real fallow_eff
       real water_use_eff
       real water_use
-      integer day, mon, year
 
 !     + + + LOCAL DEFINITIONS + + +
 !     fallow_eff - computed fallow efficiency from period rain and soil water content values
@@ -39,9 +37,6 @@
         hprevrotation(isr) = 1
 
       else  ! done when initializing cycle(s) completed
-
-        ! get current day in day, month, year format
-        call get_simdate( day, mon, year )
 
         if( bmrotation .gt. hprevrotation(isr) ) then
           ! write newline
@@ -75,7 +70,7 @@
         if( cumtrans(isr) .gt. 0.0 ) then
 
         write(unit=luohydrobal(isr),fmt=1000, advance='NO')             &
-     &  day, mon, year,                                                 &
+     &  lastoper(isr)%day, lastoper(isr)%mon, lastoper(isr)%yr,         &
      &  trim(lastoper(isr)%name),                                       &
      &  'Start day,swc,snow', initday(isr), initswc(isr), initsnow(isr),&
      &  'End day,swc,snow', presday(isr), presswc(isr), pressnow(isr),  &
@@ -89,7 +84,7 @@
         else
 
         write(unit=luohydrobal(isr),fmt=1000, advance='NO')             &
-     &  day, mon, year,                                                 &
+     &  lastoper(isr)%day, lastoper(isr)%mon, lastoper(isr)%yr,         &
      &  trim(lastoper(isr)%name),                                       &
      &  'Start day,swc,snow', initday(isr), initswc(isr), initsnow(isr),&
      &  'End day,swc,snow', presday(isr), presswc(isr), pressnow(isr),  &
@@ -102,7 +97,7 @@
 
         end if
 
- 1000 format(1x,i2,'/',i2,'/',i4,'|',a,'|',a,'|',f7.0,'|',2(f9.3,'|'),  &
+ 1000 format(1x,i2,'/',i2,'/',i2,'|',a,'|',a,'|',f7.0,'|',2(f9.3,'|'),  &
      &       a,'|',f7.0,'|',2(f9.3,'|'),a,'|',8(f9.3,'|'))
  1001 format(a)
 
