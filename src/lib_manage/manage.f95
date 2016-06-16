@@ -96,7 +96,7 @@
       ! find simulation year to which management year corresponds
       mansimyr = simyr - mod (simyr-startyr, mperod(sr)) + manyr - 1
 
-      if (difdat (simdd,simmm,mansimyr,manday,manmon,mansimyr).ne.0) then
+      if (difdat (simdd,simmm,simyr,manday,manmon,mansimyr).ne.0) then
         ! management date does not match simulation date
         return
       end if
