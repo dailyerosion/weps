@@ -68,7 +68,8 @@
         wsdblk = csdblk
         do j = 1,nj
           if (wsdblk .lt. 0.97 * csdsblk) then
-            wsdblk = wsdblk+0.75 * (1-(wsdblk/(0.97 * csdsblk)))**1.5
+            wsdblk = min( csdsblk,                                      &
+     &               wsdblk+0.75 * (1-(wsdblk/(0.97 * csdsblk)))**1.5 )
           else
             exit
           endif
