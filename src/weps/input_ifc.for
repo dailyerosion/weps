@@ -82,6 +82,7 @@
       ! initialize new variables not read in from ifc file 
       do lay = 1, nslay(isr)
           ahfredsat(lay,isr) = 0.0
+          asdwsrat(lay, isr) = -1.0
       end do
 
       ! Set layer thickness of the soils as is appropriate for the simulation
@@ -91,20 +92,9 @@
       asfalw(isr) = asfald(isr)/((1.33**2.)*(1-asfald(isr))+asfald(isr))
 
       ! Settled Bulk Density, Reference Bulk Density, and Particle Density (texture based calculation)
-      call proptext( nslay(isr), asfcla(1,isr),                         &
-     &               asfsan(1,isr), asfom(1,isr),                       &
-     &               asdsblk(1,isr), asdprocblk(1,isr), asdpart(1,isr) )
-
-      do lay=1,nslay(isr)
-      ! make sure settled bd is greater than or equal to wet bulk density
-        if( asdsblk(lay,isr).lt.asdwblk(lay,isr) ) then
-            write(*,*) 'WARNING: settled bd (',asdsblk(lay,isr),        &  ! NOTE:  Changed to "WARNING" so message
-     &                 ') < wet bd (',asdwblk(lay,isr),'), sbd = wbd' !wouldn't display in GUI popup Warning dialog box
-            asdsblk(lay,isr) = asdwblk(lay,isr)
-        endif
-      end do
-
-
+      call proptext(nslay(isr),asfcla(1,isr),asfsan(1,isr),asfom(1,isr),&
+     &              asdblk(1,isr), asdsblk(1,isr), asdprocblk(1,isr),   &
+     &              asdwblk(1,isr), asdwsrat(1, isr), asdpart(1,isr) )
 
       ! calculate (or recalculate) additional values from soil basic properties
       do lay=1,nslay(isr)

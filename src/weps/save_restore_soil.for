@@ -124,6 +124,7 @@
 !       other variables by depth
           Zsdsblk(ldx, isr)= asdsblk(ldx, isr)
           Zsdpart(ldx, isr)= asdpart(ldx, isr)
+          Zsdwsrat(ldx, isr)= asdwsrat(ldx, isr)
           Zhfredsat(ldx, isr)= ahfredsat(ldx, isr)
       end do
 
@@ -240,6 +241,7 @@
 !       other variables by depth
           asdsblk(ldx, isr)= Zsdsblk(ldx, isr)
           asdpart(ldx, isr)= Zsdpart(ldx, isr)
+          asdwsrat(ldx, isr)= Zsdwsrat(ldx, isr)
           ahfredsat(ldx, isr)= Zhfredsat(ldx, isr)
       end do
 

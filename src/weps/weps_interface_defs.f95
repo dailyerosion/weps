@@ -841,12 +841,16 @@
       end subroutine propsaxt
 !-------------------------------
       subroutine proptext( nlay, clayf, sandf, organf, &
-     &                 settled_bulkden, proctor_bulkden, partden )
+     &                     bulkden, settled_bulkden, proctor_bulkden, &
+     &                     wet_bulkden, wet_set_rat, partden )
 
       integer nlay
       real sandf(*), clayf(*), organf(*)
+      real bulkden(*)
       real settled_bulkden(*)
       real proctor_bulkden(*)
+      real wet_bulkden(*)
+      real wet_set_rat(*)
       real partden(*)      
       end subroutine proptext
 !--------------------------------

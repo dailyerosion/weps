@@ -18,12 +18,13 @@
       real             asdwblk(mnsz, mnsub)
       real             asdblk0(mnsz, mnsub)
       real             asdpart(mnsz, mnsub)
+      real             asdwsrat(mnsz, mnsub)
       real             restrict_depth(mnsub)
       real             bedrock_depth(mnsub)
 
       common / s1phys /                                                 &
      &    asdblk, asdsblk, asdprocblk, asdwblk, asdblk0, asdpart,        &
-     &    restrict_depth, bedrock_depth 
+     &    asdwsrat, restrict_depth, bedrock_depth 
 
       save :: /s1phys/
 
@@ -43,6 +44,8 @@
 
 !     asdpart - Soil layer particle density adjusted from mineral only
 !               to include organic matter content
+
+!     asdwsrat - Nondimensional ratio of wet to settled bulk density
 
 !     restrict_depth - depth to impermeable layer/restricting zone (mm)
 

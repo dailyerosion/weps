@@ -22,6 +22,14 @@ module barriers_mod
      type( barrier_params), dimension(:), allocatable :: param
   end type barrier_data
 
+  type barrier_seasonal
+     character*80 :: amzbt  ! Barrier type
+     integer :: nper ! number of periods in barrier
+     integer :: np   ! number of points in barrier_params and polyline point array
+     type(point), dimension(:), allocatable :: points  ! the polyline points
+     type( barrier_params), dimension(:), allocatable :: param
+  end type barrier_seasonal
+
   type(barrier_data), dimension(:), allocatable :: barrier
 
 contains

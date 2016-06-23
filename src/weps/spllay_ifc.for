@@ -214,6 +214,8 @@
      &                     tempnslay, tempdep )
         call move_ave_val( nslay(isr), aszlyd(1,isr), asdwblk(1,isr),   &
      &                     tempnslay, tempdep )
+        call move_ave_val( nslay(isr), aszlyd(1,isr), asdwsrat(1,isr),  &
+     &                     tempnslay, tempdep )
 
 !     IP soil chemical properties
         call move_ave_val( nslay(isr), aszlyd(1,isr), asfom(1,isr),     &
@@ -591,6 +593,7 @@
 !!     other variables by depth
 !        asdsblk(ldx, isr)= asdsblk(otnlay(ldx), isr)
 !        asdpart(ldx, isr)= asdpart(otnlay(ldx), isr)
+!        asdwsrat(ldx, isr)= asdwsrat(otnlay(ldx), isr)
 !
 !      end do
 ! 120  continue

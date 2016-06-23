@@ -33,6 +33,7 @@
       real             Zsdwblk(mnsz, mnsub)
       real             Zsdblk0(mnsz, mnsub)
       real             Zsdpart(mnsz, mnsub)
+      real             Zsdwsrat(mnsz, mnsub)
 
       real             Zslrr(mnsub)
       real             Zslrro(mnsub)
@@ -89,7 +90,7 @@
       common / soil_save /                                              &
      & Zszcr, Zsfcr, Zsmlos, Zsflos, Zsdcr, Zsecr, Zsfald, Zsfalw,      &
      & Zmrslp, ZSFCov, Zrestrict_depth, Zbedrock_depth,                 &
-     & Zsdblk, Zsdsblk, Zsdwblk, Zsdblk0, Zsdpart,                      &
+     & Zsdblk, Zsdsblk, Zsdwblk, Zsdblk0, Zsdpart, Zsdwsrat,            &
      &                 Zszrgh, Zszrho, Zsxrgw, Zsxrgs, Zsargo, Zsxdks,  &
      &                 Zsxdkh, Zs0rrk, Zslrrc, Zslrr, Zslrro,           &
      &                 Zsfsan, Zsfsil, Zsfcla, Zsvroc,                  &

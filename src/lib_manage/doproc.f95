@@ -625,7 +625,8 @@
 !       With the change in composition of the layers, it is necessary
 !       to update soil properties that are a function of texture
         call proptext( tlayer, asfcla(1,sr), asfsan(1,sr), asfom(1,sr), &
-     &                 asdsblk(1,sr), asdprocblk(1,sr), asdpart(1,sr) )
+     &                 asdblk(1,sr), asdsblk(1,sr), asdprocblk(1,sr),   &
+     &                 asdwblk(1,sr), asdwsrat(1, sr), asdpart(1,sr) )
 
         if( wc_type.eq.4 ) then
           ! use texture based calculations from Rawls to set all soil

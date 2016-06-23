@@ -262,6 +262,7 @@
         do lay = 1, nslay(isr)
             asfvcs(lay,isr) = 0.0
             ahfredsat(lay,isr) = 0.0
+            asdwsrat(lay, isr) = -1.0
         end do
 
 
@@ -272,9 +273,9 @@
       asfalw(isr) = asfald(isr)/((1.33**2.)*(1-asfald(isr))+asfald(isr))
 
       ! texture based calculation of settled bulk density and particle density
-      call proptext( nslay(isr), asfcla(1,isr),                         &
-     &               asfsan(1,isr), asfom(1,isr),                       &
-     &               asdsblk(1,isr), asdprocblk(1,isr), asdpart(1,isr) )
+      call proptext(nslay(isr),asfcla(1,isr),asfsan(1,isr),asfom(1,isr),&
+     &              asdsblk(1,isr), asdsblk(1,isr), asdprocblk(1,isr),  &
+     &              asdwblk(1,isr), asdwsrat(1, isr), asdpart(1,isr) )
 
       ! calculate (or recalculate) additional values from soil basic properties
       do lay=1,nslay(isr)

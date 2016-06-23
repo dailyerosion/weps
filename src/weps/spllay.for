@@ -214,6 +214,8 @@
      &                     tempnslay, tempdep )
         call move_ave_val( nslay(isr), aszlyd(1,isr), asdwblk(1,isr),   &
      &                     tempnslay, tempdep )
+        call move_ave_val( nslay(isr), aszlyd(1,isr), asdwsrat(1,isr),  &
+     &                     tempnslay, tempdep )
         call move_ave_val( nslay(isr), aszlyd(1,isr), aslagm(1,isr),    &
      &                     tempnslay, tempdep )
         call move_ave_val( nslay(isr), aszlyd(1,isr), as0ags(1,isr),    &
@@ -573,6 +575,7 @@
         asdwblk(ldx, isr)= asdwblk(otnlay(ldx), isr)
         asdsblk(ldx, isr)= asdsblk(otnlay(ldx), isr)
         asdpart(ldx, isr)= asdpart(otnlay(ldx), isr)
+        asdwsrat(ldx, isr)= asdwsrat(otnlay(ldx), isr)
         aslagm(ldx, isr) = aslagm(otnlay(ldx), isr)
         as0ags(ldx, isr) = as0ags(otnlay(ldx), isr)
         aslagx(ldx, isr) = aslagx(otnlay(ldx), isr)
