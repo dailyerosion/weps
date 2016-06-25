@@ -45,9 +45,11 @@ module sci_report_mod
 !     + + + LOCAL VARIABLES + + +
       integer idx, jdy
       integer sdx, nsubr
-      real sarea, tarea, cellarea, texmult, avgtexmult
+      real tarea, cellarea, texmult, avgtexmult
       real avgallbiomass, avgallerosion, avgallstir, avgallenergy
       real avgallwatererosion
+      real, dimension(:), allocatable :: sarea
+      real, dimension(:), allocatable :: sarea_ratio
       real, dimension(:), allocatable :: allbiomass_avg
       real, dimension(:), allocatable :: allerosion_avg
       real, dimension(:), allocatable :: stir_avg
@@ -102,6 +104,10 @@ module sci_report_mod
       if( isr .eq. 0 ) then
         nsubr = size(luosci) - 1
         sum_stat = 0
+        allocate( sarea(nsubr), stat=alloc_stat )
+        sum_stat = sum_stat + alloc_stat
+        allocate( sarea_ratio(nsubr), stat=alloc_stat )
+        sum_stat = sum_stat + alloc_stat
         allocate( allbiomass_avg(nsubr), stat=alloc_stat )
         sum_stat = sum_stat + alloc_stat
         allocate( allerosion_avg(nsubr), stat=alloc_stat )
@@ -114,51 +120,54 @@ module sci_report_mod
            Write(*,*) 'ERROR: unable to allocate sci_report sum arrays'
         end if
 
+        ! find subregion areas
         do sdx = 1, nsubr
-
-          allbiomass_avg(sdx) = scisum(sdx)%allbiomass / scisum(sdx)%days
-          allerosion_avg(sdx) = scisum(sdx)%allerosion * 365.25 / scisum(sdx)%days 
-
           ! initialize subregion area totals
-          sarea = 0.0
+          sarea(sdx) = 0.0
 
           do idx = 1, imax-1
               do jdy = 1, jmax-1
                   if( cellstate(idx,jdy)%csr .eq. sdx ) then
-                      sarea = sarea + cellarea
+                      sarea(sdx) = sarea(sdx) + cellarea
                   end if
                end do
           end do
 
-          tarea = tarea + sarea
-          avgallbiomass = avgallbiomass + allbiomass_avg(sdx) * sarea
-          avgallerosion = avgallerosion + allerosion_avg(sdx) * sarea
-          avgallwatererosion =avgallwatererosion+WaterErosion(sdx)*sarea
+          tarea = tarea + sarea(sdx)
+        end do
+
+        ! find subregion area ratios
+        do sdx = 1, nsubr
+          sarea_ratio(sdx) = sarea(sdx) / tarea
+        end do
+
+        do sdx = 1, nsubr
+
+          allbiomass_avg(sdx) = scisum(sdx)%allbiomass / scisum(sdx)%days
+          allerosion_avg(sdx) = scisum(sdx)%allerosion * 365.25 / scisum(sdx)%days 
+          avgallbiomass = avgallbiomass + allbiomass_avg(sdx) * sarea_ratio(sdx)
+          avgallerosion = avgallerosion + allerosion_avg(sdx) * sarea_ratio(sdx)
+          avgallwatererosion =avgallwatererosion+WaterErosion(sdx)*sarea_ratio(sdx)
 
           ! get soil texture multiplier
           texmult  = get_sci_soil_multiplier(sdx)
-          avgtexmult = avgtexmult + texmult * sarea
+          avgtexmult = avgtexmult + texmult * sarea_ratio(sdx)
 
           ! field operation STIR averaging
           stir_avg(sdx) = scisum(sdx)%stir / mperod(sdx)
-          avgallstir = avgallstir + stir_avg(sdx) * sarea
+          avgallstir = avgallstir + stir_avg(sdx) * sarea_ratio(sdx)
 
           ! field operation energy averaging
           energy_avg(sdx) = scisum(sdx)%energy / mperod(sdx)
-          avgallenergy = avgallenergy + energy_avg(sdx) * sarea
+          avgallenergy = avgallenergy + energy_avg(sdx) * sarea_ratio(sdx)
 
         end do
 
-        avgallbiomass = avgallbiomass / tarea
-        avgallerosion = -avgallerosion / tarea ! make erosion positive to match renner
-        avgallwatererosion = avgallwatererosion / tarea
-        avgtexmult = avgtexmult / tarea
-        avgallstir = avgallstir / tarea
-        avgallenergy = avgallenergy / tarea
+        avgallerosion = -avgallerosion ! make erosion positive to match renner
 
       else
           avgallbiomass = scisum(isr)%allbiomass / scisum(isr)%days
-          avgallerosion = scisum(isr)%allerosion * 365.25 / scisum(isr)%days 
+          avgallerosion = -scisum(isr)%allerosion * 365.25 / scisum(isr)%days  ! make erosion positive to match renner
           avgallwatererosion = WaterErosion(isr)
 
           ! get soil texture multiplier
