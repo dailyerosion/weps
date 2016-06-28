@@ -28,7 +28,7 @@
      &                 bcmshoot, bcmtotshoot, bcmbgstemz,               &
      &                 bcmrootstorez, bcmrootfiberz,                    &
      &                 bczht, bczshoot, bcdstm, bczrtd,                 &
-     &                 bcdayap, bcdayam, bcleapdays,                    &
+     &                 bcdayap, bcdayam,                                &
      &                 bcthucum, bctrthucum,                            &
      &                 bcgrainf, bczgrowpt, bcfliveleaf,                &
      &                 bcleafareatrend, bcstemmasstrend, bctwarmdays,   &
@@ -85,7 +85,7 @@
       real bcmshoot, bcmtotshoot, bcmbgstemz(*)
       real bcmrootstorez(*), bcmrootfiberz(*)
       real bczht, bczshoot, bcdstm, bczrtd
-      integer bcdayap, bcdayam, bcleapdays
+      integer bcdayap, bcdayam
       real bcthucum, bctrthucum
       real bcgrainf, bczgrowpt, bcfliveleaf
       real bcleafareatrend, bcstemmasstrend
@@ -192,7 +192,6 @@
 !     bczrtd  - Crop root depth (m)
 !     bcdayap - number of days of growth completed since crop planted
 !     bcdayam - number of days since crop matured
-!     bcleapdays - number of leap days that occur while crop is "in place"
 !     bprevdayap - number of days of growth completed since crop planted
 !     bcthucum - crop accumulated heat units
 !     bctrthucum - accumulated root growth heat units (degree-days)
@@ -323,7 +322,7 @@
      &              bcmshoot, bcmtotshoot, bcmbgstemz,                  &
      &              bcmrootstorez, bcmrootfiberz,                       &
      &              bczht, bczshoot, bcdstm, bczrtd,                    &
-     &              bcdayap, bcdayam, bcleapdays,                       &
+     &              bcdayap, bcdayam,                                   &
      &              bcthucum, bctrthucum,                               &
      &              bcgrainf, bczgrowpt, bcfliveleaf,                   &
      &              bcleafareatrend, bcstemmasstrend, bctwarmdays,      &
@@ -711,11 +710,6 @@
           ! accumulate days after maturity
           bcdayam = bcdayam + 1
 
-      end if
-
-      ! keep track of leap days in growth period
-      if( (mm .eq. 2) .and. (dd .eq. 29 ) ) then
-          bcleapdays = bcleapdays + 1
       end if
 
       return

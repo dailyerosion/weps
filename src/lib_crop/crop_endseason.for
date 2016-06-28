@@ -4,7 +4,8 @@
 !$HeadURL$
 
       subroutine crop_endseason ( isr, bmrotation, bc0nam, bm0cfl,      &
-     &                 bnslay, bc0idc, bcdayam, bcleapdays,             &
+     &                 bnslay, bc0idc, bcdayam,                         &
+     &                 bplant_day, bplant_month, bplant_rotyr,          &
      &                 bcthum, bcxstmrep,                               &
      &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
      &                 bprevflatstem, bprevflatleaf, bprevflatstore,    &
@@ -29,7 +30,8 @@
       integer, intent(in) :: isr   ! subregion number
       integer, intent(in) :: bmrotation ! rotation count updated in manage.for
       character*(80) bc0nam
-      integer bm0cfl, bnslay, bc0idc, bcdayam, bcleapdays
+      integer bm0cfl, bnslay, bc0idc, bcdayam
+      integer bplant_day, bplant_month, bplant_rotyr
       real bcthum, bcxstmrep
       real bprevstandstem, bprevstandleaf, bprevstandstore
       real bprevflatstem, bprevflatleaf, bprevflatstore
@@ -48,7 +50,9 @@
 !     bnslay - number of soil layers
 !     bc0idc - crop type:annual,perennial,etc
 !     bcdayam - number of days since crop matured
-!     bcleapdays - number of leap days that occur while crop is "in place"
+!     bplant_day - day on month crop was planted
+!     bplant_month - month of year crop was planted
+!     bplant_rotyr - rotation year crop was planted
 !     bcthum - potential heat units for crop maturity (deg. C)
 !     bcxstmrep - a representative diameter so that acdstm*acxstmrep*aczht=acrsai
 !     bcmstandstem - crop standing stem mass (kg/m^2)
@@ -92,14 +96,10 @@
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     lay - index used to loop through layers
 !     dd,mm,yy - the current day, month, and year
-!     jdx - loop counter variable
-!     today - julian day for current date
-!     tjday - test value for planting date
-!     pjday - planting julian day
-!     pday,pmon,pyr - the planting day, month, and year
+!     hui - heat unit index
 !     bg_stem_sum - sum of below ground stem
 !     root_store_sum - sum of root storage
-!     root_fiber_sum - sum of root fiber 
+!     root_fiber_sum - sum of root fiber
 
 !     + + + OUTPUT FORMATS + + +
  2010 format(1x,i2,'/',i2,'/',i3,'|',1x,i2,'/',i2,'/',i2,'|',a40,'|',   &
@@ -130,24 +130,6 @@
 !     day of year
       call get_simdate(dd, mm, yy)
 
-      ! find planting date
-      tjday = julday(dd, mm, yy) - bprevdayap - bcdayam + bcleapdays
-      ! count backwards to planting date, checking for leapdays.
-      do jdx = julday(dd, mm, yy), tjday, -1
-         call caldat( jdx, pday, pmon, pyr )
-         if( (pmon .eq. 2) .and. (pday .eq. 29) ) then
-            bcleapdays = bcleapdays - 1
-         end if
-      end do
-
-      ! find planting date accounting for leap day difference between
-      ! when the crop was grown and this back calculation period
-      pjday = julday(dd, mm, yy) - bprevdayap - bcdayam + bcleapdays
-      call caldat( pjday, pday, pmon, pyr )
-
-      ! convert planting year from simulation years to rotation years (less than zero allowed)
-      pyr = lastoper(isr)%yr - (yy - pyr)
-
       ! end of season print statements when crop submodel output flag set
       ! added initialization flag to prevent printing if crop not yet initialized
 
@@ -168,7 +150,8 @@
             root_fiber_sum = root_fiber_sum + bprevrootfiberz(lay)
         end do
 
-        write(UNIT=luoseason(isr),FMT=2010,advance='NO')pday, pmon, pyr,&
+        write(UNIT=luoseason(isr),FMT=2010,advance='NO')                &
+     &    bplant_day, bplant_month, bplant_rotyr,                       &
      &   lastoper(isr)%day, lastoper(isr)%mon, lastoper(isr)%yr, bc0nam,&
      &    bprevstandstem, bprevstandleaf, bprevstandstore,              &
      &    bprevflatstem, bprevflatleaf, bprevflatstore,                 &

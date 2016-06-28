@@ -978,7 +978,8 @@
                ! This may be harvest or non-harvest termination, allow early harvest warnings
                mature_warn_flg = 1
                call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
-     &         nslay(sr), ac0idc(sr), crop%growth%dayam, crop%growth%leapdays, &
+     &         nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &         aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),      &
      &         acthum(sr), crop%geometry%xstmrep, &
      &         prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &         prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1056,7 +1057,8 @@
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, crop%growth%leapdays, &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1115,7 +1117,8 @@
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, crop%growth%leapdays, &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1209,7 +1212,8 @@
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, crop%growth%leapdays, &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1268,7 +1272,8 @@
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, crop%growth%leapdays, &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1374,7 +1379,8 @@
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, crop%growth%leapdays, &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1437,7 +1443,8 @@
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, crop%growth%leapdays, &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1501,7 +1508,8 @@
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, crop%growth%leapdays, &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1564,7 +1572,8 @@
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, crop%growth%leapdays, &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1708,7 +1717,8 @@
           ! non-harvest termination, suppress early harvest warnings
           mature_warn_flg = 0
           call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, crop%growth%leapdays, &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1937,7 +1947,8 @@
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, crop%growth%leapdays, &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -2009,7 +2020,8 @@
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, crop%growth%leapdays, &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &

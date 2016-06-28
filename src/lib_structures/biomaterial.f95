@@ -71,7 +71,6 @@ module biomaterial
 
      integer :: dayap       ! number of days of growth completed since crop planted
      integer :: dayam       ! number of days since crop matured
-     integer :: leapdays    ! number of leap days occurring during crop growth and before harvest
      integer :: dayspring   ! day of year in which a winter annual released stored growth
   end type biostate_growth
 

@@ -79,7 +79,7 @@
      &           bcmshoot, bcmtotshoot, bcmbgstemz,                     &
      &           bcmrootstorez, bcmrootfiberz,                          &
      &           bczht, bczshoot, bcdstm, bczrtd,                       & 
-     &           bcdayap, bcdayam, bcleapdays,                          &
+     &           bcdayap, bcdayam,                                      &
      &           bcthucum, bctrthucum,                                  &
      &           bcgrainf, bczgrowpt, bcfliveleaf,                      &
      &           bcleafareatrend, bcstemmasstrend, bctwarmdays,         &
@@ -96,7 +96,7 @@
       real bcmshoot, bcmtotshoot, bcmbgstemz(*)
       real bcmrootstorez(*), bcmrootfiberz(*)
       real bczht, bczshoot, bcdstm, bczrtd
-      integer bcdayap, bcdayam, bcleapdays
+      integer bcdayap, bcdayam
       real bcthucum, bctrthucum
       real bcgrainf, bczgrowpt, bcfliveleaf
       real bcleafareatrend, bcstemmasstrend
@@ -153,7 +153,7 @@
      &                 bcmshoot, bcmtotshoot, bcmbgstemz,               &
      &                 bcmrootstorez, bcmrootfiberz,                    &
      &                 bczht, bczshoot, bcdstm, bczrtd,                 &
-     &                 bcdayap, bcdayam, bcleapdays,                    &
+     &                 bcdayap, bcdayam,                                &
      &                 bcthucum, bctrthucum,                            &
      &                 bcgrainf, bczgrowpt, bcfliveleaf,                &
      &                 bcleafareatrend, bcstemmasstrend, bctwarmdays,   &
@@ -198,7 +198,7 @@
       real bcmshoot, bcmtotshoot, bcmbgstemz(*)
       real bcmrootstorez(*), bcmrootfiberz(*)
       real bczht, bczshoot, bcdstm, bczrtd
-      integer bcdayap, bcdayam, bcleapdays
+      integer bcdayap, bcdayam
       real bcthucum, bctrthucum
       real bcgrainf, bczgrowpt, bcfliveleaf
       real bcleafareatrend, bcstemmasstrend
@@ -385,7 +385,8 @@
       end function temps
 !-------------------------------------
       subroutine crop_endseason ( sr, bmrotation, bc0nam, bm0cfl,       &
-     &                 bnslay, bc0idc, bcdayam, bcleapdays,             &
+     &                 bnslay, bc0idc, bcdayam,                         &
+     &                 bplant_day, bplant_month, bplant_rotyr,          &
      &                 bcthum, bcxstmrep,                               &
      &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
      &                 bprevflatstem, bprevflatleaf, bprevflatstore,    &
@@ -397,7 +398,8 @@
      &                 bprevcancov, bprevdayspring, mature_warn_flg )
       integer sr, bmrotation
       character*(80) bc0nam
-      integer bm0cfl, bnslay, bc0idc, bcdayam, bcleapdays
+      integer bm0cfl, bnslay, bc0idc, bcdayam
+      integer bplant_day, bplant_month, bplant_rotyr
       real bcthum, bcxstmrep
       real bprevstandstem, bprevstandleaf, bprevstandstore
       real bprevflatstem, bprevflatleaf, bprevflatstore

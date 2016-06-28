@@ -89,7 +89,7 @@
      &   crop%growth%mshoot, crop%growth%mtotshoot, crop%mass%stemz, &
      &   crop%mass%rootstorez, crop%mass%rootfiberz, &
      &   crop%geometry%zht, crop%geometry%zshoot, crop%geometry%dstm, crop%geometry%zrtd, &
-     &   crop%growth%dayap, crop%growth%dayam, crop%growth%leapdays, &
+     &   crop%growth%dayap, crop%growth%dayam, &
      &   crop%growth%thucum, crop%growth%trthucum, &
      &   crop%geometry%grainf, crop%growth%zgrowpt, crop%growth%fliveleaf, &
      &   crop%growth%leafareatrend, crop%growth%stemmasstrend, crop%growth%twarmdays, &
