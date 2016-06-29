@@ -1048,11 +1048,11 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-          if( harv_calib_not_selected ) then
+          if( harv_calib_not_selected(sr) ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected = .false.
+            harv_calib_not_selected(sr) = .false.
           end if
           call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,  &
      &           mandate, crop)
@@ -1111,11 +1111,11 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-          if( harv_calib_not_selected ) then
+          if( harv_calib_not_selected(sr) ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected = .false.
+            harv_calib_not_selected(sr) = .false.
           end if
           call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,  &
      &           mandate, crop)
@@ -1209,11 +1209,11 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-          if( harv_calib_not_selected ) then
+          if( harv_calib_not_selected(sr) ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected = .false.
+            harv_calib_not_selected(sr) = .false.
           end if
           call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,  &
       &          mandate, crop)
@@ -1377,11 +1377,11 @@
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           if(      (harv_calib_flg .gt. 0)                              &
-     &       .and. (harv_calib_not_selected) ) then
+     &       .and. (harv_calib_not_selected(sr)) ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected = .false.
+            harv_calib_not_selected(sr) = .false.
           end if
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
@@ -1443,12 +1443,11 @@
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           if(      (harv_calib_flg .gt. 0)                              &
-     &       .and. (harv_calib_not_selected) ) then
-          if( harv_calib_flg .gt. 0 ) then
+     &       .and. (harv_calib_not_selected(sr)) ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected = .false.
+            harv_calib_not_selected(sr) = .false.
           end if
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
@@ -1511,12 +1510,11 @@
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           if(      (harv_calib_flg .gt. 0)                              &
-     &       .and. (harv_calib_not_selected) ) then
-          if( harv_calib_flg .gt. 0 ) then
+     &       .and. (harv_calib_not_selected(sr)) ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected = .false.
+            harv_calib_not_selected(sr) = .false.
           end if
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
@@ -1578,11 +1576,11 @@
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           if(      (harv_calib_flg .gt. 0)                              &
-     &       .and. (harv_calib_not_selected) ) then
+     &       .and. (harv_calib_not_selected(sr)) ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected = .false.
+            harv_calib_not_selected(sr) = .false.
           end if
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left, &
@@ -1860,7 +1858,7 @@
         aplant_rotyr(sr) = lastoper(sr)%yr
 
         ! initialize flag to prevent multiple calibration harvests for single crop
-        harv_calib_not_selected = .true.
+        harv_calib_not_selected(sr) = .true.
 
         ! initialize transpiration depth parameters
         ahzfurcut(sr) = 0.0
@@ -1960,11 +1958,11 @@
 !       no harvest report if nothing removed or no crop present
         if( (storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0) &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-          if( harv_calib_not_selected ) then
+          if( harv_calib_not_selected(sr) ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected = .false.
+            harv_calib_not_selected(sr) = .false.
           end if
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
      &           mandate, crop)
@@ -2033,11 +2031,11 @@
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           ! removed mass is used in calibration
           if(      (harv_calib_flg .gt. 0)                              &
-     &       .and. (harv_calib_not_selected) ) then
+     &       .and. (harv_calib_not_selected(sr)) ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected = .false.
+            harv_calib_not_selected(sr) = .false.
           end if
           ! removed mass appears in crop report
           if( harv_report_flg .gt. 0 ) then
