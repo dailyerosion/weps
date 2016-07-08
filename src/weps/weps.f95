@@ -375,6 +375,8 @@
          call save_soil(isr)  
       end do
 
+      call openfils(residue)
+
 9898  continue    !Start of initialization section (calibration)
 
       ! moved from input.for so that IFC file can be re-read and re-initialized
@@ -389,8 +391,6 @@
           aslrrc(isr) = 10.
           as0rrk(isr) = 0.9
       end do 
-
-      call openfils(residue)
 
       do isr = 1, nsubr
           ! Likely that we will put all management data into memory
