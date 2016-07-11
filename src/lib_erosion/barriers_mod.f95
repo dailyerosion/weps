@@ -178,12 +178,12 @@ contains
           ! no wrapping required for bracketing index
           hi_tm = low_tm + 1
           ! find fraction of distance in time between time marks
-          frac_tm = (doy - barseas(bdx)%doy(low_tm))/(barseas(bdx)%doy(hi_tm) - barseas(bdx)%doy(low_tm))
+          frac_tm = (real(doy) - barseas(bdx)%doy(low_tm))/(barseas(bdx)%doy(hi_tm) - barseas(bdx)%doy(low_tm))
         else
           ! low_tm was at end of year, wrap to bracketing index
           hi_tm = 1
           ! find fraction of distance in time between time marks adjusted for wrapping
-          frac_tm = (doy - barseas(bdx)%doy(low_tm))/(barseas(bdx)%doy(hi_tm) + 365 - barseas(bdx)%doy(low_tm))
+          frac_tm = (real(doy) + 365 - barseas(bdx)%doy(low_tm))/(barseas(bdx)%doy(hi_tm) + 365 - barseas(bdx)%doy(low_tm))
         end if
         ! interpolate barrier params in time, copying into fixed barrier structure
         do pdx = 1, barseas(bdx)%np
