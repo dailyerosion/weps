@@ -611,7 +611,7 @@ contains
 
       else
          ! read subregion enabled simulation run file
-         if( typidx .eq. 41 ) go to 200
+         if( typidx .eq. 40 ) go to 200
 
          read (lui1,'(a)',err=80) line
 
@@ -1074,12 +1074,6 @@ contains
                ! read in next barrier
                typidx = typidx - 6
             end if
-
-         case (41)
-            ! this does nothing but skip the line for shape name
-
-         case (42)
-            ! this does nothing but skip the line for shape radius
 
          end select
       end if

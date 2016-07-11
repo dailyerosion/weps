@@ -235,15 +235,4 @@ Shrubs 1row leafoff to leafon
 #
 # === END BARRIER SECTION ===
 #
-# --CIRCULAR FIELD INFORMATION
-# Note: These fields are not used by the weps simulation.
-#       The shape and radius values are used by the user 
-#       interface to approximate a rectangular field.  They
-#       are included here so the reports can display the 
-#       correct field shape.
-#
-#   RFD-Shape
-circle
-#   RFD-Radius
-206.36
 #---------- END OF SIMULATION RUN FILE ------------
