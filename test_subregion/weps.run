@@ -189,30 +189,61 @@ Canola, fall; Fallow_ Wheat, winter; Fallow; mulch till, Z50.man
 # 0 - time interpolation
 # 1 - fixed in time until next time mark
 # 2 - dynamic seasons based on climate inputs
-0
+2
 # number of day of year time marks for seasons
 2
 # number of coordinates
 2
+#
+#   ---BEGIN--- Dynamic Seasons Input
+#
+#   RFD-BarrierCliBegOnFlg  (Example 1 = GDD)
+1
+#   RFD-BarrierCliBegOnThresh (Example 100 GDD)
+100
+#   RFD-BarrierCliBegOnBase (Example 5 degrees C)
+5
+#   RFD-BarrierCliEndOnFlg (Example 0 Specified Days)
+0
+#   RFD-BarrierCliEndOnThresh (Example 14 days)
+14
+#   RFD-BarrierCliEndOnBase (example 0, ie. no value need for this selection, but placeholder must be in file)
+0
+#
+#   RFD-BarrierCliBegOffFlg  (Example 0 = days below specified temperature, set in Base below)
+0
+#   RFD-BarrierCliBegOffThresh (Example 5 days)
+5
+#   RFD-BarrierCliBegOffBase (Example 2 degrees C)
+2
+#   RFD-BarrierCliEndOffFlg (Example 1 Cooling Degree Days)
+1
+#   RFD-BarrierCliEndOffThresh (Example 20 CDD)
+20
+#   RFD-BarrierCliEndOffBase (example 2 degrees C)
+2
+#
+#   ---END--- Dynamic Seasons Input
+#
 # first day of year time mark
-120
+10
 # second day of year time mark
-260
+150
 #   RFD-BarrierS coordinates (meters) | height (meters) | width (meters) | porosity
 # first coordinate pair and data
-0 366 
+0 0 
 # first point, first time mark, height (meters), width (meters), porosity
 1.0 1.0 0.7 
 # first point, second time mark height (meters), width (meters), porosity
 2.0 2.0 0.5
 # second coordinate pair and data
-366 366
+0 366
 # second point, first time mark height (meters), width (meters), porosity
 1.5 1.5 0.6
 # second point, second time mark height (meters), width (meters), porosity
 3.0 3.0 0.4
 #   RFD-BarrierT  type 
-Shrubs 1row leafoff to leafon
+Shrubs 1row Climate Leaf
 #
 # === END BARRIER SECTION ===
 #
