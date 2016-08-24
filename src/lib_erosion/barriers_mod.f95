@@ -26,7 +26,7 @@ module barriers_mod
                              ! this structure will be declared as a two element array
                              ! element 1, trasition to leaf on params / element 2, transition to leaf off params
      integer :: beg_flg ! multilevel flag defining the climate data type which will trigger beginning of leaf on/off
-                             ! 0 - number of days temperature is above/below  base growth temperature since given leaf off date
+                             ! 0 - number of days temperature is above/below base trigger temperature since given leaf off date
                              ! 1 - accumulation of Growing/Cooling degree days (GDD) since given leaf off/on date
                              ! 2 - accumulation of rainfall depth (above minimum depth) since given leaf off date
                              !   / accumulation of days with rainfall below minimum depth (rainfall above minimum depth
@@ -267,31 +267,28 @@ contains
           end do
 
         case (2)  ! determine time based on climatic information and interpolate
-          ! first time mark is leaf off condition
-          ! second time mark is leaf on condition
-          if( barseas(bdx)%doy(1) .lt. barseas(bdx)%doy(2) ) then
-            ! leaf off day of year is less than leaf on day of year
-            if( (doy .ge. barseas(bdx)%doy(1)) .and. (doy .lt. barseas(bdx)%doy(2)) ) then
-              ! between leaf off and leaf on state
-              frac_tm = leaf_off_2_on( barseas(bdx)%clim(1) )
-            else
-              ! between leaf on and leaf off state
-              frac_tm = leaf_on_2_off( barseas(bdx)%clim(2) )
-            end if
-          else if( barseas(bdx)%doy(1) .gt. barseas(bdx)%doy(2) ) then
-            ! leaf off day of year is greater than leaf on day of year
-            if( (doy .ge. barseas(bdx)%doy(2)) .and. (doy .lt. barseas(bdx)%doy(1)) ) then
-              ! between leaf on and leaf off state
-              frac_tm = leaf_on_2_off( barseas(bdx)%clim(2) )
-            else
-              ! between leaf off and leaf on state
-              frac_tm = leaf_off_2_on( barseas(bdx)%clim(1) )
-            end if
-
-          else
-            ! the two values are the same. input error.
+          if( doy .eq. barseas(bdx)%doy(low_tm) ) then
+            ! reset accumulators to start this process
+            barseas(bdx)%clim(low_tm)%beg_accum = 0.0
           end if
-
+          if( low_tm .eq. 1 ) then
+            ! first time mark is leaf off condition
+            frac_tm = leaf_off_2_on( barseas(bdx)%clim(low_tm) )
+          else if( low_tm .eq. 2 ) then
+            ! second time mark is leaf on condition
+            frac_tm = leaf_on_2_off( barseas(bdx)%clim(low_tm) )
+          else
+            ! error in record, should only have 2 time marks
+          end if
+          ! interpolate barrier params in time, copying into fixed barrier structure
+          do pdx = 1, barseas(bdx)%np
+            barrier(bdx)%param(pdx)%amzbr = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%amzbr, &
+                                                                barseas(bdx)%param(pdx,hi_tm)%amzbr)
+            barrier(bdx)%param(pdx)%amxbrw = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%amxbrw, &
+                                                                 barseas(bdx)%param(pdx,hi_tm)%amxbrw)
+            barrier(bdx)%param(pdx)%ampbr = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%ampbr, &
+                                                                barseas(bdx)%param(pdx,hi_tm)%ampbr)
+          end do
 
         end select
 
@@ -341,19 +338,91 @@ contains
 
   end subroutine set_barrier_season
 
-  real function leaf_off_2_on( clim )
-     use climate_input_mod, only: cli_today
-     type(barrier_climate) :: clim
+  function leaf_off_2_on( clim ) result(frac_tm)
+    use climate_input_mod, only: cli_today
+    use crop_climate_mod, only: warmday_cum, heatunit
+    use air_water_mod, only: precip_cum, high_humid_cum
+    type(barrier_climate) :: clim
+    real frac_tm
 
-     real heatunits
+    ! find current accumulation for when leaf development begins
+    select case (clim%beg_flg)
+    case (0)  ! number of consecutive days temperature is above base trigger temperature
+      call warmday_cum( clim%beg_accum, clim%beg_base )
+    case (1)  ! accumulation of growing degree days (no optimum temperature specified)    
+      clim%beg_accum = clim%beg_accum + heatunit( clim%beg_base )
+    case (2)  ! accumulation of rainfall depth above minimum
+      clim%beg_accum = precip_cum( clim%beg_accum, clim%beg_base )
+    case (3)  ! number of consecutive days humidity is above base humidity    
+      clim%beg_accum = high_humid_cum( clim%beg_accum, clim%beg_base )
+    end select       
+
+    if( clim%beg_accum .le. clim%beg_thresh ) then
+      ! no leaf development yet
+      frac_tm = 0.0
+      clim%end_accum = 0.0
+    else
+      ! leaf development has begun
+      ! find current accumulation for when leaf development is complete
+      select case (clim%end_flg)
+      case (0)  ! days to full leaf on/off are specified
+        clim%end_accum = clim%end_accum + 1
+      case (1)  ! Growing Degree Days (GDD) to full leaf on are specified
+        clim%end_accum = clim%end_accum + heatunit( clim%end_base )
+      end select
+
+      if( clim%end_accum .ge. clim%end_thresh ) then
+        ! leaf development is complete
+        frac_tm = 1.0
+      else
+        ! leaves developing
+        frac_tm = clim%end_accum / clim%end_thresh
+      end if
+    end if
 
   end function leaf_off_2_on
 
-  real function leaf_on_2_off( clim )
-     use climate_input_mod, only: cli_today
-     type(barrier_climate) :: clim
+  function leaf_on_2_off( clim ) result(frac_tm)
+    use climate_input_mod, only: cli_today
+    use crop_climate_mod, only: coldday_cum, coldunit
+    use air_water_mod, only: no_precip_cum, low_humid_cum
+    type(barrier_climate) :: clim
+    real frac_tm
 
-     real heatunits
+    ! find current accumulation for when leaf development begins
+    select case (clim%beg_flg)
+    case (0)  ! number of consecutive days temperature is below base trigger temperature
+      call coldday_cum( clim%beg_accum, clim%beg_base )
+    case (1)  ! accumulation of cold degree days
+      clim%beg_accum = clim%beg_accum + coldunit( clim%beg_base )
+    case (2)  ! accumulation of period with no rainfall above minimum value
+      clim%beg_accum = no_precip_cum( clim%beg_accum, clim%beg_base )
+    case (3)  ! number of consecutive days humidity is below base humidity    
+      clim%beg_accum = low_humid_cum( clim%beg_accum, clim%beg_base )
+    end select       
+
+    if( clim%beg_accum .le. clim%beg_thresh ) then
+      ! no leaf loss yet
+      frac_tm = 0.0
+      clim%end_accum = 0.0
+    else
+      ! leaf loss has begun
+      ! find current accumulation for when leaf loss is complete
+      select case (clim%end_flg)
+      case (0)  ! days to full leaf on/off are specified
+        clim%end_accum = clim%end_accum + 1
+      case (1)  ! Cold Degree Days (CDD) to full leaf off are specified
+        clim%end_accum = clim%end_accum + coldunit( clim%end_base )
+      end select
+
+      if( clim%end_accum .ge. clim%end_thresh ) then
+        ! leaf loss is complete
+        frac_tm = 1.0
+      else
+        ! leaves falling
+        frac_tm = clim%end_accum / clim%end_thresh
+      end if
+    end if
 
   end function leaf_on_2_off
 

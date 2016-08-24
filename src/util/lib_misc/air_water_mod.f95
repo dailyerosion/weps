@@ -7,6 +7,26 @@ module air_water_mod
 
   use climate_input_mod, only: cli_today
 
+  interface precip_cum
+    module procedure precip_cum_today
+    module procedure precip_cum_p
+  end interface precip_cum
+
+  interface no_precip_cum
+    module procedure no_precip_cum_today
+    module procedure no_precip_cum_p
+  end interface no_precip_cum
+
+  interface high_humid_cum
+    module procedure high_humid_cum_today
+    module procedure high_humid_cum_h
+  end interface high_humid_cum
+
+  interface low_humid_cum
+    module procedure low_humid_cum_today
+    module procedure low_humid_cum_h
+  end interface low_humid_cum
+
   interface rel_humid
     module procedure rel_humid_today
     module procedure rel_humid_tair_tdew
@@ -21,7 +41,134 @@ module air_water_mod
     module procedure rel_humid_2sat_2act
   end interface rel_humid_vp
 
+  interface et
+    module procedure et_today
+    module procedure et_temps
+  end interface et
+
   contains
+
+    ! accumulates daily precipitation amounts above a base value
+    function precip_cum_today( p_begin, p_base ) result(p_end)
+      real, intent(in) :: p_begin   ! previous precipitation accumlation
+      real, intent(in) :: p_base    ! base below which no precipitation accumulates
+      real :: p_end
+
+      p_end = p_begin + max(0.0, (cli_today%zdpt-p_base) )
+
+      return
+    end function precip_cum_today
+
+    ! accumulates daily precipitation amounts above a base value
+    function precip_cum_p( p_begin, p_base, p_day ) result(p_end)
+      real, intent(in) :: p_begin   ! previous precipitation accumlation
+      real, intent(in) :: p_base    ! base below which no precipitation accumulates
+      real, intent(in) :: p_day     ! daily precipitation
+      real :: p_end
+
+      p_end = p_begin + max(0.0, (p_day-p_base) )
+
+      return
+    end function precip_cum_p
+
+    ! accumulates day with lack of daily precipitation amounts above a base value
+    function no_precip_cum_today( np_begin, np_base ) result(np_end)
+      real, intent(in) :: np_begin   ! previous accumlation of days without precipitation
+      real, intent(in) :: np_base    ! base below which no precipitation accumulates
+      real :: np_end
+
+      np_end = no_precip_cum( np_begin, np_base, cli_today%zdpt )
+
+      return
+    end function no_precip_cum_today
+
+    ! accumulates day with lack of daily precipitation amounts above a base value
+    function no_precip_cum_p( np_begin, np_base, p_day ) result(np_end)
+      real, intent(in) :: np_begin   ! previous accumlation of days without precipitation
+      real, intent(in) :: np_base    ! base below which no precipitation accumulates
+      real, intent(in) :: p_day      ! daily precipitation
+      real :: np_end
+
+      if( p_day .lt. np_base ) then
+        ! no significant rain
+        np_end = np_begin + 1
+      else
+        ! significant rain
+        np_end = np_begin / 2.0
+      end if 
+
+      return
+    end function no_precip_cum_p
+
+    ! accumulates consecutive days daily humidity is above a base value
+    function high_humid_cum_today( h_begin, h_base ) result(h_end)
+      real, intent(in) :: h_begin   ! previous humidity days accumlation
+      real, intent(in) :: h_base    ! base below which no high humidity days accumulate
+      real :: h_end
+
+      if( rel_humid() .ge. h_base ) then
+        ! humidity is equal or above base value
+        h_end = h_begin + 1
+      else
+        ! humidity is below base value
+        h_end = h_begin / 2.0
+      end if
+
+      return
+    end function high_humid_cum_today
+
+    ! accumulates consecutive days daily humidity is above a base value
+    function high_humid_cum_h( h_begin, h_base, h_day ) result(h_end)
+      real, intent(in) :: h_begin   ! previous humidity days accumlation
+      real, intent(in) :: h_base    ! base below which no high humidity days accumulate
+      real, intent(in) :: h_day     ! daily humidity
+      real :: h_end
+
+      if( h_day .ge. h_base ) then
+        ! humidity is equal or above base value
+        h_end = h_begin + 1
+      else
+        ! humidity is below base value
+        h_end = h_begin / 2.0
+      end if
+
+      return
+    end function high_humid_cum_h
+
+    ! accumulates consecutive days daily humidity is below a base value
+    function low_humid_cum_today( h_begin, h_base ) result(h_end)
+      real, intent(in) :: h_begin   ! previous humidity days accumlation
+      real, intent(in) :: h_base    ! base above which no low humidity days accumulate
+      real :: h_end
+
+      if( rel_humid() .le. h_base ) then
+        ! humidity is equal or below base value
+        h_end = h_begin + 1
+      else
+        ! humidity is above base value
+        h_end = h_begin / 2.0
+      end if
+
+      return
+    end function low_humid_cum_today
+
+    ! accumulates consecutive days daily humidity is below a base value
+    function low_humid_cum_h( h_begin, h_base, h_day ) result(h_end)
+      real, intent(in) :: h_begin   ! previous humidity days accumlation
+      real, intent(in) :: h_base    ! base above which no low humidity days accumulate
+      real, intent(in) :: h_day     ! daily humidity
+      real :: h_end
+
+      if( h_day .le. h_base ) then
+        ! humidity is equal or below base value
+        h_end = h_begin + 1
+      else
+        ! humidity is above base value
+        h_end = h_begin / 2.0
+      end if
+
+      return
+    end function low_humid_cum_h
 
     ! finds the relative humidity of the air using todays climate data
     function rel_humid_today( ) result(rel_hum)
@@ -29,6 +176,7 @@ module air_water_mod
 
       rel_hum = rel_humid( cli_today%tdmx, cli_today%tdmn, cli_today%tdpt )
 
+      return
     end function rel_humid_today
 
     ! finds the relative humidity of the air using 1 air temperature and 1 dew point temperature
@@ -39,6 +187,7 @@ module air_water_mod
 
       rel_hum = satvappres(tdew)/satvappres(tair)
 
+      return
     end function rel_humid_tair_tdew
 
     ! finds the relative humidity of the air using 2 air temperature and 1 dew point temperature
@@ -52,6 +201,7 @@ module air_water_mod
         rel_hum = satvappres(tdew) &
                 / (0.5 * (satvappres(tmax) + satvappres(tmin)))
 
+      return
     end function rel_humid_2tair_tdew
 
     ! finds the relative humidity of the air using 2 air temperature and 2 dew point temperature
@@ -66,6 +216,7 @@ module air_water_mod
         rel_hum = (0.5 * (satvappres(tdamax) + satvappres(tdamin))) &
                 / (0.5 * (satvappres(tmax) + satvappres(tmin)))
 
+      return
     end function rel_humid_2tair_2tdew
 
     ! finds the relative humidity of the air using 2 saturated vapor pressures and 2 actual vapor pressures
@@ -77,6 +228,7 @@ module air_water_mod
         ! cligen record currently does not store vapor pressure values. If extended, replace function call with values.
         rel_hum = rel_humid_2sat_act( satvappres(cli_today%tdmx), satvappres(cli_today%tdmn), satvappres(cli_today%tdpt) )
 
+      return
     end function rel_humid_vp_today
 
     ! finds the relative humidity of the air using 2 saturated vapor pressures and 2 actual vapor pressures
@@ -89,6 +241,7 @@ module air_water_mod
 
         rel_hum = actvp / satvp
 
+      return
     end function rel_humid_sat_act
 
     ! finds the relative humidity of the air using 2 saturated vapor pressures and 2 actual vapor pressures
@@ -102,6 +255,7 @@ module air_water_mod
 
         rel_hum =  actvptdew / (0.5 * (satvptmax + satvptmin))
 
+      return
     end function rel_humid_2sat_act
 
     ! finds the relative humidity of the air using 2 saturated vapor pressures and 2 actual vapor pressures
@@ -117,6 +271,7 @@ module air_water_mod
         rel_hum = (0.5 * (actvpmax + actvpmin)) &
                 / (0.5 * (satvptmax + satvptmin))
 
+      return
     end function rel_humid_2sat_2act
 
     ! returns the saturated vapor pressure for water (kPa)
@@ -188,8 +343,26 @@ module air_water_mod
 
     ! This subroutine calculates daily potential evapotranspiration
     ! using Van Bavel's (1966) revised combination method.
-    subroutine  et(rn, g_soil, vel_wind, bmzele, bwtdmx, bwtdmn, &
-                   bwtdav, bwtdpt, bhzetp, loc_za, loc_zo, loc_zd)
+    function  et_today(rn, g_soil, vel_wind, bmzele, loc_za, loc_zo, loc_zd) result(bhzetp)
+      real, intent(in) :: rn        ! Net radiation (Mj/m^2/day)
+      real, intent(in) :: g_soil    ! ground heat flux (Mj/m^2/day)
+      real, intent(in) :: vel_wind  ! Wind speed (m/s) at meteorological height (loc_za)
+      real, intent(in) :: bmzele    ! Elevation of the site (m)
+      ! the following must be in consistent units (length)
+      real, intent(in) :: loc_za    ! height of meteorological measurement 
+      real, intent(in) :: loc_zo    ! aerodynamic roughness length
+      real, intent(in) :: loc_zd    ! zero plane displacement
+      real :: bhzetp   ! potential evaporation depth (mm)
+
+      bhzetp = et(rn, g_soil, vel_wind, bmzele, cli_today%tdmx, cli_today%tdmn, cli_today%tdav, &
+                  cli_today%tdpt, loc_za, loc_zo, loc_zd)
+
+    end function et_today
+
+    ! This subroutine calculates daily potential evapotranspiration
+    ! using Van Bavel's (1966) revised combination method.
+    function  et_temps(rn, g_soil, vel_wind, bmzele, bwtdmx, bwtdmn, &
+                   bwtdav, bwtdpt, loc_za, loc_zo, loc_zd) result(bhzetp)
       real, intent(in) :: rn        ! Net radiation (Mj/m^2/day)
       real, intent(in) :: g_soil    ! ground heat flux (Mj/m^2/day)
       real, intent(in) :: vel_wind  ! Wind speed (m/s) at meteorological height (loc_za)
@@ -198,11 +371,11 @@ module air_water_mod
       real, intent(in) :: bwtdmx    ! daily minimum temperature (C)
       real, intent(in) :: bwtdav    ! daily average temperature (C)
       real, intent(in) :: bwtdpt    ! daily average dew point temperature (C)
-      real, intent(out) :: bhzetp   ! potential evaporation depth (mm)  
       ! the following must be in consistent units (length)
       real, intent(in) :: loc_za    ! height of meteorological measurement 
       real, intent(in) :: loc_zo    ! aerodynamic roughness length
       real, intent(in) :: loc_zd    ! zero plane displacement
+      real :: bhzetp   ! potential evaporation depth (mm)  
 
       ! b1,b2,b3 - constants used in eqn for (svpg0)
       real, parameter :: b1 = 67.5242
@@ -307,7 +480,7 @@ module air_water_mod
       !etpw = term2 / term3
 
       return
-    end subroutine  et
+    end function  et_temps
 
     ! returns the water vapor density in air (kg/m^3)
     ! calculated directly from PV = nRT

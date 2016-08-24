@@ -22,6 +22,16 @@ module crop_climate_mod
       module procedure warmday_cum_temps
   end interface warmday_cum
 
+  interface coldunit
+      module procedure coldunit_today
+      module procedure coldunit_temps
+  end interface coldunit
+
+  interface coldday_cum
+      module procedure coldday_cum_today
+      module procedure coldday_cum_temps
+  end interface coldday_cum
+
   interface temp_stress
       module procedure temp_stress_today
       module procedure temp_stress_soil
@@ -46,7 +56,7 @@ module crop_climate_mod
       real, intent(in) :: bctmin   ! minimum crop growth temperature
       real :: huc1
 
-      huc1 = heatunit_today(bctmin) - heatunit_today(bctmax)
+      huc1 = heatunit(bctmin) - heatunit(bctmax)
       if (huc1.lt.0.) huc1=0.
 
       return
@@ -70,27 +80,11 @@ module crop_climate_mod
     ! calculates the amount of heat units in degree-days above a
     ! threshold temperature assuming a fully sinusoidal daily 
     ! temperature cycle with maximum and minimum 12 hours apart.
-    function heatunit_today( thres ) result(heatunit)
-      use p1unconv_mod, only: pi
+    function heatunit_today( thres ) result(heat_unit)
       real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
-      real :: heatunit
+      real :: heat_unit
 
-      ! local variables
-      real :: tmean   ! arithmetic average of tmax and tmin
-      real :: delta   ! difference between daily maximum and minimum temperature
-      real :: theta   ! point where threshold and air temperature are equal, defines integration limits
-
-      if (thres .ge. cli_today%tdmx) then
-          heatunit = 0.0
-      else if ((thres .le. cli_today%tdmn) .or. (cli_today%tdmx .le. cli_today%tdmn)) then
-          tmean = (cli_today%tdmx + cli_today%tdmn) / 2.0
-          heatunit = tmean - thres
-      else
-          tmean = (cli_today%tdmx + cli_today%tdmn) / 2.0
-          delta = (cli_today%tdmx - cli_today%tdmn) / 2.0
-          theta = asin( (thres - tmean) / delta )
-          heatunit = ( (tmean - thres) * (pi/2.0 - theta) + delta * cos(theta) ) / pi
-      end if
+      heat_unit = heatunit( cli_today%tdmx, cli_today%tdmn, thres )
 
       return
     end function heatunit_today
@@ -98,12 +92,12 @@ module crop_climate_mod
     ! calculates the amount of heat units in degree-days above a
     ! threshold temperature assuming a fully sinusoidal daily 
     ! temperature cycle with maximum and minimum 12 hours apart.
-    function heatunit_temps( tmax, tmin, thres ) result(heatunit)
+    function heatunit_temps( tmax, tmin, thres ) result(heat_unit)
       use p1unconv_mod, only: pi
       real, intent(in) :: tmax   ! maximum daily air temperature
       real, intent(in) :: tmin   ! minimum daily air temperature
       real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
-      real :: heatunit
+      real :: heat_unit
 
       ! local variables
       real :: tmean   ! arithmetic average of tmax and tmin
@@ -111,15 +105,15 @@ module crop_climate_mod
       real :: theta   ! point where threshold and air temperature are equal, defines integration limits
 
       if (thres .ge. tmax) then
-          heatunit = 0.0
+          heat_unit = 0.0
       else if ((thres .le. tmin) .or. (tmax .le. tmin)) then
           tmean = (tmax + tmin) / 2.0
-          heatunit = tmean - thres
+          heat_unit = tmean - thres
       else
           tmean = (tmax + tmin) / 2.0
           delta = (tmax - tmin) / 2.0
           theta = asin( (thres - tmean) / delta )
-          heatunit = ( (tmean - thres) * (pi/2.0 - theta) + delta * cos(theta) ) / pi
+          heat_unit = ( (tmean - thres) * (pi/2.0 - theta) + delta * cos(theta) ) / pi
       end if
 
       return
@@ -128,20 +122,10 @@ module crop_climate_mod
     ! calculates the cumulative number of days the daily average temperature
     ! is above a threshold temperature.
     subroutine warmday_cum_today( bctwarmdays, thres )
-      real, intent(inout) :: bctwarmdays  ! total number of consequtive days tempeature is above threshold
+      real, intent(inout) :: bctwarmdays  ! total number of consequtive days temperature is above threshold
       real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
 
-      ! local variables
-      real :: tmean   ! arithmetic average of tmax and tmin
-
-      tmean = (cli_today%tdmx + cli_today%tdmn) / 2.0
-      if (tmean .ge. thres) then
-          ! this is a warm day
-          bctwarmdays = bctwarmdays + 1
-      else
-          ! reduce warm day total, but do not zero, for proper fall regrow of perennials
-          bctwarmdays = bctwarmdays / 2
-      end if
+      call warmday_cum( bctwarmdays, thres, cli_today%tdmx, cli_today%tdmn )
 
       return
     end subroutine warmday_cum_today
@@ -168,6 +152,82 @@ module crop_climate_mod
 
       return
     end subroutine warmday_cum_temps
+
+    ! calculates the amount of cold units in degree-days below a
+    ! threshold temperature assuming a fully sinusoidal daily 
+    ! temperature cycle with maximum and minimum 12 hours apart.
+    function coldunit_today( thres ) result(cold_unit)
+      real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
+      real :: cold_unit
+
+      cold_unit = coldunit( cli_today%tdmx, cli_today%tdmn, thres )
+
+      return
+    end function coldunit_today
+
+    ! calculates the amount of cold units in degree-days below a
+    ! threshold temperature assuming a fully sinusoidal daily 
+    ! temperature cycle with maximum and minimum 12 hours apart.
+    function coldunit_temps( tmax, tmin, thres ) result(cold_unit)
+      use p1unconv_mod, only: pi
+      real, intent(in) :: tmax   ! maximum daily air temperature
+      real, intent(in) :: tmin   ! minimum daily air temperature
+      real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
+      real :: cold_unit
+
+      ! local variables
+      real :: tmean   ! arithmetic average of tmax and tmin
+      real :: delta   ! difference between daily maximum and minimum temperature
+      real :: theta   ! point where threshold and air temperature are equal, defines integration limits
+
+      if (thres .le. tmin) then
+          cold_unit = 0.0
+      else if ((thres .ge. tmax) .or. (tmax .le. tmin)) then
+          tmean = (tmax + tmin) / 2.0
+          cold_unit = thres - tmean
+      else
+          tmean = (tmax + tmin) / 2.0
+          delta = (tmax - tmin) / 2.0
+          theta = asin( (tmean - thres) / delta )
+          cold_unit = ( (thres - tmean) * (pi/2.0 - theta) + delta * cos(theta) ) / pi
+      end if
+
+      return
+    end function coldunit_temps
+
+    ! calculates the cumulative number of days the daily average temperature
+    ! is below a threshold temperature.
+    subroutine coldday_cum_today( colddays, thres )
+      real, intent(inout) :: colddays  ! total number of consequtive days tempeature is below threshold
+      real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
+
+      call coldday_cum( colddays, thres, cli_today%tdmx, cli_today%tdmn )
+
+      return
+    end subroutine coldday_cum_today
+
+    ! calculates the cumulative number of days the daily average temperature
+    ! is below a threshold temperature.
+    subroutine coldday_cum_temps( colddays, thres, tmax, tmin )
+      real, intent(inout) :: colddays  ! total number of consequtive days tempeature is below threshold
+      real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
+      real, intent(in) :: tmax   ! maximum daily air temperature
+      real, intent(in) :: tmin   ! minimum daily air temperature
+
+      ! local variables
+      real :: tmean   ! arithmetic average of tmax and tmin
+
+      tmean = (tmax + tmin) / 2.0
+      if (tmean .le. thres) then
+          ! this is a cold day
+          colddays = colddays + 1
+      else
+          ! reduce cold day total, but do not zero
+          colddays = colddays / 2
+      end if
+
+      return
+    end subroutine coldday_cum_temps
 
     ! To calculate the temperature stress factor
     ! This algorithms was taken from the EPIC subroutine cgrow.

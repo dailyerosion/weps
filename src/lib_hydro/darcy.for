@@ -199,13 +199,13 @@
 !      integer dayear
 !      real   availwc
 !      real   unsatcond_bc
-      real   unsatcond_pot_bc
-      real   matricfluxpot_bc
+!      real   unsatcond_pot_bc
+!      real   matricfluxpot_bc
 !      real   intersect
 
 !      real   diffusive, vaporden
 
-      real   evap_dissag
+!      real   evap_dissag
 
 !     + + + DATA INITIALIZATIONS + + +
 

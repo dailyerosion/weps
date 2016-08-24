@@ -562,10 +562,9 @@
       fld_wind = movewind(bwudav, anemht*mtomm, awzzo, awzdisp,         &
      &                    loc_met_height, loc_zov, loc_zd)
 
-!     Calculate potential evapotranspiration using subroutine et
+      ! Calculate potential evapotranspiration using function et
       g_soil = 0.0 ! test
-      call et(rn, g_soil, fld_wind, bmzele, cli_today%tdmx, cli_today%tdmn, cli_today%tdav,     &
-     &        cli_today%tdpt, h1et%zetp, loc_met_height, loc_zov, loc_zd)
+      h1et%zetp = et(rn, g_soil, fld_wind, bmzele, loc_met_height, loc_zov, loc_zd)
 
       if (  h1et%zetp  .le.  0.0  ) then
          h1et%zep = 0.0
