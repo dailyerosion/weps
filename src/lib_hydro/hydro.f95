@@ -56,7 +56,7 @@
       use hydro_data_struct_defs, only: am0hfl, hydro_derived_et
       use wepp_param_mod, only: wepp_param
       use climate_input_mod, only: cli_tyav, cli_next, cli_today, cli_prev
-      use air_water_mod, only: et
+      use air_water_mod, only: et, rel_humid
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -347,7 +347,7 @@
 
  3010 format('# hr daysim idoy yr bhrwc0 bhrwc0/bhrwcw(1)')
 
- 3020 format('# daysim idoy yr rn cli_today%tdmx cli_today%tdmn cli_today%tdpt fld_wind rise')
+ 3020 format('# daysim idoy yr rn cli_today%tdmx cli_today%tdmn cli_today%tdpt fld_wind rise, rel_humid')
 
 !     + + + DATA INITIALIZATIONS + + +
 !     Calculate hour of sunrise
@@ -806,7 +806,7 @@
 
          ! print out daily weather as used in hydro
          write(luoweather(isr),*) daysim, idoy, yr, rn, cli_today%tdmx, cli_today%tdmn,      &
-     &                       cli_today%tdpt, fld_wind, rise
+     &                       cli_today%tdpt, fld_wind, rise, rel_humid()
       end if
 
       return
