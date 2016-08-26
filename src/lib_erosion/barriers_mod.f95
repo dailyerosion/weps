@@ -22,23 +22,31 @@ module barriers_mod
      type( barrier_params), dimension(:), allocatable :: param
   end type barrier_data
 
-  type barrier_climate       ! expects 2 dates (full leaf off / full leaf on) in that order
-                             ! this structure will be declared as a two element array
-                             ! element 1, trasition to leaf on params / element 2, transition to leaf off params
-     integer :: beg_flg ! multilevel flag defining the climate data type which will trigger beginning of leaf on/off
-                             ! 0 - number of days temperature is above/below base trigger temperature since given leaf off date
-                             ! 1 - accumulation of Growing/Cooling degree days (GDD) since given leaf off/on date
-                             ! 2 - accumulation of rainfall depth (above minimum depth) since given leaf off date
-                             !   / accumulation of days with rainfall below minimum depth (rainfall above minimum depth
-                             !     resets accumulation) since given leaf on date
-                             ! 3 - accumulation of humidity levels above/below base humidity since given leaf off/on date
+  type barrier_day_state
+     character*80 :: st_desc ! text description of the barrier state on this day
+     integer :: doy          ! day of year the state occurs
+  end type barrier_day_state
+
+  type barrier_climate       ! used with season flag type 2 and defines parameters for climate based triggers for 
+                             ! transition from one barrier state to another such as leaf off to leaf on, or low height to high height (grass trap strip?)
+     integer :: beg_flg ! multilevel flag defining the climate data type which will trigger beginning of transition
+                             ! 0 - number of days temperature is above base trigger temperature since previous known state date
+                             ! 1 - number of days temperature is below base trigger temperature since previous known state date
+                             ! 2 - accumulation of Growing degree days (GDD) since previous known state date
+                             ! 3 - accumulation of Cooling degree days (CDD) since previous known state date
+                             ! 4 - accumulation of rainfall depth (above minimum depth) since previous known state date
+                             ! 5 - accumulation of days with rainfall below minimum depth (rainfall above minimum depth
+                             !     resets accumulation) since  previous known state date
+                             ! 6 - accumulation of humidity levels above base humidity since previous known state date
+                             ! 7 - accumulation of humidity levels below base humidity since previous known state date
      real :: beg_thresh  ! accumulation threshold value for each of the methods above
      real :: beg_base    ! base value above/below which accumulation occurs
      real :: beg_accum   ! total accumulation of beg_flg specified quantity since given day of year
      integer :: end_flg ! multilevel flag defining the method for determining completion of leaf emergence/drop
-                             ! 0 - days to full leaf on/off are specified
-                             ! 1 - Growing/Cooling Degree Days (GDD/CDD) to full leaf on/off are specified
-     real :: end_thresh ! Accumulation threshold value where full leaf on/off occurs
+                             ! 0 - days to complete transition are specified
+                             ! 1 - Growing Degree Days (GDD) to full transition are specified
+                             ! 2 - Cooling Degree Days (CDD) to full transition are specified
+     real :: end_thresh ! Accumulation threshold value where full transition occurs
      real :: end_base   ! base value above/below which accumulation occurs
      real :: end_accum  ! total accumlation of end_flg specified quantity since beg_threshold exceeded
   end type barrier_climate
@@ -48,11 +56,11 @@ module barriers_mod
      integer :: seas_flg    ! multi level flag defining implementation of barrier seasons
                             ! 0 - use seasonal data as given with time interpolation
                             ! 1 - set barrier data on doy given. Value remains constant until the next doy given, ie. no time interpolation
-                            ! 2 - Manage the timing of season transitions internally with a climate based model
+                            ! 2 - Manage the timing of barrier state (seasonal) transitions internally with a climate based model
      integer :: ntm  ! number of time marks specified for barrier
      integer :: np   ! number of points in barrier_params and polyline point array
      type(point), dimension(:), allocatable :: points  ! the polyline points
-     integer, dimension(:), allocatable :: doy         ! day of year for time marks
+     type(barrier_day_state), dimension(:), allocatable :: dst  ! label and day of year for time marks
      type(barrier_params), dimension(:,:), allocatable :: param
      type(barrier_climate), dimension(:), allocatable :: clim
   end type barrier_seasonal
@@ -132,12 +140,12 @@ contains
     sum_stat = 0
     allocate(barr%points(nump), stat=alloc_stat)
     sum_stat = sum_stat + alloc_stat
-    allocate(barr%doy(numtm), stat=alloc_stat)
+    allocate(barr%dst(numtm), stat=alloc_stat)
     sum_stat = sum_stat + alloc_stat
     allocate(barr%param(nump,numtm), stat=alloc_stat)
     sum_stat = sum_stat + alloc_stat
     if( sflg .eq. 2 ) then
-       allocate(barr%clim(2), stat=alloc_stat)
+       allocate(barr%clim(numtm), stat=alloc_stat)
        sum_stat = sum_stat + alloc_stat
     else
        allocate(barr%clim(0), stat=alloc_stat)
@@ -168,7 +176,7 @@ contains
     sum_stat = 0
     deallocate(barr%points, stat=dealloc_stat)
     sum_stat = sum_stat + dealloc_stat
-    deallocate(barr%doy, stat=dealloc_stat)
+    deallocate(barr%dst, stat=dealloc_stat)
     sum_stat = sum_stat + dealloc_stat
     deallocate(barr%param, stat=dealloc_stat)
     sum_stat = sum_stat + dealloc_stat
@@ -207,34 +215,39 @@ contains
       ! check number of time marks in seasonal barrier
       if( barseas(bdx)%ntm .gt. 1 ) then
         ! this barrier contains seasons
-
         ! find location in time mark array
-        if( (doy .lt. barseas(bdx)%doy(1)) .or. (doy .ge. barseas(bdx)%doy(barseas(bdx)%ntm)) ) then
+        ! NOTE: This assumes that the time marks are in DAY OF YEAR Order!!
+        if( (doy .lt. barseas(bdx)%dst(1)%doy) .or. (doy .ge. barseas(bdx)%dst(barseas(bdx)%ntm)%doy) ) then
           low_tm = barseas(bdx)%ntm
         else
           do tdx = 1, barseas(bdx)%ntm-1
             ! search for low time mark index
-            if( doy .ge. barseas(bdx)%doy(tdx) ) then
+            if( doy .ge. barseas(bdx)%dst(tdx)%doy ) then
               low_tm = tdx
               exit
             end if
           end do
         end if
 
+        ! set high time mark index
+        if( low_tm .lt. barseas(bdx)%ntm ) then
+          ! no wrapping required for bracketing index
+          hi_tm = low_tm + 1
+        else
+          ! low_tm was at end of year, wrap to bracketing index
+          hi_tm = 1
+        end if
+
         select case (barseas(bdx)%seas_flg)
         case (0)  ! do interpolation between all time points
           ! set high time mark index and find interpolation fraction
-          if( low_tm .lt. barseas(bdx)%ntm ) then
-            ! no wrapping required for bracketing index
-            hi_tm = low_tm + 1
+          if( low_tm .lt. hi_tm ) then
             ! find fraction of distance in time between time marks
-            frac_tm = (real(doy) - barseas(bdx)%doy(low_tm)) &
-                    / (barseas(bdx)%doy(hi_tm) - barseas(bdx)%doy(low_tm))
+            frac_tm = (real(doy) - barseas(bdx)%dst(low_tm)%doy) &
+                    / (barseas(bdx)%dst(hi_tm)%doy - barseas(bdx)%dst(low_tm)%doy)
           else
-            ! low_tm was at end of year, wrap to bracketing index
-            hi_tm = 1
             ! adjust calculation of location in time
-            if( doy .ge. barseas(bdx)%doy(low_tm) ) then
+            if( doy .ge. barseas(bdx)%dst(low_tm)%doy ) then
               doy_adj = 0
               sgn_adj = -1
             else
@@ -246,8 +259,8 @@ contains
               sgn_adj = 1
             end if
             ! find fraction of distance in time between time marks adjusted for wrapping
-            frac_tm = sgn_adj * (real(doy) + doy_adj - barseas(bdx)%doy(low_tm)) &
-                    / (barseas(bdx)%doy(hi_tm) + doy_adj - barseas(bdx)%doy(low_tm))
+            frac_tm = sgn_adj * (real(doy) + doy_adj - barseas(bdx)%dst(low_tm)%doy) &
+                    / (barseas(bdx)%dst(hi_tm)%doy + doy_adj - barseas(bdx)%dst(low_tm)%doy)
           end if
           ! interpolate barrier params in time, copying into fixed barrier structure
           do pdx = 1, barseas(bdx)%np
@@ -267,19 +280,12 @@ contains
           end do
 
         case (2)  ! determine time based on climatic information and interpolate
-          if( doy .eq. barseas(bdx)%doy(low_tm) ) then
+          if( doy .eq. barseas(bdx)%dst(low_tm)%doy ) then
             ! reset accumulators to start this process
             barseas(bdx)%clim(low_tm)%beg_accum = 0.0
           end if
-          if( low_tm .eq. 1 ) then
-            ! first time mark is leaf off condition
-            frac_tm = leaf_off_2_on( barseas(bdx)%clim(low_tm) )
-          else if( low_tm .eq. 2 ) then
-            ! second time mark is leaf on condition
-            frac_tm = leaf_on_2_off( barseas(bdx)%clim(low_tm) )
-          else
-            ! error in record, should only have 2 time marks
-          end if
+          ! find fraction of state transition
+          frac_tm = state_transition( barseas(bdx)%clim(low_tm) )
           ! interpolate barrier params in time, copying into fixed barrier structure
           do pdx = 1, barseas(bdx)%np
             barrier(bdx)%param(pdx)%amzbr = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%amzbr, &
@@ -305,7 +311,7 @@ contains
       ! write header to barrier daily output file
       do bdx = 1, size(barrier)
         write(UNIT=luo_barr,FMT='(a)',advance='NO') &
-          '#yr  doy Barrier_Description  npt '
+          '#yr  doy Barrier_Description  beg_accu beg_thre end_accu end_thre npt '
         do pdx = 1, barrier(bdx)%np
           write(UNIT=luo_barr,FMT='(a)',advance='NO') &
             ' height  width porosi '
@@ -319,8 +325,13 @@ contains
       max_seas = 0
       do bdx = 1, size(barrier)
         ! write data to barrier daily output file
-        write(UNIT=luo_barr,FMT='(i4," ",i3," ",a20," ",i3," ")',advance='NO') &
-          get_simdate_year(), doy, barrier(bdx)%amzbt, barrier(bdx)%np
+        write(UNIT=luo_barr,FMT='(i4," ",i3," ",a20," ")',advance='NO') &
+             get_simdate_year(), doy, barrier(bdx)%amzbt
+        write(UNIT=luo_barr,FMT='(4(f8.4," "))',advance='NO') &
+             barseas(bdx)%clim(low_tm)%beg_accum, barseas(bdx)%clim(low_tm)%beg_thresh, &
+             barseas(bdx)%clim(low_tm)%end_accum, barseas(bdx)%clim(low_tm)%end_thresh
+        write(UNIT=luo_barr,FMT='(i3," ")',advance='NO') &
+             barrier(bdx)%np
         do pdx = 1, barrier(bdx)%np
           write(UNIT=luo_barr,FMT='(3(" ",f6.4)," ")',advance='NO') &
             barrier(bdx)%param(pdx)%amzbr, barrier(bdx)%param(pdx)%amxbrw, barrier(bdx)%param(pdx)%ampbr
@@ -338,93 +349,58 @@ contains
 
   end subroutine set_barrier_season
 
-  function leaf_off_2_on( clim ) result(frac_tm)
-    use climate_input_mod, only: cli_today
-    use crop_climate_mod, only: warmday_cum, heatunit
-    use air_water_mod, only: precip_cum, high_humid_cum
+  function state_transition( clim ) result(frac_tm)
+    use crop_climate_mod, only: warmday_cum, heatunit, coldunit, coldday_cum
+    use air_water_mod, only: precip_cum, no_precip_cum, high_humid_cum, low_humid_cum
     type(barrier_climate) :: clim
     real frac_tm
 
-    ! find current accumulation for when leaf development begins
+    ! find current accumulation for when transition begins
     select case (clim%beg_flg)
     case (0)  ! number of consecutive days temperature is above base trigger temperature
       call warmday_cum( clim%beg_accum, clim%beg_base )
-    case (1)  ! accumulation of growing degree days (no optimum temperature specified)    
-      clim%beg_accum = clim%beg_accum + heatunit( clim%beg_base )
-    case (2)  ! accumulation of rainfall depth above minimum
-      clim%beg_accum = precip_cum( clim%beg_accum, clim%beg_base )
-    case (3)  ! number of consecutive days humidity is above base humidity    
-      clim%beg_accum = high_humid_cum( clim%beg_accum, clim%beg_base )
-    end select       
-
-    if( clim%beg_accum .le. clim%beg_thresh ) then
-      ! no leaf development yet
-      frac_tm = 0.0
-      clim%end_accum = 0.0
-    else
-      ! leaf development has begun
-      ! find current accumulation for when leaf development is complete
-      select case (clim%end_flg)
-      case (0)  ! days to full leaf on/off are specified
-        clim%end_accum = clim%end_accum + 1
-      case (1)  ! Growing Degree Days (GDD) to full leaf on are specified
-        clim%end_accum = clim%end_accum + heatunit( clim%end_base )
-      end select
-
-      if( clim%end_accum .ge. clim%end_thresh ) then
-        ! leaf development is complete
-        frac_tm = 1.0
-      else
-        ! leaves developing
-        frac_tm = clim%end_accum / clim%end_thresh
-      end if
-    end if
-
-  end function leaf_off_2_on
-
-  function leaf_on_2_off( clim ) result(frac_tm)
-    use climate_input_mod, only: cli_today
-    use crop_climate_mod, only: coldday_cum, coldunit
-    use air_water_mod, only: no_precip_cum, low_humid_cum
-    type(barrier_climate) :: clim
-    real frac_tm
-
-    ! find current accumulation for when leaf development begins
-    select case (clim%beg_flg)
-    case (0)  ! number of consecutive days temperature is below base trigger temperature
+    case (1)  ! number of consecutive days temperature is below base trigger temperature
       call coldday_cum( clim%beg_accum, clim%beg_base )
-    case (1)  ! accumulation of cold degree days
+    case (2)  ! accumulation of growing degree days (no optimum temperature specified)    
+      clim%beg_accum = clim%beg_accum + heatunit( clim%beg_base )
+    case (3)  ! accumulation of cold degree days
       clim%beg_accum = clim%beg_accum + coldunit( clim%beg_base )
-    case (2)  ! accumulation of period with no rainfall above minimum value
+    case (4)  ! accumulation of rainfall depth above minimum
+      clim%beg_accum = precip_cum( clim%beg_accum, clim%beg_base )
+    case (5)  ! accumulation of period with no rainfall above minimum value
       clim%beg_accum = no_precip_cum( clim%beg_accum, clim%beg_base )
-    case (3)  ! number of consecutive days humidity is below base humidity    
+    case (6)  ! number of consecutive days humidity is above base humidity    
+      clim%beg_accum = high_humid_cum( clim%beg_accum, clim%beg_base )
+    case (7)  ! number of consecutive days humidity is below base humidity    
       clim%beg_accum = low_humid_cum( clim%beg_accum, clim%beg_base )
     end select       
 
     if( clim%beg_accum .le. clim%beg_thresh ) then
-      ! no leaf loss yet
+      ! no transition yet
       frac_tm = 0.0
       clim%end_accum = 0.0
     else
-      ! leaf loss has begun
-      ! find current accumulation for when leaf loss is complete
+      ! transition has begun
+      ! find current accumulation for when transition is complete
       select case (clim%end_flg)
-      case (0)  ! days to full leaf on/off are specified
+      case (0)  ! days to complete transition are specified
         clim%end_accum = clim%end_accum + 1
-      case (1)  ! Cold Degree Days (CDD) to full leaf off are specified
+      case (1)  ! Growing Degree Days (GDD) to complete transition are specified
+        clim%end_accum = clim%end_accum + heatunit( clim%end_base )
+      case (2)  ! Cold Degree Days (CDD) to complete transition are specified
         clim%end_accum = clim%end_accum + coldunit( clim%end_base )
       end select
 
       if( clim%end_accum .ge. clim%end_thresh ) then
-        ! leaf loss is complete
+        ! transition is complete
         frac_tm = 1.0
       else
-        ! leaves falling
+        ! in transition
         frac_tm = clim%end_accum / clim%end_thresh
       end if
     end if
 
-  end function leaf_on_2_off
+  end function state_transition
 
   subroutine sbbr( cellstate )
 

@@ -613,7 +613,7 @@ contains
 
       else
          ! read subregion enabled simulation run file
-         if( typidx .eq. 47 ) go to 200
+         if( typidx .eq. 48 ) go to 200
 
          read (lui1,'(a)',err=80) line
 
@@ -1005,7 +1005,7 @@ contains
             end if
             if( nbr .lt. 1 ) then
                ! skip reading barrier information
-               typidx = typidx + 13
+               typidx = typidx + 14
             else
                ! set index for first barrier
                ibr = 1
@@ -1059,6 +1059,8 @@ contains
          case (40)
             ! barrier begin leaf on/off climate base value for accumulation
             read (line,*,err=80) barseas(ibr)%clim(iexp)%beg_base
+            ! initialize accumulator
+            barseas(ibr)%clim(iexp)%beg_accum = 0.0
 
          case (41)
             ! barrier climate data type flag for completion of leaf on/off
@@ -1071,6 +1073,8 @@ contains
          case (43)
             ! barrier completion of leaf on/off climate base value for accumulation
             read (line,*,err=80) barseas(ibr)%clim(iexp)%end_base
+            ! initialize accumulator
+            barseas(ibr)%clim(iexp)%end_accum = 0.0
 
             ! increment counter
             iexp = iexp + 1
@@ -1081,31 +1085,36 @@ contains
             
          case (44)
             ! read in day of year time mark for barrier seasons
-            read (line,*,err=80) barseas(ibr)%doy(iseas)
+            read (line,*,err=80) barseas(ibr)%dst(iseas)%doy
             if( iseas .gt. 1 ) then
-               if( barseas(ibr)%doy(iseas) .eq. barseas(ibr)%doy(iseas-1) ) then
-                 write(*,*) 'ERROR: Barrier time marks must not be the same'
-                 write(*,FMT='(i0)') 'Input value was: ', barseas(ibr)%doy(iseas)
+               if( barseas(ibr)%dst(iseas)%doy .le. barseas(ibr)%dst(iseas-1)%doy ) then
+                 write(*,*) 'ERROR: Barrier time marks (day of year) must always increase'
+                 write(*,FMT='(i0)') 'Previous value was: ', barseas(ibr)%dst(iseas-1)%doy
+                 write(*,FMT='(i0)') 'Newest value is: ', barseas(ibr)%dst(iseas)%doy
                  call exit(44)
                end if
             end if
+
+         case (45)
+            ! read in text description of time mark for barrier seasons
+            read (line,*,err=80) barseas(ibr)%dst(iseas)%st_desc
             ! read next day of year time mark
             iseas = iseas + 1
             if( iseas .le. ntm_seas ) then
                 ! read another day of year time mark 
-                typidx = typidx - 1
+                typidx = typidx - 2
             else
                 ! done reading reset for seasonal data below
                 iseas = 1
             end if
 
-         case (45)
+         case (46)
             ! read point pair
             read (line,*,err=80) barseas(ibr)%points(ipol)%x, barseas(ibr)%points(ipol)%y
             !  also place in fixed barrier structure
             barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
 
-         case (46)
+         case (47)
             ! barrier height
             read (line,*,err=80) barseas(ibr)%param(ipol,iseas)%amzbr, &
                                  barseas(ibr)%param(ipol,iseas)%amxbrw, &
@@ -1131,7 +1140,7 @@ contains
                 end if
             end if
 
-         case (47)
+         case (48)
             ! barrier type character string
             barseas(ibr)%amzbt = line(1:80)
             !  also place in fixed barrier structure
@@ -1141,7 +1150,7 @@ contains
             ibr = ibr + 1
             if (ibr.le.nbr) then
                ! read in next barrier
-               typidx = typidx - 13
+               typidx = typidx - 14
             end if
 
          end select
