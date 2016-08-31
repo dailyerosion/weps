@@ -32,7 +32,10 @@
 
 !     + + + END SPECIFICATIONS + + +
 
-      if( bczrtd .le. bhztransprtmin ) then
+      if( bczrtd .eq. 0.0 ) then
+          ! no plant growing, no adjustment
+          transpdepth = 0.0
+      else if( bczrtd .le. bhztransprtmin ) then
           transpdepth = bczrtd + bhzfurcut
       else if( (bczrtd .lt. bhztransprtmax)                             &
      &    .and. (bhztransprtmax .gt. bhztransprtmin) ) then
