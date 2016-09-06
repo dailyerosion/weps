@@ -32,6 +32,7 @@
       include 'p1werm.inc'
       include 'manage/man.inc'
       include 'manage/asd.inc'
+      include 'manage/mproc.inc'
 
 ! for debugging
 ! ***      include 's1layr.inc'      
@@ -134,7 +135,11 @@
         read (line (3:12),'(i2,1x,i2,1x,i4)', err=902) manday,manmon,manyr
         ! find simulation year to which management year corresponds
         mansimyr = simyr - mod (simyr-startyr, mperod(sr)) + manyr - 1
-        if (difdat (simdd,simmm,mansimyr,manday,manmon,mansimyr).ne.0) return
+        if( difdat (simdd,simmm,mansimyr,manday,manmon,mansimyr).ne.0) then
+           ! initialize end of season / hydrobal reporting flag to true to generate a report
+           rpt_season_flg = .true.
+           return
+        end if
       case ('*')
         call stir_report(sr, .true., lastoper(sr)%stir, lastoper(sr)%energyarea)
         mcount(sr) = mcount(sr) + 1

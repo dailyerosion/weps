@@ -50,9 +50,9 @@
 !       4 - 2'nd residue pool
 !       ....
 !       2**n - nth residue pool
-!     rpt_season_flg - flag to limit end of season / hydrobal reporting to once per operation
-!                      true  - generate report in this operation
-!                      false - report has already been generated in this operation
+!     rpt_season_flg - flag to limit end of season / hydrobal reporting to once per day
+!                      true  - generate report in this day
+!                      false - report has already been generated in this day
 !     tdepth - tillage depth (mm)
 !     rdgflag - tillage ridge flag
 !     imprs  - implement ridge spacing (can be used to set row spacing)
