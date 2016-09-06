@@ -129,34 +129,53 @@
                end if
             end if
             if( report_loop .and. stircum(isr)%man_eof ) then ! man_eof indicates at least one pass completed
-               ! All harvest/termination ops should be present, check for last harvest
-               do jdx = idx, stircum(isr)%phopcnt
-                  ! index forward looking for harvest/termination or planting op
-                  if( stircum(isr)%phop(jdx)%phop_type .eq. 1 ) then
-                     ! found planting, this is last harvest/termination
-                     stircum(isr)%phop(idx)%last_harv = 1
-                     ! no more checking needed
-                     exit
-                  else if( jdx .eq. stircum(isr)%phopcnt ) then
-                     ! at end of file, restart at beginning
-                     do kdx = 1, idx-1
-                        if( stircum(isr)%phop(kdx)%phop_type .eq. 1 ) then
-                           ! found planting, this is last harvest/termination
-                           stircum(isr)%phop(idx)%last_harv = 1
-                           ! no more checking needed
-                           exit
-                        else if( stircum(isr)%phop(kdx)%phop_type .eq. 2 ) then
-                           ! found harvest/termination, this is not last harvest/termination
-                           ! no more checking needed
-                           exit
-                        end if
-                     end do
-                  else if( (stircum(isr)%phop(jdx)%phop_type .eq. 2) .and. (jdx .ne. idx) ) then
-                     ! found harvest/termination, this is not last harvest/termination
-                     ! no more checking needed
-                     exit
-                  end if
-               end do
+               ! All harvest/termination ops should be present, check for last harvest/termination
+               if( idx .lt. stircum(isr)%phopcnt ) then
+                  ! check operations to end of management file and wrap as needed
+                  do jdx = idx+1, stircum(isr)%phopcnt
+                     ! index forward looking for harvest/termination or planting op
+                     if( stircum(isr)%phop(jdx)%phop_type .eq. 1 ) then
+                        ! found planting, this is last harvest/termination
+                        stircum(isr)%phop(idx)%last_harv = 1
+                        ! no more checking needed
+                        exit
+                     else if( stircum(isr)%phop(jdx)%phop_type .eq. 2 ) then
+                        ! found harvest/termination, this is not last harvest/termination
+                        ! no more checking needed
+                        exit
+                     end if
+                     if( jdx .eq. stircum(isr)%phopcnt ) then
+                        ! at end of file, restart at beginning
+                        do kdx = 1, idx-1
+                           if( stircum(isr)%phop(kdx)%phop_type .eq. 1 ) then
+                              ! found planting, this is last harvest/termination
+                              stircum(isr)%phop(idx)%last_harv = 1
+                              ! no more checking needed
+                              exit
+                           else if( stircum(isr)%phop(kdx)%phop_type .eq. 2 ) then
+                              ! found harvest/termination, this is not last harvest/termination
+                              ! no more checking needed
+                              exit
+                           end if
+                        end do
+                     end if
+                  end do
+               else
+                  ! start checking operations at beginning of managment file, no wrapping required
+                  do jdx = 1, stircum(isr)%phopcnt
+                     ! index forward looking for harvest/termination or planting op
+                     if( stircum(isr)%phop(jdx)%phop_type .eq. 1 ) then
+                        ! found planting, this is last harvest/termination
+                        stircum(isr)%phop(idx)%last_harv = 1
+                        ! no more checking needed
+                        exit
+                     else if( stircum(isr)%phop(jdx)%phop_type .eq. 2 ) then
+                        ! found harvest/termination, this is not last harvest/termination
+                        ! no more checking needed
+                        exit
+                     end if
+                  end do
+               end if
             end if
          end if
          ! always reset
