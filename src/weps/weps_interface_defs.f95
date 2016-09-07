@@ -2037,7 +2037,7 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       real bsfsan(1:*), bsfsil(1:*), bsfcla(1:*)
       real bszrgh, bszrr, bsfcce(1:*), bsfcec(1:*)
       real cump, dcump, bsk4d(*)
-      real bhtmx0(*), bhrwc0(*), szlyd(0:*)
+      real bhtmx0(*), bhrwc0(*), szlyd(*)
       real bszrr0, bszrh0
       real bseagm(*), bseagmn(*), bseagmx(*)
       real bslmin(*),bslmax(*)
@@ -2106,7 +2106,7 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
      &  bsdsblk, bsdwblk,                                               &
      &  bhzinf, bhzwid, trigger)
       integer daysim
-      real szlyd(0:*)
+      real szlyd(*)
       real  bhrwc0(*), bhrwc(*), bhrwcdmx(*)
       real  bseagmx(*), bseagmn(*), bseags(0:*)
       real  bhrwca(*), bhrwcw(*),bhrwcs(*)

@@ -43,7 +43,7 @@
       real bsfsan(1:mnsz), bsfsil(1:mnsz), bsfcla(1:mnsz)
       real bszrgh, bszrr, bsfcce(1:mnsz), bsfcec(1:mnsz)
       real cump, dcump, bsk4d(mnsz)
-      real bhtmx0(mnsz), bhrwc0(mnsz), szlyd(0:mnsz)
+      real bhtmx0(mnsz), bhrwc0(mnsz), szlyd(mnsz)
       real bszrr0, bszrh0
       real bseagm(mnsz), bseagmn(mnsz), bseagmx(mnsz)
       real bslmin(mnsz),bslmax(mnsz)
@@ -136,9 +136,9 @@
          end do
       endif
 
-
-      szlyd(0) = 0.0
-      do ldx = 1, bslay
+      szlyd(1) = bszlyt(1)
+      trigger(1) = 0
+      do ldx = 2, bslay
           ! calc. depth to bottom of each layer
           szlyd(ldx) = szlyd(ldx-1) + bszlyt(ldx)
           ! zero out trigger condition array
@@ -236,8 +236,12 @@
 ! *** eodf
 
 !           set stability drying process coefficient:
-            bsk4d(ldx) = 0.46 - 0.23 * exp(-(szlyd(ldx-1) +             &
+            if( ldx .eq. 1) then
+              bsk4d(ldx) = 0.46 - 0.23 * exp(-(szlyd(ldx)/2.0)/88.57)
+            else
+              bsk4d(ldx) = 0.46 - 0.23 * exp(-(szlyd(ldx-1) +           &
      &               (szlyd(ldx) - szlyd(ldx-1))/2.0)/88.57)
+            end if
 
  10      continue
 
