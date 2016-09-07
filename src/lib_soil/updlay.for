@@ -23,7 +23,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
 
       integer daysim
-      real szlyd(0:mnsz)
+      real szlyd(mnsz)
       real  bhrwc0(mnsz), bhrwc(mnsz), bhrwcdmx(mnsz)
       real  bseagmx(mnsz), bseagmn(mnsz), bseags(0:mnsz)
       real  bhrwca(mnsz), bhrwcw(mnsz),bhrwcs(mnsz)
