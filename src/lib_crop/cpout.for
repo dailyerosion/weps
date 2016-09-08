@@ -38,17 +38,27 @@
      &        '(mg/shoot)    (m^2/shoot)   (m)           (m)      ',    &
      &        '(kg/m^2) (#/m^2)')
 
- 2033 format('# Planting |Harv/Term  |                                  &
-     &      |standing|      |       |flat   |       |       |root  |    &
-     &   |       |      |         |root')
- 2034 format('#dy mo year|dy mo year |crop_name                         &
-     &      |stem   |leaf   |store  |stem   |leaf   |store  |stem  |stor&
-     &e  |fiber  |height|stemcount|depth  |grainf |stmrepd|cancov|dapl|c&
-     &hill |hucum  |mxhu|huind|dafm|spring')
- 2035 format('#          |           |                                  &
-     &      |kg/m^2 |-------|-------|-------|-------|-------|------|----&
-     &---|------ | meter |#/m^2    |meter  |------ |meter |----- |---- |&
-     &deg_C |deg_C |deg_C|-----|----|------')
+ 2043 format('# Planting |Harv/Term  |')
+ 2044 format('#dy mo year|dy mo year |')
+ 2045 format('#          |           |')                                 &
+
+ 2053 format('                                        |')
+ 2054 format('crop_name                               |')
+ 2055 format('                                        |')
+
+ 2063 format('standing|      |       |flat   |       |       |root  |')
+ 2064 format('stem    |leaf  |store  |stem   |leaf   |store  |stem  |')
+ 2065 format('kg/m^2  |------|-------|-------|-------|-------|------|')
+
+ 2073 format('       |       |      |         |root  |')
+ 2074 format('store  |fiber  |height|stemcount|depth |')
+ 2075 format('-------|-------|meters|#/m^2    |meters|')
+
+ 2084 format('grainf |stmrepd|cancov|dapl    |chill |hucum  |mxhu |')
+ 2085 format('-------|meters |----- |days    |deg_C |deg_C  |deg_C|')
+
+ 2094 format('huind|dafm|spring')
+ 2095 format('-----|days|------')
 
  6000 format('#plant harvest 0=days_mat calc_d_mat db_d_mat calc_heatu d&
      &b_heatu')
@@ -58,9 +68,25 @@
 
 
       ! season.out headers
-      write(luoseason(isr), 2033)
-      write(luoseason(isr), 2034)
-      write(luoseason(isr), 2035)
+
+      write(luoseason(isr),2043,ADVANCE="NO")
+      write(luoseason(isr),2053,ADVANCE="NO")
+      write(luoseason(isr),2063,ADVANCE="NO")
+      write(luoseason(isr),2073,ADVANCE="YES")
+
+      write(luoseason(isr),2044,ADVANCE="NO")
+      write(luoseason(isr),2054,ADVANCE="NO")
+      write(luoseason(isr),2064,ADVANCE="NO")
+      write(luoseason(isr),2074,ADVANCE="NO")
+      write(luoseason(isr),2084,ADVANCE="NO")
+      write(luoseason(isr),2094,ADVANCE="YES")
+
+      write(luoseason(isr),2045,ADVANCE="NO")
+      write(luoseason(isr),2055,ADVANCE="NO")
+      write(luoseason(isr),2065,ADVANCE="NO")
+      write(luoseason(isr),2075,ADVANCE="NO")
+      write(luoseason(isr),2085,ADVANCE="NO")
+      write(luoseason(isr),2095,ADVANCE="YES")
 
       if (am0cfl(isr).gt.0) then
 
