@@ -125,7 +125,7 @@ module crop_climate_mod
       real, intent(inout) :: bctwarmdays  ! total number of consequtive days temperature is above threshold
       real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
 
-      call warmday_cum( bctwarmdays, thres, cli_today%tdmx, cli_today%tdmn )
+      call warmday_cum_temps( bctwarmdays, thres, cli_today%tdmx, cli_today%tdmn )
 
       return
     end subroutine warmday_cum_today
@@ -142,7 +142,7 @@ module crop_climate_mod
       real :: tmean   ! arithmetic average of tmax and tmin
 
       tmean = (tmax + tmin) / 2.0
-      if (tmean .ge. thres) then
+      if (tmean .gt. thres) then
           ! this is a warm day
           bctwarmdays = bctwarmdays + 1
       else
