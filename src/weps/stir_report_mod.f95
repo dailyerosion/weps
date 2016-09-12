@@ -197,7 +197,11 @@ module stir_report_mod
               end if
              
               !multiple the energy by the soil multiplier
-              local_op_energy = stircum(isr)%phop(idx)%phop_energy * get_stir_soil_multiplier(isr)
+              if( stircum(isr)%phop(idx)%phop_energy .ge. 0.0 ) then
+                local_op_energy = stircum(isr)%phop(idx)%phop_energy * get_stir_soil_multiplier(isr)
+              else
+                local_op_energy = 0.0
+              end if
            
               ! print this line
               write(luostir(isr),1000) stircum(isr)%phop(idx)%phopday, stircum(isr)%phop(idx)%phopmon, &
