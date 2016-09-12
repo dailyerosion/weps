@@ -214,13 +214,9 @@ contains
 
          case (12)
             ! read CLIGEN file name
-            write(luolog, *) 'line0: ', line
-            write(luolog, *) 'line1: ', line(1:len_trim(line))
             clifil = rootp(1:len_trim(rootp)) // line(1:len_trim(line))
+            write(luolog, *) 'clifil: ', clifil(1:len_trim(clifil))
             ! open CLIGEN run file
-            write(luolog, *) 'line2: ', line
-            write(luolog, *) 'clifil: ', clifil
-            write(luolog, *) 'len: ', len(clifil), len_trim(clifil)
             call fopenk (luicli, clifil, 'old')
             write(luolog,*) 'opened cligen file to determine db format...'
             ! read 1st line of CLIGEN file
@@ -697,13 +693,9 @@ contains
 
          case (12)
             ! read CLIGEN file name
-            write(luolog, *) 'line0: ', line
-            write(luolog, *) 'line1: ', line(1:len_trim(line))
             clifil = rootp(1:len_trim(rootp)) // line(1:len_trim(line))
+            write(luolog, *) 'clifil: ', clifil(1:len_trim(clifil))
             ! open CLIGEN run file
-            write(luolog, *) 'line2: ', line
-            write(luolog, *) 'clifil: ', clifil
-            write(luolog, *) 'len: ', len(clifil), len_trim(clifil)
             call fopenk (luicli, clifil, 'old')
             write(luolog,*) 'opened cligen file to determine db format...'
             ! read 1st line of CLIGEN file
