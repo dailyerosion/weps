@@ -40,7 +40,7 @@ module sweep_io_mod
                                           awzypt, awdair, anemht, awzzo, wzoflg, &
                                           ntstep, awadir, awudmx, subday, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
-      use barriers_mod, only: create_barrier, barrier
+      use barriers_mod, only: create_barrier, barrier, barseas
       use grid_mod, only: amasim, amxsim, xgdpt, ygdpt
       use sae_in_out_mod, only: saeinp
 
@@ -153,6 +153,10 @@ module sweep_io_mod
       if( alloc_stat .gt. 0 ) then
          Write(*,*) 'ERROR: memory alloc., barriers'
       end if
+      allocate(barseas(nbr), stat = alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: memory alloc., barriers'
+      end if
 
       ! NOTE: Barrier data must not be in the input file if "nbr = 0"
       do ibr = 1, nbr
@@ -161,14 +165,19 @@ module sweep_io_mod
         read (line,*) poly_np
         ! create storage for point and barrier data
         barrier(ibr) = create_barrier(poly_np)
+        barseas(ibr) = create_barrier(poly_np,1,0)
         ! read in points and point data
         do ipol = 1, poly_np
            ! read point pair
            line = getline(i_unit)
-           read (line,*) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
+           read (line,*) barseas(ibr)%points(ipol)%x, barseas(ibr)%points(ipol)%y
+           !  also place in fixed barrier structure
+           barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
            ! barrier height, width, porosity
            line = getline(i_unit)
-           read (line,*) barrier(ibr)%param(ipol)%amzbr, barrier(ibr)%param(ipol)%amxbrw, barrier(ibr)%param(ipol)%ampbr
+           read (line,*) barseas(ibr)%param(ipol,1)%amzbr, barseas(ibr)%param(ipol,1)%amxbrw, barseas(ibr)%param(ipol,1)%ampbr
+           !  also place in fixed barrier structure
+           barrier(ibr)%param(ipol) = barseas(ibr)%param(ipol,1)
            if( barrier(ibr)%param(ipol)%amzbr .le. 0.0 ) then
              write(*,*) 'ERROR: Barrier height must be > 0'
              write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol

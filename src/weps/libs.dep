@@ -12,6 +12,7 @@ wepp
 wepp_erosion
 wepp_route
 util/confidence
+util/climate
 util/date
 util/math
 util/minpack
