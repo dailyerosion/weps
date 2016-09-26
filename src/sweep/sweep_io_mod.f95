@@ -81,7 +81,7 @@ module sweep_io_mod
       ! Read the debug flag to specify level of debug support
       ! (currently only input file level debug supported)
 
-      line = getline(i_unit)
+      line = adjustl(getline(i_unit))
       if (line (1:8).eq.'Version: ') then
           ! get next input line of versioned file
           line = getline(i_unit)
