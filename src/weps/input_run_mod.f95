@@ -532,6 +532,46 @@ contains
                read (line,*,err=80) barseas(ibr)%points(ipol)%x, barseas(ibr)%points(ipol)%y
                !  also place in fixed barrier structure
                barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
+
+               !  Convert (x,y) barrier rectangular corner coordinates to
+               !  (x,y) midline coordinates and width as currently defined in WEPS.
+
+               !  NOTE:  We don't convert to true midline coordinates because
+               !         the erosion submodel assumes the midline is the barrier
+               !         edge at this time.  Since WEPS 1.0 only handles barriers
+               !         that exist on the simulation region (field) boundary, the
+               !         the barrier (x,y) coordinates are set to match the simulation
+               !         region boundary coordinates, not to the actual barrier
+               !         midline coordinates.  LEW AUG 23, 2000  8:07 AM
+               if ((amxsim(1)%x .eq. barseas(ibr)%points(1)%x) .and. &
+                   (amxsim(2)%x .eq. barseas(ibr)%points(2)%x)) then ! N or S barrier
+                  if (amxsim(1)%y .eq. barseas(ibr)%points(2)%y) then ! S barrier
+                     barseas(ibr)%points(1)%y = amxsim(1)%y
+                     !  also place in fixed barrier structure
+                     barrier(ibr)%points(1) = barseas(ibr)%points(1)
+                     !write(6,*) 'South barrier'
+                  else if (amxsim(2)%y .eq. barseas(ibr)%points(1)%y) then ! N barrier
+                     barseas(ibr)%points(2)%y = amxsim(2)%y
+                     !  also place in fixed barrier structure
+                     barrier(ibr)%points(2) = barseas(ibr)%points(2)
+                     !write(6,*) 'North barrier'
+                  endif
+               else if ((amxsim(1)%y .eq. barseas(ibr)%points(1)%y) .and. &
+                        (amxsim(2)%y .eq. barseas(ibr)%points(2)%y)) then ! E or W barrier
+                  if (amxsim(1)%x .eq. barseas(ibr)%points(2)%x) then       ! W barrier
+                     barseas(ibr)%points(1)%x = amxsim(1)%x
+                     !  also place in fixed barrier structure
+                     barrier(ibr)%points(1) = barseas(ibr)%points(1)
+                     !write(6,*) 'West barrier'
+                  else if (amxsim(2)%x .eq. barseas(ibr)%points(1)%x) then  ! E barrier
+                     barseas(ibr)%points(2)%x = amxsim(2)%x
+                     !  also place in fixed barrier structure
+                     barrier(ibr)%points(2) = barseas(ibr)%points(2)
+                     !write(6,*) 'East barrier'
+                  endif
+               else
+                  write(6,*) 'No barrier match for barrier: ', ibr
+               endif
             end if
 
          case (36)
