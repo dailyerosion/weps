@@ -129,13 +129,15 @@ module stir_report_mod
 
       if( end_of_file .and. ( .not. report_loop ) ) then
           ! used in stir_crop, which requires at least two passes to work
-          ! reset the plant harvest array index for second pass
+          ! reset the plant harvest array index during initialization
           stircum(isr)%phopidx = 0
       end if
 
       if( (.not. stircum(isr)%man_eof) .and. end_of_file ) then
           ! first time at end of managment file
           stircum(isr)%man_eof = end_of_file
+          ! reset the plant harvest array index before last pass
+          stircum(isr)%phopidx = 0
       else
           ! only go through stir calculation once (see done flag above)
           ! make sure to do on second time through and only in report loop
