@@ -41,11 +41,10 @@
       real             Zszrgh(mnsub)
       real             Zsxrgs(mnsub)
       real             Zsxrgw(mnsub)
-        real             Zszrho(mnsub)
-        real             Zsxdks(mnsub)
-        real             Zsxdkh(mnsub)
-        real             Zs0rrk(mnsub)
-        real             Zslrrc(mnsub)
+      real             Zszrho(mnsub)
+      real             Zsxdks(mnsub)
+      real             Zsxdkh(mnsub)
+      real             Zs0rrk(mnsub)
 
       real             Zsfsan(0:mnsz, mnsub)
       real             Zsfsil(0:mnsz, mnsub)
@@ -92,7 +91,7 @@
      & Zmrslp, ZSFCov, Zrestrict_depth, Zbedrock_depth,                 &
      & Zsdblk, Zsdsblk, Zsdwblk, Zsdblk0, Zsdpart, Zsdwsrat,            &
      &                 Zszrgh, Zszrho, Zsxrgw, Zsxrgs, Zsargo, Zsxdks,  &
-     &                 Zsxdkh, Zs0rrk, Zslrrc, Zslrr, Zslrro,           &
+     &                 Zsxdkh, Zs0rrk, Zslrr, Zslrro,                   &
      &                 Zsfsan, Zsfsil, Zsfcla, Zsvroc,                  &
      &                 Zsfvcs, Zsfcs, Zsfms, Zsffs, Zsfvfs,             &
      &                 Zs0ph, Zsfom, Zsfcce, Zsfcec, Zsfcle,            &

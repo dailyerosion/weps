@@ -64,7 +64,6 @@
       ! Zsxdks(isr) = asxdks(isr)
       ! Zsxdkh(isr) = asxdkh(isr)
       ! Zs0rrk(isr) = as0rrk(isr)
-      ! Zslrrc(isr) = aslrrc(isr)
 
 !   Other
       Zsfalw(isr) = subrsurf%asfalw
@@ -185,7 +184,6 @@
       ! asxdks(isr) = Zsxdks(isr)
       ! asxdkh(isr) = Zsxdkh(isr)
       ! as0rrk(isr) = Zs0rrk(isr)
-      ! aslrrc(isr) = Zslrrc(isr)
 
 !   Other
       subrsurf%asfalw = Zsfalw(isr)

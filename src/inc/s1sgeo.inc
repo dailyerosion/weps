@@ -17,13 +17,12 @@
       real             asxdks(mnsub)
       real             asxdkh(mnsub)
       real             as0rrk(mnsub)
-      real             aslrrc(mnsub)
       real             aslrr(mnsub)
       real             aslrro(mnsub)
 
       common / s1sgeo /                                                 &
      &                 aszrgh, aszrho, asxrgw, asxrgs, asargo, asxdks,  &
-     &                 asxdkh, as0rrk, aslrrc, aslrr, aslrro
+     &                 asxdkh, as0rrk, aslrr, aslrro
 
       save :: /s1sgeo/
 
@@ -106,17 +105,6 @@
 
 !            - This variable contains the random roughness shape
 !              parameter (K) for each of  the subregions.
-
-!     aslrrc - Random roughness parameter C (scale)
-
-!              range values       min        max
-!              ------------   ---------  ---------
-!              fixed          fmin       fmax
-!              typical        tmin       tmax
-!              ------------   ---------  ---------
-
-!            - This variable contains the random roughness scale
-!              parameter (C) for each of  the subregions.
 
 !     aslrr - Allmaras random roughness parameter (mm) 
 !     aslrro - original random roughness height, after tillage, mm

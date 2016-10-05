@@ -137,9 +137,6 @@
       if (as0rrk(sr).lt.tstmin.or.as0rrk(sr).gt.tstmax)                 &
      &  write(*,*) 'day ',day,' as0rrk ', as0rrk(sr)
 !
-      if (aslrrc(sr).lt.tstmin.or.aslrrc(sr).gt.tstmax)                 &
-     &  write(*,*) 'day ',day,' aslrrc ', aslrrc(sr)
-!
       if (aslrr(sr).lt.1.0.or.aslrr(sr).gt.30.0)                        &
      &  write(*,*) 'day ',day,' aslrr ', aslrr(sr)
 !

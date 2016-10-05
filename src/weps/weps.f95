@@ -392,7 +392,6 @@
 
 !     temporarily initialize old random roughness
       do isr =1, nsubr ! added subregion loop JG
-          aslrrc(isr) = 10.
           as0rrk(isr) = 0.9
       end do 
 
