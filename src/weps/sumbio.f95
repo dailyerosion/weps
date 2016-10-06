@@ -3,10 +3,11 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine sumbio(isr, crop, residue, restot, croptot, biotot)
+      subroutine sumbio(isr, crop, residue, restot, croptot, biotot, subrsurf)
 
       use biomaterial, only: biomatter, biototal
       use wind_mod, only: biodrag
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr
@@ -14,11 +15,11 @@
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: croptot
       type(biototal), intent(inout) :: restot, biotot
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
 !     Update geometric properties of all biomass pools
 
       include 'p1werm.inc'
-      include 's1sgeo.inc'
 
 ! local variables
 
@@ -82,7 +83,7 @@
 !     from SAI and LAI values
       biotot%rcdtot = biodrag( restot%rlaitot, restot%rsaitot, croptot%rlaitot,&
                   croptot%rsaitot, croptot%c0rg, croptot%xrow, croptot%zht_ave, &
-                  aszrgh(isr) )
+                  subrsurf%aszrgh )
 ! *****************************************************************
 !     sum the stem area index and leaf area index values by height
 !     this is based upon the "tallest" biomass pool height value

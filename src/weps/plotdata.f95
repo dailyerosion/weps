@@ -39,7 +39,6 @@
       include 'h1db1.inc'
       include 's1layr.inc'
       include 's1phys.inc'
-      include 's1sgeo.inc'
       include 's1agg.inc'
       include 'h1hydro.inc'
       include 'm1subr.inc'
@@ -156,7 +155,7 @@
      &                    day, month, year,                             &
      &                    total, suspen, pmten,                         &
      &                    awudmx, awadir, cli_today%zdpt, ahrwc0(12, sr), &
-     &                    aszrgh(sr), asargo(sr), aslrr(sr),            &
+     &                    subrsurf%aszrgh, subrsurf%asargo, subrsurf%aslrr, &
      &                    aslagm(1,sr), aseags(1,sr), subrsurf%asfcr, &
      &                    subrsurf%asmlos, subrsurf%asflos, asdblk(1,sr), &
      &                    biotot%ffcvtot, biotot%fscvtot,               &

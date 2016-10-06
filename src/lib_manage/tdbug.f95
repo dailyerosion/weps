@@ -36,7 +36,6 @@
       include 's1agg.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
-      include 's1sgeo.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -77,19 +76,19 @@
  2067     format('aslrr') 
  2062     format (f7.2)
           write(luotdb(sr),2067)
-          write(luotdb(sr),2062) aslrr(sr)
+          write(luotdb(sr),2062) subrsurf%aslrr
 
       case (3) ! oriented roughness ridge only process (process code 03)
  2070     format(3x,'aszrgh asxrgw asxrgs asargo asxdks asxdkh')
  2071     format (4x,6(2x,f7.3))
           write(luotdb(sr),2070)
-          write(luotdb(sr),2071) aszrgh(sr), asxrgw(sr), asxrgs(sr),        &
-     &      asargo(sr), asxdks(sr), asxdkh(sr)
+          write(luotdb(sr),2071) subrsurf%aszrgh, subrsurf%asxrgw, subrsurf%asxrgs, &
+            subrsurf%asargo, subrsurf%asxdks, subrsurf%asxdkh
 
       case (4) ! oriented roughness process dike only (process code 04)
           write(luotdb(sr),2070)
-          write(luotdb(sr),2071) aszrgh(sr), asxrgw(sr), asxrgs(sr),        &
-     &      asargo(sr), asxdks(sr), asxdkh(sr)
+          write(luotdb(sr),2071) subrsurf%aszrgh, subrsurf%asxrgw, subrsurf%asxrgs, &
+            subrsurf%asargo, subrsurf%asxdks, subrsurf%asxdkh
 
       case (5) ! oriented roughness process (process code 05)
  2072     format(3x,'asfcr  asflos')
@@ -97,8 +96,8 @@
           write(luotdb(sr),2072)
           write(luotdb(sr),2073) subrsurf%asfcr, subrsurf%asflos
           write(luotdb(sr),2070)
-          write(luotdb(sr),2071) aszrgh(sr), asxrgw(sr), asxrgs(sr),        &
-     &      asargo(sr), asxdks(sr), asxdkh(sr)
+          write(luotdb(sr),2071) subrsurf%aszrgh, subrsurf%asxrgw, subrsurf%asxrgs, &
+            subrsurf%asargo, subrsurf%asxdks, subrsurf%asxdkh
 
       case (11) ! crushing process (process code 11)
  2040     format(3x,'aslagn aslagx aslagm as0ags') 

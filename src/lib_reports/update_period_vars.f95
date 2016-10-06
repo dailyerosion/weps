@@ -51,14 +51,14 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
                                 ! asecr (stability of crust)
                                 ! acancr(crust coeff. of abrasion)
                                 ! acanag (agg. coeff. of abrasion)
+                                ! aslrr Allmaras RR values
+                                ! aszrgh Ridge height
+                                ! asxrgs Ridge spacing
+                                ! asargo Ridge dir
+
 
 
     include "p1werm.inc"        ! needed by other include files
-
-    include "s1sgeo.inc"        ! aslrr(isr) Allmaras RR values
-                                ! aszrgh(isr) Ridge height
-                                ! asxrgs(isr) Ridge spacing
-                                ! asargo(isr) Ridge dir
 
     include "s1agg.inc"         ! aslagm, as0ags, aslagn, aslagx (ASD parms)
                                 ! aseags (agg stability), asdagd (agg density)
@@ -110,16 +110,16 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
   if( isr .gt. 0 ) then
 
 ! Roughness vars
-    period_update(Random_rough)%val = aslrr(isr)
+    period_update(Random_rough)%val = subrsurf%aslrr
     period_update(Random_rough)%cnt = period_update(Random_rough)%cnt + 1
 
-    period_update(Ridge_ht)%val = aszrgh(isr)
+    period_update(Ridge_ht)%val = subrsurf%aszrgh
     period_update(Ridge_ht)%cnt = period_update(Ridge_ht)%cnt + 1
 
-    period_update(Ridge_sp)%val = asxrgs(isr)
+    period_update(Ridge_sp)%val = subrsurf%asxrgs
     period_update(Ridge_sp)%cnt = period_update(Ridge_sp)%cnt + 1
 
-    period_update(Ridge_dir)%val = asargo(isr)
+    period_update(Ridge_dir)%val = subrsurf%asargo
     period_update(Ridge_dir)%cnt = period_update(Ridge_dir)%cnt + 1
 
     call sbsfdi(aslagm(1,isr), as0ags(1,isr), aslagn(1,isr),                &

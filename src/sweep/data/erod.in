@@ -180,19 +180,19 @@
 #
 #
 #
-#     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)
+#     aslrr(s), R, Allmaras random roughness (mm)
  5.0
-#     aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)
-#     asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)
-#     asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)
-#     asxrgo(s), R, (s1sgeo.inc) Ridge orientation (deg)
+#     aszrgh(s), R, Ridge height (mm)
+#     asxrgs(s), R, Ridge spacing (mm)
+#     asxrgw(s), R, Ridge width (mm)
+#     asxrgo(s), R, Ridge orientation (deg)
  0.0 0.0 0.0 0
-#     asxdks(s), R, (s1sgeo.inc) Dike spacing (mm)
+#     asxdks(s), R, Dike spacing (mm)
  0.0
 #
 #     +++ HYDROLOGY +++
 #
-#     ahzsnd(s), R, (s1sgeo.inc) Snow depth (mm)
+#     ahzsnd(s), R, Snow depth (mm)
  0.0
 #
 #     ahrwcw(l,s), R, (h1db1.inc) Soil layer wilting point water content (Mg/Mg)
@@ -332,19 +332,19 @@
 #     asecr(s), R,  Soil crust stability ln(J/kg)
   0
   cr_se
-#     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)
+#     aslrr(s), R, Allmaras random roughness (mm)
   0
   rr(mm)
-#     aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)
+#     aszrgh(s), R, Ridge height (mm)
   0
   z_rgh(mm)
-#     asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)
+#     asxrgs(s), R, Ridge spacing (mm)
   0
   x_rgs(mm)
-#     asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)
+#     asxrgw(s), R, Ridge width (mm)
   0
   x_rgw(mm)
-#     asxrgo(s), R, (s1sgeo.inc) Ridge orientation (deg)
+#     asxrgo(s), R, Ridge orientation (deg)
   0
   a_rgo(deg)
 #

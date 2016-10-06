@@ -38,7 +38,6 @@
       include 's1agg.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
-      include 's1sgeo.inc'
       include 'c1info.inc'
       include 'c1gen.inc'
       include 'c1db1.inc'
@@ -114,28 +113,28 @@
 !
       if (dmpflg) write(*,*) 's1sgeo'
 !      
-      if (aszrgh(sr).lt.0.0.or.aszrgh(sr).gt.500.0)                     &
-     &  write(*,*) 'day ',day,' aszrgh ', aszrgh(sr)
+      if (subrsurf%aszrgh.lt.0.0.or.subrsurf%aszrgh.gt.500.0) &
+     &  write(*,*) 'day ',day,' aszrgh ', subrsurf%aszrgh
 !
-      if (asxrgw(sr).lt.10.0.or.asxrgw(sr).gt.4000.0)                   &
-     &  write(*,*) 'day ',day,' asxrgw ', asxrgw(sr)
+      if (subrsurf%asxrgw.lt.10.0.or.subrsurf%asxrgw.gt.4000.0) &
+     &  write(*,*) 'day ',day,' asxrgw ', subrsurf%asxrgw
 !
-      if (asxrgs(sr).lt.10.0.or.asxrgs(sr).gt.2000.0)                   &
-     &  write(*,*) 'day ',day,' asxrgs ', asxrgs(sr)
+      if (subrsurf%asxrgs.lt.10.0.or.subrsurf%asxrgs.gt.2000.0)                   &
+     &  write(*,*) 'day ',day,' asxrgs ', subrsurf%asxrgs
 !
-      if (asargo(sr).lt.0.0.or.asargo(sr).gt.179.0)                     &
-     &  write(*,*) 'day ',day,' asargo ', asargo(sr)
-!
-! wjr,  test values based on definition
-      if (asxdks(sr).lt.0.0.or.asxdks(sr).gt.1000.0)                    &
-     &  write(*,*) 'day ',day,' asxdks ', asxdks(sr)
+      if (subrsurf%asargo.lt.0.0.or.subrsurf%asargo.gt.179.0)                     &
+     &  write(*,*) 'day ',day,' asargo ', subrsurf%asargo
 !
 ! wjr,  test values based on definition
-      if (asxdkh(sr).lt.0.0.or.asxdkh(sr).gt.1000.0)                    &
-     &  write(*,*) 'day ',day,' asxdkh ', asxdkh(sr)
+      if (subrsurf%asxdks.lt.0.0.or.subrsurf%asxdks.gt.1000.0)                    &
+     &  write(*,*) 'day ',day,' asxdks ', subrsurf%asxdks
 !
-      if (aslrr(sr).lt.1.0.or.aslrr(sr).gt.30.0)                        &
-     &  write(*,*) 'day ',day,' aslrr ', aslrr(sr)
+! wjr,  test values based on definition
+      if (subrsurf%asxdkh.lt.0.0.or.subrsurf%asxdkh.gt.1000.0)                    &
+     &  write(*,*) 'day ',day,' asxdkh ', subrsurf%asxdkh
+!
+      if (subrsurf%aslrr.lt.1.0.or.subrsurf%aslrr.gt.30.0) &
+     &  write(*,*) 'day ',day,' aslrr ', subrsurf%aslrr
 !
 ! w1wind
 !

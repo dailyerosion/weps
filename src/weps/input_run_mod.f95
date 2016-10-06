@@ -43,7 +43,6 @@ contains
       include 's1agg.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
-      include 's1sgeo.inc'
       include 'c1gen.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'

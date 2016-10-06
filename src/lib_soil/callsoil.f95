@@ -29,7 +29,6 @@
       include 's1dbc.inc'
       include 's1dbh.inc'
       include 's1phys.inc'
-      include 's1sgeo.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'
       include 'h1db1.inc'
@@ -46,8 +45,6 @@
      &                 aszlyt(1,isr), nslay(isr),                       &
      &                 asfsan(1,isr), asfsil(1,isr), asfcla(1,isr),     &
      &                 asfom(1,isr), asvroc(1,isr),                     &
-     &                 asxrgs(isr), aszrgh(isr), aszrho(isr),           &
-     &                 aslrr(isr), aslrro(isr),                         &
      &                 asdsblk(1,isr), asdwblk(1,isr),                  &
      &                 asdblk(0,isr), asdagd(0,isr),                    &
      &                 aslagm(0,isr), aslagn(0,isr),                    &

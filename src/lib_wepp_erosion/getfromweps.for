@@ -5,7 +5,7 @@
 
       subroutine getfromweps(isr,sand,silt,clay,orgmat,                 &
      & thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh,                        &
-     & frctrl, frcsol, precip)
+     & frctrl, frcsol, precip, subrsurf)
      
 !-------------------------------------------------------------------------------------
 !     getfromweps()
@@ -21,13 +21,13 @@
 
       use p1unconv_mod, only: mmtom
       use climate_input_mod, only: cli_today
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
       implicit none
 
       include 'p1werm.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
-      include 's1sgeo.inc'
       include 's1phys.inc'
       include 's1layr.inc'
       include 'hydro/htheta.inc'
@@ -43,6 +43,7 @@
       real, intent(out):: thetfc(mxnsl), por(mxnsl), rh
       real, intent(out):: frctrl, frcsol
       real, intent(out):: precip
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
       
 !     + + + argument declarations + + +     
 !     isr - This variable holds the subregion index.
@@ -69,10 +70,10 @@
       integer i,isFroze
       
 !     random roughness in WEPS is mm, WEPP is m      
-      rrc = aslrr(isr) / 1000.0
+      rrc = subrsurf%aslrr / 1000.0
 
 !     ridge height in WEPS is mm, WEPP is m
-      rh = aszrgh(isr) / 1000.0
+      rh = subrsurf%aszrgh / 1000.0
        
 !     soil grain friction factor - TODO       
       frcsol = 1.11

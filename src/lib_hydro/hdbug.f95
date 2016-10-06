@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine  hdbug(isr, slay, crop, restot, h1et)
+      subroutine  hdbug(isr, slay, crop, restot, h1et, subrsurf)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -22,6 +22,7 @@
       use biomaterial, only: biototal, biomatter
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use hydro_data_struct_defs, only: hydro_derived_et
+      use erosion_data_struct_defs, only: subregionsurfacestate
       use climate_input_mod, only: cli_today
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -30,6 +31,7 @@
       type(biomatter), intent(in) :: crop
       type(biototal), intent(in) :: restot
       type(hydro_derived_et), intent(in) :: h1et
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     isr       - subregion index.
@@ -44,7 +46,6 @@
       include 's1agg.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
-      include 's1sgeo.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -140,7 +141,7 @@
                     ahzsmt(isr), h1et%zeta, h1et%zetp, h1et%zpta
       write(luohdb(isr),2054) isr, isr, isr, isr
       write(luohdb(isr),2055) h1et%zea, h1et%zep, h1et%zptp, ah0cng(isr), &
-                    ah0cnp(isr), aslrr(isr)
+                    ah0cnp(isr), subrsurf%aslrr
       write(luohdb(isr),2056)
 
       do 200 l = 1,slay

@@ -16,7 +16,6 @@
       include 'p1werm.inc'
       include 'm1flag.inc'      !am0cropupfl
       include 'main/main.inc'   !daysim, iy
-      include 's1sgeo.inc'      !aszrgh
       include 's1layr.inc'      !aszlyd, nslay
       include 'c1gen.inc'       !ac0rg, acxrow
       include 'c1db1.inc'       !ac0ssa, ac0ssb, acdpop
@@ -42,7 +41,7 @@
         if( am0cropupfl.gt.0 ) then
             ! update all derived globals for crop global variables
             call cropupdate( &
-     &      aszrgh(isr), aszlyd(1,isr), &
+     &      subrsurf%aszrgh, aszlyd(1,isr), &
      &      ac0rg(isr), acxrow(isr), &
      &      nslay(isr), ac0ssa(isr), ac0ssb(isr), &
      &      acdpop(isr), &
@@ -67,7 +66,7 @@
 !        write(*,*) "Start callcrop"     !CROP submodel
         ! Crop growth flag indicates growing crop
         if( crop%growth%am0cgf ) then
-            call callcrop(daysim, isr, crop, residue, restot, croptot, h1et)
+            call callcrop(daysim, isr, crop, residue, restot, croptot, h1et, subrsurf)
         end if
 
 !        write(*,*) "Start decomp"
@@ -77,7 +76,7 @@
         call updres(isr, residue, restot)
 
 !        write(*,*) "Start sumbio"
-        call sumbio(isr, crop, residue, restot, croptot, biotot) ! sum live and dead biomass
+        call sumbio(isr, crop, residue, restot, croptot, biotot, subrsurf) ! sum live and dead biomass
 
       return
       end

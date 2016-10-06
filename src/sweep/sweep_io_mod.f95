@@ -336,8 +336,6 @@ module sweep_io_mod
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%as0ags, l=1,subrsurf(sr)%nslay)
 
-        ! s1sgeo.inc
-
         ! Crust parms (fraction, thickness)
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%asfcr, subrsurf(sr)%aszcr, &
@@ -840,8 +838,6 @@ module sweep_io_mod
 
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%as0ags, l=1,subrsurf(sr)%nslay)
-
-        ! s1sgeo.inc
 
         ! Crust parms (fraction, thickness)
         line = getline(i_unit)

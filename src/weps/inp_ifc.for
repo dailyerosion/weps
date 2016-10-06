@@ -15,7 +15,6 @@
       include 's1agg.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
-      include 's1sgeo.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -163,22 +162,22 @@
 
 !     read IC surface roughness properties
         case (39)                                                     ! Random roughness (mm)
-          read(line,*,err=902) aslrr(isr)
-          aslrro(isr) = aslrr(isr)                ! init after-tillage RR
+          read(line,*,err=902) subrsurf%aslrr
+          subrsurf%aslrro = subrsurf%aslrr                            ! init after-tillage RR
         case (40)                                                     ! Ridge orientation (deg)
-          read(line,*,err=902) asargo(isr)
+          read(line,*,err=902) subrsurf%asargo
         case (41)                                                     ! Ridge height (mm)
-          read(line,*,err=902) aszrgh(isr)
+          read(line,*,err=902) subrsurf%aszrgh
         case (42)                                                     ! Ridge spacing (mm)
-          read(line,*,err=902) asxrgs(isr)
+          read(line,*,err=902) subrsurf%asxrgs
         case (43)                                                     ! Ridge width (mm)
-          read(line,*,err=902) asxrgw(isr)
+          read(line,*,err=902) subrsurf%asxrgw
 
         ! this is where dike height and spacing should be read in.
         ! they are not, but need to be initialized.
         ! case (??)
-          asxdks(isr) = 0.0
-          asxdkh(isr) = 0.0
+          subrsurf%asxdks = 0.0
+          subrsurf%asxdkh = 0.0
 
 !     read IC soil hydrologic properties
         ! All SWC values are converted to mass basis as they are the "independent variables" in WEPS
@@ -260,7 +259,6 @@
       include 's1agg.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
-      include 's1sgeo.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -414,22 +412,22 @@
 
 !     read IC surface roughness properties
         case (41)                                                     ! Random roughness (mm)
-          read(line,*,err=902) aslrr(isr)
-          aslrro(isr) = aslrr(isr)                ! init after-tillage RR
+          read(line,*,err=902) subrsurf%aslrr
+          subrsurf%aslrro = subrsurf%aslrr                            ! init after-tillage RR
         case (42)                                                     ! Ridge orientation (deg)
-          read(line,*,err=902) asargo(isr)
+          read(line,*,err=902) subrsurf%asargo
         case (43)                                                     ! Ridge height (mm)
-          read(line,*,err=902) aszrgh(isr)
+          read(line,*,err=902) subrsurf%aszrgh
         case (44)                                                     ! Ridge spacing (mm)
-          read(line,*,err=902) asxrgs(isr)
+          read(line,*,err=902) subrsurf%asxrgs
         case (45)                                                     ! Ridge width (mm)
-          read(line,*,err=902) asxrgw(isr)
+          read(line,*,err=902) subrsurf%asxrgw
 
         ! this is where dike height and spacing are now read in.
         case (46)                                                     ! Dike spacing (mm)
-          read(line,*,err=902) asxdks(isr)
+          read(line,*,err=902) subrsurf%asxdks
         case (47)                                                     ! Dike height (mm)
-          read(line,*,err=902) asxdkh(isr)
+          read(line,*,err=902) subrsurf%asxdkh
 
 !     read IC soil hydrologic properties
         ! All SWC values are converted to mass basis as they are the "independent variables" in WEPS

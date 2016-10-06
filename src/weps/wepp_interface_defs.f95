@@ -88,7 +88,8 @@
 !---------------------------
       subroutine getfromweps(isr,sand,silt,clay,orgmat, &
        thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh, &
-       frctrl, frcsol, precip)
+       frctrl, frcsol, precip, subrsurf)
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer, intent(in):: isr
       real, intent(out):: sand(*), silt(*), clay(*)
       real, intent(out):: orgmat(*)
@@ -97,6 +98,7 @@
       real, intent(out):: thetfc(*), por(*), rh
       real, intent(out):: frctrl, frcsol
       real, intent(out):: precip
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
       end subroutine getfromweps
 !---------------------------------
       SUBROUTINE init_wepp(afterWarmup)

@@ -8,8 +8,6 @@
      &                 bhrwc, bhrwcdmx, bhrwca,                         &
      &                 bhrwcw, bhrwcs, bszlyt, bslay,                   &
      &                 bsfsan, bsfsil, bsfcla, bsfom, bsvroc,           &
-     &                 bsxrgs, bszrgh, bszrho,                          &
-     &                 bszrr, bszrro,                                   &
      &                 bsdsblk, bsdwblk,                                &
      &                 bsdblk, bsdagd,                                  &
      &                 bslagm, bslagn,                                  &
@@ -60,8 +58,6 @@
       integer bslay
       real bsfsan(1:mnsz), bsfsil(1:mnsz), bsfcla(1:mnsz)
       real bsfom(1:mnsz), bsvroc(1:mnsz)
-      real bsxrgs, bszrgh, bszrho
-      real bszrr, bszrro
       real bsdsblk(mnsz), bsdwblk(mnsz)
       real bsdblk(0:mnsz), bsdagd(0:mnsz)
       real bslagm(0:mnsz), bslagn(0:mnsz)
@@ -94,11 +90,6 @@
 !   bsfcla    - layer fraction of clay.
 !   bsfom     - layer fraction of organic matter.
 !   bsvroc    - soil volume fraction of rock in each layer
-!   bsxrgs    - ridge spacing. we have a relation between this and bszrgh.
-!   bszrgh    - ridge height, mm.
-!   bszrho    - ridge height right after tillage, mm.
-!   bszrr     - random roughness height, mm.
-!   bszrro    - random roughness height right after tillage, mm.
 !   bsdsblk    - consolidated soil bulk density by layer, Mg/m^3
 !   bsdwblk    - Bulk Density of soil measured at 1/3 bar, Mg/m^3
 !   bsdblk    - current layer density may be different from bsdsblk.
@@ -177,15 +168,15 @@
       call sinit (daysim,                                               &
      &                 bhtsmx, bhrwc, bsfom, bszlyt,                    &
      &                 bslay, bsfsan, bsfsil, bsfcla,                   &
-     &                 bszrgh, bszrr, bsfcce, bsfcec,                   &
+                       subrsurf%aszrgh, subrsurf%aslrr, bsfcce, bsfcec, &
      &                 cump(isr), dcump, bsk4d,                         &
      &                 bhtmx0(1,isr), bhrwc0(1,isr), szlyd(0),          &
      &                 bszrr0(isr), bszrh0(isr),                        &
      &                 bseagm, bseagmn, bseagmx,                        &
      &                 bslmin, bslmax,                                  &
      &                 rain, snow, sprink,                              &
-     &                 bhzirr, bszrho,                                  &
-     &                 bhlocirr, bhzsmt, bszrro,                        &
+                       bhzirr, subrsurf%aszrho, &
+                       bhlocirr, bhzsmt, subrsurf%aslrro, &
      &                 bsdsblk, cli_today%zdpt, cli_today%tdav, trigger)
 !
 !  UPDATE SURFACE
@@ -194,19 +185,19 @@
       if (dcump .gt. 0.0) then
 
 !  RIDGE SECTION:
-        call rid(cf2cov, bbfscv, bbffcv, bszrgh,                        &
-     &    bsxrgs, bszrho, cumpa, dcump, bsvroc)
+        call rid(cf2cov, bbfscv, bbffcv, subrsurf%aszrgh, &
+          subrsurf%asxrgs, subrsurf%aszrho, cumpa, dcump, bsvroc)
 
 !
 !  RANDOM ROUGHNESS SECTION:
-        call ranrou(bsfsil(1), bsfsan(1), bszrr, bszrro,                &
+        call ranrou(bsfsil(1), bsfsan(1), subrsurf%aslrr, subrsurf%aslrro, &
      &    cumpa, dcump, cf2cov, bsvroc(1))
 
 !
 !  CRUST SECTION:
         call  cru(subrsurf%aszcr, cumpa, bsfcla(1), dcump, &
           subrsurf%asfcr, bhzsmt, subrsurf%asmlos, bsfom(1), bsfcce(1), &
-          bsfsan(1), bsmls0, bszrgh, bszrr, subrsurf%asflos)
+          bsfsan(1), bsmls0, subrsurf%aszrgh, subrsurf%aslrr, subrsurf%asflos)
       endif
 
 !  skip layer update on first simulation day
@@ -238,8 +229,8 @@
           bhrwc0(ldx,isr) = bhrwc(ldx)
       end do
 
-      bszrr0(isr) = bszrr
-      bszrh0(isr) = bszrgh
+      bszrr0(isr) = subrsurf%aslrr
+      bszrh0(isr) = subrsurf%aszrgh
 
 !     + + + OUTPUT FORMATS + + +
  2100 format('#daysim idoy yr cump dcump bszrgh bsxrgs bszrr bszcr bsfcr&
@@ -272,8 +263,9 @@
              write(luosoillay(isr),*)
          end if
 
-         write(luosoilsurf(isr), 2200) daysim,idoy,yr, cump(isr), dcump,&
-     &        bszrgh, bsxrgs, bszrr, subrsurf%aszcr, subrsurf%asfcr, subrsurf%asecr, subrsurf%asmlos, subrsurf%asflos
+         write(luosoilsurf(isr), 2200) daysim,idoy,yr, cump(isr), dcump, &
+              subrsurf%aszrgh, subrsurf%asxrgs, subrsurf%aslrr, subrsurf%aszcr, &
+              subrsurf%asfcr, subrsurf%asecr, subrsurf%asmlos, subrsurf%asflos
 
 ! output new values by layer to the soil output file.
          do ldx = 1,bslay

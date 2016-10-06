@@ -35,7 +35,6 @@
       include 's1agg.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
-      include 's1sgeo.inc'
       include 's1psd.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
@@ -130,8 +129,8 @@
      &              croptot%rlaitot,                                    &
      &              croptot%zrtd, biotot%mftot, ahfwsf(isr), h1et%zper
       write(luosdb(isr),2052) isr,isr,isr,isr,isr,isr,isr
-      write(luosdb(isr),2053) h1et%zrun,h1et%zirr,ahzsno(isr),      &
-     &               ahzsmt(isr), asxrgs(isr),aszrgh(isr),aslrr(isr)
+      write(luosdb(isr),2053) h1et%zrun,h1et%zirr,ahzsno(isr), &
+                     ahzsmt(isr), subrsurf%asxrgs,subrsurf%aszrgh,subrsurf%aslrr
       write(luosdb(isr),2054) isr,isr,isr,isr,isr,isr,isr
       write(luosdb(isr),2055) subrsurf%asfcr, subrsurf%asecr, subrsurf%asmlos, &
      &               subrsurf%asflos, croptot%c0rg, subrsurf%aszcr

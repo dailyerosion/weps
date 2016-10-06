@@ -73,7 +73,6 @@
       include 'm1sim.inc'  ! am0jd
       include 'm1flag.inc'
       include 's1layr.inc'
-      include 's1sgeo.inc'
       include 's1phys.inc'
       include 'c1info.inc'
       include 'c1gen.inc'
@@ -486,10 +485,10 @@
          ! initialize soil depth to bottom of layers (mm) from layer thickness (mm)
          call soilinit(isr)
          ! initialize croptot variables
-         call cropupdate( aszrgh(isr), aszlyd(1,isr), ac0rg(isr), acxrow(isr), nslay(isr), ac0ssa(isr), ac0ssb(isr), &
+         call cropupdate( subrsurf(isr)%aszrgh, aszlyd(1,isr), ac0rg(isr), acxrow(isr), nslay(isr), ac0ssa(isr), ac0ssb(isr), &
                           acdpop(isr), ahztranspdepth(isr), ahzfurcut(isr), ahztransprtmin(isr), ahztransprtmax(isr), &
                           crop(isr), croptot(isr) )
-         call sumbio(isr, crop(isr), residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))
+         call sumbio(isr, crop(isr), residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr), subrsurf(isr))
 
       !write(*,*) 'biotot, croptot, restot', biotot(isr), croptot(isr), restot(isr)
 
@@ -800,7 +799,7 @@
 
             do isr=1,nsubr   ! do multiple subregion     
                if ((run_erosion .eq. 2) .or. (run_erosion .eq. 3)) then
-                  call water_erosion( isr, cd, cm, cy, restot(isr), croptot(isr) )
+                  call water_erosion( isr, cd, cm, cy, restot(isr), croptot(isr), subrsurf(isr) )
                end if
 
                call sci_cum( isr, restot(isr), cellstate )   ! Keep running total for soil conditioning index (SCI)

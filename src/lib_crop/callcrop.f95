@@ -2,7 +2,7 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine callcrop(daysim, sr, crop, residue, restot, croptot, h1et)
+      subroutine callcrop(daysim, sr, crop, residue, restot, croptot, h1et, subrsurf)
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
@@ -11,6 +11,7 @@
       use timer_mod, only: timer, TIMCROP, TIMSTART, TIMSTOP
       use crop_data_struct_defs, only: am0cdb
       use hydro_data_struct_defs, only: hydro_derived_et
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer daysim
@@ -20,6 +21,7 @@
       type(biototal), intent(in) :: restot
       type(biototal), intent(inout) :: croptot
       type(hydro_derived_et), intent(in) :: h1et
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
 ! Includes
       include 'p1werm.inc'
@@ -32,7 +34,6 @@
       include 's1dbc.inc'
       include 's1dbh.inc'
       include 's1phys.inc'
-      include 's1sgeo.inc'    ! Contains required variables for biodrag()
       include 'h1hydro.inc'
       include 'h1temp.inc'
       include 'crop/prevstate.inc'
@@ -62,7 +63,7 @@
 !     only continue if crop is growing
       if( crop%growth%am0cgf ) then
 
-         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), crop, restot, h1et)
+         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), crop, restot, h1et, subrsurf)
 
          call cropgrow(sr, nslay(sr), aszlyd(1,sr),                     &
      &   crop%database%ck, acgrf(sr), acehu0(sr), aczmxc(sr),                  &
@@ -108,7 +109,7 @@
      &   agmbgstemz(1,sr),                                              &
      &   agzht(sr), agdstm(sr), agxstmrep(sr), aggrainf(sr) )
 
-         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), crop, restot, h1et)
+         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), crop, restot, h1et, subrsurf)
       end if
 
       ! check for abandoned stems in crop regrowth
@@ -139,7 +140,7 @@
 
       ! update all derived globals for crop global variables
       call cropupdate(                                                  &
-     &      aszrgh(sr), aszlyd(1,sr), &
+            subrsurf%aszrgh, aszlyd(1,sr), &
      &      ac0rg(sr), acxrow(sr), &
      &      nslay(sr), ac0ssa(sr), ac0ssb(sr), &
      &      acdpop(sr), &

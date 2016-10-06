@@ -39,7 +39,6 @@
       include 's1dbc.inc'
       include 's1dbh.inc'
       include 's1phys.inc'
-      include 's1sgeo.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'
       include 'h1db1.inc'
@@ -49,7 +48,7 @@
       call timer(TIMHYDR,TIMSTART)      
 
       if (am0hdb(isr) .eq. 1) then
-         call hdbug(isr, nslay(isr), crop, restot, h1et)
+         call hdbug(isr, nslay(isr), crop, restot, h1et, subrsurf)
       end if
 
       call hydro( isr, nslay(isr), amrslp(isr), biotot%zht_ave,         &
@@ -64,8 +63,8 @@
      &            asfsan(1,isr), asfsil(1,isr), asfcla(1,isr),          &
      &            asvroc(1,isr), asfom(1,isr), asfcec(1,isr),           &
      &            ahtsav(1,isr), biotot%dstmtot, biotot%ffcvtot,        &
-     &            asxrgs(isr), aszrgh(isr), subrsurf%asfcr, &
-     &            aslrro(isr), aslrr(isr), amzele,                      &
+     &            subrsurf%asxrgs, subrsurf%aszrgh, subrsurf%asfcr, &
+                  subrsurf%aslrro, subrsurf%aslrr, amzele, &
      &            ahzdmaxirr(isr), ahratirr(isr), ahdurirr(isr),        &
      &            ahlocirr(isr), ahminirr(isr), am0monirr(isr),         &
      &            ahmadirr(isr), ahndayirr(isr), ahmintirr(isr),        &
@@ -87,7 +86,7 @@
 !                 initswc(isr), initsnow(isr), initday(isr)
 
       if (am0hdb(isr) .eq. 1) then
-         call hdbug(isr, nslay(isr), crop, restot, h1et)
+         call hdbug(isr, nslay(isr), crop, restot, h1et, subrsurf)
       end if
       call timer(TIMHYDR,TIMSTOP)      
 

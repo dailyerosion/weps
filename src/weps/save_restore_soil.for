@@ -25,7 +25,6 @@
       include 's1agg.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
-      include 's1sgeo.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -52,12 +51,12 @@
       Zsmlos(isr) = subrsurf%asmlos
       Zsflos(isr) = subrsurf%asflos
 !   Surface roughness Properties
-      Zslrr(isr) = aslrr(isr)
-      Zslrro(isr) = aslrro(isr)
-      Zsargo(isr) = asargo(isr)
-      Zszrgh(isr) = aszrgh(isr)
-      Zsxrgs(isr) = asxrgs(isr)
-      Zsxrgw(isr) = asxrgw(isr)
+      Zslrr(isr) = subrsurf%aslrr
+      Zslrro(isr) = subrsurf%aslrro
+      Zsargo(isr) = subrsurf%asargo
+      Zszrgh(isr) = subrsurf%aszrgh
+      Zsxrgs(isr) = subrsurf%asxrgs
+      Zsxrgw(isr) = subrsurf%asxrgw
 
 !    Not sure if these surface variables need to be here
       ! Zszrho(isr) = aszrho(isr)  ! not defined yet
@@ -146,7 +145,6 @@
       include 's1agg.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
-      include 's1sgeo.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -171,12 +169,12 @@
       subrsurf%asmlos = Zsmlos(isr)
       subrsurf%asflos = Zsflos(isr)
 !   Surface roughness Properties
-      aslrr(isr) = Zslrr(isr)
-      aslrro(isr) = Zslrro(isr)
-      asargo(isr) = Zsargo(isr)
-      aszrgh(isr) = Zszrgh(isr)
-      asxrgs(isr) = Zsxrgs(isr)
-      asxrgw(isr) = Zsxrgw(isr)
+      subrsurf%aslrr = Zslrr(isr)
+      subrsurf%aslrro = Zslrro(isr)
+      subrsurf%asargo = Zsargo(isr)
+      subrsurf%aszrgh = Zszrgh(isr)
+      subrsurf%asxrgs = Zsxrgs(isr)
+      subrsurf%asxrgw = Zsxrgw(isr)
 
 !    Not sure if these surface variables need to be here
       ! aszrho(isr) = Zszrho(isr)

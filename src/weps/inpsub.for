@@ -28,7 +28,6 @@
       include 's1agg.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
-      include 's1sgeo.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -144,22 +143,22 @@
         case (27)
           read(line,*,err=82) subrsurf%asflos
         case (28)
-          read(line,*,err=82) aslrr(isr)
-          aslrro(isr) = aslrr(isr)
+          read(line,*,err=82) subrsurf%aslrr
+          subrsurf%aslrro = subrsurf%aslrr
         case (29)
-          read(line,*,err=82) asargo(isr)
+          read(line,*,err=82) subrsurf%asargo
         case (30)
-          read(line,*,err=82) aszrgh(isr)
+          read(line,*,err=82) subrsurf%aszrgh
         case (31)
-          read(line,*,err=82) asxrgs(isr)
+          read(line,*,err=82) subrsurf%asxrgs
         case (32)
-          read(line,*,err=82) asxrgw(isr)
+          read(line,*,err=82) subrsurf%asxrgw
 
         ! this is where dike height and spacing should be read in.
         ! they are not, but need to be initialized.
         ! case (??)
-          asxdks(isr) = 0.0
-          asxdkh(isr) = 0.0
+          subrsurf%asxdks = 0.0
+          subrsurf%asxdkh = 0.0
 
         case (33)
 !     read soil hydrologic properties

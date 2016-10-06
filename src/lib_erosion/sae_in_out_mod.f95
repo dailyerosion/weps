@@ -367,25 +367,25 @@ module sae_in_out_mod
                           subrsurf(sr)%asdcr, subrsurf(sr)%asecr
       write(luo_saeinp,2230)
  2230 format('#',/, &
-      '#     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)')
+      '#     aslrr(s), R, Allmaras random roughness (mm)')
       write(luo_saeinp,*) subrsurf(sr)%aslrr
       write(luo_saeinp,2235)
  2235 format('#',/, &
-      '#     aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)',/, &
-      '#     asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)',/, &
-      '#     asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)',/, &
-      '#     asargo(s), R, (s1sgeo.inc) Ridge orientation (deg)')
+      '#     aszrgh(s), R, Ridge height (mm)',/, &
+      '#     asxrgs(s), R, Ridge spacing (mm)',/, &
+      '#     asxrgw(s), R, Ridge width (mm)',/, &
+      '#     asargo(s), R, Ridge orientation (deg)')
       write(luo_saeinp,*) subrsurf(sr)%aszrgh, subrsurf(sr)%asxrgs, subrsurf(sr)%asxrgw, subrsurf(sr)%asargo
       write(luo_saeinp,2240)
  2240 format('#',/, &
-      '#     asxdks(s), R, (s1sgeo.inc) Dike spacing (mm)')
+      '#     asxdks(s), R, Dike spacing (mm)')
       write(luo_saeinp,*) subrsurf(sr)%asxdks
       write(luo_saeinp,2245)
 !      hydrology
  2245 format('#',/, &
       '#     +++ HYDROLOGY +++',/, &
       '#',/, &
-      '#     ahzsnd(s), R, (s1sgeo.inc) Snow depth (mm)')
+      '#     ahzsnd(s), R, Snow depth (mm)')
       write(luo_saeinp,*) subrsurf(sr)%ahzsnd
       write(luo_saeinp,2250)
  2250 format('#',/, &

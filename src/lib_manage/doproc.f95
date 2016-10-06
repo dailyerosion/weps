@@ -33,7 +33,6 @@
       include 'm1sim.inc'
       include 's1layr.inc'
       include 's1agg.inc'
-      include 's1sgeo.inc'
       include 's1phys.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
@@ -361,7 +360,7 @@
         ! the biomass in the soil affects this calculation. Since it is 
         ! the integrated soil biomass, not fresh biomass that causes this,
         ! the best estimate is the number from sumbio from the previous day.
-        call rough(roughflg,rrimpl,ti,fracarea,aslrr(sr),               &
+        call rough(roughflg,rrimpl,ti,fracarea,subrsurf%aslrr, &
      &             tlayer, asfcla(1,sr), asfsil(1,sr),                  &
      &             biotot%mbgz, biotot%mrtz,                            &
      &             aszlyd(1,sr))
@@ -389,18 +388,18 @@
         read(line(2:len_trim(line)),* , err=901)                        &
      &    rdgflag, rdght, imprs, rdgwt
 
-        rdght1 = aszrgh(sr) !keep initial ridge height value
+        rdght1 = subrsurf%aszrgh !keep initial ridge height value
         am0til = .true.  !set flag for surface modification
 !     do process
-        call orient1(aszrgh(sr),asxrgw(sr),asxrgs(sr),asargo(sr),       &
+        call orient1(subrsurf%aszrgh,subrsurf%asxrgw,subrsurf%asxrgs,subrsurf%asargo, &
      &               rdght,rdgwt,imprs,odir,tdepth,rdgflag)
 
 !     post-process stuff
         !if the ridge height changed or is very small,
         !then assume any dikes got destroyed
-        if (rdght1 .ne. aszrgh(sr) .or. (aszrgh(sr) .le. 0.1)) then
-          asxdkh(sr) = 0.0
-          asxdks(sr) = 0.0
+        if (rdght1 .ne. subrsurf%aszrgh .or. (subrsurf%aszrgh .le. 0.1)) then
+          subrsurf%asxdkh = 0.0
+          subrsurf%asxdks = 0.0
         end if
 
         if (am0tdb(sr) .eq. 1) then
@@ -427,7 +426,7 @@
 
         am0til = .true.  !set flag for surface modification
 !     do process
-        call orient2(asxdkh(sr),asxdks(sr),dikeht,dikespac)
+        call orient2(subrsurf%asxdkh,subrsurf%asxdks,dikeht,dikespac)
 
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
@@ -453,8 +452,8 @@
 
         am0til = .true.  !set flag for surface modification
 !     do process
-        call orient(aszrgh(sr),asxrgw(sr),asxrgs(sr),asargo(sr),        &
-     &              asxdkh(sr),asxdks(sr),                              &
+        call orient(subrsurf%aszrgh,subrsurf%asxrgw,subrsurf%asxrgs,subrsurf%asargo, &
+     &              subrsurf%asxdkh,subrsurf%asxdks, &
      &              rdght,rdgwt,imprs,odir,dikeht,dikespac,             &
      &              tdepth,rdgflag)
 
@@ -1903,7 +1902,7 @@
                 ! seed placed in furrow bottom and ridge made unconditionally
                 ! set transpiration depth parameters (meters)
                 ahzfurcut(sr) = mmtom                                   &
-     &                     * furrowcut(aszrgh(sr),asxrgw(sr),asxrgs(sr))
+     &                     * furrowcut(subrsurf%aszrgh,subrsurf%asxrgw,subrsurf%asxrgs)
                 ahztransprtmin(sr) = ahzfurcut(sr) + ac0growdepth(sr)
                 ahztransprtmax(sr) = aczmrt(sr)
               end if

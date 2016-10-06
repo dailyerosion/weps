@@ -65,32 +65,35 @@ module erosion_data_struct_defs
 
   type subregionsurfacestate
      ! ERODIN inputs
-     real :: adzht_ave  ! adzht_ave(s), R, Average residue height (m)
-     real :: aczht      ! aczht(s), R, Crop height (m)
-     real :: acrsai     ! acrsai(s), R, Crop stem area index (m^2/m^2)
-     real :: acrlai     ! acrlai(s), R, Crop leaf area index (m^2/m^2)
-     real :: adrsaitot  ! adrsaitot(s), R, Residue stem area index (m^2/m^2)
-     real :: adrlaitot  ! adrlaitot(s), R, Residue leaf area index (m^2/m^2)
-     real :: acxrow     ! acxrow(s) Crop row spacing (m)
-     integer :: ac0rg   ! ac0rg(s)  Crop seed placement (0 - furrow, 1 - ridge)
-     real :: abffcv     ! abffcv(s), R, (b1geom.inc) Flat biomass cover (m^2/m^2)
-     integer :: nslay   ! nslay(s), I, (s1layr.inc) Number of soil layers
+     real :: adzht_ave  ! Average residue height (m)
+     real :: aczht      ! Crop height (m)
+     real :: acrsai     ! Crop stem area index (m^2/m^2)
+     real :: acrlai     ! Crop leaf area index (m^2/m^2)
+     real :: adrsaitot  ! Residue stem area index (m^2/m^2)
+     real :: adrlaitot  ! Residue leaf area index (m^2/m^2)
+     real :: acxrow     ! Crop row spacing (m)
+     integer :: ac0rg   ! Crop seed placement (0 - furrow, 1 - ridge)
+     real :: abffcv     ! (b1geom.inc) Flat biomass cover (m^2/m^2)
+     integer :: nslay   ! (s1layr.inc) Number of soil layers
      type(by_soil_layer), dimension(:), allocatable :: bsl
-     real :: asfcr      ! asfcr(s), R,  Surface crust fraction (m^2/m^2)
-     real :: aszcr      ! aszcr(s), R,  Surface crust thickness (mm)
-     real :: asflos     ! asflos(s), R,  Fraction of loose material on surface (m^2/m^2)
-     real :: asmlos     ! asmlos(s), R,  Mass of loose material on crust (kg/m^2)
-     real :: asdcr      ! asdcr(s), R,  Soil crust density (Mg/m^3)
-     real :: asecr      ! asecr(s), R,  Soil crust stability ln(J/kg)
+     real :: asfcr      ! Surface crust fraction (m^2/m^2)
+     real :: aszcr      ! Surface crust thickness (mm)
+     real :: asflos     ! Fraction of loose material on surface (m^2/m^2)
+     real :: asmlos     ! Mass of loose material on crust (kg/m^2)
+     real :: asdcr      ! Soil crust density (Mg/m^3)
+     real :: asecr      ! Soil crust stability ln(J/kg)
      real :: asfald     ! Dry soil albedo
      real :: asfalw     ! Wet soil albedo
-     real :: aslrr      ! aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)
-     real :: aszrgh     ! aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)
-     real :: asxrgs     ! asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)
-     real :: asxrgw     ! asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)
-     real :: asargo     ! asargo(s), R, (s1sgeo.inc) Ridge orientation (deg)
-     real :: asxdks     ! asxdks(s), R, (s1sgeo.inc) Dike spacing (mm)
-     real :: ahzsnd     ! ahzsnd(s), R, (s1sgeo.inc) Snow depth (mm)
+     real :: aszrgh     ! Ridge height (mm)
+     real :: aszrho     ! Original ridge height, after tillage, (mm)
+     real :: asxrgw     ! Ridge width (mm)
+     real :: asxrgs     ! Ridge spacing (mm)
+     real :: asargo     ! Ridge orientation (deg)
+     real :: asxdks     ! Dike spacing (mm)
+     real :: asxdkh     ! Dike Height (mm)
+     real :: aslrr      ! Allmaras random roughness (mm)
+     real :: aslrro     ! Original random roughness height, after tillage, mm
+     real :: ahzsnd     ! (h1db1.inc) Snow depth (mm)
      real, dimension(:), allocatable :: ahrwc0
      ! derived
      real :: abrsai     ! abrsai - Biomass stem area index (m^2/m^2)

@@ -30,7 +30,6 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, h1et, subrsurf )
       include  's1layr.inc'
       include  's1phys.inc'
       include  's1agg.inc'
-      include  's1sgeo.inc'
       include  'h1db1.inc'
 
 !     +++ LOCAL VARIABLES +++
@@ -76,12 +75,6 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, h1et, subrsurf )
 
     end do
 
-    subrsurf%aslrr = aslrr(sr)
-    subrsurf%aszrgh = aszrgh(sr)
-    subrsurf%asxrgs = asxrgs(sr)
-    subrsurf%asxrgw = asxrgw(sr)
-    subrsurf%asargo = asargo(sr)
-    subrsurf%asxdks = asxdks(sr)
     subrsurf%ahzsnd = h1et%zsnd
 
     do idx = 1, 24

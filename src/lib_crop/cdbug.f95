@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine  cdbug(isr, slay, crop, restot, h1et)
+      subroutine  cdbug(isr, slay, crop, restot, h1et, subrsurf)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -22,6 +22,7 @@
       use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use hydro_data_struct_defs, only: hydro_derived_et
+      use erosion_data_struct_defs, only: subregionsurfacestate
       use climate_input_mod, only: cli_today
 
 !     + + +   ARGUMENT DECLARATIONS + + +
@@ -30,6 +31,7 @@
       type(biomatter), intent(in) :: crop    ! structure containing full crop description
       type(biototal), intent(in) :: restot   ! structure containing residue totals
       type(hydro_derived_et), intent(in) :: h1et
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -40,7 +42,6 @@
       include 's1agg.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
-      include 's1sgeo.inc'
       include 'c1db1.inc'
       include 'c1db2.inc'
       include 'h1hydro.inc'
@@ -135,7 +136,7 @@
      &               h1et%zeta, h1et%zetp, h1et%zpta
       write(luocdb(isr),2054) isr, isr, isr, isr
       write(luocdb(isr),2055) h1et%zea, h1et%zep, h1et%zptp, actmin(isr),        &
-     &               actopt(isr), aslrr(isr)
+     &               actopt(isr), subrsurf%aslrr
       write(luocdb(isr),2056)
 
       do 200 l = 1,slay
