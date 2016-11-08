@@ -1064,18 +1064,6 @@
       real iarr(*),p1, p5, p9
       end subroutine sort
 !--------------------------------
-      subroutine spllay(isr, subrsurf)
-      use erosion_data_struct_defs, only: subregionsurfacestate
-      integer       isr
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
-      end subroutine spllay
-!--------------------------------
-      subroutine spllay_ifc (isr, subrsurf)
-      use erosion_data_struct_defs, only: subregionsurfacestate
-      integer       isr
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
-      end subroutine spllay_ifc
-!--------------------------------
       subroutine submodels (isr, crop, residue, restot, croptot,        &
      &                      biotot, decompfac, mandate, h1et, wp, subrsurf)
       use biomaterial, only: biomatter, biototal, decomp_factors

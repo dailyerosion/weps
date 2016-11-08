@@ -19,7 +19,8 @@ module input_soil_mod
 !     + + + MODULES + + +
       use sci_soil_texture_mod, only : update_sci_soil_multiplier
       use stir_soil_texture_mod, only : update_stir_soil_multiplier
-      use file_io_mod, only: fopenk      
+      use file_io_mod, only: fopenk
+      use split_layers_mod, only: spllay_ifc
       use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + + ARGUMENTS + + +
@@ -725,6 +726,7 @@ module input_soil_mod
 !     06-Feb-99   wjr   created
 
       use file_io_mod, only: fopenk
+      use split_layers_mod, only: spllay
       use erosion_data_struct_defs, only: subregionsurfacestate
 
       include 'p1werm.inc'
