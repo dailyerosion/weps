@@ -11,7 +11,12 @@ module soil_data_struct_defs
   integer, dimension(:), allocatable :: am0sdb    ! flag to print SOIL variables before and after the call to SOIL
                                                      ! 0 = no output
                                                      ! 1 = output
-  type soil_intrinsic
+  type soil_def
+     ! metadata
+     character*(512) :: infile ! soil input file name
+     integer :: nslay          ! number of soil layers
+
+     ! intrinsic - properties that are instrinsic, modify by changing the material in the soil
      real :: asfald     ! Dry soil albedo
      real :: asfalw     ! Wet soil albedo
      real :: restrict_depth    ! depth to impermeable layer/restricting zone (mm)
@@ -43,9 +48,8 @@ module soil_data_struct_defs
      real, dimension(:), pointer :: asfvfs    ! Soil layer content of very fine sand sand (Mg/Mg)
      real, dimension(:), pointer :: asfwdc    ! Soil layer content of water dispersible clay (Mg/Mg)
                                               ! Not used - not input in Version 1.0 IFC file
-  end type soil_intrinsic
 
-  type soil_state
+     ! state - properties indicating the state of the soil (can change without material changing)
      real :: aszrgh     ! Ridge height (mm)
      real :: aszrho     ! Original ridge height, after tillage, (mm)
      real :: asxrgw     ! Ridge width (mm)
@@ -68,9 +72,8 @@ module soil_data_struct_defs
      real, dimension(:), pointer :: aseags    ! agg stability ln(J/kg)
      real, dimension(:), pointer :: aslagm    ! GMD (mm)
      real, dimension(:), pointer :: as0ags    ! GSD (mm/mm)
-  end type soil_state
 
-  type soil_derived
+     ! derived - calculate values from state and intrinsics that are used by other process modules
      real :: acanag     ! coefficient of abrasion for aggregates (1/m)
      real :: acancr     ! coefficient of abrasion for crust (1/m)
      real :: asf10an    ! soil fraction pm10 in abraded suspension
@@ -97,14 +100,6 @@ module soil_data_struct_defs
      real, dimension(:), pointer :: ahrwc1    ! Soil layer water content at 0.1 bar (Mg/Mg)
      real, dimension(:), pointer :: ahfredsat ! fraction of soil porosity that will be filled with water
                        ! while wetting under normal field conditions due to entrapped air
-  end type soil_derived
-
-  type soil_def
-     character*(512) :: infile ! soil input file name
-     integer :: nslay          ! number of soil layers
-     type(soil_intrinsic) :: intri    ! properties that are instrinsic, modify by changing the material in the soil
-     type(soil_state) :: state        ! properties indicating the state of the soil (can change without material changing)
-     type(soil_derived) :: deriv      ! calculate values from state and intrinsics that are used by other process modules
   end type soil_def
 
 contains
@@ -121,105 +116,106 @@ contains
      sum_stat = 0
 
      ! intrinsic
-     allocate(soil%intri%asvroc(nsoillay), stat=alloc_stat)
+     allocate(soil%asvroc(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asfsan(nsoillay), stat=alloc_stat)
+     allocate(soil%asfsan(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asfsil(nsoillay), stat=alloc_stat)
+     allocate(soil%asfsil(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asfcla(nsoillay), stat=alloc_stat)
+     allocate(soil%asfcla(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%as0ph(nsoillay), stat=alloc_stat)
+     allocate(soil%as0ph(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asfcce(nsoillay), stat=alloc_stat)
+     allocate(soil%asfcce(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asfcec(nsoillay), stat=alloc_stat)
+     allocate(soil%asfcec(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asfom(nsoillay), stat=alloc_stat)
+     allocate(soil%asfom(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asdwblk(nsoillay), stat=alloc_stat)
+     allocate(soil%asdwblk(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asdsblk(nsoillay), stat=alloc_stat)
+     allocate(soil%asdsblk(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asdprocblk(nsoillay), stat=alloc_stat)
+     allocate(soil%asdprocblk(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%aslagn(nsoillay), stat=alloc_stat)
+     allocate(soil%aslagn(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%aslagx(nsoillay), stat=alloc_stat)
+     allocate(soil%aslagx(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%aseagm(nsoillay), stat=alloc_stat)
+     allocate(soil%aseagm(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%aseagmn(nsoillay), stat=alloc_stat)
+     allocate(soil%aseagmn(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%aseagmx(nsoillay), stat=alloc_stat)
+     allocate(soil%aseagmx(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%ask4d(nsoillay), stat=alloc_stat)
+     allocate(soil%ask4d(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%aslmin(nsoillay), stat=alloc_stat)
+     allocate(soil%aslmin(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%aslmax(nsoillay), stat=alloc_stat)
+     allocate(soil%aslmax(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asfcle(nsoillay), stat=alloc_stat)
+     allocate(soil%asfcle(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asfvcs(nsoillay), stat=alloc_stat)
+     allocate(soil%asfvcs(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asfcs(nsoillay), stat=alloc_stat)
+     allocate(soil%asfcs(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asfms(nsoillay), stat=alloc_stat)
+     allocate(soil%asfms(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asffs(nsoillay), stat=alloc_stat)
+     allocate(soil%asffs(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asfvfs(nsoillay), stat=alloc_stat)
+     allocate(soil%asfvfs(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%intri%asfwdc(nsoillay), stat=alloc_stat)
+     allocate(soil%asfwdc(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
      ! state
-     allocate(soil%state%aszlyt(nsoillay), stat=alloc_stat)
+     allocate(soil%aszlyt(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%state%asdblk(nsoillay), stat=alloc_stat)
+     allocate(soil%asdblk(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%state%asdagd(nsoillay), stat=alloc_stat)
+     allocate(soil%asdagd(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%state%aseags(nsoillay), stat=alloc_stat)
+     allocate(soil%aseags(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%state%aslagm(nsoillay), stat=alloc_stat)
+     allocate(soil%aslagm(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%state%as0ags(nsoillay), stat=alloc_stat)
+     allocate(soil%as0ags(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
      ! derived
-     allocate(soil%deriv%asdpart(nsoillay), stat=alloc_stat)
+     allocate(soil%asdpart(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%aszlyd(nsoillay), stat=alloc_stat)
+     allocate(soil%aszlyd(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%asdwsrat(nsoillay), stat=alloc_stat)
+     allocate(soil%asdwsrat(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%asdblk0(nsoillay), stat=alloc_stat)
+     allocate(soil%asdblk0(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%ahrwc(nsoillay), stat=alloc_stat)
+     allocate(soil%ahrwc(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%ahrwcdmx(nsoillay), stat=alloc_stat)
+     allocate(soil%ahrwcdmx(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%aheaep(nsoillay), stat=alloc_stat)
+     allocate(soil%aheaep(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%ah0cb(nsoillay), stat=alloc_stat)
+     allocate(soil%ah0cb(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%ahrsk(nsoillay), stat=alloc_stat)
+     allocate(soil%ahrsk(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%ahrwcr(nsoillay), stat=alloc_stat)
+     allocate(soil%ahrwcr(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%ahrwcw(nsoillay), stat=alloc_stat)
+     allocate(soil%ahrwcw(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%ahrwcf(nsoillay), stat=alloc_stat)
+     allocate(soil%ahrwcf(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%ahrwcs(nsoillay), stat=alloc_stat)
+     allocate(soil%ahrwcs(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%ahrwca(nsoillay), stat=alloc_stat)
+     allocate(soil%ahrwca(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%ahrwc1(nsoillay), stat=alloc_stat)
+     allocate(soil%ahrwc1(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%deriv%ahfredsat(nsoillay), stat=alloc_stat)
+     allocate(soil%ahfredsat(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
 
      if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to allocate memory for soil'
@@ -238,105 +234,106 @@ contains
      sum_stat = 0
 
      ! intrinsic
-     deallocate(soil%intri%asvroc, stat=dealloc_stat)
+     deallocate(soil%asvroc, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asfsan, stat=dealloc_stat)
+     deallocate(soil%asfsan, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asfsil, stat=dealloc_stat)
+     deallocate(soil%asfsil, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asfcla, stat=dealloc_stat)
+     deallocate(soil%asfcla, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%as0ph, stat=dealloc_stat)
+     deallocate(soil%as0ph, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asfcce, stat=dealloc_stat)
+     deallocate(soil%asfcce, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asfcec, stat=dealloc_stat)
+     deallocate(soil%asfcec, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asfom, stat=dealloc_stat)
+     deallocate(soil%asfom, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asdwblk, stat=dealloc_stat)
+     deallocate(soil%asdwblk, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asdsblk, stat=dealloc_stat)
+     deallocate(soil%asdsblk, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asdprocblk, stat=dealloc_stat)
+     deallocate(soil%asdprocblk, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%aslagn, stat=dealloc_stat)
+     deallocate(soil%aslagn, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%aslagx, stat=dealloc_stat)
+     deallocate(soil%aslagx, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%aseagm, stat=dealloc_stat)
+     deallocate(soil%aseagm, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%aseagmn, stat=dealloc_stat)
+     deallocate(soil%aseagmn, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%aseagmx, stat=dealloc_stat)
+     deallocate(soil%aseagmx, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%ask4d, stat=dealloc_stat)
+     deallocate(soil%ask4d, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%aslmin, stat=dealloc_stat)
+     deallocate(soil%aslmin, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%aslmax, stat=dealloc_stat)
+     deallocate(soil%aslmax, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asfcle, stat=dealloc_stat)
+     deallocate(soil%asfcle, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asfvcs, stat=dealloc_stat)
+     deallocate(soil%asfvcs, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asfcs, stat=dealloc_stat)
+     deallocate(soil%asfcs, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asfms, stat=dealloc_stat)
+     deallocate(soil%asfms, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asffs, stat=dealloc_stat)
+     deallocate(soil%asffs, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asfvfs, stat=dealloc_stat)
+     deallocate(soil%asfvfs, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%intri%asfwdc, stat=dealloc_stat)
+     deallocate(soil%asfwdc, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
 
      ! state
-     deallocate(soil%state%aszlyt, stat=dealloc_stat)
+     deallocate(soil%aszlyt, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%state%asdblk, stat=dealloc_stat)
+     deallocate(soil%asdblk, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%state%asdagd, stat=dealloc_stat)
+     deallocate(soil%asdagd, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%state%aseags, stat=dealloc_stat)
+     deallocate(soil%aseags, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%state%aslagm, stat=dealloc_stat)
+     deallocate(soil%aslagm, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%state%as0ags, stat=dealloc_stat)
+     deallocate(soil%as0ags, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
 
      ! derived
-     deallocate(soil%deriv%asdpart, stat=dealloc_stat)
+     deallocate(soil%asdpart, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%aszlyd, stat=dealloc_stat)
+     deallocate(soil%aszlyd, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%asdwsrat, stat=dealloc_stat)
+     deallocate(soil%asdwsrat, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%asdblk0, stat=dealloc_stat)
+     deallocate(soil%asdblk0, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%ahrwc, stat=dealloc_stat)
+     deallocate(soil%ahrwc, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%ahrwcdmx, stat=dealloc_stat)
+     deallocate(soil%ahrwcdmx, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%aheaep, stat=dealloc_stat)
+     deallocate(soil%aheaep, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%ah0cb, stat=dealloc_stat)
+     deallocate(soil%ah0cb, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%ahrsk, stat=dealloc_stat)
+     deallocate(soil%ahrsk, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%ahrwcr, stat=dealloc_stat)
+     deallocate(soil%ahrwcr, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%ahrwcw, stat=dealloc_stat)
+     deallocate(soil%ahrwcw, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%ahrwcf, stat=dealloc_stat)
+     deallocate(soil%ahrwcf, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%ahrwcs, stat=dealloc_stat)
+     deallocate(soil%ahrwcs, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%ahrwca, stat=dealloc_stat)
+     deallocate(soil%ahrwca, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%ahrwc1, stat=dealloc_stat)
+     deallocate(soil%ahrwc1, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%deriv%ahfredsat, stat=dealloc_stat)
+     deallocate(soil%ahfredsat, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
 
      if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to deallocate memory for soil'
