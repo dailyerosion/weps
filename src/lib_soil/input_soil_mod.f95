@@ -7,8 +7,7 @@ module input_soil_mod
 
   contains
 
-!      subroutine input_ifc(isr, soil_in, soil)
-    subroutine input_ifc(isr, subrsurf)
+    subroutine input_ifc(isr, soil)
 ! ***************************************************************** wjr
 ! reads initial field conditions (IFC) file (Version: 1.0)
 
@@ -17,29 +16,24 @@ module input_soil_mod
 !     based upon "inpsub.for" routine
           
 !     + + + MODULES + + +
+      use soil_data_struct_defs, only: soil_def
       use sci_soil_texture_mod, only : update_sci_soil_multiplier
       use stir_soil_texture_mod, only : update_stir_soil_multiplier
       use file_io_mod, only: fopenk
       use split_layers_mod, only: spllay_ifc
-      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + + ARGUMENTS + + +
       integer, intent(in) :: isr
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
+      type(soil_def), intent(inout) :: soil  ! soil for this subregion
 
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
-      include 's1agg.inc'
-      include 's1dbh.inc'
-      include 's1dbc.inc'
-      include 'h1hydro.inc'
-      include 'h1scs.inc'
-      include 'h1db1.inc'
+!      include 'h1hydro.inc'
+!      include 'h1scs.inc'
+!      include 'h1db1.inc'
       include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL COMMON BLOCKS + + +
@@ -62,20 +56,20 @@ module input_soil_mod
       ! temporary initialization until proper structures put this in better place
       ! these are accumulated in update_period_update_vars but are not set until
       ! erosion is called at least once (sbinit, sbpm10)
-      subrsurf%acanag = 0
-      subrsurf%acancr = 0
+      soil%acanag = 0
+      soil%acancr = 0
 
       call fopenk (lui1, sinfil(isr), 'old') ! open IFC file
        
 !     Check to see if this is a "versioned" IFC file
       read (lui1,'(a)',err=901) line
       if (line(1:12) .eq. 'Version: 1.0') then
-         call inp_ifc_v1(isr, lui1, subrsurf)  ! For version 1.0 IFC file format only
+         call inp_ifc_v1(isr, lui1, soil)  ! For version 1.0 IFC file format only
       else if (line(1:12) .eq. 'Version: 1.1') then
-         call inp_ifc_v1_1(isr, lui1, subrsurf)  ! For version 1.1 IFC file format only
+         call inp_ifc_v1_1(isr, lui1, soil)  ! For version 1.1 IFC file format only
       else  ! Assuming obsolete unversioned IFC file formats only
          close (lui1)    
-         call inpsub(isr, subrsurf)  ! For obsolete IFC file formats only
+         call inpsub(isr, soil)  ! For obsolete IFC file formats only
          return            ! initialization is already done in inpsub
       end if
                    
@@ -85,25 +79,25 @@ module input_soil_mod
 !! which now handles both version 1.0 and version 1.1 IFC file formats
 
       ! initialize new variables not read in from ifc file 
-      do lay = 1, nslay(isr)
-          ahfredsat(lay,isr) = 0.0
-          asdwsrat(lay, isr) = -1.0
+      do lay = 1, soil%nslay
+          soil%ahfredsat(lay) = 0.0
+          soil%asdwsrat(lay) = -1.0
       end do
 
       ! Set layer thickness of the soils as is appropriate for the simulation
-      call spllay_ifc(isr, subrsurf)
+      call spllay_ifc(soil)
 
       ! Wet Albedo (calculate from dry albedo)
-      subrsurf%asfalw = subrsurf%asfald                                 &
-     &                / ((1.33**2.)*(1-subrsurf%asfald)+subrsurf%asfald)
+      soil%asfalw = soil%asfald                                 &
+     &                / ((1.33**2.)*(1-soil%asfald)+soil%asfald)
 
       ! Settled Bulk Density, Reference Bulk Density, and Particle Density (texture based calculation)
-      call proptext(nslay(isr),asfcla(1,isr),asfsan(1,isr),asfom(1,isr),&
-     &              asdblk(1,isr), asdsblk(1,isr), asdprocblk(1,isr),   &
-     &              asdwblk(1,isr), asdwsrat(1, isr), asdpart(1,isr) )
+      call proptext(soil%nslay, soil%asfcla, soil%asfsan, soil%asfom, &
+     &              soil%asdblk, soil%asdsblk, soil%asdprocblk, &
+     &              soil%asdwblk, soil%asdwsrat, soil%asdpart )
 
       ! calculate (or recalculate) additional values from soil basic properties
-      do lay=1,nslay(isr)
+      do lay=1,soil%nslay
 !       command line switch, changes to IFC values
         if( wc_type.eq.0 ) then                ! This is OK, this is the way values are now read in
             continue                           ! Ifc inputs are 1/3bar(vol), 15bar(vol), convert both to (grav)
@@ -121,38 +115,38 @@ module input_soil_mod
         else if( wc_type.eq.3 ) then           ! Default method.  It resets many input values
             ! Use texture based calculation of 1/3bar(vol), 15bar(vol) and bulk
             ! density and convert to (grav). Using Saxton Method
-            call propsaxt(asfsan(lay,isr), asfcla(lay,isr),             &
-     &                    ahrwcs(lay,isr),                              &
-     &                    ahrwcf(lay,isr), ahrwcw(lay,isr) )
+            call propsaxt(soil%asfsan(lay), soil%asfcla(lay), &
+     &                    soil%ahrwcs(lay), &
+     &                    soil%ahrwcf(lay), soil%ahrwcw(lay) )
             ! use volumetric saturation to calculate bulk density
-            asdwblk(lay,isr) = (1.0-ahrwcs(lay,isr)) * asdpart(lay,isr)
+            soil%asdwblk(lay) = (1.0-soil%ahrwcs(lay)) * soil%asdpart(lay)
             ! Returned values are 1/3bar(vol), 15bar(vol), convert both to (grav)
-            ahrwcf(lay,isr) = ahrwcf(lay,isr) / asdwblk(lay,isr)
-            ahrwcw(lay,isr) = ahrwcw(lay,isr) / asdwblk(lay,isr)
+            soil%ahrwcf(lay) = soil%ahrwcf(lay) / soil%asdwblk(lay)
+            soil%ahrwcw(lay) = soil%ahrwcw(lay) / soil%asdwblk(lay)
         end if
       end do
 
-      do lay=1,nslay(isr)
+      do lay=1,soil%nslay
 !       set saturation based on definition
-!       ahrwcs(lay,isr) = 1.0/asdblk(lay,isr)-1.0/asdpart(lay,isr)   ! Is this based on gravimetric values?
+!       soil%ahrwcs(lay) = 1.0/soil%asdblk(lay)-1.0/soil%asdpart(lay)   ! Is this based on gravimetric values?
 
-        if(ahrwcs(lay,isr).lt.ahrwcf(lay,isr)) then
+        if(soil%ahrwcs(lay) .lt. soil%ahrwcf(lay)) then
             write(*,*) 'WARNING: Layer, Field Capacity > Saturation',   &  ! NOTE:  Changed to "WARNING" so message
-     &                 lay, ahrwcf(lay,isr), ahrwcs(lay,isr)          !wouldn't display in GUI popup Warning dialog box
-!           ahrwcf(lay,isr) = ahrwcs(lay,isr)
+     &                 lay, soil%ahrwcf(lay), soil%ahrwcs(lay)          !wouldn't display in GUI popup Warning dialog box
+!           soil%ahrwcf(lay) = soil%ahrwcs(lay)
         endif
 
 !      output for soil file screening
-!        write(*,1000) sinfil,lay,aszlyt(lay,isr),
-!     &        asfsan(lay,isr),asfcla(lay,isr),asfom(lay,isr),
-!     &        asdwblk(lay,isr),asdblk(lay,isr),ahrwcs(lay,isr),
-!     &        ahrwcf(lay,isr),ahrwcw(lay,isr),
-!     &        ahrwcf(lay,isr)-ahrwcw(lay,isr),
-!     &        1.0 - asdwblk(lay,isr)/asdpart(lay,isr),
-!     &        ahrwcf(lay,isr)*asdwblk(lay,isr),
-!     &        ahrwcw(lay,isr)*asdwblk(lay,isr),
-!     &        ahrwcf(lay,isr)*asdwblk(lay,isr)-
-!     &        ahrwcw(lay,isr)*asdwblk(lay,isr)
+!        write(*,1000) sinfil,lay, soil%aszlyt(lay),
+!     &        soil%asfsan(lay), soil%asfcla(lay), soil%asfom(lay),
+!     &        soil%asdwblk(lay), soil%asdblk(lay), soil%ahrwcs(lay),
+!     &        soil%ahrwcf(lay), soil%ahrwcw(lay),
+!     &        soil%ahrwcf(lay)-soil%ahrwcw(lay),
+!     &        1.0 - soil%asdwblk(lay)/soil%asdpart(lay),
+!     &        soil%ahrwcf(lay)*soil%asdwblk(lay),
+!     &        soil%ahrwcw(lay)*soil%asdwblk(lay),
+!     &        soil%ahrwcf(lay)*soil%asdwblk(lay)-
+!     &        soil%ahrwcw(lay)*soil%asdwblk(lay)
 
       end do
 
@@ -160,60 +154,36 @@ module input_soil_mod
           ! use texture based calculations from Rawls to set all soil
           ! water properties.
           call param_prop_bc(                                           &
-     &        nslay(isr), aszlyd(1,isr), asdblk(1,isr), asdpart(1,isr), &
-     &        asfcla(1,isr), asfsan(1,isr), asfom(1,isr), asfcec(1,isr),&
-     &        ahrwcs(1,isr), ahrwcf(1,isr), ahrwcw(1,isr),ahrwcr(1,isr),&
-     &        ahrwca(1,isr), ah0cb(1,isr), aheaep(1,isr), ahrsk(1,isr), &
-     &        ahfredsat(1,isr) )
+     &        soil%nslay, soil%aszlyd, soil%asdblk, soil%asdpart, &
+     &        soil%asfcla, soil%asfsan, soil%asfom, soil%asfcec, &
+     &        soil%ahrwcs, soil%ahrwcf, soil%ahrwcw, soil%ahrwcr, &
+     &        soil%ahrwca, soil%ah0cb, soil%aheaep, soil%ahrsk, &
+     &        soil%ahfredsat )
 
 
-!         do lay=1,nslay(isr)
+!         do lay=1,soil%nslay
 !             ! set soil to field capacity not wilting point
-!             ahrwc(lay,isr) = ahrwcf(lay,isr)
+!             soil%ahrwc(lay) = soil%ahrwcf(lay)
 !         end do
       else
           ! set matrix potential parameters to match 1/3 bar and 15 bar water contents
-          call param_pot_bc( nslay(isr), asdblk(1,isr), asdpart(1,isr), &
-     &                     ahrwcf(1,isr), ahrwcw(1,isr),                &
-     &                     asfcla(1,isr), asfom(1,isr),                 &
-     &                     ah0cb(1,isr), aheaep(1,isr) )
+          call param_pot_bc( soil%nslay, soil%asdblk, soil%asdpart, &
+     &                     soil%ahrwcf, soil%ahrwcw,                &
+     &                     soil%asfcla, soil%asfom,                 &
+     &                     soil%ah0cb, soil%aheaep )
       end if
-
-!       some soil characteristic values for crop nutirent effects 
-!       were originally planned and then dropped and are not included in 
-!       layer splitting. A Debug full debug compile complains
-!       that these values are not initialized when they are mixed as
-!       part of  management process. they are initialized here to avoid
-!       removing them from mix and invert
-        do lay = 1, nslay(isr)
-            ! I've removed them from the mix and invert functions.  However, they might still be
-            ! used in (hopefully) dead crop code.
-            ascmg(lay,isr) = 0.0
-            ascna(lay,isr) = 0.0
-            asfesp(lay,isr) = 0.0
-            asfnoh(lay,isr) = 0.0
-            asfpoh(lay,isr) = 0.0
-            asfpsp(lay,isr) = 0.0
-            ! obsolete variables removed from "versioned" ifc files
-              ! Can't not initialize them here because crop apparently is still using them somewhere
-            asfsmb(lay,isr) = 0.0
-            asrsar(lay,isr) = 0.0
-            asftan(lay,isr) = 0.0
-            asftap(lay,isr) = 0.0
-  
-        end do
 
       ! Check if override of rock fragments are specified
       if (SoilRockFragments(isr) .ge. 0.0) then
-        do lay = 1, nslay(isr)
-          asvroc(lay,isr) = SoilRockFragments(isr)
+        do lay = 1, soil%nslay
+          soil%asvroc(lay) = SoilRockFragments(isr)
         end do
       end if
       
       !Update the stir soil texture multiplier.  This is called only once after the soil 
       !is read so layer mixing does not affect the texture multiplier.  Only the top layer used.   
-      call update_sci_soil_multiplier(isr,asfsan(1,isr),asfcla(1,isr))
-      call update_stir_soil_multiplier(isr,asfsan(1,isr),asfcla(1,isr))
+      call update_sci_soil_multiplier(isr, soil%asfsan(1), soil%asfcla(1))
+      call update_stir_soil_multiplier(isr, soil%asfsan(1), soil%asfcla(1))
 
       return
 
@@ -226,17 +196,12 @@ module input_soil_mod
 
 !      subroutine inp_ifc_v1 (isr, lui1, soil)
 !      subroutine inp_ifc_v1_1 (isr, lui1, soil)
-    subroutine inp_ifc_v1 (isr, lui1, subrsurf)
+    subroutine inp_ifc_v1 (isr, lui1, soil)
 
-      use erosion_data_struct_defs, only: subregionsurfacestate
+      use soil_data_struct_defs, only: soil_def, allocate_soil
 
       include 'p1werm.inc'
       include 'm1subr.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
-      include 's1agg.inc'
-      include 's1dbh.inc'
-      include 's1dbc.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -244,7 +209,7 @@ module input_soil_mod
 !     + + + Arguments + + +
       integer isr
       integer lui1
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
+      type(soil_def), intent(inout) :: soil  ! soil structure
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
@@ -284,7 +249,7 @@ module input_soil_mod
 
 !     read IP surface physical properties
         case (5)                                                      ! Dry soil albedo (fraction)
-          read(line,*,err=902) subrsurf%asfald
+          read(line,*,err=902) soil%asfald
         case (6)                                                      ! Slope gradient (m/m)
           ! set default outflow height to zero (minimum depression storage)
           ahzoutflow(isr) = 0.0
@@ -310,137 +275,139 @@ module input_soil_mod
           read(line,*,err=902) SFCov(isr)
 
         case (8)                                                      ! Depth to bedrock (mm)
-          read(line,*,err=902) bedrock_depth(isr)
+          read(line,*,err=902) soil%bedrock_depth
         case (9)                                                      ! Depth to root restricting layer (mm)
-          read(line,*,err=902) restrict_depth(isr)
+          read(line,*,err=902) soil%restrict_depth
 
 !     read IP soil layer number and thickness 
         case (10)                                                      ! Number of soil layers
-          read(line,*,err=902) nslay(isr)
+          read(line,*,err=902) soil%nslay
+          ! allocate layer arrays
+          call allocate_soil(soil)
         case (11)                                                      ! Soil layer thickness (mm)
-          read(line,*,err=902) (aszlyt(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%aszlyt(lay), lay=1,soil%nslay)
 
 !     read IP soil physical properties
         case (12)                                                     ! Sand fraction (kg/kg)
-          read(line,*,err=902) (asfsan(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfsan(lay), lay=1,soil%nslay)
         case (13)                                                     ! Silt fraction (kg/kg)
-          read(line,*,err=902) (asfsil(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfsil(lay), lay=1,soil%nslay)
         case (14)                                                     ! Clay fraction (kg/kg)
-          read(line,*,err=902) (asfcla(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfcla(lay), lay=1,soil%nslay)
         case (15)                                                     ! Rock fragments fraction (m^3/m^3)
-          read(line,*,err=902) (asvroc(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asvroc(lay), lay=1,soil%nslay)
         case (16)                                                     ! Very course sand fraction (kg/kg)
-          read(line,*,err=902) (asfvcs(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfvcs(lay), lay=1,soil%nslay)
         case (17)                                                     ! Course sand fraction (kg/kg)
-          read(line,*,err=902) (asfcs(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfcs(lay), lay=1,soil%nslay)
         case (18)                                                     ! Medium sand fraction (kg/kg)
-          read(line,*,err=902) (asfms(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfms(lay), lay=1,soil%nslay)
         case (19)                                                     ! Fine sand fraction (kg/kg)
-          read(line,*,err=902) (asffs(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asffs(lay), lay=1,soil%nslay)
         case (20)                                                     ! Very fine sand fraction (kg/kg)
-          read(line,*,err=902) (asfvfs(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfvfs(lay), lay=1,soil%nslay)
         case (21)                                                     ! Bulk density [wet or 1/3 bar] (Mg/m^3)
-          read(line,*,err=902) (asdwblk(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asdwblk(lay), lay=1,soil%nslay)
 
 !     read IP soil chemical properties
         case (22)                                                     ! Organic matter (kg/kg)
-          read(line,*,err=902) (asfom(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfom(lay), lay=1,soil%nslay)
         case (23)                                                     ! PH (0-14)
-          read(line,*,err=902) (as0ph(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%as0ph(lay), lay=1,soil%nslay)
         case (24)                                                     ! Calcium Carbonate Equiv [CaCO3] (kg/kg)
-          read(line,*,err=902) (asfcce(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfcce(lay), lay=1,soil%nslay)
         case (25)                                                     ! Cation Exchange Capacity [CEC] (meq/100g)
-          read(line,*,err=902) (asfcec(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfcec(lay), lay=1,soil%nslay)
         case (26)                                                     ! Linear extensibility ((Mg/m^3)/(Mg/m^3))
-          read(line,*,err=902) (asfcle(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfcle(lay), lay=1,soil%nslay)
 
 !     read IC aggregate properties
         case (27)                                                     ! ASD GMD (mm)
-          read(line,*,err=902) (aslagm(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%aslagm(lay), lay=1,soil%nslay)
         case (28)                                                     ! ASD GSD
-          read(line,*,err=902) (as0ags(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%as0ags(lay), lay=1,soil%nslay)
         case (29)                                                     ! Maximum agg. size (mm)
-          read(line,*,err=902) (aslagx(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%aslagx(lay), lay=1,soil%nslay)
         case (30)                                                     ! Minimum agg. size (mm)
-          read(line,*,err=902) (aslagn(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%aslagn(lay), lay=1,soil%nslay)
         case (31)                                                     ! Aggregate density (Mg/m^3)
-          read(line,*,err=902) (asdagd(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asdagd(lay), lay=1,soil%nslay)
         case (32)                                                     ! Dry aggregate stability (ln(J/m^2))
-          read(line,*,err=902) (aseags(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%aseags(lay), lay=1,soil%nslay)
 
 !     read IC crust properties
         case (33)                                                     ! Crust thickness (mm)
-          read(line,*,err=902) subrsurf%aszcr
+          read(line,*,err=902) soil%aszcr
         case (34)                                                     ! Crust density (Mg/m^3)
-          read(line,*,err=902) subrsurf%asdcr
+          read(line,*,err=902) soil%asdcr
         case (35)                                                     ! Crust stability (ln(J/m^2))
-          read(line,*,err=902) subrsurf%asecr
+          read(line,*,err=902) soil%asecr
         case (36)                                                     ! Crust surface frction (m^2/m^2)
-          read(line,*,err=902) subrsurf%asfcr
+          read(line,*,err=902) soil%asfcr
         case (37)                                                     ! Mass of loose material on crust (kg/m^2)
-          read(line,*,err=902) subrsurf%asmlos
+          read(line,*,err=902) soil%asmlos
         case (38)                                                     ! Fraction of loose material on crust (m^2/m^2)
-          read(line,*,err=902) subrsurf%asflos
+          read(line,*,err=902) soil%asflos
 
 !     read IC surface roughness properties
         case (39)                                                     ! Random roughness (mm)
-          read(line,*,err=902) subrsurf%aslrr
-          subrsurf%aslrro = subrsurf%aslrr                            ! init after-tillage RR
+          read(line,*,err=902) soil%aslrr
+          soil%aslrro = soil%aslrr                            ! init after-tillage RR
         case (40)                                                     ! Ridge orientation (deg)
-          read(line,*,err=902) subrsurf%asargo
+          read(line,*,err=902) soil%asargo
         case (41)                                                     ! Ridge height (mm)
-          read(line,*,err=902) subrsurf%aszrgh
+          read(line,*,err=902) soil%aszrgh
         case (42)                                                     ! Ridge spacing (mm)
-          read(line,*,err=902) subrsurf%asxrgs
+          read(line,*,err=902) soil%asxrgs
         case (43)                                                     ! Ridge width (mm)
-          read(line,*,err=902) subrsurf%asxrgw
+          read(line,*,err=902) soil%asxrgw
 
         ! this is where dike height and spacing should be read in.
         ! they are not, but need to be initialized.
         ! case (??)
-          subrsurf%asxdks = 0.0
-          subrsurf%asxdkh = 0.0
+          soil%asxdks = 0.0
+          soil%asxdkh = 0.0
 
 !     read IC soil hydrologic properties
         ! All SWC values are converted to mass basis as they are the "independent variables" in WEPS
         case (44)                                                     ! Initial BD value (Mg/m^3)
-          read(line,*,err=902) (asdblk(lay,isr), lay=1,nslay(isr))
-          do lay=1,nslay(isr)
-            asdblk0(lay,isr) = asdblk(lay,isr)    ! init previous day BD
+          read(line,*,err=902) (soil%asdblk(lay), lay=1,soil%nslay)
+          do lay=1,soil%nslay
+            soil%asdblk0(lay) = soil%asdblk(lay)    ! init previous day BD
           end do
         case (45)                                                     ! Initial SWC (m^3/m^3)
-          read(line,*,err=902) (ahrwc(lay,isr), lay=1,nslay(isr))
-          do lay=1,nslay(isr)                                         ! Convert to mass basis (kg/kg)
-            ahrwc(lay,isr) = ahrwc(lay,isr) / asdblk(lay,isr)         ! (using "initial" bd value)
+          read(line,*,err=902) (soil%ahrwc(lay), lay=1,soil%nslay)
+          do lay=1,soil%nslay                                         ! Convert to mass basis (kg/kg)
+            soil%ahrwc(lay) = soil%ahrwc(lay) / soil%asdblk(lay)         ! (using "initial" bd value)
           end do
 
 !     read soil hydrologic (water release curve) properties
       ! All can be overridden if "Saxton" method is specified (wc_type == 3)
         case (46)                                                     ! Saturated SWC (m^3/m^3)
-          read(line,*,err=902) (ahrwcs(lay,isr), lay=1,nslay(isr))
-          do lay=1,nslay(isr)                                         ! Convert to mass basis (kg/kg)
-            ahrwcs(lay,isr) = ahrwcs(lay,isr) / asdblk(lay,isr)       ! (using "initial" bd value)
+          read(line,*,err=902) (soil%ahrwcs(lay), lay=1,soil%nslay)
+          do lay=1,soil%nslay                                         ! Convert to mass basis (kg/kg)
+            soil%ahrwcs(lay) = soil%ahrwcs(lay) / soil%asdblk(lay)       ! (using "initial" bd value)
           end do
         case (47)                                                     ! Field Capacity SWC (m^3/m^3)
-          read(line,*,err=902) (ahrwcf(lay,isr), lay=1,nslay(isr))
-          do lay=1,nslay(isr)                                         ! Convert to mass basis (kg/kg)
-            ahrwcf(lay,isr) = ahrwcf(lay,isr) / asdblk(lay,isr)       ! (using "initial" bd value)
+          read(line,*,err=902) (soil%ahrwcf(lay), lay=1,soil%nslay)
+          do lay=1,soil%nslay                                         ! Convert to mass basis (kg/kg)
+            soil%ahrwcf(lay) = soil%ahrwcf(lay) / soil%asdblk(lay)       ! (using "initial" bd value)
           end do
         case (48)                                                     ! Wilting Point SWC (m^3/m^3)
-          read(line,*,err=902) (ahrwcw(lay,isr), lay=1,nslay(isr))
-          do lay=1,nslay(isr)                                         ! Convert to mass basis (kg/kg)
-            ahrwcw(lay,isr) = ahrwcw(lay,isr) / asdblk(lay,isr)       ! (using "initial" bd value)
+          read(line,*,err=902) (soil%ahrwcw(lay), lay=1,soil%nslay)
+          do lay=1,soil%nslay                                         ! Convert to mass basis (kg/kg)
+            soil%ahrwcw(lay) = soil%ahrwcw(lay) / soil%asdblk(lay)       ! (using "initial" bd value)
           end do
 
 !     read more soil hydrologic (water release curve) properties
       ! All three can be reset if "Walter Rawls" method is specified (wc_type == 4)
       ! CB and Air Entry Pot. values possibly reset if "Walter Rawls" method not specified
         case (49)                                                     ! Soil CB value
-          read(line,*,err=902) (ah0cb(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%ah0cb(lay), lay=1,soil%nslay)
         case (50)                                                     ! Air Entry Potential (J/kg)
-          read(line,*,err=902) (aheaep(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%aheaep(lay), lay=1,soil%nslay)
         case (51)                                                     ! Saturated Hydraulic Conductivity (m/s)
-          read(line,*,err=902) (ahrsk(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%ahrsk(lay), lay=1,soil%nslay)
 
         end select
         goto 100
@@ -464,7 +431,7 @@ module input_soil_mod
     end subroutine inp_ifc_v1
 
 !-----------------------------------------------------------------------
-    subroutine inp_ifc_v1_1 (isr, lui1, subrsurf)
+    subroutine inp_ifc_v1_1 (isr, lui1, soil)
 
       ! input routine for Version 1.1 IFC file format
 
@@ -472,15 +439,10 @@ module input_soil_mod
       ! and missing soil surface initialization values
       ! dike height and spacing values
 
-      use erosion_data_struct_defs, only: subregionsurfacestate
+      use soil_data_struct_defs, only: soil_def, allocate_soil
 
       include 'p1werm.inc'
       include 'm1subr.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
-      include 's1agg.inc'
-      include 's1dbh.inc'
-      include 's1dbc.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -491,7 +453,7 @@ module input_soil_mod
 !     + + + Arguments + + +
       integer isr
       integer lui1
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
+      type(soil_def), intent(inout) :: soil  ! subregion surface conditions
 
 !     + + + LOCAL VARIABLES + + +
       integer       lay
@@ -534,7 +496,7 @@ module input_soil_mod
 
 !     read IP surface physical properties
         case (7)                                                      ! Dry soil albedo (fraction)
-          read(line,*,err=902) subrsurf%asfald
+          read(line,*,err=902) soil%asfald
         case (8)                                                      ! Slope gradient (m/m)
           ! set default outflow height to zero (minimum depression storage)
           ahzoutflow(isr) = 0.0
@@ -560,137 +522,139 @@ module input_soil_mod
           read(line,*,err=902) SFCov(isr)
 
         case (10)                                                      ! Depth to bedrock (mm)
-          read(line,*,err=902) bedrock_depth(isr)
+          read(line,*,err=902) soil%bedrock_depth
         case (11)                                                      ! Depth to root restricting layer (mm)
-          read(line,*,err=902) restrict_depth(isr)
+          read(line,*,err=902) soil%restrict_depth
 
 !     read IP soil layer number and thickness 
         case (12)                                                      ! Number of soil layers
-          read(line,*,err=902) nslay(isr)
+          read(line,*,err=902) soil%nslay
+          ! allocate soil arrays
+          call allocate_soil(soil)
         case (13)                                                      ! Soil layer thickness (mm)
-          read(line,*,err=902) (aszlyt(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%aszlyt(lay), lay=1,soil%nslay)
 
 !     read IP soil physical properties
         case (14)                                                     ! Sand fraction (kg/kg)
-          read(line,*,err=902) (asfsan(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfsan(lay), lay=1,soil%nslay)
         case (15)                                                     ! Silt fraction (kg/kg)
-          read(line,*,err=902) (asfsil(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfsil(lay), lay=1,soil%nslay)
         case (16)                                                     ! Clay fraction (kg/kg)
-          read(line,*,err=902) (asfcla(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfcla(lay), lay=1,soil%nslay)
         case (17)                                                     ! Rock fragments fraction (m^3/m^3)
-          read(line,*,err=902) (asvroc(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asvroc(lay), lay=1,soil%nslay)
         case (18)                                                     ! Very course sand fraction (kg/kg)
-          read(line,*,err=902) (asfvcs(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfvcs(lay), lay=1,soil%nslay)
         case (19)                                                     ! Course sand fraction (kg/kg)
-          read(line,*,err=902) (asfcs(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfcs(lay), lay=1,soil%nslay)
         case (20)                                                     ! Medium sand fraction (kg/kg)
-          read(line,*,err=902) (asfms(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfms(lay), lay=1,soil%nslay)
         case (21)                                                     ! Fine sand fraction (kg/kg)
-          read(line,*,err=902) (asffs(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asffs(lay), lay=1,soil%nslay)
         case (22)                                                     ! Very fine sand fraction (kg/kg)
-          read(line,*,err=902) (asfvfs(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfvfs(lay), lay=1,soil%nslay)
         case (23)                                                     ! Bulk density [wet or 1/3 bar] (Mg/m^3)
-          read(line,*,err=902) (asdwblk(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asdwblk(lay), lay=1,soil%nslay)
 
 !     read IP soil chemical properties
         case (24)                                                     ! Organic matter (kg/kg)
-          read(line,*,err=902) (asfom(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfom(lay), lay=1,soil%nslay)
         case (25)                                                     ! PH (0-14)
-          read(line,*,err=902) (as0ph(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%as0ph(lay), lay=1,soil%nslay)
         case (26)                                                     ! Calcium Carbonate Equiv [CaCO3] (kg/kg)
-          read(line,*,err=902) (asfcce(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfcce(lay), lay=1,soil%nslay)
         case (27)                                                     ! Cation Exchange Capacity [CEC] (meq/100g)
-          read(line,*,err=902) (asfcec(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfcec(lay), lay=1,soil%nslay)
         case (28)                                                     ! Linear extensibility ((Mg/m^3)/(Mg/m^3))
-          read(line,*,err=902) (asfcle(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asfcle(lay), lay=1,soil%nslay)
 
 !     read IC aggregate properties
         case (29)                                                     ! ASD GMD (mm)
-          read(line,*,err=902) (aslagm(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%aslagm(lay), lay=1,soil%nslay)
         case (30)                                                     ! ASD GSD
-          read(line,*,err=902) (as0ags(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%as0ags(lay), lay=1,soil%nslay)
         case (31)                                                     ! Maximum agg. size (mm)
-          read(line,*,err=902) (aslagx(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%aslagx(lay), lay=1,soil%nslay)
         case (32)                                                     ! Minimum agg. size (mm)
-          read(line,*,err=902) (aslagn(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%aslagn(lay), lay=1,soil%nslay)
         case (33)                                                     ! Aggregate density (Mg/m^3)
-          read(line,*,err=902) (asdagd(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%asdagd(lay), lay=1,soil%nslay)
         case (34)                                                     ! Dry aggregate stability (ln(J/m^2))
-          read(line,*,err=902) (aseags(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%aseags(lay), lay=1,soil%nslay)
 
 !     read IC crust properties
         case (35)                                                     ! Crust thickness (mm)
-          read(line,*,err=902) subrsurf%aszcr
+          read(line,*,err=902) soil%aszcr
         case (36)                                                     ! Crust density (Mg/m^3)
-          read(line,*,err=902) subrsurf%asdcr
+          read(line,*,err=902) soil%asdcr
         case (37)                                                     ! Crust stability (ln(J/m^2))
-          read(line,*,err=902) subrsurf%asecr
+          read(line,*,err=902) soil%asecr
         case (38)                                                     ! Crust surface frction (m^2/m^2)
-          read(line,*,err=902) subrsurf%asfcr
+          read(line,*,err=902) soil%asfcr
         case (39)                                                     ! Mass of loose material on crust (kg/m^2)
-          read(line,*,err=902) subrsurf%asmlos
+          read(line,*,err=902) soil%asmlos
         case (40)                                                     ! Fraction of loose material on crust (m^2/m^2)
-          read(line,*,err=902) subrsurf%asflos
+          read(line,*,err=902) soil%asflos
 
 !     read IC surface roughness properties
         case (41)                                                     ! Random roughness (mm)
-          read(line,*,err=902) subrsurf%aslrr
-          subrsurf%aslrro = subrsurf%aslrr                            ! init after-tillage RR
+          read(line,*,err=902) soil%aslrr
+          soil%aslrro = soil%aslrr                            ! init after-tillage RR
         case (42)                                                     ! Ridge orientation (deg)
-          read(line,*,err=902) subrsurf%asargo
+          read(line,*,err=902) soil%asargo
         case (43)                                                     ! Ridge height (mm)
-          read(line,*,err=902) subrsurf%aszrgh
+          read(line,*,err=902) soil%aszrgh
         case (44)                                                     ! Ridge spacing (mm)
-          read(line,*,err=902) subrsurf%asxrgs
+          read(line,*,err=902) soil%asxrgs
         case (45)                                                     ! Ridge width (mm)
-          read(line,*,err=902) subrsurf%asxrgw
+          read(line,*,err=902) soil%asxrgw
 
         ! this is where dike height and spacing are now read in.
         case (46)                                                     ! Dike spacing (mm)
-          read(line,*,err=902) subrsurf%asxdks
+          read(line,*,err=902) soil%asxdks
         case (47)                                                     ! Dike height (mm)
-          read(line,*,err=902) subrsurf%asxdkh
+          read(line,*,err=902) soil%asxdkh
 
 !     read IC soil hydrologic properties
         ! All SWC values are converted to mass basis as they are the "independent variables" in WEPS
         case (48)                                                     ! Initial BD value (Mg/m^3)
-          read(line,*,err=902) (asdblk(lay,isr), lay=1,nslay(isr))
-          do lay=1,nslay(isr)
-            asdblk0(lay,isr) = asdblk(lay,isr)    ! init previous day BD
+          read(line,*,err=902) (soil%asdblk(lay), lay=1,soil%nslay)
+          do lay=1,soil%nslay
+            soil%asdblk0(lay) = soil%asdblk(lay)    ! init previous day BD
           end do
         case (49)                                                     ! Initial SWC (m^3/m^3)
-          read(line,*,err=902) (ahrwc(lay,isr), lay=1,nslay(isr))
-          do lay=1,nslay(isr)                                         ! Convert to mass basis (kg/kg)
-            ahrwc(lay,isr) = ahrwc(lay,isr) / asdblk(lay,isr)         ! (using "initial" bd value)
+          read(line,*,err=902) (soil%ahrwc(lay), lay=1,soil%nslay)
+          do lay=1,soil%nslay                                         ! Convert to mass basis (kg/kg)
+            soil%ahrwc(lay) = soil%ahrwc(lay) / soil%asdblk(lay)         ! (using "initial" bd value)
           end do
 
 !     read soil hydrologic (water release curve) properties
       ! All can be overridden if "Saxton" method is specified (wc_type == 3)
         case (50)                                                     ! Saturated SWC (m^3/m^3)
-          read(line,*,err=902) (ahrwcs(lay,isr), lay=1,nslay(isr))
-          do lay=1,nslay(isr)                                         ! Convert to mass basis (kg/kg)
-            ahrwcs(lay,isr) = ahrwcs(lay,isr) / asdblk(lay,isr)       ! (using "initial" bd value)
+          read(line,*,err=902) (soil%ahrwcs(lay), lay=1,soil%nslay)
+          do lay=1,soil%nslay                                         ! Convert to mass basis (kg/kg)
+            soil%ahrwcs(lay) = soil%ahrwcs(lay) / soil%asdblk(lay)       ! (using "initial" bd value)
           end do
         case (51)                                                     ! Field Capacity SWC (m^3/m^3)
-          read(line,*,err=902) (ahrwcf(lay,isr), lay=1,nslay(isr))
-          do lay=1,nslay(isr)                                         ! Convert to mass basis (kg/kg)
-            ahrwcf(lay,isr) = ahrwcf(lay,isr) / asdblk(lay,isr)       ! (using "initial" bd value)
+          read(line,*,err=902) (soil%ahrwcf(lay), lay=1,soil%nslay)
+          do lay=1,soil%nslay                                         ! Convert to mass basis (kg/kg)
+            soil%ahrwcf(lay) = soil%ahrwcf(lay) / soil%asdblk(lay)       ! (using "initial" bd value)
           end do
         case (52)                                                     ! Wilting Point SWC (m^3/m^3)
-          read(line,*,err=902) (ahrwcw(lay,isr), lay=1,nslay(isr))
-          do lay=1,nslay(isr)                                         ! Convert to mass basis (kg/kg)
-            ahrwcw(lay,isr) = ahrwcw(lay,isr) / asdblk(lay,isr)       ! (using "initial" bd value)
+          read(line,*,err=902) (soil%ahrwcw(lay), lay=1,soil%nslay)
+          do lay=1,soil%nslay                                         ! Convert to mass basis (kg/kg)
+            soil%ahrwcw(lay) = soil%ahrwcw(lay) / soil%asdblk(lay)       ! (using "initial" bd value)
           end do
 
 !     read more soil hydrologic (water release curve) properties
       ! All three can be reset if "Walter Rawls" method is specified (wc_type == 4)
       ! CB and Air Entry Pot. values possibly reset if "Walter Rawls" method not specified
         case (53)                                                     ! Soil CB value
-          read(line,*,err=902) (ah0cb(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%ah0cb(lay), lay=1,soil%nslay)
         case (54)                                                     ! Air Entry Potential (J/kg)
-          read(line,*,err=902) (aheaep(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%aheaep(lay), lay=1,soil%nslay)
         case (55)                                                     ! Saturated Hydraulic Conductivity (m/s)
-          read(line,*,err=902) (ahrsk(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=902) (soil%ahrsk(lay), lay=1,soil%nslay)
 
         end select
         goto 100
@@ -714,7 +678,7 @@ module input_soil_mod
     end subroutine inp_ifc_v1_1
 
 !      subroutine inpsub (isr, soil_in, soil)
-    subroutine inpsub (isr, subrsurf)
+    subroutine inpsub (isr, soil)
 ! ***************************************************************** wjr
 ! reads initial field conditions (IFC) file for all subregions
 !
@@ -727,17 +691,12 @@ module input_soil_mod
 
       use file_io_mod, only: fopenk
       use split_layers_mod, only: spllay
-      use erosion_data_struct_defs, only: subregionsurfacestate
+      use soil_data_struct_defs, only: soil_def, allocate_soil
 
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
-      include 's1agg.inc'
-      include 's1dbh.inc'
-      include 's1dbc.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -745,7 +704,7 @@ module input_soil_mod
 
 !     + + + Arguments + + +
       integer, intent(in) :: isr
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
+      type(soil_def), intent(inout) :: soil  ! subregion surface conditions
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
@@ -792,107 +751,106 @@ module input_soil_mod
         case (2)
           read(line,*,err=82) am0tax(isr)
         case (3)
-          read(line,*,err=82) nslay(isr)
+          read(line,*,err=82) soil%nslay
+          ! allocate soil arrays
+          call allocate_soil(soil)
         case (4)
-          read(line,*,err=82) (aszlyt(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%aszlyt(lay), lay=1,soil%nslay)
 !     read soil physical properties
         case (5)
-          read(line,*,err=82) (asfsan(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asfsan(lay), lay=1,soil%nslay)
         case (6)
-          read(line,*,err=82) (asfsil(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asfsil(lay), lay=1,soil%nslay)
         case (7)
-          read(line,*,err=82) (asfcla(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asfcla(lay), lay=1,soil%nslay)
         case (8)
-          read(line,*,err=82) (asvroc(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asvroc(lay), lay=1,soil%nslay)
         case (9)
-          read(line,*,err=82) (asfcs(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asfcs(lay), lay=1,soil%nslay)
         case (10)
-          read(line,*,err=82) (asfms(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asfms(lay), lay=1,soil%nslay)
         case (11)
-          read(line,*,err=82) (asffs(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asffs(lay), lay=1,soil%nslay)
         case (12)
-          read(line,*,err=82) (asfvfs(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asfvfs(lay), lay=1,soil%nslay)
         case (13)
-          read(line,*,err=82) (asfwdc(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asfwdc(lay), lay=1,soil%nslay)
         case (14)
-          read(line,*,err=82) (asdblk(lay,isr), lay=1,nslay(isr))
-          do lay=1,nslay(isr)                    ! initialize "dry" bd, even though it isn't used with these IFC files
-             asfcle(lay,isr) = 0.0 
+          read(line,*,err=82) (soil%asdblk(lay), lay=1,soil%nslay)
+          ! initialize coefficient of linear expansion, even though it isn't used with these IFC files
+          do lay=1,soil%nslay
+             soil%asfcle(lay) = 0.0 
           end do
-! *** debugging write
-!           write(*,*) ' inpsub: ', asdblk(1:7,isr)
-! *** eodw
         case (15)
-          read(line,*,err=82) (asdwblk(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asdwblk(lay), lay=1,soil%nslay)
         case (16)
 !     aggregate properties
-          read(line,*,err=82) (aslagm(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%aslagm(lay), lay=1,soil%nslay)
         case (17)
-          read(line,*,err=82) (as0ags(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%as0ags(lay), lay=1,soil%nslay)
         case (18)
-          read(line,*,err=82) (aslagx(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%aslagx(lay), lay=1,soil%nslay)
         case (19)
-          read(line,*,err=82) (aslagn(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%aslagn(lay), lay=1,soil%nslay)
         case (20)
-          read(line,*,err=82) (asdagd(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asdagd(lay), lay=1,soil%nslay)
         case (21)
-          read(line,*,err=82) (aseags(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%aseags(lay), lay=1,soil%nslay)
         case (22)
 !     read crust properties
-          read(line,*,err=82) subrsurf%aszcr
+          read(line,*,err=82) soil%aszcr
         case (23)
-          read(line,*,err=82) subrsurf%asdcr
+          read(line,*,err=82) soil%asdcr
         case (24)
-          read(line,*,err=82) subrsurf%asecr
+          read(line,*,err=82) soil%asecr
         case (25)
-          read(line,*,err=82) subrsurf%asfcr
+          read(line,*,err=82) soil%asfcr
         case (26)
 !     read surface properties
-          read(line,*,err=82) subrsurf%asmlos
-!      write(*,*) ' inpsub: asmlos(isr) ', asmlos(isr)
+          read(line,*,err=82) soil%asmlos
         case (27)
-          read(line,*,err=82) subrsurf%asflos
+          read(line,*,err=82) soil%asflos
         case (28)
-          read(line,*,err=82) subrsurf%aslrr
-          subrsurf%aslrro = subrsurf%aslrr
+          read(line,*,err=82) soil%aslrr
+          soil%aslrro = soil%aslrr
         case (29)
-          read(line,*,err=82) subrsurf%asargo
+          read(line,*,err=82) soil%asargo
         case (30)
-          read(line,*,err=82) subrsurf%aszrgh
+          read(line,*,err=82) soil%aszrgh
         case (31)
-          read(line,*,err=82) subrsurf%asxrgs
+          read(line,*,err=82) soil%asxrgs
         case (32)
-          read(line,*,err=82) subrsurf%asxrgw
+          read(line,*,err=82) soil%asxrgw
 
         ! this is where dike height and spacing should be read in.
         ! they are not, but need to be initialized.
         ! case (??)
-          subrsurf%asxdks = 0.0
-          subrsurf%asxdkh = 0.0
+          soil%asxdks = 0.0
+          soil%asxdkh = 0.0
 
         case (33)
 !     read soil hydrologic properties
-          read(line,*,err=82) (ahrwc(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%ahrwc(lay), lay=1,soil%nslay)
         case (34)
-          read(line,*,err=82) (ahrwcs(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%ahrwcs(lay), lay=1,soil%nslay)
         case (35)
-          read(line,*,err=82) (ahrwcf(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%ahrwcf(lay), lay=1,soil%nslay)
         case (36)
-          read(line,*,err=82) (ahrwcw(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%ahrwcw(lay), lay=1,soil%nslay)
         case (37)
-          read(line,*,err=82) (ahrwc1(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%ahrwc1(lay), lay=1,soil%nslay)
         case (38)
-          read(line,*,err=82) (ah0cb(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%ah0cb(lay), lay=1,soil%nslay)
         case (39)
-          read(line,*,err=82) (aheaep(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%aheaep(lay), lay=1,soil%nslay)
         case (40)
-          read(line,*,err=82) (ahrsk(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%ahrsk(lay), lay=1,soil%nslay)
         case (41)
           read(line,*,err=82) ah0cnp(isr)
         case (42)
           read(line,*,err=82) ah0cng(isr)
         case (43)
-          read(line,*,err=82) subrsurf%asfald
+          read(line,*,err=82) soil%asfald
 
 !         Code added to "skip" extra parameter not available in "old" ifc files
           ! set default outflow height to zero (minimum depression storage)
@@ -933,25 +891,25 @@ module input_soil_mod
 
         case (45)
 !         read soil chemical properties
-          read(line,*,err=82) (asfom(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asfom(lay), lay=1,soil%nslay)
 
         case (46)
-          read(line,*,err=82) (as0ph(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%as0ph(lay), lay=1,soil%nslay)
         case (47)
-          read(line,*,err=82) (asfcce(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asfcce(lay), lay=1,soil%nslay)
 !       read other soil chemical properties needed by the CROP
         case (48)
-          read(line,*,err=82) (asfcec(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asfcec(lay), lay=1,soil%nslay)
         case (49)
-          read(line,*,err=82) (asfsmb(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (temp, lay=1,soil%nslay) ! asfsmb no longer used
         case (50)
-          read(line,*,err=82) (as0ec(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (temp, lay=1,soil%nslay) ! as0ec no longer used
         case (51)
-          read(line,*,err=82) (asrsar(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (temp, lay=1,soil%nslay) ! asrsar no longer used
         case (52)
-          read(line,*,err=82) (asftan(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (temp, lay=1,soil%nslay) ! asftan no longer used
         case (53)
-          read(line,*,err=82) (asftap(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (temp, lay=1,soil%nslay) ! asftap no longer used
 
 !         Code added to "skip" extra parameter not available in "old" ifc files
           if (ifc_format .eq. 1) then !old ifc format (skip next typidx line)
@@ -959,94 +917,93 @@ module input_soil_mod
           endif
 
         case (54)    !This line only gets read if new ifc format is specified
-          read(line,*,err=82) (asfcle(lay,isr), lay=1,nslay(isr))
+          read(line,*,err=82) (soil%asfcle(lay), lay=1,soil%nslay)
 
         end select
         goto 100
 
-      ! reading of subregion IFC elements complete
+        ! reading of subregion IFC elements complete
   190 continue 
 
-      !initialize new variables not in either of these  "old" ifc file formats 
-         bedrock_depth = 99990.0
-         restrict_depth = 99990.0
-        do lay = 1, nslay(isr)
-            asfvcs(lay,isr) = 0.0
-            ahfredsat(lay,isr) = 0.0
-            asdwsrat(lay, isr) = -1.0
-        end do
+      ! initialize new variables not in either of these  "old" ifc file formats 
+      soil%bedrock_depth = 99990.0
+      soil%restrict_depth = 99990.0
+      do lay = 1, soil%nslay
+        soil%asfvcs(lay) = 0.0
+        soil%ahfredsat(lay) = 0.0
+        soil%asdwsrat(lay) = -1.0
+      end do
 
 
       ! set layer thickness of the soils as is appropriate for the simulation
-      call spllay(isr, subrsurf)
+      call spllay(soil)
 
       ! calculate wet albedo from dry
-      subrsurf%asfalw = subrsurf%asfald                                 &
-     &                / ((1.33**2.)*(1-subrsurf%asfald)+subrsurf%asfald)
+      soil%asfalw = soil%asfald                                 &
+     &                / ((1.33**2.)*(1-soil%asfald)+soil%asfald)
 
       ! texture based calculation of settled bulk density and particle density
-      call proptext(nslay(isr),asfcla(1,isr),asfsan(1,isr),asfom(1,isr),&
-     &              asdsblk(1,isr), asdsblk(1,isr), asdprocblk(1,isr),  &
-     &              asdwblk(1,isr), asdwsrat(1, isr), asdpart(1,isr) )
+      call proptext(soil%nslay,soil%asfcla,soil%asfsan,soil%asfom,&
+     &              soil%asdsblk, soil%asdsblk, soil%asdprocblk,  &
+     &              soil%asdwblk, soil%asdwsrat, soil%asdpart )
 
       ! calculate (or recalculate) additional values from soil basic properties
-      do lay=1,nslay(isr)
+      do lay=1,soil%nslay
 
 !       command line switch, changes to IFC values
         if( wc_type.eq.0 ) then
 !           Ifc inputs are 1/3bar(vol), 15bar(vol), convert both to (grav)
-            ahrwcf(lay,isr) = ahrwcf(lay,isr) / asdwblk(lay,isr)
-            ahrwcw(lay,isr) = ahrwcw(lay,isr) / asdwblk(lay,isr)
+            soil%ahrwcf(lay) = soil%ahrwcf(lay) / soil%asdwblk(lay)
+            soil%ahrwcw(lay) = soil%ahrwcw(lay) / soil%asdwblk(lay)
         else if( wc_type.eq.1 ) then
 !           Ifc inputs are 1/3bar(vol), 15bar(grav), convert 1/3bar(vol) to (grav)
-            ahrwcf(lay,isr) = ahrwcf(lay,isr) / asdwblk(lay,isr)
+            soil%ahrwcf(lay) = soil%ahrwcf(lay) / soil%asdwblk(lay)
         else if( wc_type.eq.2 ) then
 !           Ifc inputs are 1/3bar(grav), 15bar(grav), no conversion necessary
         else if( wc_type.eq.3 ) then
 !!          Use texture based calculation of 1/3bar(vol), 15bar(vol) and bulk
 !           density and convert to (grav). Using Saxton Method
-            call propsaxt(asfsan(lay,isr), asfcla(lay,isr),             &
-     &                    ahrwcs(lay,isr),                              &
-     &                    ahrwcf(lay,isr), ahrwcw(lay,isr) )
+            call propsaxt(soil%asfsan(lay), soil%asfcla(lay), soil%ahrwcs(lay), &
+     &                    soil%ahrwcf(lay), soil%ahrwcw(lay) )
 !!          use volumetric saturation to calculate bulk density
-            asdwblk(lay,isr) = (1.0-ahrwcs(lay,isr)) * asdpart(lay,isr)
+            soil%asdwblk(lay) = (1.0-soil%ahrwcs(lay)) * soil%asdpart(lay)
 !           Returned values are 1/3bar(vol), 15bar(vol), convert both to (grav)
-            ahrwcf(lay,isr) = ahrwcf(lay,isr) / asdwblk(lay,isr)
-            ahrwcw(lay,isr) = ahrwcw(lay,isr) / asdwblk(lay,isr)
+            soil%ahrwcf(lay) = soil%ahrwcf(lay) / soil%asdwblk(lay)
+            soil%ahrwcw(lay) = soil%ahrwcw(lay) / soil%asdwblk(lay)
         end if
 
 !       set soil to field capacity not wilting point
-        ahrwc(lay,isr) = ahrwcf(lay,isr)
+        soil%ahrwc(lay) = soil%ahrwcf(lay)
 
 !       make sure settled bd is greater than or equal to wet bulk density
-        if( asdsblk(lay,isr).lt.asdwblk(lay,isr) ) then
-            asdsblk(lay,isr) = asdwblk(lay,isr)
+        if( soil%asdsblk(lay) .lt. soil%asdwblk(lay) ) then
+            soil%asdsblk(lay) = soil%asdwblk(lay)
         endif
 
 !       set initial condition to wet bulk density, not dry
-        asdblk(lay,isr) = asdwblk(lay,isr)
+        soil%asdblk(lay) = soil%asdwblk(lay)
 !       set previous day bulk density
-        asdblk0(lay,isr) = asdblk(lay,isr)
+        soil%asdblk0(lay) = soil%asdblk(lay)
 
 !       set saturation based on definition
-        ahrwcs(lay,isr) = 1.0/asdblk(lay,isr)-1.0/asdpart(lay,isr)
-        if(ahrwcs(lay,isr).lt.ahrwcf(lay,isr)) then
-!            ahrwcf(lay,isr) = ahrwcs(lay,isr)
+        soil%ahrwcs(lay) = 1.0/soil%asdblk(lay)-1.0/soil%asdpart(lay)
+        if(soil%ahrwcs(lay) .lt. soil%ahrwcf(lay)) then
+!            soil%ahrwcf(lay) = soil%ahrwcs(lay)
             write(*,*) 'Layer, Field Capacity > Saturation',            &
-     &                 lay, ahrwcf(lay,isr), ahrwcs(lay,isr)
+     &                 lay, soil%ahrwcf(lay), soil%ahrwcs(lay)
         endif
 
 !      output for soil file screening
-!        write(*,1000) sinfil,lay,aszlyt(lay,isr),
-!     &        asfsan(lay,isr),asfcla(lay,isr),asfom(lay,isr),
-!     &        asdwblk(lay,isr),asdblk(lay,isr),ahrwcs(lay,isr),
-!     &        ahrwcf(lay,isr),ahrwcw(lay,isr),
-!     &        ahrwcf(lay,isr)-ahrwcw(lay,isr),
-!     &        1.0 - asdwblk(lay,isr)/asdpart(lay,isr),
-!     &        ahrwcf(lay,isr)*asdwblk(lay,isr),
-!     &        ahrwcw(lay,isr)*asdwblk(lay,isr),
-!     &        ahrwcf(lay,isr)*asdwblk(lay,isr)-
-!     &        ahrwcw(lay,isr)*asdwblk(lay,isr)
+!        write(*,1000) sinfil,lay,soil%aszlyt(lay),
+!     &        soil%asfsan(lay),soil%asfcla(lay),soil%asfom(lay),
+!     &        soil%asdwblk(lay),soil%asdblk(lay),soil%ahrwcs(lay),
+!     &        soil%ahrwcf(lay),soil%ahrwcw(lay),
+!     &        soil%ahrwcf(lay)-soil%ahrwcw(lay),
+!     &        1.0 - soil%asdwblk(lay)/soil%asdpart(lay),
+!     &        soil%ahrwcf(lay)*soil%asdwblk(lay),
+!     &        soil%ahrwcw(lay)*soil%asdwblk(lay),
+!     &        soil%ahrwcf(lay)*soil%asdwblk(lay)-
+!     &        soil%ahrwcw(lay)*soil%asdwblk(lay)
 
       end do
 
@@ -1054,38 +1011,23 @@ module input_soil_mod
           ! use texture based calculations from Rawls to set all soil
           ! water properties.
           call param_prop_bc(                                           &
-     &        nslay(isr), aszlyd(1,isr), asdblk(1,isr), asdpart(1,isr), &
-     &        asfcla(1,isr), asfsan(1,isr), asfom(1,isr), asfcec(1,isr),&
-     &        ahrwcs(1,isr), ahrwcf(1,isr), ahrwcw(1,isr),ahrwcr(1,isr),&
-     &        ahrwca(1,isr), ah0cb(1,isr), aheaep(1,isr), ahrsk(1,isr), &
-     &        ahfredsat(1,isr) )
+     &        soil%nslay, soil%aszlyd, soil%asdblk, soil%asdpart, &
+     &        soil%asfcla, soil%asfsan, soil%asfom, soil%asfcec, &
+     &        soil%ahrwcs, soil%ahrwcf, soil%ahrwcw,soil%ahrwcr, &
+     &        soil%ahrwca, soil%ah0cb, soil%aheaep, soil%ahrsk, &
+     &        soil%ahfredsat )
 
-          do lay=1,nslay(isr)
+          do lay=1,soil%nslay
               ! set soil to field capacity not wilting point
-              ahrwc(lay,isr) = ahrwcf(lay,isr)
+              soil%ahrwc(lay) = soil%ahrwcf(lay)
           end do
       else
           ! set matrix potential parameters to match 1/3 bar and 15 bar water contents
-          call param_pot_bc( nslay(isr), asdblk(1,isr), asdpart(1,isr), &
-     &                     ahrwcf(1,isr), ahrwcw(1,isr),                &
-     &                     asfcla(1,isr), asfom(1,isr),                 &
-     &                     ah0cb(1,isr), aheaep(1,isr) )
+          call param_pot_bc( soil%nslay, soil%asdblk, soil%asdpart, &
+     &                     soil%ahrwcf, soil%ahrwcw,                &
+     &                     soil%asfcla, soil%asfom,                 &
+     &                     soil%ah0cb, soil%aheaep )
       end if
-
-!       some soil characteristic values for crop nutrient effects 
-!       were originally planned and then dropped and are not included in 
-!       layer splitting. A Debug full debug compile complains
-!       that these values are not initialized when they are mixed as
-!       part of  management process. they are initialized here to avoid
-!       removing them from mix and invert
-        do lay = 1, nslay(isr)
-            ascmg(lay,isr) = 0.0
-            ascna(lay,isr) = 0.0
-            asfesp(lay,isr) = 0.0
-            asfnoh(lay,isr) = 0.0
-            asfpoh(lay,isr) = 0.0
-            asfpsp(lay,isr) = 0.0
-        end do
 
       close (lui1)
 

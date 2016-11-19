@@ -3,11 +3,12 @@
 !$Revision$
 !$HeadURL$
 
-SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot, cellstate, h1et, subrsurf)
+SUBROUTINE update_period_update_vars(isr, period_update, soil, restot, croptot, biotot, cellstate, h1et, subrsurf)
 
     use weps_interface_defs, ignore_me=>update_period_update_vars
     USE pd_var_tables
     USE pd_var_type_def
+    use soil_data_struct_defs, only: soil_def
     use biomaterial, only: biototal
     use erosion_data_struct_defs, only: cellsurfacestate
     use hydro_data_struct_defs, only: hydro_derived_et
@@ -20,6 +21,9 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
 !   + + + ARGUMENT DECLARATIONS + + +
     INTEGER :: isr              ! current subregion
     TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update
+    type(soil_def), intent(in) :: soil  ! contains:
+                                ! aslagm, as0ags, aslagn, aslagx (ASD parms)
+                                ! aseags (agg stability), asdagd (agg density)
     type(biototal), intent(in) :: restot  ! contains:
                                 ! adftcvtot(isr)  total dead flat cover
                                 ! adrcdtot(isr)   total effective silhouette
@@ -60,8 +64,6 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
 
     include "p1werm.inc"        ! needed by other include files
 
-    include "s1agg.inc"         ! aslagm, as0ags, aslagn, aslagx (ASD parms)
-                                ! aseags (agg stability), asdagd (agg density)
     include "h1balance.inc"     ! pressswc(isr)  daily surface water content in all soil layers (mm)
 
 !    REAL :: biodrag		! biodrag() function in util/misc/biodrag.for
@@ -122,15 +124,14 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
     period_update(Ridge_dir)%val = subrsurf%asargo
     period_update(Ridge_dir)%cnt = period_update(Ridge_dir)%cnt + 1
 
-    call sbsfdi(aslagm(1,isr), as0ags(1,isr), aslagn(1,isr),                &
-         aslagx(1,isr),0.84,ef84)
+    call sbsfdi(soil%aslagm(1), soil%as0ags(1), soil%aslagn(1), soil%aslagx(1),0.84,ef84)
     period_update(Surface_Ag_84)%val = ef84
     period_update(Surface_Ag_84)%cnt = period_update(Surface_Ag_84)%cnt + 1
 
-    period_update(Surface_Ag_AS)%val = aseags(1,isr)  !Ag Stability (J/m^2)
+    period_update(Surface_Ag_AS)%val = soil%aseags(1)  !Ag Stability (J/m^2)
     period_update(Surface_Ag_AS)%cnt = period_update(Surface_Ag_AS)%cnt + 1
 
-    period_update(Surface_Ag_DN)%val = asdagd(1,isr)  !Ag Density (Mg/m^3)
+    period_update(Surface_Ag_DN)%val = soil%asdagd(1)  !Ag Density (Mg/m^3)
     period_update(Surface_Ag_DN)%cnt = period_update(Surface_Ag_DN)%cnt + 1
 
     period_update(Surface_Ag_CA)%val = subrsurf%acanag  !Ag Coeff. of abrasion (1/m)

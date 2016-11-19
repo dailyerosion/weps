@@ -21,11 +21,11 @@ subroutine compact( u, load, tillf, tlay, nlay, density, settled_bd, proc_bd_wc,
   real :: u             ! Compaction coefficient
   real :: load          ! Compaction load (Mg, Megagrams) (also known as metric ton)
   real :: tillf         ! fraction of soil area tilled by the machine
-  real :: density(mnsz) ! present soil bulk density (Mg/m^3)
-  real :: settled_bd(mnsz) ! proctor soil bulk density adjusted for water content (Mg/m^3)
-  real :: proc_bd_wc(mnsz) ! proctor soil bulk density adjusted for water content (Mg/m^3)
-  real :: proc_bd(mnsz) ! proctor soil bulk density (maximum dry density) (Mg/m^3)
-  real :: laythk(mnsz)  ! layer thickness (mm)
+  real :: density(*) ! present soil bulk density (Mg/m^3)
+  real :: settled_bd(*) ! settled soil bulk density
+  real :: proc_bd_wc(*) ! proctor soil bulk density adjusted for water content (Mg/m^3)
+  real :: proc_bd(*) ! proctor soil bulk density (maximum dry density) (Mg/m^3)
+  real :: laythk(*)  ! layer thickness (mm)
 
   ! + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
   ! mnsz        - max number of soil layers

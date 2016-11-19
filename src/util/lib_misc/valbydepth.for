@@ -79,6 +79,10 @@
           end if
       end do
 
+      ! check for top depth past soil bottom
+      if( depthtop .gt. bszlyd(layrsn) ) then
+          indextop = layrsn
+      end if
       ! check for bottom depth past soil bottom
       if( depthbot .gt. bszlyd(layrsn) ) then
           indexbot = layrsn

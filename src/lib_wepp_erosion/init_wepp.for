@@ -4,15 +4,17 @@
 !$HeadURL$
 
 !
-      SUBROUTINE init_wepp(isr, afterWarmup)
+      SUBROUTINE init_wepp(isr, afterWarmup, soil)
       
       use wepp_interface_defs, ignore_me=>init_wepp
       use grid_mod, only: amxsim, sim_area
       use Points_Mod, only: slen
+      use soil_data_struct_defs, only: soil_def
 
       implicit none
       
       integer, intent(in) :: isr, afterWarmup
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
 
 !----------------------------------------------------------------------------
 !
@@ -37,8 +39,6 @@
 !
 !----------------------------------------------------------------------------
       include 'p1werm.inc'
-      include 's1dbh.inc'
-      include 's1dbc.inc'
       include 'm1subr.inc'
       include 'hydro/htheta.inc'
       include 'wepp_erosion.inc'
@@ -81,10 +81,10 @@
          return
       endif
 
-      sandf = asfsan(1,isr)
-      siltf = asfsil(1,isr)
-      clayf = asfcla(1,isr)
-      orgmatf = asfom(1,isr)
+      sandf = soil%asfsan(1)
+      siltf = soil%asfsil(1)
+      clayf = soil%asfcla(1)
+      orgmatf = soil%asfom(1)
     !  
 !     compute slope length based on the length of the rectangular WEPS simulation area
       wp_efflen = slen(amxsim(1), amxsim(2))/2.0
@@ -95,12 +95,12 @@
 	wp_fwidth = sim_area / wp_efflen
 	
 
-	sand(1) = asfsan(1,isr)
-	silt(1) = asfsil(1,isr)
-	clay(1) = asfcla(1,isr)
-	orgmat(1) = asfom(1,isr)
+	sand(1) = soil%asfsan(1)
+	silt(1) = soil%asfsil(1)
+	clay(1) = soil%asfcla(1)
+	orgmat(1) = soil%asfom(1)
 	thetfc(1) = theta(1)
-	rfg(1) = asvroc(1,isr)
+	rfg(1) = soil%asvroc(1)
 
 !     default rill spacing to 1m
       wp_rspace = 1.0

@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   dogroup (sr)
+      subroutine   dogroup (sr, soil)
 
 !     + + + PURPOSE + + +
 !     Dogroup reads in any coefficients associated with the group of
@@ -14,17 +14,18 @@
 
       use weps_interface_defs, ignore_me=>dogroup
       use manage_data_struct_defs, only: lastoper
+      use soil_data_struct_defs, only: soil_def
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 's1layr.inc'
       include 'c1db1.inc'
       include 'manage/man.inc'
       include 'manage/mproc.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     iunit - management file handle 
@@ -73,7 +74,7 @@
 ! ***          stop
 ! ***        endif
 !     pre-process stuff
-        tlayer = tillay(tdepth, aszlyt(1,sr), nslay(sr))
+        tlayer = tillay(tdepth, soil%aszlyt, soil%nslay)
 !     do process (usually just processes or other operations)
 !     post-process stuff
 !-----END tillage process (process code 01)

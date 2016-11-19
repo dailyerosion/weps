@@ -7,313 +7,407 @@ module split_layers_mod
 
   contains
 
-!      subroutine spllay_ifc (isr, soil_in, soil)
-    subroutine spllay_ifc (isr, subrsurf)
-! ***************************************************************** wjr
-! Converts NASIS layered IFC files into 10,40,50,... IFC files
-!
-!     Edit History
-!     07-Feb-01   wjr   created
-!     10-Oct-04   lew   modified to work with "versioned" IFC files only
+    subroutine soil_layer_count( layer_infla, layer_scale, nnlay, fix_thick )
+      integer, intent(in) :: layer_infla
+      integer, intent(in) :: layer_scale
+      integer, intent(out) :: nnlay    ! number of soil layers for new layering
+      real, intent(in), dimension(:) :: fix_thick    ! thickness of fixed soil layers from database
 
-      use erosion_data_struct_defs, only: subregionsurfacestate
+      ! local variables
+      integer :: nflay    ! number of layers in fix_thick array
+      integer :: fdx      ! fixed layer index
+      real :: mfac        ! multiplier factor
+      real :: fix_depth
+      real, dimension(2) :: targetthk
+      real, dimension(2) :: targetdep
+      real, parameter :: max_depth = 3000.0
+
+      ! set multiplier factor
+      mfac = 1.0 + layer_infla/100.0
+
+      ! get number of fixed soil layers
+      nflay = size(fix_thick)
+
+      ! set initial layer thicknesses
+      fdx = 1
+      fix_depth = fix_thick(fdx)
+      nnlay = 1
+      targetthk(1) = layer_scale
+      targetdep(1) = targetthk(1)
+
+      ! check layers for maximum depth and number of fixed layers
+      do while( targetdep(1) .lt. max_depth )
+        ! estimate new target layer thickness and depth
+        targetthk(2) = targetthk(1) * mfac
+        targetdep(2) = targetdep(1) + targetthk(2)
+
+        ! check for crossing layer boundaries
+        if( targetdep(2) .gt. fix_depth ) then
+          ! update set layer used for checking
+          fdx = fdx + 1
+          if( fdx .le. nflay) then
+            ! add extra layer to match layer boundary
+            nnlay = nnlay + 1
+            ! update new set layer depth
+            fix_depth = fix_depth + fix_thick(fdx)
+          else
+            fix_depth = max( fix_depth, max_depth )
+          end if
+        end if
+
+        ! update for next step
+        nnlay = nnlay + 1
+        targetthk(1) = targetthk(2)
+        targetdep(1) = targetdep(2)
+
+      end do
+
+    end subroutine soil_layer_count
+
+    subroutine soil_layer_split( layer_infla, layer_scale, fix_thick, split_thick )
+      integer, intent(in) :: layer_infla
+      integer, intent(in) :: layer_scale
+      real, intent(in), dimension(:) :: fix_thick    ! thickness of fixed soil layers from database
+      real, intent(out), dimension(:) :: split_thick    ! thickness of new soil layers
+
+      ! local variables
+      integer :: nflay    ! number of layers in fix_thick array
+      integer :: fdx      ! fixed layer index
+      integer :: nslay    ! number of layers in split_thick array
+      integer :: sdx      ! split layer index
+      integer :: ntlay    ! number of layers in temporary split_thick array
+      integer :: tdx      ! temporary split layer index
+      integer :: ldx      ! local layer index
+      integer :: alloc_stat, sum_stat
+      real :: mfac        ! multiplier factor
+      real :: add_depth   ! depth increment to be added
+      integer :: dodx     ! do layers for adjustment
+      real :: tgtthk      ! used in layer adjustment
+      real :: totthk      ! used in layer adjustment
+      real :: tinfser     ! used in layer adjustment
+      real, dimension(:), allocatable :: fix_depth      
+      real, dimension(:), allocatable :: targetthk
+      real, dimension(:), allocatable :: targetdep
+      real, dimension(:), allocatable :: tempthk
+      real, dimension(:), allocatable :: tempdep
+      integer, dimension(:), allocatable :: tempstat
+      real, parameter :: max_depth = 3000.0
+
+      ! set multiplier factor
+      mfac = 1.0 + layer_infla/100.0
+
+      ! get number of soil layers
+      nflay = size(fix_thick)
+      nslay = size(split_thick)
+      ntlay = nslay
+
+      ! allocate temporary arrays
+      sum_stat = 0
+      allocate(fix_depth(nflay), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(targetthk(nslay), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(targetdep(nslay), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(tempthk(nslay), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(tempdep(nslay), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(tempstat(nslay), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      if( sum_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: unable to allocate enough memory for soil_layer_split data arrays'
+      end if
+
+      ! set multiplier factor
+      mfac = 1.0 + layer_infla/100.0
+
+      ! alternative layering
+      targetthk(1) = layer_scale
+      targetdep(1) = targetthk(1)
+      do sdx=2,nslay
+        targetthk(sdx) = targetthk(sdx-1) * mfac
+        targetdep(sdx) = targetdep(sdx-1) + targetthk(sdx)
+      end do
+
+      ! compute out depth to bottom of soil layer
+      fix_depth(1) = fix_thick(1)
+      do fdx = 2, nflay
+        fix_depth(fdx) = fix_depth(fdx-1) + fix_thick(fdx)
+      end do
+
+      ! based on depth to impermeable, bedrock layer, increase depth 
+      ! of soil. With a unit gradient at the bottom boundary, no water
+      ! will move up from the lower boundary.
+      if( fix_depth(nflay) .lt. max_depth ) then
+          add_depth = max_depth - fix_depth(nflay)
+          fix_depth(nflay) = fix_depth(nflay) + add_depth 
+      end if
+
+        ! set temporary layer thicknesses, matching input layer boundaries
+        ! checking termination layer to get same total soil thickness
+        ! set number of layers
+        fdx = 1
+        sdx = 1
+        tdx = 1
+        do while ( (sdx .le. nslay) .and. (fdx .le. nflay) )
+          if( targetdep(sdx) .le. fix_depth(fdx) ) then
+            ! totally within layer
+            tempthk(tdx) = targetthk(sdx)
+            tempdep(tdx) = targetdep(sdx)
+            tempstat(tdx) = 0   ! target layer boundary
+            tdx = tdx + 1
+            sdx = sdx + 1
+          else if( tempdep(tdx-1) .le. fix_depth(fdx) ) then
+            ! crossed layer boundary set at layer boundary
+            tempthk(tdx) = fix_depth(fdx) - tempdep(tdx-1) 
+            tempdep(tdx) = fix_depth(fdx)
+            ! adjust target thickness to match new layer division
+            targetthk(sdx) = targetdep(sdx) - fix_depth(fdx)
+            tempstat(tdx) = 1   ! input layer boundary
+            ! increment counters
+            tdx = tdx + 1
+            fdx = fdx + 1
+          end if 
+        end do
+        ntlay = tdx-1
+
+        ! even out layer spacing of last surface layers
+        ! search for first original layer boundary
+        sdx = 1
+        do while( (sdx.lt.ntlay) .and. (tempstat(sdx).eq.0) )
+          sdx = sdx + 1
+        end do
+        ! surface layers only, average last two layers
+        totthk = tempthk(sdx-1) + tempthk(sdx)
+        tgtthk = totthk / 2.0
+        ! redo layers
+        tempthk(sdx-1) = tgtthk
+        if( sdx .eq. 2 ) then
+          ! only two surface layers, keep indexes in bounds
+          tempdep(sdx-1) = tempthk(sdx-1)
+        else
+          tempdep(sdx-1) = tempdep(sdx-2) + tempthk(sdx-1)
+        end if
+        ! get the last layer of the interval exact
+        tempthk(sdx) = tempdep(sdx) - tempdep(sdx-1)
+
+        ! even out layer spacing between fixed layers
+        fdx = 0
+        sdx = 0
+        do tdx = 1, ntlay
+          if( tempstat(tdx) .eq. 1 ) then
+            ! fixed layer found
+            fdx = sdx
+            sdx = tdx
+          end if
+          if( fdx .gt. 0 ) then
+            ! below surface layers
+            dodx = (sdx-fdx)
+            ! add up series used to set layer adjustment series
+            tinfser = 1.0
+            do ldx = 1, dodx-1
+              tinfser = tinfser + mfac**ldx
+            end do
+            totthk = tempdep(sdx) - tempdep(fdx)
+            tgtthk = totthk / tinfser
+            do ldx = fdx+1, sdx-1
+              ! redo layers in this interval
+              tempthk(ldx) = tgtthk * mfac ** (ldx - fdx - 1)
+              tempdep(ldx) = tempdep(ldx-1) + tempthk(ldx)
+            end do
+            ! get the last layer of the interval exact
+            tempthk(ldx) = tempdep(sdx) - tempdep(sdx-1)
+            ! set so that adjustment not done until next permanent layer
+            fdx = 0
+          end if
+        end do
+
+      ! copy result into array for return
+      do ldx = 1, nslay
+        split_thick(ldx) = tempthk(ldx)
+      end do
+
+      ! deallocate temporary arrays
+      sum_stat = 0
+      deallocate(fix_depth, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(targetthk, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(targetdep, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(tempthk, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(tempdep, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(tempstat, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      if( sum_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: unable to allocate enough memory for soil_layer_split data arrays'
+      end if
+
+    end subroutine soil_layer_split
+
+    subroutine move_ave_val( nlay_old, laydepth_old, valuearr_old, nlay_new, laydepth_new, valuearr_new )
+      !   + + + PURPOSE + + +
+      ! averages new layer values across old layers and moves new values into the same array
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: nlay_old    ! number of layers in old layering
+      integer, intent(in) :: nlay_new    ! depth to bottom of old soil layers
+      real, intent(in), dimension(:) :: laydepth_old  ! soil property variable array in old layering
+      real, intent(in), dimension(:) :: valuearr_old  ! number of layers in new layering
+      real, intent(in), dimension(:) :: laydepth_new  ! depth to bottom of new soil layers
+      real, intent(out), dimension(:) :: valuearr_new ! soil property variable array in new layering
+
+!     + + + LOCAL VARIABLES + + +
+      integer lay
+      real depth
+
+!     + + + LOCAL DEFINITIONS + + +
+!     lay     - layer index
+!     depth   - depth in soil of top of layer
+
+!     + + + FUNCTIONS CALLED + + +
+      real valbydepth
+
+!     + + + END SPECIFICATIONS + + +
+
+      ! start from soil surface
+      depth = 0.0
+      do lay = 1, nlay_new
+          valuearr_new(lay) = valbydepth(                               &
+     &                        nlay_old, laydepth_old, valuearr_old,     &
+     &                        0, depth, laydepth_new(lay) )
+          depth = laydepth_new(lay)
+      end do
+
+      return
+    end subroutine move_ave_val
+
+    subroutine spllay_ifc (soil)
+      ! Converts NASIS layered IFC data into thin layered data
+      ! Edit History
+      ! 07-Feb-01   wjr   created
+      ! 10-Oct-04   lew   modified to work with "versioned" IFC files only
+
+      use soil_data_struct_defs, only: soil_def, allocate_soil, deallocate_soil
       use soil_mod, only: depthini
+
+!     + + + ARGUMENTS + + +
+      type(soil_def), intent(inout) :: soil  ! soil for the subregion
 
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
-      include 's1agg.inc'
-      include 's1dbh.inc'
-      include 's1dbc.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
       include 'command.inc'          !declarations for commandline args
 
-      integer       isr
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
-
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
 
 !     + + + LOCAL VARIABLES + + +
-!      integer      lay
-!      character    line*256
-      real          max_depth, add_depth
-      real          totthk, tgtthk
-      ! real          curdep
-      ! integer       otnlay(mnsz)
-      ! real          newthk(mnsz)
-      integer       oldcur, newcur, tmpcur
-      integer       dolcur
-      integer       ldx
+      type(soil_def) :: soil_split
 
-!     set up target layers (use as max for now)
-      real          targetthk(mnsz)
-      real          targetdep(mnsz)
-      real          mfac     ! multipier for progressive layer thickness
-      real          tinfser  ! total inflation series for interlayer adjustment
+      ! copy all input values from soil to soil_split
+      ! NOTE: array declared as allocatable, so arrays copied as well
+      soil_split = soil
+      ! deallocate arrays in new soil structure
+      call deallocate_soil(soil_split)
 
-      ! create temporary layer thickness and depth and value arrays
-      real          tempthk(mnsz)
-      real          tempdep(mnsz)
-      integer       tempstat(mnsz) ! 0 = target layer, 1 = fixed input layer
-      integer       tempnslay
+      ! find number of soil layers in modified soil layering
+      call soil_layer_count( layer_infla, layer_scale, soil_split%nslay, soil%aszlyt )
 
-      targetthk(1) = 10
-      targetthk(2) = 40
-      targetthk(3) = 50
-      targetthk(4) = 50
-      targetthk(5) = 50
-      targetthk(6) = 75
-      targetthk(7) = 75
-      do ldx=8,mnsz
-          targetthk(ldx) = 100
-      end do
+      ! allocate layer arrays for modified soil layering
+      call allocate_soil(soil_split)
 
-      ! set multiplier factor
-      mfac = 1.0 + layer_infla/100.0
+      ! create modified soil layering
+      call soil_layer_split( layer_infla, layer_scale, soil%aszlyt, soil_split%aszlyt )
 
-        ! alternative layering
-        targetthk(1) = layer_scale
-        targetdep(1) = targetthk(1)
-        do ldx=2,mnsz
-          targetthk(ldx) = targetthk(ldx-1) * mfac
-          targetdep(ldx) = targetdep(ldx-1) + targetthk(ldx)
-        end do
+      ! recalculate  depth to bottom of soil layer for old and new layering
+      call depthini( soil%nslay, soil%aszlyt, soil%aszlyd )
+      call depthini( soil_split%nslay, soil_split%aszlyt, soil_split%aszlyd )
 
-        ! compute out depth to bottom of soil layer
-        aszlyd(1, isr) = aszlyt(1, isr)
-        do ldx = 2, nslay(isr)
-          aszlyd(ldx, isr) = aszlyd(ldx-1, isr) + aszlyt(ldx, isr)
-        end do
+      ! average soil properties and put back into property arrays
+      ! save old layer values of property before placing new values
+      ! into enlarged array. All layers are averaged, allowing for
+      ! new layers to be either smaller or larger than original
 
-        ! based on depth to impermeable, bedrock layer, increase depth 
-        ! of soil. With a unit gradient at the bottom boundary, no water
-        ! will move up from the lower boundary.
-        max_depth = 3000.0
-        if( aszlyd(nslay(isr),isr) .lt. max_depth ) then
-            add_depth = max_depth - aszlyd(nslay(isr),isr)
-            aszlyd(nslay(isr),isr) = aszlyd(nslay(isr),isr) + add_depth 
-            aszlyt(nslay(isr),isr) = aszlyt(nslay(isr),isr) + add_depth
-        end if
+      ! IP soil physical properties
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfsan, soil_split%nslay, soil_split%aszlyd, soil_split%asfsan )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfsil, soil_split%nslay, soil_split%aszlyd, soil_split%asfsil )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfcla, soil_split%nslay, soil_split%aszlyd, soil_split%asfcla )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asvroc, soil_split%nslay, soil_split%aszlyd, soil_split%asvroc )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfvcs, soil_split%nslay, soil_split%aszlyd, soil_split%asfvcs )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfcs, soil_split%nslay, soil_split%aszlyd, soil_split%asfcs )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfms, soil_split%nslay, soil_split%aszlyd, soil_split%asfms )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asffs, soil_split%nslay, soil_split%aszlyd, soil_split%asffs )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfvfs, soil_split%nslay, soil_split%aszlyd, soil_split%asfvfs )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asdwblk, soil_split%nslay, soil_split%aszlyd, soil_split%asdwblk )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asdwsrat, soil_split%nslay, soil_split%aszlyd, soil_split%asdwsrat )
 
-        ! set temporary layer thicknesses, matching input layer boundaries
-        ! checking termination layer to get same total soil thickness
-        ! set number of layers
-        oldcur = 1
-        newcur = 1
-        tmpcur = 1
-        do while ( (newcur .le. mnsz) .and. (oldcur .le. nslay(isr)) )
-          if( targetdep(newcur) .le. aszlyd(oldcur, isr) ) then
-            ! totally within layer
-            tempthk(tmpcur) = targetthk(newcur)
-            tempdep(tmpcur) = targetdep(newcur)
-            tempstat(tmpcur) = 0   ! target layer boundary
-            tmpcur = tmpcur + 1
-            newcur = newcur + 1
-          else if( tempdep(tmpcur-1) .le. aszlyd(oldcur, isr) ) then
-            ! crossed layer boundary set at layer boundary
-            tempthk(tmpcur) = aszlyd(oldcur,isr) - tempdep(tmpcur-1) 
-            tempdep(tmpcur) = aszlyd(oldcur,isr)
-            ! adjust target thickness to match new layer division
-            targetthk(newcur) = targetdep(newcur) - aszlyd(oldcur,isr)
-            tempstat(tmpcur) = 1   ! input layer boundary
-            ! increment counters
-            tmpcur = tmpcur + 1
-            oldcur = oldcur + 1
-          end if 
-        end do
-        tempnslay = tmpcur-1
+      ! IP soil chemical properties
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfom, soil_split%nslay, soil_split%aszlyd, soil_split%asfom )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%as0ph, soil_split%nslay, soil_split%aszlyd, soil_split%as0ph )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfcce, soil_split%nslay, soil_split%aszlyd, soil_split%asfcce )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfcec, soil_split%nslay, soil_split%aszlyd, soil_split%asfcec )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfcle, soil_split%nslay, soil_split%aszlyd, soil_split%asfcle )
 
-        ! even out layer spacing of last surface layers
-        ! search for first original layer boundary
-        newcur = 1
-        do while( (newcur.lt.tempnslay) .and. (tempstat(newcur).eq.0) )
-          newcur = newcur + 1
-        end do
-        ! surface layers only, average last two layers
-        totthk = tempthk(newcur-1) + tempthk(newcur)
-        tgtthk = totthk / 2.0
-        ! redo layers
-        tempthk(newcur-1) = tgtthk
-        if( newcur .eq. 2 ) then
-          ! only two surface layers, keep indexes in bounds
-          tempdep(newcur-1) = tempthk(newcur-1)
-        else
-          tempdep(newcur-1) = tempdep(newcur-2) + tempthk(newcur-1)
-        end if
-        ! get the last layer of the interval exact
-        tempthk(newcur) = tempdep(newcur) - tempdep(newcur-1)
+      ! IC aggregate properties
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aslagm, soil_split%nslay, soil_split%aszlyd, soil_split%aslagm )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%as0ags, soil_split%nslay, soil_split%aszlyd, soil_split%as0ags )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aslagx, soil_split%nslay, soil_split%aszlyd, soil_split%aslagx )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aslagn, soil_split%nslay, soil_split%aszlyd, soil_split%aslagn )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asdagd, soil_split%nslay, soil_split%aszlyd, soil_split%asdagd )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aseags, soil_split%nslay, soil_split%aszlyd, soil_split%aseags )
 
-        ! even out layer spacing between fixed layers
-        oldcur = 0
-        newcur = 0
-        do tmpcur = 1, tempnslay
-          if( tempstat(tmpcur) .eq. 1 ) then
-            ! fixed layer found
-            oldcur = newcur
-            newcur = tmpcur
-          end if
-          if( oldcur .gt. 0 ) then
-            ! below surface layers
-            dolcur = (newcur-oldcur)
-            ! add up series used to set layer adjustment series
-            tinfser = 1.0
-            do ldx = 1, dolcur-1
-              tinfser = tinfser + mfac**ldx
-            end do
-            totthk = tempdep(newcur) - tempdep(oldcur)
-            tgtthk = totthk / tinfser
-            do ldx = oldcur+1, newcur-1
-              ! redo layers in this interval
-              tempthk(ldx) = tgtthk * mfac ** (ldx - oldcur - 1)
-              tempdep(ldx) = tempdep(ldx-1) + tempthk(ldx)
-            end do
-            ! get the last layer of the interval exact
-            tempthk(ldx) = tempdep(newcur) - tempdep(newcur-1)
-            ! set so that adjustment not done until next permanent layer
-            oldcur = 0
-          end if
-        end do
+      ! IC soil hydrologic properties
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asdblk, soil_split%nslay, soil_split%aszlyd, soil_split%asdblk )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asdblk0, soil_split%nslay, soil_split%aszlyd, soil_split%asdblk0 )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrwc, soil_split%nslay, soil_split%aszlyd, soil_split%ahrwc )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrwcs, soil_split%nslay, soil_split%aszlyd, soil_split%ahrwcs )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrwcf, soil_split%nslay, soil_split%aszlyd, soil_split%ahrwcf )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrwcw, soil_split%nslay, soil_split%aszlyd, soil_split%ahrwcw )
 
-      ! debug write of layering created
-!      do ldx=1,nslay(isr)
-!          write(*,*) 'Old_Layer: ', ldx, aszlyt(ldx,isr),aszlyd(ldx,isr)
-!      end do
-!      do ldx=1,tempnslay
-!          write(*,*) 'New_Layer: ',ldx, tempthk(ldx), tempdep(ldx),     &
-!     &                             tempstat(ldx)
-!      end do
-!      ldx = 1
-!      do ldx=1,mnsz
-!          write(*,*) 'Tar_Layer: ', ldx, targetthk(ldx), targetdep(ldx)
-!      end do
+      ! soil hydrologic (water release curve) properties
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ah0cb, soil_split%nslay, soil_split%aszlyd, soil_split%ah0cb )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aheaep, soil_split%nslay, soil_split%aszlyd, soil_split%aheaep )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrsk, soil_split%nslay, soil_split%aszlyd, soil_split%ahrsk )
 
-        ! average soil properties and put back into property arrays
-        ! save old layer values of property before placing new values
-        ! into enlarged array. All layers are averaged, allowing for
-        ! new layers to be either smaller or larger than original
+      ! New variable added that isn't read in any IFC file formats
+      ! but is calculated with the -w4 cmdline option wc_type == 4
+      ! before the layers are split
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahfredsat, soil_split%nslay, soil_split%aszlyd, soil_split%ahfredsat )
 
-!     IP soil physical properties
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfsan(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfsil(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfcla(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asvroc(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfvcs(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfcs(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfms(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asffs(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfvfs(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asdwblk(1,isr),   &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asdwsrat(1,isr),  &
-     &                     tempnslay, tempdep )
+      ! return new layer split array
+      soil = soil_split
 
-!     IP soil chemical properties
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfom(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), as0ph(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfcce(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfcec(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfcle(1,isr),    &
-     &                     tempnslay, tempdep )
+      ! deallocate layer arrays for modified soil layering
+      call deallocate_soil(soil_split)
 
-!     IC aggregate properties
-        call move_ave_val( nslay(isr), aszlyd(1,isr), aslagm(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), as0ags(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), aslagx(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), aslagn(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asdagd(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), aseags(1,isr),    &
-     &                     tempnslay, tempdep )
-
-!     IC soil hydrologic properties
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asdblk(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asdblk0(1,isr),   &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ahrwc(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ahrwcs(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ahrwcf(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ahrwcw(1,isr),    &
-     &                     tempnslay, tempdep )
-
-!     soil hydrologic (water release curve) properties
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ah0cb(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), aheaep(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ahrsk(1,isr),     &
-     &                     tempnslay, tempdep )
-
-        ! New variable added that isn't read in any IFC file formats
-        ! but is calculated with the -w4 cmdline option wc_type == 4
-        ! before the layers are split
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ahfredsat(1,isr), &
-     &                     tempnslay, tempdep )
-
-
-        ! set new number of soil layers into original variable
-        nslay(isr) = tempnslay
-        ! put new thickness into array
-        do ldx = 1, tempnslay
-          aszlyt(ldx, isr) = tempthk(ldx)
-        end do
-        ! recalculate  depth to bottom of soil layer
-        call depthini( nslay(isr), aszlyt(1,isr), aszlyd(1,isr) )
-     
       return
 
     end subroutine spllay_ifc
 
 
-!      subroutine spllay(isr, soil_in, soil)
-    subroutine spllay(isr, subrsurf)
-! ***************************************************************** wjr
-! Converts NASIS layered IFC files into 10,40,50,... IFC files
-!
-!     Edit History
-!     07-Feb-01   wjr   created
-      use erosion_data_struct_defs, only: subregionsurfacestate
+    subroutine spllay(soil)
+      ! Converts NASIS layered IFC data into thin layered data
+      ! Edit History
+      ! 07-Feb-01   wjr   created
+
+      use soil_data_struct_defs, only: soil_def, allocate_soil, deallocate_soil
       use soil_mod, only: depthini
 
 !     + + + ARGUMENTS + + +
-      integer       isr
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
+      type(soil_def), intent(inout) :: soil  ! subregion surface conditions
 
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
-      include 's1agg.inc'
-      include 's1dbh.inc'
-      include 's1dbc.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -321,576 +415,82 @@ module split_layers_mod
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
+
 !     + + + LOCAL VARIABLES + + +
-!      integer      lay
-!      character    line*256
-      real          totthk, curdep, tgtthk
-      integer       otnlay(mnsz)
-      real          newthk(mnsz)
-      integer       oldcur, newcur, tmpcur
-      integer       dolcur
-      integer       ldx
+      type(soil_def) :: soil_split
 
-!     set up target layers (use as max for now)
-      real          targetthk(mnsz)
-      real          targetdep(mnsz)
-      real          mfac     ! multipier for progressive layer thickness
-      real          tinfser  ! total inflation series for interlayer adjustment
+      ! find number of soil layers in modified soil layering
+      call soil_layer_count( layer_infla, layer_scale, soil_split%nslay, soil%aszlyt )
 
-      ! create temporary layer thickness and depth and value arrays
-      real          tempthk(mnsz)
-      real          tempdep(mnsz)
-      integer       tempstat(mnsz) ! 0 = target layer, 1 = fixed input layer
-      integer       tempnslay
+      ! copy all input values from soil to soil_split
+      ! NOTE: array declared as allocatable, so arrays copied as well
+      soil_split = soil
+      ! deallocate arrays in new soil structure
+      call deallocate_soil(soil_split)
 
-      targetthk(1) = 10
-      targetthk(2) = 40
-      targetthk(3) = 50
-      targetthk(4) = 50
-      targetthk(5) = 50
-      targetthk(6) = 75
-      targetthk(7) = 75
-      do ldx=8,mnsz
-          targetthk(ldx) = 100
-      end do
+      ! allocate layer arrays for modified soil layering
+      call allocate_soil(soil_split)
 
-      ! set multiplier factor
-      mfac = 1.0 + layer_infla/100.0
-!      do isr = 1,nsubr
+      ! create modified soil layering
+      call soil_layer_split( layer_infla, layer_scale, soil%aszlyt, soil_split%aszlyt )
 
-        ! alternative layering
-        targetthk(1) = layer_scale
-        targetdep(1) = targetthk(1)
-        do ldx=2,mnsz
-          targetthk(ldx) = targetthk(ldx-1) * mfac
-          targetdep(ldx) = targetdep(ldx-1) + targetthk(ldx)
-        end do
+      ! recalculate  depth to bottom of soil layer
+      call depthini( soil_split%nslay, soil_split%aszlyt, soil_split%aszlyd )
 
-        ! based on depth to impermeable, bedrock layer, increase depth 
-        ! of soil. With a unit gradient at the bottom boundary, no water
-        ! will move up from the lower boundary.
-        aszlyt(nslay(isr), isr) = aszlyt(nslay(isr), isr) + 3000.0
+      ! average soil properties and put back into property arrays
+      ! save old layer values of property before placing new values
+      ! into enlarged array. All layers are averaged, allowing for
+      ! new layers to be either smaller of larger tha original
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfsan, soil_split%nslay, soil_split%aszlyd, soil_split%asfsan )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfsil, soil_split%nslay, soil_split%aszlyd, soil_split%asfsil )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfcla, soil_split%nslay, soil_split%aszlyd, soil_split%asfcla )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asvroc, soil_split%nslay, soil_split%aszlyd, soil_split%asvroc )
 
-        ! compute out depth to bottom of soil layer
-        aszlyd(1, isr) = aszlyt(1, isr)
-        do ldx = 2, nslay(isr)
-          aszlyd(ldx, isr) = aszlyd(ldx-1, isr) + aszlyt(ldx, isr)
-        end do
+      ! New variable added that isn't read in "old" IFC file formats
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfvcs, soil_split%nslay, soil_split%aszlyd, soil_split%asfvcs )
 
-        ! set temporary layer thicknesses, matching input layer boundaries
-        ! checking termination layer to get same total soil thickness
-        ! set number of layers
-        oldcur = 1
-        newcur = 1
-        tmpcur = 1
-        do while ( (newcur .le. mnsz) .and. (oldcur .le. nslay(isr)) )
-          if( targetdep(newcur) .le. aszlyd(oldcur, isr) ) then
-            ! totally within layer
-            tempthk(tmpcur) = targetthk(newcur)
-            tempdep(tmpcur) = targetdep(newcur)
-            tempstat(tmpcur) = 0   ! target layer boundary
-            tmpcur = tmpcur + 1
-            newcur = newcur + 1
-          else if( tempdep(tmpcur-1) .le. aszlyd(oldcur, isr) ) then
-            ! crossed layer boundary set at layer boundary
-            tempthk(tmpcur) = aszlyd(oldcur,isr) - tempdep(tmpcur-1) 
-            tempdep(tmpcur) = aszlyd(oldcur,isr)
-            ! adjust target thickness to match new layer division
-            targetthk(newcur) = targetdep(newcur) - aszlyd(oldcur,isr)
-            tempstat(tmpcur) = 1   ! input layer boundary
-            ! increment counters
-            tmpcur = tmpcur + 1
-            oldcur = oldcur + 1
-          end if 
-        end do
-        tempnslay = tmpcur-1
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfcs, soil_split%nslay, soil_split%aszlyd, soil_split%asfcs )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfms, soil_split%nslay, soil_split%aszlyd, soil_split%asfms )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asffs, soil_split%nslay, soil_split%aszlyd, soil_split%asffs )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfvfs, soil_split%nslay, soil_split%aszlyd, soil_split%asfvfs )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfwdc, soil_split%nslay, soil_split%aszlyd, soil_split%asfwdc )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asdblk, soil_split%nslay, soil_split%aszlyd, soil_split%asdblk )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfcle, soil_split%nslay, soil_split%aszlyd, soil_split%asfcle )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asdwblk, soil_split%nslay, soil_split%aszlyd, soil_split%asdwblk )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asdwsrat, soil_split%nslay, soil_split%aszlyd, soil_split%asdwsrat )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aslagm, soil_split%nslay, soil_split%aszlyd, soil_split%aslagm )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%as0ags, soil_split%nslay, soil_split%aszlyd, soil_split%as0ags )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aslagx, soil_split%nslay, soil_split%aszlyd, soil_split%aslagx )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aslagn, soil_split%nslay, soil_split%aszlyd, soil_split%aslagn )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asdagd, soil_split%nslay, soil_split%aszlyd, soil_split%asdagd )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aseags, soil_split%nslay, soil_split%aszlyd, soil_split%aseags )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrwc, soil_split%nslay, soil_split%aszlyd, soil_split%ahrwc )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrwcs, soil_split%nslay, soil_split%aszlyd, soil_split%ahrwcs )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrwcf, soil_split%nslay, soil_split%aszlyd, soil_split%ahrwcf )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrwcw, soil_split%nslay, soil_split%aszlyd, soil_split%ahrwcw )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrwc1, soil_split%nslay, soil_split%aszlyd, soil_split%ahrwc1 )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ah0cb, soil_split%nslay, soil_split%aszlyd, soil_split%ah0cb )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aheaep, soil_split%nslay, soil_split%aszlyd, soil_split%aheaep )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrsk, soil_split%nslay, soil_split%aszlyd, soil_split%ahrsk )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfom, soil_split%nslay, soil_split%aszlyd, soil_split%asfom )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%as0ph, soil_split%nslay, soil_split%aszlyd, soil_split%as0ph )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfcce, soil_split%nslay, soil_split%aszlyd, soil_split%asfcce )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfcec, soil_split%nslay, soil_split%aszlyd, soil_split%asfcec )
+      ! This value only available in new IFC format
+      if (ifc_format .gt. 1) then
+        call move_ave_val( soil%nslay, soil%aszlyd, soil%asfcle, soil_split%nslay, soil_split%aszlyd, soil_split%asfcle )
+      end if
 
-        ! even out layer spacing of last surface layers
-        ! search for first original layer boundary
-        newcur = 1
-        do while( (newcur.lt.tempnslay) .and. (tempstat(newcur).eq.0) )
-          newcur = newcur + 1
-        end do
-        ! surface layers only, average last two layers
-        totthk = tempthk(newcur-1) + tempthk(newcur)
-        tgtthk = totthk / 2.0
-        ! redo layers
-        tempthk(newcur-1) = tgtthk
-        if( newcur .eq. 2 ) then
-          ! only two surface layers, keep indexes in bounds
-          tempdep(newcur-1) = tempthk(newcur-1)
-        else
-          tempdep(newcur-1) = tempdep(newcur-2) + tempthk(newcur-1)
-        end if
-        ! get the last layer of the interval exact
-        tempthk(newcur) = tempdep(newcur) - tempdep(newcur-1)
+      ! New variable added that isn't read in any IFC file formats
+      ! but is calculated with the -w4 cmdline option wc_type == 4
+      ! before the layers are split
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahfredsat, soil_split%nslay, soil_split%aszlyd, soil_split%ahfredsat )
 
-        ! even out layer spacing between fixed layers
-        oldcur = 0
-        newcur = 0
-        do tmpcur = 1, tempnslay
-          if( tempstat(tmpcur) .eq. 1 ) then
-            ! fixed layer found
-            oldcur = newcur
-            newcur = tmpcur
-          end if
-          if( oldcur .gt. 0 ) then
-            ! below surface layers
-            dolcur = (newcur-oldcur)
-            ! add up series used to set layer adjustment series
-            tinfser = 1.0
-            do ldx = 1, dolcur-1
-              tinfser = tinfser + mfac**ldx
-            end do
-            totthk = tempdep(newcur) - tempdep(oldcur)
-            tgtthk = totthk / tinfser
-            do ldx = oldcur+1, newcur-1
-              ! redo layers in this interval
-              tempthk(ldx) = tgtthk * mfac ** (ldx - oldcur - 1)
-              tempdep(ldx) = tempdep(ldx-1) + tempthk(ldx)
-            end do
-            ! get the last layer of the interval exact
-            tempthk(ldx) = tempdep(newcur) - tempdep(newcur-1)
-            ! set so that adjustment not done until next permanent layer
-            oldcur = 0
-          end if
-        end do
+      ! return new layer split array
+      soil = soil_split
 
-      ! debug write of layering created
-!      do ldx=1,nslay(isr)
-!          write(*,*) 'Old_Layer: ', ldx, aszlyt(ldx,isr),aszlyd(ldx,isr)
-!      end do
-!      do ldx=1,tempnslay
-!          write(*,*) 'New_Layer: ',ldx, tempthk(ldx), tempdep(ldx),     &
-!     &                             tempstat(ldx)
-!      end do
-!      ldx = 1
-!      do ldx=1,mnsz
-!          write(*,*) 'Tar_Layer: ', ldx, targetthk(ldx), targetdep(ldx)
-!      end do
-
-        ! average soil properties and put back into property arrays
-        ! save old layer values of property before placing new values
-        ! into enlarged array. All layers are averaged, allowing for
-        ! new layers to be either smaller of larger tha original
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfsan(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfsil(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfcla(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asvroc(1,isr),    &
-     &                     tempnslay, tempdep )
-
-        ! New variable added that isn't read in "old" IFC file formats
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfvcs(1,isr),    &
-     &                     tempnslay, tempdep )
-
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfcs(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfms(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asffs(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfvfs(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfwdc(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asdblk(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfcle(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asdwblk(1,isr),   &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asdwsrat(1,isr),  &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), aslagm(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), as0ags(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), aslagx(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), aslagn(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asdagd(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), aseags(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ahrwc(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ahrwcs(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ahrwcf(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ahrwcw(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ahrwc1(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ah0cb(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), aheaep(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ahrsk(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfom(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), as0ph(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfcce(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfcec(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asfsmb(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), as0ec(1,isr),     &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asrsar(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asftan(1,isr),    &
-     &                     tempnslay, tempdep )
-        call move_ave_val( nslay(isr), aszlyd(1,isr), asftap(1,isr),    &
-     &                     tempnslay, tempdep )
-        ! This value only available in new IFC format
-        if (ifc_format .gt. 1) then
-            call move_ave_val( nslay(isr), aszlyd(1,isr), asfcle(1,isr),&
-     &                         tempnslay, tempdep )
-        end if
-
-        ! New variable added that isn't read in any IFC file formats
-        ! but is calculated with the -w4 cmdline option wc_type == 4
-        ! before the layers are split
-        call move_ave_val( nslay(isr), aszlyd(1,isr), ahfredsat(1,isr), &
-     &                     tempnslay, tempdep )
-
-        ! set new number of soil layers into original variable
-        nslay(isr) = tempnslay
-        ! put new thickness into array
-        do ldx = 1, tempnslay
-          aszlyt(ldx, isr) = tempthk(ldx)
-        end do
-        ! recalculate  depth to bottom of soil layer
-        call depthini( nslay(isr), aszlyt(1,isr), aszlyd(1,isr) )
-
-!      end do
-
-      return
-
-!      do isr = 1,nsubr
-
-      oldcur = 0
-      newcur = 0
-      totthk = 0
-      tgtthk = 0
-   10 continue
-        oldcur = oldcur + 1
-        totthk = totthk + aszlyt(oldcur,isr)
-        newcur = newcur + 1
-        tgtthk = tgtthk + targetthk(newcur)
-        otnlay(newcur) = oldcur
-   20   if( tgtthk .lt. totthk ) then
-          newcur = newcur + 1
-          tgtthk = tgtthk + targetthk(newcur)
-          otnlay(newcur) = oldcur
-          go to 20
-        end if
-      if (oldcur .lt. nslay(isr)) goto 10
-      nslay(isr) = newcur
-      do ldx = 1, nslay(isr)
-        aszlyt(ldx, isr) = targetthk(ldx)
-      end do
-
-      go to 1000
-
-! end of hot fix
-
-!     + + + FUNCTION DECLARATIONS + + +
-!
-!     convert layers by subregion
-!
-!      do isr = 1,nsubr
-
-        write(*,*) 'ready to spllay:'
-
-        totthk = 0;
-        do ldx = 1, nslay(isr)
-           totthk = totthk + aszlyt(ldx, isr)
-        enddo
-!
-!       stop if soil sample is less than 40mm thick
-!
-        if (totthk .lt. 40.0) then
-            write(0,9002) 
-9002        format('Total soil thickness too thin for WEPS')
-            call exit (1)
-        endif
-
-        oldcur = 1
-        newcur = 1
-        dolcur = 1
-        if (aszlyt(dolcur,isr) .ge. 150) then
-           newthk(1) = 10
-           newthk(2) = 40
-           newthk(3) = 50
-           otnlay(1) = oldcur
-           otnlay(2) = oldcur
-           otnlay(3) = oldcur
-           aszlyt(1, isr) = aszlyt(1, isr) - 100
-           newcur = 4
-           oldcur = 1
-        elseif (aszlyt(dolcur,isr) .ge. 120) then
-           newthk(1) = aszlyt(1, isr) * 1 / 15
-           newthk(2) = aszlyt(1, isr) * 4 / 15
-           newthk(3) = aszlyt(1, isr) * 5 / 15
-           newthk(4) = aszlyt(1, isr) * 5 / 15
-           otnlay(1) = oldcur
-           otnlay(2) = oldcur
-           otnlay(3) = oldcur
-           otnlay(4) = oldcur
-           newcur = 5
-           oldcur = 2
-        elseif (aszlyt(dolcur,isr) .ge. 70) then
-           newthk(1) = aszlyt(1, isr) * 1 / 10
-           newthk(2) = aszlyt(1, isr) * 4 / 10
-           newthk(3) = aszlyt(1, isr) * 5 / 10
-           otnlay(1) = oldcur
-           otnlay(2) = oldcur
-           otnlay(3) = oldcur
-           newcur = 4
-           oldcur = 2
-        elseif(aszlyt(dolcur,isr) .ge. 20) then
-           newthk(1) = aszlyt(1, isr) * 1 / 5
-           newthk(2) = aszlyt(1, isr) * 4 / 5
-           otnlay(1) = oldcur
-           otnlay(2) = oldcur
-           newcur = 3
-           oldcur = 2
-        else
-           newthk(1) = aszlyt(dolcur, isr) * 1 / 5
-           otnlay(1) = oldcur
-           newcur = 2
-           oldcur = 2
-           if (newthk(1).lt.4) newthk(1) = 4
-        endif
- 
-        dolcur = oldcur
-        if (newcur .eq. 2) then
-          if (aszlyt(dolcur,isr) .ge. newthk(1) * 14) then
-             newthk(2) = newthk(1) * 4
-             newthk(3) = newthk(1) * 5
-             otnlay(2) = oldcur
-             otnlay(3) = oldcur
-             aszlyt(dolcur,isr) = aszlyt(dolcur,isr) - newthk(2) -      &
-     &       newthk(3)
-             newcur = 4
-             oldcur = 2
-          elseif(aszlyt(dolcur,isr) .ge. newthk(1) * 11) then
-             newthk(2) = newthk(1) * 4 / 14
-             newthk(3) = newthk(1) * 5 / 14
-             newthk(4) = newthk(1) * 5 / 14
-             otnlay(2) = oldcur
-             otnlay(3) = oldcur
-             otnlay(4) = oldcur
-             newcur = 5
-             oldcur = 3
-          elseif(aszlyt(dolcur,isr) .ge. newthk(1) * 6) then
-             newthk(2) = newthk(1) * 4 / 9
-             newthk(3) = newthk(1) * 5 / 9
-             otnlay(2) = oldcur
-             otnlay(3) = oldcur
-             newcur = 4
-             oldcur = 3
-          else
-             newthk(2) = aszlyt(dolcur,isr)
-             otnlay(2) = oldcur
-             newcur = 3
-             oldcur = 3
-          endif
-        endif
-
-        dolcur = oldcur
-        if(newcur.eq.3) then
-          if (aszlyt(dolcur,isr) .ge. newthk(2)*1.25 + 50) then
-            newthk(3) = newthk(2) * 1.25
-            aszlyt(dolcur,isr) = aszlyt(dolcur,isr) - 50
-            otnlay(3) = oldcur
-            newcur = 4
-            oldcur = 3
-          elseif (aszlyt(dolcur,isr) .ge. newthk(2)*1.25) then
-            newthk(3) = newthk(2) * .5
-            newthk(4) = newthk(2) * .5
-            otnlay(3) = oldcur
-            otnlay(4) = oldcur
-            newcur = 5
-            oldcur = 3
-          else
-            newthk(3) = aszlyt(dolcur,isr)
-            if (newthk(3) .lt. 10) newthk(3) = 10
-            otnlay(3) = oldcur
-            newcur = 4
-            oldcur = 3
-          endif
-        endif
-
-        curdep = 0
-        do ldx = 1, newcur-1
-          curdep = curdep + newthk(ldx)
-        enddo
-
-!
-! layers in top 200 mm are targeted to 50 mm thickness
-!
-        do while (curdep .lt. 200)
-          if (aszlyt(oldcur, isr) .gt. 100) then
-            newthk(newcur) = 50
-            aszlyt(oldcur, isr) = aszlyt(oldcur, isr) - 50
-            otnlay(newcur) = oldcur
-            newcur = newcur + 1
-            curdep = curdep + 50
-          else if (aszlyt(oldcur, isr) .gt. 50) then
-            newthk(newcur) = aszlyt(oldcur, isr) / 2.0
-            newthk(newcur+1) = newthk(newcur)
-            otnlay(newcur) = oldcur
-            otnlay(newcur+1) = oldcur
-            newcur = newcur + 2
-            oldcur = oldcur + 1
-            if (oldcur .gt. nslay(isr)) then
-              exit
-            endif
-          else
-            newthk(newcur) = aszlyt(oldcur, isr)
-            curdep = curdep + newthk(newcur)
-            otnlay(newcur) = oldcur
-            newcur = newcur + 1
-            oldcur = oldcur + 1
-            if (oldcur .gt. nslay(isr)) then
-              exit
-            endif
-          endif
-        enddo
-!
-! no more input layers left
-!
-        if (oldcur .gt. nslay(isr)) goto 120
-!
-! layers in top 200-400 mm are targeted to 50-100 mm thickness
-!   depending on depth
-!
-        do while (curdep .lt. 400)
-          tgtthk = 50 + ((curdep - 200) / 200) * 50
-          if (aszlyt(oldcur, isr) .gt. tgtthk * 2) then
-            newthk(newcur) = tgtthk
-            aszlyt(oldcur, isr) = aszlyt(oldcur, isr) - 50
-            otnlay(newcur) = oldcur
-            newcur = newcur + 1
-            curdep = curdep + 50
-          else if (aszlyt(oldcur, isr) .gt. tgtthk) then
-            newthk(newcur) = aszlyt(oldcur, isr) / 2.0
-            newthk(newcur+1) = newthk(newcur)
-            otnlay(newcur) = oldcur
-            otnlay(newcur+1) = oldcur
-            newcur = newcur + 2
-            oldcur = oldcur + 1
-            if (oldcur .gt. nslay(isr)) then
-              exit
-            endif
-          else
-            newthk(newcur) = aszlyt(oldcur, isr)
-            curdep = curdep + newthk(newcur)
-            otnlay(newcur) = oldcur
-            newcur = newcur + 1
-            oldcur = oldcur + 1
-            if (oldcur .gt. nslay(isr)) then
-              exit
-            endif
-          endif
-        enddo
-!
-!  no more input layers left
-!
-        if (oldcur .gt. nslay(isr)) goto 120
-!
-! layers lower than 400 mm are targeted at 100 mm
-!
-        do while (oldcur .le. nslay(isr))
-          if (aszlyt(oldcur, isr) .gt. 200) then
-             newthk(newcur) = 100
-             aszlyt(oldcur, isr) = aszlyt(oldcur, isr) - 100
-             otnlay(newcur) = oldcur
-             newcur = newcur + 1
-          else
-             newthk(newcur) = aszlyt(oldcur, isr) / 2
-             newthk(newcur+1) = aszlyt(oldcur, isr) / 2
-             otnlay(newcur) = oldcur
-             otnlay(newcur+1) = oldcur
-             newcur = newcur + 2
-             oldcur = oldcur + 1
-          endif
-        enddo
-!
-! update number of layers
-!
-        nslay(isr) = newcur -1
-!
-! transfer new layer thicknesses to global array
-!
-        do ldx = 1, nslay(isr)
-          aszlyt(ldx, isr) = newthk(ldx)
-        enddo
-!
-!      update soil properties for new layers
-!
-!     note!, this is done backward assuming that more layers are created
-!     than exist in the original soil layering and the old value
-!     will be used before it is overwritten
- 1000 continue
-      do ldx = nslay(isr), 2, -1
-        asfsan(ldx, isr) = asfsan(otnlay(ldx), isr)
-        asfsil(ldx, isr) = asfsil(otnlay(ldx), isr)
-        asfcla(ldx, isr) = asfcla(otnlay(ldx), isr)
-        asvroc(ldx, isr) = asvroc(otnlay(ldx), isr)
-
-        ! New variable added that isn't read in "old" IFC file formats
-        asfvcs(ldx, isr)  = asfvcs(otnlay(ldx), isr)
-
-        asfcs(ldx, isr)  = asfcs(otnlay(ldx), isr)
-        asfms(ldx, isr)  = asfms(otnlay(ldx), isr)
-        asffs(ldx, isr)  = asffs(otnlay(ldx), isr)
-        asfvfs(ldx, isr) = asfvfs(otnlay(ldx), isr)
-        asfwdc(ldx, isr) = asfwdc(otnlay(ldx), isr)
-        asdblk(ldx, isr) = asdblk(otnlay(ldx), isr)
-        asfcle(ldx, isr) = asfcle(otnlay(ldx), isr)   ! added so that "mix" and "invert" have them
-        asdblk0(ldx, isr) = asdblk0(otnlay(ldx), isr)
-        asdwblk(ldx, isr)= asdwblk(otnlay(ldx), isr)
-        asdsblk(ldx, isr)= asdsblk(otnlay(ldx), isr)
-        asdpart(ldx, isr)= asdpart(otnlay(ldx), isr)
-        asdwsrat(ldx, isr)= asdwsrat(otnlay(ldx), isr)
-        aslagm(ldx, isr) = aslagm(otnlay(ldx), isr)
-        as0ags(ldx, isr) = as0ags(otnlay(ldx), isr)
-        aslagx(ldx, isr) = aslagx(otnlay(ldx), isr)
-        aslagn(ldx, isr) = aslagn(otnlay(ldx), isr)
-        asdagd(ldx, isr) = asdagd(otnlay(ldx), isr)
-        aseags(ldx, isr) = aseags(otnlay(ldx), isr)
-        ahrwc(ldx, isr)  = ahrwc(otnlay(ldx), isr)
-        ahrwcs(ldx, isr) = ahrwcs(otnlay(ldx), isr)
-        ahrwcf(ldx, isr) = ahrwcf(otnlay(ldx), isr)
-        ahrwcw(ldx, isr) = ahrwcw(otnlay(ldx), isr)
-        ahrwc1(ldx, isr) = ahrwc1(otnlay(ldx), isr)
-        ah0cb(ldx, isr)  = ah0cb(otnlay(ldx), isr)
-        aheaep(ldx, isr) = aheaep(otnlay(ldx), isr)
-        ahrsk(ldx, isr)  = ahrsk(otnlay(ldx), isr)
-        asfom(ldx, isr)  = asfom(otnlay(ldx), isr)
-        as0ph(ldx, isr)  = as0ph(otnlay(ldx), isr)
-        asfcce(ldx, isr) = asfcce(otnlay(ldx), isr)
-        asfcec(ldx, isr) = asfcec(otnlay(ldx), isr)
-        asfsmb(ldx, isr) = asfsmb(otnlay(ldx), isr)
-        as0ec(ldx, isr)  = as0ec(otnlay(ldx), isr)
-        asrsar(ldx, isr) = asrsar(otnlay(ldx), isr)
-        asftan(ldx, isr) = asftan(otnlay(ldx), isr)
-        asftap(ldx, isr) = asftap(otnlay(ldx), isr)
-        asfcle(ldx, isr) = asfcle(otnlay(ldx), isr)
-      end do
- 120  continue
-!      end do
+      ! deallocate layer arrays for modified soil layering
+      call deallocate_soil(soil_split)
 
       return
 

@@ -3,11 +3,12 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine hydrinit(isr, h1et, wp)
+      subroutine hydrinit(isr, soil, h1et, wp)
 
 ! Contains init code from main
 
       use weps_interface_defs, only: saxpar
+      use soil_data_struct_defs, only: soil_def
       use hydro_data_struct_defs, only: hydro_derived_et
       use wepp_param_mod, only: wepp_param
 
@@ -15,21 +16,17 @@
       include 'h1db1.inc'
       include 'h1hydro.inc'
       include 'h1balance.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
       include 'h1temp.inc'
       include 'hydro/htheta.inc'
 
       include 'main/main.inc'
       include 'h1scs.inc'
-
-      include 's1dbh.inc'
-      include 's1dbc.inc'
       
       include 'wepp_erosion.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
+      type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(hydro_derived_et), intent(inout) :: h1et
       type(wepp_param), intent(inout) :: wp
 
@@ -37,11 +34,11 @@
       real ltheta(mnsz)
       real sand(mnsz),clay(mnsz),orgmat(mnsz)
 
-      do idx = 1, nslay(isr)
+      do idx = 1, soil%nslay
         ! Initialize the water holding capacity variable
-        ahrwca(idx,isr) = ahrwcf(idx, isr) - ahrwcw(idx,isr)
+        soil%ahrwca(idx) = soil%ahrwcf(idx) - soil%ahrwcw(idx)
         ! set volumetric water content to initialize reporting variable
-        ltheta(idx) = ahrwc(idx,isr) * asdblk(idx,isr)
+        ltheta(idx) = soil%ahrwc(idx) * soil%asdblk(idx)
       end do
 
       ! Set infiltration water depth to 0.0
@@ -49,7 +46,7 @@
       ahzeasurf(isr) = 0.0
 
       ! soil layer temperature, ice fraction
-      do idx = 1, nslay(isr)
+      do idx = 1, soil%nslay
           ahtsav(idx, isr) = 0.0
           ahfice(idx, isr) = 0.0
       end do
@@ -59,8 +56,8 @@
       ahfsnfrz(isr) = 0.0
 
       ! set hydrologic balance variables
-      initswc(isr) = dot_product(ltheta(1:nslay(isr)),                  &
-     &                           aszlyt(1:nslay(isr),isr))
+      initswc(isr) = dot_product(ltheta(1:soil%nslay),                  &
+     &                           soil%aszlyt(1:soil%nslay))
       initsnow(isr) = ahzsno(isr)
       initday(isr) = daysim
 
@@ -95,21 +92,21 @@
       ahfwsf(isr) = 1.0
       h1et%zper = 0.0
 
-      do idx = 1, nslay(isr)
+      do idx = 1, soil%nslay
           ahtsmx(idx, isr) = 0.0
           ahtsmn(idx, isr) = 0.0
       end do
 
-      do idx = 1, nslay(isr)
+      do idx = 1, soil%nslay
           ! Soil layer sand content (Mg/Mg)
-          sand(idx) = asfsan(idx,isr)
+          sand(idx) = soil%asfsan(idx)
           ! Soil layer clay content (Mg/Mg)		
-          clay(idx) = asfcla(idx,isr)
+          clay(idx) = soil%asfcla(idx)
           ! Soil layer organic matter content (Mg/Mg)		
-          orgmat(idx) = asfom(idx,isr)
+          orgmat(idx) = soil%asfom(idx)
       end do
 	
-      call saxpar(sand,clay,orgmat,nslay(isr),wp%saxwp,wp%saxfc,        &
+      call saxpar(sand,clay,orgmat,soil%nslay,wp%saxwp,wp%saxfc,        &
      &    wp%saxenp,wp%saxpor,wp%saxA, wp%saxB,wp%saxks)
 
       ! Added for WEPP bookeeping      

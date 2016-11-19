@@ -10,13 +10,13 @@ module soil_processes_mod
     subroutine updlay(daysim, szlyd,                                  &
      &  bhrwc0, bhrwc, bhrwcdmx,                                        &
      &  bseagmx, bseagmn, bseags,                                       &
-     &  bhrwca, bhrwcw, bhrwcs,                                         &
+     &  bhrwcw, bhrwcs,                                         &
      &  bhtsmn, bhtmx0, bhtsmx,                                         &
-     &  bsk4d, bslmin, bslmax,                                          &
+     &  bslmin, bslmax,                                          &
      &  bslagm,                                                         &
      &  bs0ags, bslagx, bsdblk,                                         &
      &  bszlyt, bsdagd, bslay,                                          &
-     &  bsdsblk, bsdwblk,                                               &
+     &  bsdsblk,                                               &
      &  bhzinf, bhzwid, trigger)
 
 !     + + + GLOBAL COMMON BLOCKS + + +
@@ -25,17 +25,17 @@ module soil_processes_mod
 !     + + + ARGUMENT DECLARATIONS + + +
 
       integer daysim
-      real szlyd(mnsz)
-      real  bhrwc0(mnsz), bhrwc(mnsz), bhrwcdmx(mnsz)
-      real  bseagmx(mnsz), bseagmn(mnsz), bseags(0:mnsz)
-      real  bhrwca(mnsz), bhrwcw(mnsz),bhrwcs(mnsz)
-      real  bhtsmn(mnsz), bhtmx0(mnsz), bhtsmx(mnsz)
-      real bsk4d(mnsz), bslmin(mnsz), bslmax(mnsz)
-      real bslagm(0:mnsz)
-      real bs0ags(0:mnsz), bslagx(0:mnsz)
-      real bsdblk(0:mnsz), bhzinf
-      real bszlyt(mnsz), bsdagd(0:mnsz)
-      real bsdsblk(mnsz), bsdwblk(mnsz)
+      real szlyd(*)
+      real  bhrwc0(*), bhrwc(*), bhrwcdmx(*)
+      real  bseagmx(*), bseagmn(*), bseags(*)
+      real  bhrwcw(*),bhrwcs(*)
+      real  bhtsmn(*), bhtmx0(*), bhtsmx(*)
+      real bslmin(*), bslmax(*)
+      real bslagm(*)
+      real bs0ags(*), bslagx(*)
+      real bsdblk(*), bhzinf
+      real bszlyt(*), bsdagd(*)
+      real bsdsblk(*)
       real bhzwid
 
       integer bslay, trigger(bslay)
@@ -74,8 +74,8 @@ module soil_processes_mod
 !
          call aggsta(daysim, bseags(ldx), bseagmn(ldx), bseagmx(ldx),   &
      &    bhrwc0(ldx), bhrwc(ldx), bhrwcdmx(ldx),                       &
-     &    bhrwcw(ldx), bhrwca(ldx),bhrwcs(ldx),                         &
-     &    bhtmx0(ldx), bhtsmn(ldx), bhtsmx(ldx), bsk4d(ldx),            &
+     &    bhrwcw(ldx), bhrwcs(ldx),                         &
+     &    bhtmx0(ldx), bhtsmn(ldx), bhtsmx(ldx),            &
      &    se0,se1,  trigger(ldx),                                       &
      &    k4f, k4fs, k4fd, k4td, k4w, k4d)
 
@@ -83,9 +83,9 @@ module soil_processes_mod
      &    bslmax(ldx), bhtsmx(ldx), bhtmx0(ldx), bs0ags(ldx),           &
      &    bslagx(ldx), se0, se1)
 !
-         call den(bsdblk(ldx), bsdsblk(ldx), bsdwblk(ldx),              &
-     &    bszlyt(ldx), bsdagd(ldx), bhrwc0(ldx), bhrwc(ldx),            &
-     &    bhrwca(ldx), bhrwcw(ldx), bhzinf, bhzwid, trigger(ldx))
+         call den(bsdblk(ldx), bsdsblk(ldx), &
+     &    bszlyt(ldx), bsdagd(ldx), &
+     &    bhzinf, bhzwid, trigger(ldx))
    90    continue
 
       end do
@@ -95,8 +95,8 @@ module soil_processes_mod
     subroutine aggsta(daysim,                                         &
      &  cseags, cseagmn, cseagmx,                                       &
      &  cbhrwc0, cbhrwc, cbhrwcdmx,                                     &
-     &  chrwcw, chrwca,chrwcs,                                          &
-     &  chtmx0, chtsmn, chtsmx, ck4d,                                   &
+     &  chrwcw, chrwcs,                                          &
+     &  chtmx0, chtsmn, chtsmx,                                   &
      &  se0, se1, trigger,                                              &
      &  k4f, k4fs, k4fd, k4td, k4w, k4d)
 
@@ -104,8 +104,8 @@ module soil_processes_mod
       integer daysim
       real cseags, cseagmn, cseagmx
       real  cbhrwc0, cbhrwc, cbhrwcdmx
-      real  chrwcw, chrwca,chrwcs
-      real  chtmx0, chtsmn, chtsmx, ck4d
+      real  chrwcw, chrwcs
+      real  chtmx0, chtsmn, chtsmx
       real  se0, se1
       integer trigger
       real k4f, k4fs, k4fd, k4td, k4w, k4d
@@ -410,14 +410,12 @@ module soil_processes_mod
     end subroutine asd
 
     subroutine den(                                                   &
-     &  csdblk, csdsblk, csdwblk, cszlyt, csdagd,                       &
-     &  chrwc0, chrwc, chrwca, chrwcw,                                  &
+     &  csdblk, csdsblk, cszlyt, csdagd,                       &
      &  bhzinf, chzwid, trigger)
 
 !     + + + ARGUMENT DECLARATIONS + + +
 
-      real csdblk, csdsblk, csdwblk, cszlyt, csdagd
-      real chrwc0, chrwc, chrwca, chrwcw
+      real csdblk, csdsblk, cszlyt, csdagd
       real bhzinf, chzwid
       integer trigger
 
@@ -425,13 +423,8 @@ module soil_processes_mod
 
 !     csdblk - present soil bulk density (Mg/m^3)
 !     csdsblk - Settled soil bulk density (Mg/m^3)
-!     csdwblk - 1/3 bar soil bulk density (Mg/m^3)
 !     cszlyt - Soil layer thickness (mm)
 !     csdagd - Soil aggregate density (Mg/m^3)
-!     chrwc0 - Soil water content from previous day (g/g)
-!     chrwc  - Soil water content on present day (g/g)
-!     chrwca - Available soil water content (g/g)
-!     chrwcw - Wilting point soil water content (g/g)
 !     bhzinf - daily water infiltration depth (mm)
 !     chzwid - water infiltration depth (mm)
 
@@ -601,7 +594,6 @@ module soil_processes_mod
       real cumpa, dcump, cf2cov, csvroc
 
 !     + + + LOCAL VARIABLES + + +
-
       real arr, crr
 
 !     + + + LOCAL DEFINITIONS + + +

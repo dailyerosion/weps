@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine manage( sr, startyr, crop, residue, biotot, mandate, h1et, subrsurf)
+      subroutine manage( sr, startyr, soil, crop, residue, biotot, mandate, h1et)
 
 !     + + + PURPOSE + + +
 !     This is the main routine of the MANAGEMENT submodel. The date passed
@@ -22,12 +22,12 @@
       use weps_interface_defs, ignore_me=>manage
       use datetime_mod, only: difdat, get_simdate
       use file_io_mod, only: luomanage
+      use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
       use stir_report_mod, only: stir_report
       use manage_data_struct_defs, only: am0tfl, lastoper
       use hydro_data_struct_defs, only: hydro_derived_et
-      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -35,23 +35,21 @@
       include 'manage/asd.inc'
       include 'manage/mproc.inc'
 
-! for debugging
-! ***      include 's1layr.inc'      
-
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, startyr
+      type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !        sr - the subregion number
 !     startyr - starting year of the simulation run
 
 !     + + + LOCAL VARIABLES + + +
+
       integer simdd, simmm, simyr, mansimyr, manmon, manday, manyr
       character*256   line
 
@@ -126,11 +124,11 @@
         lastoper(sr)%skip = 0
         call dooper(sr)
       case ('G')
-        if(lastoper(sr)%skip.eq.0) call dogroup(sr)
+        if(lastoper(sr)%skip.eq.0) call dogroup(sr, soil)
       case ('P')
         if(lastoper(sr)%skip.eq.0) then
 
-           call doproc(sr, mcount(sr), crop, residue, biotot, mandate, h1et, subrsurf)
+           call doproc(sr, mcount(sr), soil, crop, residue, biotot, mandate, h1et)
         endif
       case ('D')
         call stir_report(sr, .false., lastoper(sr)%stir, lastoper(sr)%energyarea)

@@ -5,7 +5,7 @@
 
       subroutine getfromweps(isr,sand,silt,clay,orgmat,                 &
      & thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh,                        &
-     & frctrl, frcsol, precip, subrsurf)
+     & frctrl, frcsol, precip, soil)
      
 !-------------------------------------------------------------------------------------
 !     getfromweps()
@@ -21,15 +21,11 @@
 
       use p1unconv_mod, only: mmtom
       use climate_input_mod, only: cli_today
-      use erosion_data_struct_defs, only: subregionsurfacestate
+      use soil_data_struct_defs, only: soil_def
 
       implicit none
 
       include 'p1werm.inc'
-      include 's1dbh.inc'
-      include 's1dbc.inc'
-      include 's1phys.inc'
-      include 's1layr.inc'
       include 'hydro/htheta.inc'
       include 'm1flag.inc'
       include 'h1temp.inc'
@@ -43,7 +39,7 @@
       real, intent(out):: thetfc(mxnsl), por(mxnsl), rh
       real, intent(out):: frctrl, frcsol
       real, intent(out):: precip
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
       
 !     + + + argument declarations + + +     
 !     isr - This variable holds the subregion index.
@@ -70,10 +66,10 @@
       integer i,isFroze
       
 !     random roughness in WEPS is mm, WEPP is m      
-      rrc = subrsurf%aslrr / 1000.0
+      rrc = soil%aslrr / 1000.0
 
 !     ridge height in WEPS is mm, WEPP is m
-      rh = subrsurf%aszrgh / 1000.0
+      rh = soil%aszrgh / 1000.0
        
 !     soil grain friction factor - TODO       
       frcsol = 1.11
@@ -99,25 +95,25 @@
 !     Don't really need to get the sand,silt,clay,orgmat, cec, these would
 !     be constant during the simulation. 
 !
-      do i=1, nslay(isr)
+      do i=1, soil%nslay
 !       wilting point (15 bar) volumetric water content      
         thetdr(i) = thetaw(i)
 !       Soil layer sand content (Mg/Mg)
-        sand(i) = asfsan(i,isr)
+        sand(i) = soil%asfsan(i)
 !       Soil layer silt content (Mg/Mg)        
-        silt(i) = asfsil(i,isr)
+        silt(i) = soil%asfsil(i)
 !       Soil layer clay content (Mg/Mg)            
-        clay(i) = asfcla(i,isr)
+        clay(i) = soil%asfcla(i)
 !       Soil layer organic matter content (Mg/Mg)
-        orgmat(i) = asfom(i,isr)
+        orgmat(i) = soil%asfom(i)
 !       asfcec - Soil layer cation exchange capacity (cmol/kg) (meq/100g)
-        cec(i) = asfcec(i,isr)
+        cec(i) = soil%asfcec(i)
 
 !       Soil layer bulk density for each subregion (Mg/m^3)
-        bd(i) = 1000.0 * asdblk(i,isr)
+        bd(i) = 1000.0 * soil%asdblk(i)
 
 !       Soil layer thicknesses for each subregion (mm)        
-        dg(i) = aszlyt(i,isr) * mmtom
+        dg(i) = soil%aszlyt(i) * mmtom
 
 !       theta() - soil layer water content (m^3/m^3)
 !       thetaw() - wilting point (15 bar) volumetric water content 

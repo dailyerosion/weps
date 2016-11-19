@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   doproc (sr, bmrotation, crop, residue, biotot, mandate, h1et, subrsurf)
+      subroutine   doproc (sr, bmrotation, soil, crop, residue, biotot, mandate, h1et)
 
 !     + + + PURPOSE + + +
 !     Doproc is called when a processline is found in the management file
@@ -17,6 +17,7 @@
 
       use weps_interface_defs, ignore_me=>doproc
       use file_io_mod, only: luomanage, luotdb
+      use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
       use p1unconv_mod, only: mmtom
@@ -24,7 +25,6 @@
       use crop_data_struct_defs, only: am0cfl
       use soilden_mod, only: setbdproc_wc
       use hydro_data_struct_defs, only: hydro_derived_et
-      use erosion_data_struct_defs, only: subregionsurfacestate
       use soil_mod, only: depthini
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
@@ -32,11 +32,6 @@
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'm1sim.inc'
-      include 's1layr.inc'
-      include 's1agg.inc'
-      include 's1phys.inc'
-      include 's1dbh.inc'
-      include 's1dbc.inc'
       include 'c1gen.inc'
       include 'c1db1.inc'
       include 'c1db2.inc'
@@ -55,12 +50,12 @@
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
+      type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr - the subregion being processed
@@ -158,6 +153,7 @@
       ! temporary crop parameter values for process 66 only
       real    manure_buried_fraction, manure_total_mass
       real :: compact_load  ! 
+      real, dimension(:), allocatable :: procbdadj
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 
@@ -281,7 +277,7 @@
 
       ! set local flag to indicate whether a crop is growing or not
       ! this is used to eliminate spurious harvest reports from residue removal
-      if( poolmass( nslay(sr), &
+      if( poolmass( soil%nslay, &
                  crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
                  crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
                  noparam1, noparam2, &
@@ -293,7 +289,7 @@
           crop_present = 0
       end if
 
-      if( poolmass( nslay(sr), &
+      if( poolmass( soil%nslay, &
                  atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
                  atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
                  atmflatrootstore(sr), atmflatrootfiber(sr),            &
@@ -324,17 +320,17 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before crust breakdown process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         am0til = .true.  !set flag for surface modification
 !     do process
-        call crust(kappa,fracarea,subrsurf%asfcr,subrsurf%asflos,subrsurf%asmlos)
+        call crust(kappa,fracarea,soil%asfcr,soil%asflos,soil%asmlos)
 
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After crust breakdown process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END crust breakdown process (process code 01)
 
@@ -346,7 +342,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before random roughness process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
 !     read the random roughness for the implement. tillage intensity
@@ -361,15 +357,15 @@
         ! the biomass in the soil affects this calculation. Since it is 
         ! the integrated soil biomass, not fresh biomass that causes this,
         ! the best estimate is the number from sumbio from the previous day.
-        call rough(roughflg,rrimpl,ti,fracarea,subrsurf%aslrr, &
-     &             tlayer, asfcla(1,sr), asfsil(1,sr),                  &
+        call rough(roughflg,rrimpl,ti,fracarea,soil%aslrr, &
+     &             tlayer, soil%asfcla, soil%asfsil,                  &
      &             biotot%mbgz, biotot%mrtz,                            &
-     &             aszlyd(1,sr))
+     &             soil%aszlyd)
 
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After random roughness process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END random roughness process (process code 02)
 
@@ -379,7 +375,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before oriented roughness1 process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
 !     read the oriented roughness (ridge) parameters for the implement
@@ -389,23 +385,23 @@
         read(line(2:len_trim(line)),* , err=901)                        &
      &    rdgflag, rdght, imprs, rdgwt
 
-        rdght1 = subrsurf%aszrgh !keep initial ridge height value
+        rdght1 = soil%aszrgh !keep initial ridge height value
         am0til = .true.  !set flag for surface modification
 !     do process
-        call orient1(subrsurf%aszrgh,subrsurf%asxrgw,subrsurf%asxrgs,subrsurf%asargo, &
+        call orient1(soil%aszrgh,soil%asxrgw,soil%asxrgs,soil%asargo, &
      &               rdght,rdgwt,imprs,odir,tdepth,rdgflag)
 
 !     post-process stuff
         !if the ridge height changed or is very small,
         !then assume any dikes got destroyed
-        if (rdght1 .ne. subrsurf%aszrgh .or. (subrsurf%aszrgh .le. 0.1)) then
-          subrsurf%asxdkh = 0.0
-          subrsurf%asxdks = 0.0
+        if (rdght1 .ne. soil%aszrgh .or. (soil%aszrgh .le. 0.1)) then
+          soil%asxdkh = 0.0
+          soil%asxdks = 0.0
         end if
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After oriented roughness process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END oriented roughness process (process code 03)
 
@@ -415,7 +411,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before oriented roughness2 process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
 !     read the oriented roughness (dike) parameters for the implement
@@ -427,12 +423,12 @@
 
         am0til = .true.  !set flag for surface modification
 !     do process
-        call orient2(subrsurf%asxdkh,subrsurf%asxdks,dikeht,dikespac)
+        call orient2(soil%asxdkh,soil%asxdks,dikeht,dikespac)
 
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After oriented roughness process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END oriented roughness dike only process (process code 04)
 
@@ -442,7 +438,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before oriented roughness process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
 !     read the oriented roughness parameters for the implement
@@ -453,15 +449,15 @@
 
         am0til = .true.  !set flag for surface modification
 !     do process
-        call orient(subrsurf%aszrgh,subrsurf%asxrgw,subrsurf%asxrgs,subrsurf%asargo, &
-     &              subrsurf%asxdkh,subrsurf%asxdks, &
+        call orient(soil%aszrgh,soil%asxrgw,soil%asxrgs,soil%asargo, &
+     &              soil%asxdkh,soil%asxdks, &
      &              rdght,rdgwt,imprs,odir,dikeht,dikespac,             &
      &              tdepth,rdgflag)
 
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After oriented roughness process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END oriented roughness process (process code 05)
 
@@ -471,17 +467,17 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before crushing process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !        write (*,*) '//Before crushing process//'
-        if( aslagm(5,sr).gt.aslagx(5,sr) ) then
-            write (*,*) 'before crush:',aslagm(5,sr),aslagx(5,sr)
+        if( soil%aslagm(5).gt.soil%aslagx(5) ) then
+            write (*,*) 'before crush:',soil%aslagm(5),soil%aslagx(5)
         end if
-!        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
+!        write (*,*) 'dia,sd',soil%aslagm(1),soil%as0ags(1)
 !
 !       Convert ASD from modified log-normal to sieve classes
-        call asd2m(aslagn(1,sr), aslagx(1,sr), aslagm(1,sr),            &
-     &           as0ags(1,sr), nslay(sr), massf)
+        call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, &
+     &           soil%as0ags, soil%nslay, massf)
 !
 !
 !       read the crushing parameters for the implement
@@ -497,8 +493,6 @@
         endif
 
         ! adjust parameters based on soil aggregate stability
-        !aseags(1,sr)
-
 
 !       do process
         call crush(alpha, beta, tlayer, massf)
@@ -506,17 +500,17 @@
 !       post-process stuff
 !
 !       Convert ASD back from sieve classes to modified log-normal
-        call m2asd(massf, nslay(sr),                                    &
-     &    aslagn(1,sr), aslagx(1,sr), aslagm(1,sr), as0ags(1,sr))
+        call m2asd(massf, soil%nslay,                                    &
+     &    soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags)
 
-        if( aslagm(5,sr).gt.aslagx(5,sr) ) then
-            write (*,*) 'after crush:',aslagm(5,sr),aslagx(5,sr)
+        if( soil%aslagm(5).gt.soil%aslagx(5) ) then
+            write (*,*) 'after crush:',soil%aslagm(5),soil%aslagx(5)
         end if
-!        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
+!        write (*,*) 'dia,sd',soil%aslagm(1),soil%as0ags(1)
 !
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After crushing process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END crushing process (process code 11)
 
@@ -526,10 +520,10 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before loosening process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
-        if( aslagm(5,sr).gt.aslagx(5,sr) ) then
-            write (*,*) 'before loose:',aslagm(5,sr),aslagx(5,sr)
+        if( soil%aslagm(5).gt.soil%aslagx(5) ) then
+            write (*,*) 'before loose:',soil%aslagm(5),soil%aslagx(5)
         end if
 
 
@@ -540,45 +534,44 @@
 
 !        if( sr .eq. 3 ) then
 !          write(*,*) mu,fracarea,tlayer,                                &
-!     &    asdblk(1,sr),asdsblk(1,sr),aszlyt(1,sr)
+!     &    soil%asdblk(1),soil%asdsblk(1),soil%aszlyt(1)
 !        end if
 
 !       do process
         call loosn(mu,fracarea,tlayer,                                  &
-     &    asdblk(1,sr),asdsblk(1,sr),aszlyt(1,sr))
+     &    soil%asdblk,soil%asdsblk,soil%aszlyt)
 
 !        if( sr .eq. 3 ) then
 !          write(*,*) mu,fracarea,tlayer,                                &
-!     &    asdblk(1,sr),asdsblk(1,sr),aszlyt(1,sr)
+!     &    soil%asdblk(1),soil%asdsblk(1),soil%aszlyt(1)
 !          stop
 !        end if
 
 !       post-process stuff
 
         ! recalculate  depth to bottom of soil layer
-        call depthini( nslay(sr), aszlyt(1,sr), aszlyd(1,sr) )
+        call depthini( soil%nslay, soil%aszlyt, soil%aszlyd )
 
         if( wc_type.eq.4 ) then
           ! use texture based calculations from Rawls to set all soil
           ! water properties.
           call param_prop_bc(                                           &
-     &        nslay(sr), aszlyd(1,sr), asdblk(1,sr), asdpart(1,sr),     &
-     &        asfcla(1,sr), asfsan(1,sr), asfom(1,sr), asfcec(1,sr),    &
-     &        ahrwcs(1,sr), ahrwcf(1,sr), ahrwcw(1,sr),ahrwcr(1,sr),    &
-     &        ahrwca(1,sr), ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),     &
-     &        ahfredsat(1,sr) )
-
+     &        soil%nslay, soil%aszlyd, soil%asdblk, soil%asdpart,     &
+     &        soil%asfcla, soil%asfsan, soil%asfom, soil%asfcec,    &
+     &        soil%ahrwcs, soil%ahrwcf, soil%ahrwcw,soil%ahrwcr,    &
+     &        soil%ahrwca, soil%ah0cb, soil%aheaep, soil%ahrsk,     &
+     &        soil%ahfredsat )
         else
           ! adjust soil hydraulic properties for change in density
-          call param_blkden_adj( tlayer, asdblk(1,sr), asdblk0(1,sr),   &
-     &       asdpart(1,sr), ahrwcf(1,sr), ahrwcw(1,sr), ahrwca(1,sr),   &
-     &       asfcla(1,sr), asfom(1,sr),                                 &
-     &       ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr) )
+          call param_blkden_adj( tlayer, soil%asdblk, soil%asdblk0,   &
+     &       soil%asdpart, soil%ahrwcf, soil%ahrwcw, soil%ahrwca,   &
+     &       soil%asfcla, soil%asfom,                                 &
+     &       soil%ah0cb, soil%aheaep, soil%ahrsk )
         end if
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After loosening process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END loosening process (process code 12)
 
@@ -589,13 +582,13 @@
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before mixing process//'
           write (luotdb(sr),*) 'Tillage layer depth is', tlayer
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !        write (*,*) '//Before mixing process//'
-        if( aslagm(5,sr).gt.aslagx(5,sr) ) then
-            write (*,*) 'before mix:',aslagm(5,sr),aslagx(5,sr)
+        if( soil%aslagm(5).gt.soil%aslagx(5) ) then
+            write (*,*) 'before mix:',soil%aslagm(5),soil%aslagx(5)
         end if
-!        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
+!        write (*,*) 'dia,sd',soil%aslagm(1),soil%as0ags(1)
 
 !       read the mixing coefficient from the data file
         mcur(sr) = mcur(sr) + 1
@@ -603,21 +596,20 @@
         read(line(2:len_trim(line)),* , err=901) rho
 
 !       Convert ASD from modified log-normal to sieve classes
-        call asd2m(aslagn(1,sr), aslagx(1,sr), aslagm(1,sr),            &
-     &           as0ags(1,sr), nslay(sr), massf)
+        call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
 
 !       do process
-        call mix(rho,fracarea,tlayer,asdblk(1,sr),aszlyt(1,sr),         &
-     &    asfsan(1,sr), asfsil(1,sr),asfcla(1,sr), asvroc(1,sr),        &
-     &    asfcs(1,sr), asfms(1,sr), asffs(1,sr), asfvfs(1,sr),          &
-     &    asdwblk(1,sr),                                                &
-     &    asfom(1,sr), as0ph(1,sr), asfcce(1,sr), asfcec(1,sr),         &
-     &    asfcle(1,sr),                                                 &
-     &    asdagd(1,sr),aseags(1,sr),                                    &
-     &    ahrwc(1,sr),                                                  &
-     &    ahrwcs(1,sr),ahrwcf(1,sr), ahrwcw(1,sr),                      &
-     &    ahrwca(1,sr),                                                 &
-     &    ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),                       &
+        call mix(rho,fracarea,tlayer,soil%asdblk,soil%aszlyt, &
+     &    soil%asfsan, soil%asfsil,soil%asfcla, soil%asvroc, &
+     &    soil%asfcs, soil%asfms, soil%asffs, soil%asfvfs, &
+     &    soil%asdwblk,                                                &
+     &    soil%asfom, soil%as0ph, soil%asfcce, soil%asfcec,         &
+     &    soil%asfcle,                                                 &
+     &    soil%asdagd,soil%aseags, &
+     &    soil%ahrwc,                                                  &
+     &    soil%ahrwcs,soil%ahrwcf, soil%ahrwcw,                      &
+     &    soil%ahrwca,                                                 &
+     &    soil%ah0cb, soil%aheaep, soil%ahrsk,                       &
      &    residue,                                                      &
      &    massf)
 
@@ -625,41 +617,40 @@
 
 !       With the change in composition of the layers, it is necessary
 !       to update soil properties that are a function of texture
-        call proptext( tlayer, asfcla(1,sr), asfsan(1,sr), asfom(1,sr), &
-     &                 asdblk(1,sr), asdsblk(1,sr), asdprocblk(1,sr),   &
-     &                 asdwblk(1,sr), asdwsrat(1, sr), asdpart(1,sr) )
+        call proptext( tlayer, soil%asfcla, soil%asfsan, soil%asfom, &
+     &                 soil%asdblk, soil%asdsblk, soil%asdprocblk,   &
+     &                 soil%asdwblk, soil%asdwsrat, soil%asdpart )
 
         if( wc_type.eq.4 ) then
           ! use texture based calculations from Rawls to set all soil
           ! water properties.
           call param_prop_bc(                                           &
-     &        tlayer, aszlyd(1,sr), asdblk(1,sr), asdpart(1,sr),        &
-     &        asfcla(1,sr), asfsan(1,sr), asfom(1,sr), asfcec(1,sr),    &
-     &        ahrwcs(1,sr), ahrwcf(1,sr), ahrwcw(1,sr),ahrwcr(1,sr),    &
-     &        ahrwca(1,sr), ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),     &
-     &        ahfredsat(1,sr) )
+     &        tlayer, soil%aszlyd, soil%asdblk, soil%asdpart,        &
+     &        soil%asfcla, soil%asfsan, soil%asfom, soil%asfcec,    &
+     &        soil%ahrwcs, soil%ahrwcf, soil%ahrwcw,soil%ahrwcr,    &
+     &        soil%ahrwca, soil%ah0cb, soil%aheaep, soil%ahrsk,     &
+     &        soil%ahfredsat )
 
         else
           ! set matrix potential parameters to match 1/3 bar and 15 bar water contents
-          call param_pot_bc( tlayer, asdblk(1,sr), asdpart(1,sr),       &
-     &                     ahrwcf(1,sr), ahrwcw(1,sr),                  &
-     &                     asfcla(1,sr), asfom(1,sr),                   &
-     &                     ah0cb(1,sr), aheaep(1,sr) )
+          call param_pot_bc( tlayer, soil%asdblk, soil%asdpart,       &
+     &                     soil%ahrwcf, soil%ahrwcw,                  &
+     &                     soil%asfcla, soil%asfom,                   &
+     &                     soil%ah0cb, soil%aheaep )
         end if
 
 !       set previous day bulk density for the changed layers since
 !       this is a change in composition not in bulk density per se
-        call set_prevday_blk( tlayer, asdblk(1,sr), asdblk0(1,sr) )
+        call set_prevday_blk( tlayer, soil%asdblk, soil%asdblk0 )
 
 !       Convert ASD back from sieve classes to modified log-normal
-        call m2asd(massf, nslay(sr),                                    &
-     &    aslagn(1,sr), aslagx(1,sr), aslagm(1,sr), as0ags(1,sr))
+        call m2asd(massf, soil%nslay, soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags)
 
-!        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
+!        write (*,*) 'dia,sd',soil%aslagm(1),soil%as0ags(1)
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After mixing process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
 !-----END mixing process (process code 13)
@@ -670,27 +661,26 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before inversion process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !        write (*,*) '//Before inversion process//'
-!        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
+!        write (*,*) 'dia,sd',soil%aslagm(1),soil%as0ags(1)
 
 !     Convert ASD from modified log-normal to sieve classes
-        call asd2m(aslagn(1,sr), aslagx(1,sr), aslagm(1,sr),            &
-     &           as0ags(1,sr), nslay(sr), massf)
+        call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
 
 !     do process
-        call invert(tlayer,asdblk(1,sr),aszlyt(1,sr),                   &
-     &    asfsan(1,sr), asfsil(1,sr),asfcla(1,sr), asvroc(1,sr),        &
-     &    asfcs(1,sr), asfms(1,sr), asffs(1,sr), asfvfs(1,sr),          &
-     &    asdwblk(1,sr),                                                &
-     &    asfom(1,sr), as0ph(1,sr), asfcce(1,sr), asfcec(1,sr),         &
-     &    asfcle(1,sr),                                                 &
-     &    asdagd(1,sr),aseags(1,sr),                                    &
-     &    ahrwc(1,sr),                                                  &
-     &    ahrwcs(1,sr),ahrwcf(1,sr), ahrwcw(1,sr),                      &
-     &    ahrwca(1,sr),                                                 &
-     &    ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),                       &
+        call invert(tlayer,soil%asdblk,soil%aszlyt, &
+     &    soil%asfsan, soil%asfsil,soil%asfcla, soil%asvroc, &
+     &    soil%asfcs, soil%asfms, soil%asffs, soil%asfvfs, &
+     &    soil%asdwblk,                                                &
+     &    soil%asfom, soil%as0ph, soil%asfcce, soil%asfcec,         &
+     &    soil%asfcle,                                                 &
+     &    soil%asdagd, soil%aseags, &
+     &    soil%ahrwc,                                                  &
+     &    soil%ahrwcs,soil%ahrwcf, soil%ahrwcw,                      &
+     &    soil%ahrwca,                                                 &
+     &    soil%ah0cb, soil%aheaep, soil%ahrsk,                       &
      &    residue,                                                      &
      &    massf)
 
@@ -698,12 +688,11 @@
 !     post-process stuff
 
 !     Convert ASD back from sieve classes to modified log-normal
-        call m2asd(massf, nslay(sr),                                    &
-     &    aslagn(1,sr), aslagx(1,sr), aslagm(1,sr), as0ags(1,sr))
+        call m2asd(massf, soil%nslay, soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags)
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After inversion process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END inversion process (process code 14)
 
@@ -713,10 +702,10 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before compaction process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
-        if( aslagm(5,sr).gt.aslagx(5,sr) ) then
-            write (*,*) 'before compaction:',aslagm(5,sr),aslagx(5,sr)
+        if( soil%aslagm(5).gt.soil%aslagx(5) ) then
+            write (*,*) 'before compaction:',soil%aslagm(5),soil%aslagx(5)
         end if
 
         ! read the compaction parameter for the implement
@@ -728,35 +717,38 @@
         ! compaction occurs below the tlayer depth
         ! find maximum bulk density (soil water content)
         ! find depth of compaction using water content adjusted proctor density
-        call compact( mu, compact_load, fracarea, tlayer+1, nslay(sr), asdblk(1,sr), asdsblk(1,sr), &
-                      setbdproc_wc( asfcla(1,sr), asfsan(1,sr), asfom(1,sr), asdpart(1,sr), ahrwc(1,sr) ), &
-                      asdprocblk(1,sr), aszlyt(1,sr) )
-
+        allocate( procbdadj(soil%nslay) )
+        do idx=1,soil%nslay
+          procbdadj(idx) = setbdproc_wc( soil%asfcla(idx), soil%asfsan(idx), soil%asfom(idx), soil%asdpart(idx), soil%ahrwc(idx) )
+        end do
+        call compact( mu, compact_load, fracarea, tlayer+1, soil%nslay, soil%asdblk, soil%asdsblk, &
+                      procbdadj, soil%asdprocblk, soil%aszlyt )
+        deallocate( procbdadj )
         ! post-process stuff
         ! recalculate  depth to bottom of soil layer
-        call depthini( nslay(sr), aszlyt(1,sr), aszlyd(1,sr) )
+        call depthini( soil%nslay, soil%aszlyt, soil%aszlyd )
 
         if( wc_type.eq.4 ) then
           ! use texture based calculations from Rawls to set all soil
           ! water properties.
           call param_prop_bc(                                           &
-     &        nslay(sr), aszlyd(1,sr), asdblk(1,sr), asdpart(1,sr),     &
-     &        asfcla(1,sr), asfsan(1,sr), asfom(1,sr), asfcec(1,sr),    &
-     &        ahrwcs(1,sr), ahrwcf(1,sr), ahrwcw(1,sr),ahrwcr(1,sr),    &
-     &        ahrwca(1,sr), ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),     &
-     &        ahfredsat(1,sr) )
+     &        soil%nslay, soil%aszlyd, soil%asdblk, soil%asdpart,     &
+     &        soil%asfcla, soil%asfsan, soil%asfom, soil%asfcec,    &
+     &        soil%ahrwcs, soil%ahrwcf, soil%ahrwcw,soil%ahrwcr,    &
+     &        soil%ahrwca, soil%ah0cb, soil%aheaep, soil%ahrsk,     &
+     &        soil%ahfredsat )
 
         else
           ! adjust soil hydraulic properties for change in density
-          call param_blkden_adj( nslay(sr), asdblk(1,sr), asdblk0(1,sr), &
-     &       asdpart(1,sr), ahrwcf(1,sr), ahrwcw(1,sr), ahrwca(1,sr),   &
-     &       asfcla(1,sr), asfom(1,sr),                                 &
-     &       ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr) )
+          call param_blkden_adj( soil%nslay, soil%asdblk, soil%asdblk0, &
+     &       soil%asdpart, soil%ahrwcf, soil%ahrwcw, soil%ahrwca,   &
+     &       soil%asfcla, soil%asfom,                                 &
+     &       soil%ah0cb, soil%aheaep, soil%ahrsk )
         end if
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After compaction process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
         !-----END Compaction (process code 21)
 
@@ -766,7 +758,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flatten variable toughness proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -786,7 +778,7 @@
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flatten variable toughness proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END flatten process variable toughness (process code 24)
 !
@@ -796,7 +788,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before mass bury variable toughness pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -818,7 +810,7 @@
 !     do process
         if( tlayer .gt. 0 ) then
           call mburyvt(mfvt,fracarea,crop%database%rbc, burydistflg,    &
-     &             tlayer,aszlyt(1,sr),aszlyd(1,sr),                    &
+     &             tlayer,soil%aszlyt,soil%aszlyd,                    &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atmflatrootstore(sr), atmflatrootfiber(sr),                &
      &       atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),     &
@@ -829,7 +821,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After mass bury variable toughness pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END mass bury process variable toughness (process code 25)
 !
@@ -839,7 +831,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before re-surface vari. toughness proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -858,7 +850,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After re-surface vari. toughness proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END re-surface process variable toughness (process code 26)
 
@@ -876,7 +868,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before defoliate process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
 !       Some operations will not kill certain types of crops,
@@ -914,7 +906,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After defoliate process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END defoliate process (process code 30)
 
@@ -931,7 +923,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before kill process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
 !       Some operations will not kill certain types of crops,
@@ -961,7 +953,7 @@
      &       .or.(ac0idc(sr).eq.5)))) then
 !            Stop the crop growth (ie. stop calling crop submodel) and
 !            transfer crop state to temporary crop pool
-             call kill_crop( crop%growth%am0cgf, nslay(sr), &
+             call kill_crop( crop%growth%am0cgf, soil%nslay, &
      &           crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
      &           crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
      &           crop%mass%rootstorez, crop%mass%rootfiberz, &
@@ -982,7 +974,7 @@
                mature_warn_flg = 1
                call crop_endseason( sr, bmrotation, mperod(sr), &
      &         crop%bname, am0cfl(sr), &
-     &         nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &         soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &         aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),      &
      &         acthum(sr), crop%geometry%xstmrep, &
      &         prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1012,7 +1004,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After kill process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END killing process (process code 31)
 
@@ -1022,7 +1014,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before cutting to height process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         ! set process parameters
@@ -1044,7 +1036,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After cutting to height process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1067,7 +1059,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1090,7 +1082,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before cutting by fraction process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1110,7 +1102,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After cutting by fraction process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1133,7 +1125,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1156,7 +1148,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before modify standing fall rate proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1180,7 +1172,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After modify standing fall rate proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END modify standing fall rate process variable toughness (process code 34)
 
@@ -1190,7 +1182,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before thinning to population process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1211,7 +1203,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After thinning to population process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1234,7 +1226,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1257,7 +1249,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before thinning by fraction process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1277,7 +1269,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After thinning by fraction process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1297,7 +1289,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1320,7 +1312,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before biomass transfer process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
 !     do process
@@ -1341,7 +1333,7 @@
      &      crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck,   &
      &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg,  &
      &      crop%database%resevapa, crop%database%resevapb, &
-     &      nslay(sr), residue )
+     &      soil%nslay, residue )
       end if
 
       ! turn off kill flag, since temporary pool being emptied
@@ -1352,7 +1344,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After biomass transfer process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END crop to biomass transfer process (process code 40)
 
@@ -1362,7 +1354,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flagged cutting to height proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         ! set process parameters
@@ -1385,7 +1377,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flagged cutting to height proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1409,7 +1401,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1432,7 +1424,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flagged cutting by fraction pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1453,7 +1445,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flagged cutting by fraction pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1477,7 +1469,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1500,7 +1492,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write(luotdb(sr),*)'//Before flagged thinning to population pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1522,7 +1514,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write(luotdb(sr),*) '//After flagged thinning to population pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1546,7 +1538,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1569,7 +1561,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flagged thinning by fraction pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1590,7 +1582,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flagged thinning by fraction pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1614,7 +1606,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1639,7 +1631,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before residue initialization process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         ! do process
@@ -1656,8 +1648,8 @@
         ! read buried residue amounts
         read(line(2:len_trim(line)), *, err=901) dmassres, zmassres, dmassrot, zmassrot
         ! place buried residue in pools by layer
-        call resinit(dmassrot, zmassrot, nslay(sr), residue(1)%mass%rootfiberz, aszlyt(1,sr))
-        call resinit(dmassres,zmassres,nslay(sr), residue(1)%mass%stemz, aszlyt(1,sr))
+        call resinit(dmassrot, zmassrot, soil%nslay, residue(1)%mass%rootfiberz, soil%aszlyt)
+        call resinit(dmassres,zmassres,soil%nslay, residue(1)%mass%stemz, soil%aszlyt)
         ! get additional line of data
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
@@ -1679,7 +1671,7 @@
         ! set cumulative decomposition days for residue to zero
         residue(1)%decomp%cumdds = 0.0
         residue(1)%decomp%cumddf = 0.0
-        do idx=1,nslay(sr)
+        do idx=1,soil%nslay
           residue(1)%decomp%cumddg(idx) = 0.0
         end do
 
@@ -1691,8 +1683,8 @@
         do idx = 2, mnbpls
             residue(idx)%mass%standstem = 0.0
             residue(idx)%mass%flatstem = 0.0
-            call resinit(dmassrot, zmassrot, nslay(sr), residue(idx)%mass%rootfiberz, aszlyt(1,sr))
-            call resinit(dmassres,zmassres,nslay(sr), residue(idx)%mass%stemz, aszlyt(1,sr))
+            call resinit(dmassrot, zmassrot, soil%nslay, residue(idx)%mass%rootfiberz, soil%aszlyt)
+            call resinit(dmassres,zmassres,soil%nslay, residue(idx)%mass%stemz, soil%aszlyt)
         end do
 
         do idx = 1, mnbpls
@@ -1702,9 +1694,9 @@
             residue(idx)%mass%flatstore = 0.0
             residue(idx)%mass%flatrootstore = 0.0
             residue(idx)%mass%flatrootfiber = 0.0
-            call resinit(dmassres, zmassres, nslay(sr), residue(idx)%mass%leafz, aszlyt(1,sr))
-            call resinit(dmassres, zmassres, nslay(sr), residue(idx)%mass%storez, aszlyt(1,sr))
-            call resinit(dmassrot, zmassrot, nslay(sr), residue(idx)%mass%rootstorez, aszlyt(1,sr))
+            call resinit(dmassres, zmassres, soil%nslay, residue(idx)%mass%leafz, soil%aszlyt)
+            call resinit(dmassres, zmassres, soil%nslay, residue(idx)%mass%storez, soil%aszlyt)
+            call resinit(dmassrot, zmassrot, soil%nslay, residue(idx)%mass%rootstorez, soil%aszlyt)
             ! set other state variables
             residue(idx)%geometry%xstmrep = residue(idx)%database%xstm
             residue(idx)%geometry%grainf = 1.0
@@ -1713,7 +1705,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After residue initialization process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END residue initialization process (process code 50)
 !
@@ -1723,7 +1715,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before planting process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !     kill and transfer only if existing crop and new crop
       if( crop%growth%am0cgf.and.(crop%geometry%dstm.gt.0.0) ) then
@@ -1731,7 +1723,7 @@
 !         be killed and transferred to residue or all the residue will be lost
 !         when the new crop is initialized
 !        (remove when multiple species capable)
-          call kill_crop( crop%growth%am0cgf, nslay(sr), &
+          call kill_crop( crop%growth%am0cgf, soil%nslay, &
      &           crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
      &           crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
      &           crop%mass%rootstorez, crop%mass%rootfiberz, &
@@ -1754,14 +1746,14 @@
      &      crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck,   &
      &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg,  &
      &      crop%database%resevapa, crop%database%resevapb, &
-     &      nslay(sr), residue )
+     &      soil%nslay, residue )
           ! non-harvest termination, suppress early harvest warnings
           mature_warn_flg = 0
           ! attach a crop name to the non-harvest terminiation in stir report
           call stir_crop(sr, crop%bname, 2)
           call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1903,7 +1895,7 @@
                 ! seed placed in furrow bottom and ridge made unconditionally
                 ! set transpiration depth parameters (meters)
                 ahzfurcut(sr) = mmtom                                   &
-     &                     * furrowcut(subrsurf%aszrgh,subrsurf%asxrgw,subrsurf%asxrgs)
+     &                     * furrowcut(soil%aszrgh,soil%asxrgw,soil%asxrgs)
                 ahztransprtmin(sr) = ahzfurcut(sr) + ac0growdepth(sr)
                 ahztransprtmax(sr) = aczmrt(sr)
               end if
@@ -1931,7 +1923,7 @@
 !       post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After planting process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
         call set_calib(sr, crop)
         if( rpt_season_flg ) then
@@ -1946,7 +1938,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before biomass remove process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1972,12 +1964,12 @@
      &    atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),        &
      &    atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),                 &
      &    atzht(sr), atdstm(sr), atgrainf(sr), residue,                 &
-     &    nslay(sr), mass_rem, mass_left)
+     &    soil%nslay, mass_rem, mass_left)
 
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After biomass remove process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -2000,7 +1992,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -2023,7 +2015,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before biomass remove pool process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -2047,12 +2039,12 @@
      &    atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),        &
      &    atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),                 &
      &    atzht(sr), atdstm(sr), atgrainf(sr), residue,                 &
-     &    nslay(sr), mass_rem, mass_left)
+     &    soil%nslay, mass_rem, mass_left)
 
         ! post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After biomass remove pool process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -2078,7 +2070,7 @@
             call report_hydrobal( sr, bmrotation, mperod(sr) )
             call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -2109,7 +2101,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before add residue process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -2124,10 +2116,10 @@
         read(line(2:len_trim(line)), *, err=901)                        &
      &    dmassres, zmassres, dmassrot, zmassrot
         ! place buried residue in pools by layer
-        call resinit(dmassrot, zmassrot, nslay(sr),                     &
-     &               atmbgrootfiberz(1,sr), aszlyt(1,sr))
-        call resinit(dmassres,zmassres,nslay(sr),                       &
-     &               atmbgstemz(1,sr), aszlyt(1,sr))
+        call resinit(dmassrot, zmassrot, soil%nslay,                     &
+     &               atmbgrootfiberz(1,sr), soil%aszlyt)
+        call resinit(dmassres,zmassres,soil%nslay,                       &
+     &               atmbgstemz(1,sr), soil%aszlyt)
         ! get additional line of data
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
@@ -2155,12 +2147,12 @@
         zmassres = 0.0
         dmassrot = 0.0
         zmassrot = 0.0
-        call resinit(dmassres, zmassres, nslay(sr),                     &
-     &               atmbgleafz(1,sr), aszlyt(1,sr))
-        call resinit(dmassres, zmassres, nslay(sr),                     &
-     &               atmbgstorez(1,sr), aszlyt(1,sr))
-        call resinit(dmassrot, zmassrot, nslay(sr),                     &
-     &               atmbgrootstorez(1,sr), aszlyt(1,sr))
+        call resinit(dmassres, zmassres, soil%nslay,                     &
+     &               atmbgleafz(1,sr), soil%aszlyt)
+        call resinit(dmassres, zmassres, soil%nslay,                     &
+     &               atmbgstorez(1,sr), soil%aszlyt)
+        call resinit(dmassrot, zmassrot, soil%nslay,                     &
+     &               atmbgrootstorez(1,sr), soil%aszlyt)
 
         atgrainf(sr) = 1.0
         atxstmrep(sr) = txstm
@@ -2172,7 +2164,7 @@
         t0ck = 0.0
 
         ! check for amount of added biomass
-        if( poolmass( nslay(sr),                                        &
+        if( poolmass( soil%nslay,                                        &
      &           atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
      &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
      &           atmflatrootstore(sr), atmflatrootfiber(sr),            &
@@ -2190,13 +2182,13 @@
      &      cropname, txstm, trbc, t0sla, t0ck,                         &
      &      tdkrate(1), tcovfact, tddsthrsh, thyfg,                     &
      &      tresevapa, tresevapb,                                       &
-     &      nslay(sr), residue )
+     &      soil%nslay, residue )
         end if
 
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After add residue process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END add residue process (process code 65)
 
@@ -2220,7 +2212,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before add manure process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         ! get additional line of data
@@ -2251,10 +2243,10 @@
      &          (manure_buried_fraction) * manure_total_mass
 
         ! place buried residue in pools by layer
-        call resinit(dmassrot, zmassrot, nslay(sr),                     &
-     &               atmbgrootfiberz(1,sr), aszlyt(1,sr))
-        call resinit(dmassres,zmassres,nslay(sr),                       &
-     &               atmbgstemz(1,sr), aszlyt(1,sr))
+        call resinit(dmassrot, zmassrot, soil%nslay,                     &
+     &               atmbgrootfiberz(1,sr), soil%aszlyt)
+        call resinit(dmassres,zmassres,soil%nslay,                       &
+     &               atmbgstemz(1,sr), soil%aszlyt)
 
         ! get additional line of data
         mcur(sr) = mcur(sr) + 1
@@ -2284,12 +2276,12 @@
         zmassres = 0.0
         dmassrot = 0.0
         zmassrot = 0.0
-        call resinit(dmassres, zmassres, nslay(sr),                     &
-     &               atmbgleafz(1,sr), aszlyt(1,sr))
-        call resinit(dmassres, zmassres, nslay(sr),                     &
-     &               atmbgstorez(1,sr), aszlyt(1,sr))
-        call resinit(dmassrot, zmassrot, nslay(sr),                     &
-     &               atmbgrootstorez(1,sr), aszlyt(1,sr))
+        call resinit(dmassres, zmassres, soil%nslay,                     &
+     &               atmbgleafz(1,sr), soil%aszlyt)
+        call resinit(dmassres, zmassres, soil%nslay,                     &
+     &               atmbgstorez(1,sr), soil%aszlyt)
+        call resinit(dmassrot, zmassrot, soil%nslay,                     &
+     &               atmbgrootstorez(1,sr), soil%aszlyt)
 
         atgrainf(sr) = 1.0
         atxstmrep(sr) = txstm
@@ -2300,7 +2292,7 @@
         t0sla = 0.0
         t0ck = 0.0
 
-        if( poolmass( nslay(sr),                                        &
+        if( poolmass( soil%nslay,                                        &
      &           atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
      &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
      &           atmflatrootstore(sr), atmflatrootfiber(sr),            &
@@ -2318,13 +2310,13 @@
      &      cropname, txstm, trbc, t0sla, t0ck,                         &
      &      tdkrate(1), tcovfact, tddsthrsh, thyfg,                     &
      &      tresevapa, tresevapb,                                       &
-     &      nslay(sr), residue )
+     &      soil%nslay, residue )
         end if
  
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After add manure process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END add manure process (process code 66)
 
@@ -2334,7 +2326,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before irrigation process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -2357,7 +2349,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After irrigate process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END irrigate process (process code 71)
 
@@ -2367,7 +2359,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before irrigation monitoring process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -2383,7 +2375,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After irrigation monitoring process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END irrigation monitoring process (process code 72)
 
@@ -2393,7 +2385,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before single event irrigation process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -2407,12 +2399,12 @@
         call ratedura(h1et%zirr, ahratirr(sr), ahdurirr(sr))
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After single event irrigation process//'
-          !call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          !call tdbug(sr, prcode, soil, crop, residue)
         end if
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After single event irrigation process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END irrigation monitoring process (process code 73)
 
@@ -2422,14 +2414,14 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before terminate irrigation monitoring//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !     do process
         am0monirr(sr) = 0
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After terminate irrigation monitoring//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
+          call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END terminate irrigation monitoring process (process code 74)
 

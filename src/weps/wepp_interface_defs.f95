@@ -88,8 +88,8 @@
 !---------------------------
       subroutine getfromweps(isr,sand,silt,clay,orgmat, &
        thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh, &
-       frctrl, frcsol, precip, subrsurf)
-      use erosion_data_struct_defs, only: subregionsurfacestate
+       frctrl, frcsol, precip, soil)
+      use soil_data_struct_defs, only: soil_def
       integer, intent(in):: isr
       real, intent(out):: sand(*), silt(*), clay(*)
       real, intent(out):: orgmat(*)
@@ -98,13 +98,13 @@
       real, intent(out):: thetfc(*), por(*), rh
       real, intent(out):: frctrl, frcsol
       real, intent(out):: precip
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
       end subroutine getfromweps
 !---------------------------------
-      SUBROUTINE init_wepp(afterWarmup)
-      
-      integer, intent(in) :: afterWarmup
-      
+      SUBROUTINE init_wepp(isr, afterWarmup, soil)
+      use soil_data_struct_defs, only: soil_def
+      integer, intent(in) :: isr, afterWarmup
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
       end subroutine init_wepp
 !---------------------------------
       subroutine param(qin,qout,qostar,qshear,qsout,a,b,avgslp,         &
@@ -347,9 +347,11 @@
       real, intent(inout) :: factor, expon
       end subroutine undflo
 !----------------------------------
-      SUBROUTINE water_erosion(isr, cd, cm, cy, restot, croptot)
+      SUBROUTINE water_erosion(isr, cd, cm, cy, soil, restot, croptot)
+      use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biototal
       integer, intent(in):: isr,cd,cm,cy
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(biototal), intent(in) :: restot, croptot
       end subroutine water_erosion
 !----------------------------------
@@ -402,11 +404,11 @@
      
       end subroutine write_hydro_summary
 !---------------------------------------      
-       subroutine weppsum(luoweppplot, luoweppsum, years)
-          
-      integer, intent(in) :: luoweppplot, luoweppsum, years    
-      
-   
+      subroutine weppsum(isr, years, wp)
+      use wepp_param_mod, only: wepp_param
+      integer, intent(in) :: isr, years
+      type(wepp_param), intent(inout) :: wp
+
       end subroutine weppsum
 !-----------------------------------
       subroutine xcrit(a,b,c,tauc,xb,xe,xc1,xc2,mshear)

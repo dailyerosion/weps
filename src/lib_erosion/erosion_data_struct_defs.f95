@@ -46,19 +46,19 @@ module erosion_data_struct_defs
   end type cellsurfacestate
 
   type by_soil_layer
-     real :: aszlyt    ! aszlyt(l,s), R, (s1layr.inc) Soil layer thickness (mm)
-     real :: asdblk    ! asdblk(l,s), R, (s1phys.inc) Soil layer bulk density (Mg/m^3)
+     real :: aszlyt    ! Soil layer thickness (mm)
+     real :: asdblk    ! asdblk(l,s), R, Soil layer bulk density (Mg/m^3)
      real :: asfsan    ! asfsan(l,s),R,(s1dbh.inc) Soil layer sand content (Mg/Mg)
      real :: asfvfs    ! asfvfs(l,s), R, (s1dbh.inc) Soil layer very fine sand (Mg/Mg)
      real :: asfsil    ! sfsil(l,s),R,(s1dbh.inc) Soil layer silt content (Mg/Mg)
      real :: asfcla    ! asfcla(l,s),R,(s1dbh.inc) Soil layer clay content (Mg/Mg)
      real :: asvroc    ! asvroc(l,s), R, (s1dbh.inc) Soil layer rock volume (m^3/m^3)
-     real :: asdagd    ! asdagd(l,s),R,(s1agg.inc) Soil layer agg density (Mg/m^3)
-     real :: aseags    ! aseags(l,s), R, (s1agg.inc) Soil layer agg stability ln(J/kg)
-     real :: aslagm    ! aslagm(l,s), R, (s1agg.inc) Soil layer GMD (mm)
-     real :: aslagn    ! aslagn(l,s), R, (s1agg.inc) Soil layer minimum agg size (mm)
-     real :: aslagx    ! aslagx(l,s), R, (s1agg.inc) Soil layer maximum agg size (mm)
-     real :: as0ags    ! as0ags(l,s), R, (s1agg.inc) Soil layer GSD (mm/mm)
+     real :: asdagd    ! asdagd(l,s),R, Soil layer agg density (Mg/m^3)
+     real :: aseags    ! aseags(l,s), R, Soil layer agg stability ln(J/kg)
+     real :: aslagm    ! aslagm(l,s), R, Soil layer GMD (mm)
+     real :: aslagn    ! aslagn(l,s), R, Soil layer minimum agg size (mm)
+     real :: aslagx    ! aslagx(l,s), R, Soil layer maximum agg size (mm)
+     real :: as0ags    ! as0ags(l,s), R, Soil layer GSD (mm/mm)
      real :: ahrwcw    ! ahrwcw(l,s), R, (h1db1.inc) Soil layer wilting point water content (Mg/Mg)
      real :: ahrwca    ! ahrwca(l,s), R, (h1db1.inc) Soil layer water content (Mg/Mg)
   end type by_soil_layer
@@ -74,7 +74,7 @@ module erosion_data_struct_defs
      real :: acxrow     ! Crop row spacing (m)
      integer :: ac0rg   ! Crop seed placement (0 - furrow, 1 - ridge)
      real :: abffcv     ! (b1geom.inc) Flat biomass cover (m^2/m^2)
-     integer :: nslay   ! (s1layr.inc) Number of soil layers
+     integer :: nslay   ! Number of soil layers
      type(by_soil_layer), dimension(:), allocatable :: bsl
      real :: asfcr      ! Surface crust fraction (m^2/m^2)
      real :: aszcr      ! Surface crust thickness (mm)
@@ -82,11 +82,6 @@ module erosion_data_struct_defs
      real :: asmlos     ! Mass of loose material on crust (kg/m^2)
      real :: asdcr      ! Soil crust density (Mg/m^3)
      real :: asecr      ! Soil crust stability ln(J/kg)
-
-! (remove)
-     real :: asfald     ! Dry soil albedo
-     real :: asfalw     ! Wet soil albedo
-
      real :: aszrgh     ! Ridge height (mm)
      real :: aszrho     ! Original ridge height, after tillage, (mm)
      real :: asxrgw     ! Ridge width (mm)
@@ -95,10 +90,6 @@ module erosion_data_struct_defs
      real :: asxdks     ! Dike spacing (mm)
      real :: asxdkh     ! Dike Height (mm)
      real :: aslrr      ! Allmaras random roughness (mm)
-
-! (remove)
-     real :: aslrro     ! Original random roughness height, after tillage, mm
-
      real :: ahzsnd     ! (h1db1.inc) Snow depth (mm)
      real, dimension(:), allocatable :: ahrwc0
      ! derived

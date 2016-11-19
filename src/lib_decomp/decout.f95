@@ -18,7 +18,6 @@
 !  +  + +  COMMON  BLOCKS + + +
 
       include 'p1werm.inc'
-      include 's1layr.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer    isr
@@ -28,6 +27,7 @@
 
 !      integer outday(13)
       integer cd, cm, cy
+      integer :: nslay
       integer :: isz
 
 ! + + + FORMATS + + +
@@ -41,6 +41,8 @@
  2010 format (6x,i3,4x,3(f7.2,1x,f7.2,3x))
 
 ! + + + END SPECIFICATIONS + + +
+
+       nslay = size(residue(1)%decomp%cumddg)
 
        call get_simdate(cd, cm, cy)
 
@@ -117,7 +119,7 @@
 !     output below ground residues
       if ((am0dfl(isr) .eq. 2) .or. (am0dfl(isr) .eq. 3)) then
          write(luod_below(isr),2005) cd, cm, cy
-         do 100 isz = 1, nslay(isr)
+         do 100 isz = 1, nslay
          write (luod_below(isr),2010)                                        &
      &         isz,residue(1)%decomp%cumddg(isz),residue(2)%decomp%cumddg(isz),           &
      &         residue(1)%deriv%mbgz(isz),residue(2)%deriv%mbgz(isz),               &

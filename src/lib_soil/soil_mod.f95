@@ -7,80 +7,57 @@ module soil_mod
 
   contains
 
-    subroutine callsoil(daysim, isr, croptot, biotot, h1et, subrsurf)
-! Wrapper to call soil
+    subroutine callsoil(daysim, isr, soil, croptot, biotot, h1et)
+      ! Wrapper to call soil
 
       use biomaterial, only: biototal
       use timer_mod, only: timer, TIMSOIL, TIMSTART, TIMSTOP
-      use soil_data_struct_defs, only: am0sdb
+      use soil_data_struct_defs, only: am0sdb, soil_def
       use hydro_data_struct_defs, only: hydro_derived_et
-      use erosion_data_struct_defs, only: subregionsurfacestate
 
-! Arguments
+      ! Arguments
       integer daysim
       integer isr                   
+      type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biototal), intent(in) :: croptot, biotot
       type(hydro_derived_et), intent(inout) :: h1et
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
-! Includes
+      ! Includes
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'
-      include 's1agg.inc'
-      include 's1layr.inc'
-      include 's1dbc.inc'
-      include 's1dbh.inc'
-      include 's1phys.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'
       include 'h1db1.inc'
 
       call timer(TIMSOIL,TIMSTART)      
 
-            if (am0sdb(isr) .eq. 1) then
-               call sdbug(isr, nslay(isr), croptot, biotot, h1et, subrsurf)
-            end if
-            call soil(isr,daysim,ahlocirr(isr),h1et%zirr, ahzsmt(isr),  &
-     &                 ahtsmx(1,isr), ahtsmn(1,isr),                    &
-     &                 ahrwc(1,isr), ahrwcdmx(1,isr), ahrwca(1,isr),    &
-     &                 ahrwcw(1,isr), ahrwcs(1,isr),                    &
-     &                 aszlyt(1,isr), nslay(isr),                       &
-     &                 asfsan(1,isr), asfsil(1,isr), asfcla(1,isr),     &
-     &                 asfom(1,isr), asvroc(1,isr),                     &
-     &                 asdsblk(1,isr), asdwblk(1,isr),                  &
-     &                 asdblk(0,isr), asdagd(0,isr),                    &
-     &                 aslagm(0,isr), aslagn(0,isr),                    &
-     &                 as0ags(0,isr), aslagx(0,isr), aseags(0,isr),     &
-     &                 aseagm(1,isr), aseagmn(1,isr), aseagmx(1,isr),   &
-     &                 ask4d(1,isr), aslmin(1,isr), aslmax(1,isr),      &
-     &                 biotot%ffcvtot, biotot%fscvtot,                  &
-     &                 asfcce(1,isr), asfcec(1,isr),                    &
-     &                 ahzinf(isr), ahzwid(isr), subrsurf)
-            if (am0sdb(isr) .eq. 1) then
-               call sdbug(isr, nslay(isr), croptot, biotot, h1et, subrsurf)
-            end if
+      if (am0sdb(isr) .eq. 1) then
+         call sdbug(isr, soil, croptot, biotot, h1et)
+      end if
+
+      call soilproc(isr,daysim,ahlocirr(isr),h1et%zirr, ahzsmt(isr),  &
+     &              ahtsmx(1,isr), ahtsmn(1,isr), &
+     &                 soil%nslay, &
+     &                 biotot%ffcvtot, biotot%fscvtot, &
+     &                 ahzinf(isr), ahzwid(isr), soil)
+
+      if (am0sdb(isr) .eq. 1) then
+         call sdbug(isr, soil, croptot, biotot, h1et)
+      end if
 
       ! recalculate  depth to bottom of soil layer
-      call depthini( nslay(isr), aszlyt(1,isr), aszlyd(1,isr) )
+      call depthini( soil%nslay, soil%aszlyt, soil%aszlyd )
 
       call timer(TIMSOIL,TIMSTOP)      
 
     end subroutine callsoil
 
-    subroutine soil (isr, daysim, bhlocirr, bhzirr, bhzsmt,           &
+    subroutine soilproc (isr, daysim, bhlocirr, bhzirr, bhzsmt,           &
      &                 bhtsmx, bhtsmn,                                  &
-     &                 bhrwc, bhrwcdmx, bhrwca,                         &
-     &                 bhrwcw, bhrwcs, bszlyt, bslay,                   &
-     &                 bsfsan, bsfsil, bsfcla, bsfom, bsvroc,           &
-     &                 bsdsblk, bsdwblk,                                &
-     &                 bsdblk, bsdagd,                                  &
-     &                 bslagm, bslagn,                                  &
-     &                 bs0ags, bslagx, bseags,                          &
-     &                 bseagm, bseagmn, bseagmx,                        &
-     &                 bsk4d, bslmin, bslmax,                           &
+     &                 bslay, &
      &                 bbffcv, bbfscv,                                  &
-     &                 bsfcce, bsfcec, bhzinf, bhzwid, subrsurf)
+     &                 bhzinf, bhzwid, soil)
 
 
 !     + + + PURPOSE + + +
@@ -103,8 +80,8 @@ module soil_mod
       use soil_data_struct_defs, only: am0sfl
       use soil_processes_mod, only: updlay, cru, ranrou, rid
       use climate_input_mod, only: cli_today
-      use erosion_data_struct_defs, only: subregionsurfacestate
       use process_mod, only: coef_abrasion
+      use soil_data_struct_defs, only: soil_def
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -117,22 +94,11 @@ module soil_mod
       integer, intent(in) :: isr   ! subregion number
       integer daysim
       real bhlocirr, bhzirr, bhzsmt
-      real bhtsmx(mnsz), bhtsmn(mnsz)
-      real bhrwc(mnsz), bhrwcdmx(mnsz), bhrwca(mnsz)
-      real bhrwcw(mnsz), bhrwcs(mnsz), bszlyt(mnsz)
+      real bhtsmx(*), bhtsmn(*)
       integer bslay
-      real bsfsan(1:mnsz), bsfsil(1:mnsz), bsfcla(1:mnsz)
-      real bsfom(1:mnsz), bsvroc(1:mnsz)
-      real bsdsblk(mnsz), bsdwblk(mnsz)
-      real bsdblk(0:mnsz), bsdagd(0:mnsz)
-      real bslagm(0:mnsz), bslagn(0:mnsz)
-      real bs0ags(0:mnsz), bslagx(0:mnsz), bseags(0:mnsz)
-      real bseagm(mnsz), bseagmn(mnsz), bseagmx(mnsz)
-      real bsk4d(mnsz), bslmin(mnsz), bslmax(mnsz)
       real bbffcv, bbfscv
-      real bsfcce(1:mnsz), bsfcec(1:mnsz)
       real bhzinf, bhzwid
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
+      type(soil_def), intent(inout) :: soil  ! soil for this subregion
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !   daysim    - an index for the day of simulation.
@@ -144,38 +110,9 @@ module soil_mod
 !   bhzsmt    - snowmelt, mm/day.
 !   bhtsmx    - layer maximum temperature of today in C.
 !   bhtsmn    - layer minimum temperature of today in C.
-!   bhrwc     - soil water content for today, kg/kg.
-!   bhrwcdmx  - daily maximum soil water content for today, kg/kg.
-!   bhrwca    - soil avaiable water content on mass basis kg water/kg soil.
-!   bhrwcw    - wilting point = 15 bar-grav. soil water content, kg/kg
-!   bszlyt    - layer thickness, mm.
 !   bslay     - number of soil layers
-!   bsfsan    - layer fraction of sand.
-!   bsfsil    - layer fraction of silt.
-!   bsfcla    - layer fraction of clay.
-!   bsfom     - layer fraction of organic matter.
-!   bsvroc    - soil volume fraction of rock in each layer
-!   bsdsblk    - consolidated soil bulk density by layer, Mg/m^3
-!   bsdwblk    - Bulk Density of soil measured at 1/3 bar, Mg/m^3
-!   bsdblk    - current layer density may be different from bsdsblk.
-!   bsdagd    - aggregate density.
-!   bslagm    - aggregate geometric mean diameter, mm.
-!   bslagn    - minimum geometric diameter for aggregates in each
-!               layer, mm.
-!   bs0ags    - aggregate geometric standard deviation.
-!   bslagx    - maximum value of aggregate size (mm)
-!               (that aggregate may reach)
-!   bseags    - agg stability, ln(J/kg).
-!   bseagm    - mean agg stability, ln(J/kg)
-!   bseagmn   - minimum agg stability, ln(J/kg)
-!   bseagmx   - maximum agg stability, ln(J/kg)
-!   bsk4d     - drying process coef. to calc. aggregate stability
-!   bslmin    - min value of aggregate gmd
-!   bslmax    - max value of aggregate gmd
 !   bbffcv    - biomass fraction flat cover
 !   bbfscv    - biomass fraction standing cover
-!   bsfcce    - soil fraction calcium carbonate equivalent
-!   bsfcec    - soil cation exchange capacity (cmol/kg)
 !   bhzinf    - daily water infiltration depth (mm of water)
 !   bhzwid    - water infiltration depth (mm of soil)
 
@@ -189,7 +126,7 @@ module soil_mod
       real rain, snow, sprink
       real cumpa
       real cf2cov
-      real szlyd(0:mnsz), laycenter(mnsz)
+      real szlyd(mnsz), laycenter(mnsz)
       real bsmls0
       real dcump
       integer yr, idoy
@@ -228,74 +165,73 @@ module soil_mod
 
 !     + + + INITIALIZATION  SECTION + + +
 
-
 ! call daily initialization
       call sinit (daysim,                                               &
-     &                 bhtsmx, bhrwc, bsfom, bszlyt,                    &
-     &                 bslay, bsfsan, bsfsil, bsfcla,                   &
-                       subrsurf%aszrgh, subrsurf%aslrr, bsfcce, bsfcec, &
-     &                 cump(isr), dcump, bsk4d,                         &
-     &                 bhtmx0(1,isr), bhrwc0(1,isr), szlyd(0),          &
+     &                 bhtsmx, soil%ahrwc, soil%asfom, soil%aszlyt,                    &
+     &                 bslay, soil%asfsan, soil%asfsil, soil%asfcla,                   &
+                       soil%aszrgh, soil%aslrr, soil%asfcce, soil%asfcec, &
+     &                 cump(isr), dcump, soil%ask4d,                         &
+     &                 bhtmx0(1,isr), bhrwc0(1,isr), szlyd,          &
      &                 bszrr0(isr), bszrh0(isr),                        &
-     &                 bseagm, bseagmn, bseagmx,                        &
-     &                 bslmin, bslmax,                                  &
+     &                 soil%aseagm, soil%aseagmn, soil%aseagmx,                        &
+     &                 soil%aslmin, soil%aslmax,                                  &
      &                 rain, snow, sprink,                              &
-                       bhzirr, subrsurf%aszrho, &
-                       bhlocirr, bhzsmt, subrsurf%aslrro, &
-     &                 bsdsblk, cli_today%zdpt, cli_today%tdav, trigger)
-!
+                       bhzirr, soil%aszrho, &
+                       bhlocirr, bhzsmt, soil%aslrro, &
+     &                 soil%asdsblk, cli_today%zdpt, cli_today%tdav, trigger)
+
 !  UPDATE SURFACE
 !     do surface processes if (rain+sprinkler+snowmelt>0)
 
       if (dcump .gt. 0.0) then
 
 !  RIDGE SECTION:
-        call rid(cf2cov, bbfscv, bbffcv, subrsurf%aszrgh, &
-          subrsurf%asxrgs, subrsurf%aszrho, cumpa, dcump, bsvroc)
+        call rid(cf2cov, bbfscv, bbffcv, soil%aszrgh, &
+          soil%asxrgs, soil%aszrho, cumpa, dcump, soil%asvroc)
 
-!
 !  RANDOM ROUGHNESS SECTION:
-        call ranrou(bsfsil(1), bsfsan(1), subrsurf%aslrr, subrsurf%aslrro, &
-     &    cumpa, dcump, cf2cov, bsvroc(1))
+        call ranrou(soil%asfsil(1), soil%asfsan(1), soil%aslrr, soil%aslrro, &
+     &    cumpa, dcump, cf2cov, soil%asvroc(1))
 
-!
 !  CRUST SECTION:
-        call  cru(subrsurf%aszcr, cumpa, bsfcla(1), dcump, &
-          subrsurf%asfcr, bhzsmt, subrsurf%asmlos, bsfom(1), bsfcce(1), &
-          bsfsan(1), bsmls0, subrsurf%aszrgh, subrsurf%aslrr, subrsurf%asflos)
+        call  cru(soil%aszcr, cumpa, soil%asfcla(1), dcump, &
+          soil%asfcr, bhzsmt, soil%asmlos, soil%asfom(1), soil%asfcce(1), &
+          soil%asfsan(1), bsmls0, soil%aszrgh, soil%aslrr, soil%asflos)
       endif
 
 !  skip layer update on first simulation day
-      if (daysim .ge. 2)                                                &
-     &  call updlay( daysim, szlyd,                                     &
-     &  bhrwc0(1,isr), bhrwc, bhrwcdmx,                                 &
-     &  bseagmx, bseagmn, bseags,                                       &
-     &  bhrwca, bhrwcw, bhrwcs,                                         &
-     &  bhtsmn, bhtmx0(1,isr), bhtsmx,                                  &
-     &  bsk4d, bslmin, bslmax,                                          &
-     &  bslagm,                                                         &
-     &  bs0ags, bslagx, bsdblk,                                         &
-     &  bszlyt, bsdagd, bslay,                                   &
-     &  bsdsblk, bsdwblk, bhzinf, bhzwid, trigger)
+      if (daysim .ge. 2) then
+        call updlay( daysim, szlyd, &
+     &  bhrwc0(1,isr), soil%ahrwc, soil%ahrwcdmx, &
+     &  soil%aseagmx, soil%aseagmn, soil%aseags, &
+     &  soil%ahrwcw, soil%ahrwcs, &
+     &  bhtsmn, bhtmx0(1,isr), bhtsmx, &
+     &  soil%aslmin, soil%aslmax, &
+     &  soil%aslagm, &
+     &  soil%as0ags, soil%aslagx, soil%asdblk, &
+     &  soil%aszlyt, soil%asdagd, bslay, &
+     &  soil%asdsblk, bhzinf, bhzwid, trigger)
 
-      ! update surface properties based on surface layer properties
-      ! crust stability
-      subrsurf%asecr = bseags(1)
-      ! crust density
-      subrsurf%asdcr = 0.576 + 0.603 * bsdsblk(1)
+        ! update surface properties based on surface layer properties
+        ! crust stability
+        soil%asecr = soil%aseags(1)
+        ! crust density
+        soil%asdcr = 0.576 + 0.603 * soil%asdsblk(1)
+      end if
+
       ! crust coefficient of abrasion
-      subrsurf%acancr = coef_abrasion(subrsurf%asecr)
+      soil%acancr = coef_abrasion(soil%asecr)
       ! aggregate coefficient of abrasion
-      subrsurf%acanag = coef_abrasion(bseags(1))
+      soil%acanag = coef_abrasion(soil%aseags(1))
 
 !     Assign today's values to 'yesterday storage'
       do ldx = 1,bslay
           bhtmx0(ldx,isr) = bhtsmx(ldx)
-          bhrwc0(ldx,isr) = bhrwc(ldx)
+          bhrwc0(ldx,isr) = soil%ahrwc(ldx)
       end do
 
-      bszrr0(isr) = subrsurf%aslrr
-      bszrh0(isr) = subrsurf%aszrgh
+      bszrr0 = soil%aslrr
+      bszrh0 = soil%aszrgh
 
 !     + + + OUTPUT FORMATS + + +
  2100 format('#daysim idoy yr cump dcump bszrgh bsxrgs bszrr bszcr bsfcr&
@@ -329,19 +265,23 @@ module soil_mod
          end if
 
          write(luosoilsurf(isr), 2200) daysim,idoy,yr, cump(isr), dcump, &
-              subrsurf%aszrgh, subrsurf%asxrgs, subrsurf%aslrr, subrsurf%aszcr, &
-              subrsurf%asfcr, subrsurf%asecr, subrsurf%asmlos, subrsurf%asflos
+              soil%aszrgh, soil%asxrgs, soil%aslrr, soil%aszcr, &
+              soil%asfcr, soil%asecr, soil%asmlos, soil%asflos
 
 ! output new values by layer to the soil output file.
          do ldx = 1,bslay
-            laycenter(ldx) = 0.5 * ( szlyd(ldx-1) + szlyd(ldx) )
+            if( ldx .eq. 1 ) then
+              laycenter(ldx) = 0.5 * szlyd(ldx)
+            else
+              laycenter(ldx) = 0.5 * ( szlyd(ldx-1) + szlyd(ldx) )
+            end if
             write (luosoillay(isr),2400) daysim, idoy, yr, ldx,         &
-     &          laycenter(ldx), bszlyt(ldx), bsdblk(ldx),               &
-     &          bseags(ldx), bseagmn(ldx), bseagm(ldx), bseagmx(ldx),   &
-     &          bslagn(ldx), bslmin(ldx), bslagm(ldx), bslmax(ldx),     &
-     &          bslagx(ldx), bs0ags(ldx), bsdagd(ldx),                  &
-     &          (bseags(ldx)-bseagmn(ldx))/(bseagmx(ldx)-bseagmn(ldx)), &
-     &          (bslagm(ldx) - bslmin(ldx))/(bslmax(ldx) - bslmin(ldx)),&
+     &          laycenter(ldx), soil%aszlyt(ldx), soil%asdblk(ldx), &
+     &          soil%aseags(ldx), soil%aseagmn(ldx), soil%aseagm(ldx), soil%aseagmx(ldx),   &
+     &          soil%aslagn(ldx), soil%aslmin(ldx), soil%aslagm(ldx), soil%aslmax(ldx),     &
+     &          soil%aslagx(ldx), soil%as0ags(ldx), soil%asdagd(ldx),                  &
+     &          (soil%aseags(ldx)-soil%aseagmn(ldx))/(soil%aseagmx(ldx)-soil%aseagmn(ldx)), &
+     &          (soil%aslagm(ldx) - soil%aslmin(ldx))/(soil%aslmax(ldx) - soil%aslmin(ldx)),&
      &          ibits(trigger(ldx),0,1), ibits(trigger(ldx),1,1),       &
      &          ibits(trigger(ldx),2,1), ibits(trigger(ldx),3,1),       &
      &          ibits(trigger(ldx),4,1), ibits(trigger(ldx),5,1),       &
@@ -350,7 +290,7 @@ module soil_mod
       endif
 
       return
-    end subroutine soil
+    end subroutine soilproc
 
     subroutine depthini(nlay, bszlyt, bszlyd)
 
@@ -406,19 +346,19 @@ module soil_mod
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer daysim
-      real bhtsmx(mnsz), bhrwc(mnsz), bsfom(1:mnsz), bszlyt(mnsz)
+      real bhtsmx(*), bhrwc(*), bsfom(*), bszlyt(*)
       integer bslay
-      real bsfsan(1:mnsz), bsfsil(1:mnsz), bsfcla(1:mnsz)
-      real bszrgh, bszrr, bsfcce(1:mnsz), bsfcec(1:mnsz)
-      real cump, dcump, bsk4d(mnsz)
-      real bhtmx0(mnsz), bhrwc0(mnsz), szlyd(mnsz)
+      real bsfsan(*), bsfsil(*), bsfcla(*)
+      real bszrgh, bszrr, bsfcce(*), bsfcec(*)
+      real cump, dcump, bsk4d(*)
+      real bhtmx0(*), bhrwc0(*), szlyd(*)
       real bszrr0, bszrh0
-      real bseagm(mnsz), bseagmn(mnsz), bseagmx(mnsz)
-      real bslmin(mnsz),bslmax(mnsz)
+      real bseagm(*), bseagmn(*), bseagmx(*)
+      real bslmin(*),bslmax(*)
       real rain, snow, sprink
       real bhzirr, bszrho
       real bhlocirr, bhzsmt, bszrro
-      real bsdsblk(mnsz), bwzdpt, bwtdav
+      real bsdsblk(*), bwzdpt, bwtdav
       integer trigger(bslay)
 
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -650,28 +590,22 @@ module soil_mod
       cump = cump + dcump
       end subroutine sinit
 
-    subroutine soilinit(isr)
+    subroutine soilinit(soil)
 ! ***************************************************************** wjr
 ! Contains init code from main
 !
 !       Edit History
 !       04-Mar-99       wjr     created
+      use soil_data_struct_defs, only: soil_def
 
-      include 'p1werm.inc'
-      include 's1layr.inc'
-      include 's1dbc.inc'
-!
-      integer isr
-!
+      type(soil_def), intent(inout) :: soil  ! soil for this subregion
+
       ! recalculate  depth to bottom of soil layer
-      call depthini( nslay(isr), aszlyt(1,isr), aszlyd(1,isr) )
-!
-! This should go away, possibly becoming a data statement   
-      asmno3(isr) = 0.
+      call depthini( soil%nslay, soil%aszlyt, soil%aszlyd )
 
     end subroutine soilinit
 
-    subroutine  sdbug(isr,slay, croptot, biotot, h1et, subrsurf)
+    subroutine  sdbug(isr, soil, croptot, biotot, h1et)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -686,23 +620,17 @@ module soil_mod
 
       use datetime_mod, only: get_simdate
       use file_io_mod, only: luosdb
+      use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use climate_input_mod, only: cli_today
       use hydro_data_struct_defs, only: hydro_derived_et
-      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
-      include 's1agg.inc'
-      include 's1dbh.inc'
-      include 's1dbc.inc'
-      include 's1psd.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -713,10 +641,10 @@ module soil_mod
       include 'soil/tsdbug.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer isr, slay
+      integer isr
+      type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biototal), intent(in) :: croptot, biotot
       type(hydro_derived_et), intent(in) :: h1et
-      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
 
 !     + + + LOCAL VARIABLES + + +
       integer cd, cm, cy, l
@@ -797,34 +725,25 @@ module soil_mod
      &              croptot%zrtd, biotot%mftot, ahfwsf(isr), h1et%zper
       write(luosdb(isr),2052) isr,isr,isr,isr,isr,isr,isr
       write(luosdb(isr),2053) h1et%zrun,h1et%zirr,ahzsno(isr), &
-                     ahzsmt(isr), subrsurf%asxrgs,subrsurf%aszrgh,subrsurf%aslrr
+                     ahzsmt(isr), soil%asxrgs,soil%aszrgh,soil%aslrr
       write(luosdb(isr),2054) isr,isr,isr,isr,isr,isr,isr
-      write(luosdb(isr),2055) subrsurf%asfcr, subrsurf%asecr, subrsurf%asmlos, &
-     &               subrsurf%asflos, croptot%c0rg, subrsurf%aszcr
+      write(luosdb(isr),2055) soil%asfcr, soil%asecr, soil%asmlos, &
+     &               soil%asflos, croptot%c0rg, soil%aszcr
       write(luosdb(isr),2056)
 
-      do 200 l = 1,slay
-         write(luosdb(isr),2060) l, aszlyt(l,isr), ahrsk(l,isr),        &
-     &                  ahrwc(l,isr),                                   &
-     &                  ahrwcs(l,isr),ahrwca(l,isr), ahrwcf(l,isr),     &
-     &                  ahrwcw(l,isr),ah0cb(l,isr),aheaep(l,isr),       &
+      do 200 l = 1,soil%nslay
+         write(luosdb(isr),2060) l, soil%aszlyt(l), soil%ahrsk(l), soil%ahrwc(l), &
+     &                  soil%ahrwcs(l), soil%ahrwca(l), soil%ahrwcf(l), &
+     &                  soil%ahrwcw(l), soil%ah0cb(l), soil%aheaep(l), &
      &                  ahtsmx(l,isr), ahtsmn(l,isr)
   200 continue
       write(luosdb(isr),2065)
-!     om, bulk density, min ag dia., and ag. stability do not have
-!     values at the surface and thus are set to high values so the
-!     output will read '*******' for these values
-      asdblk(0,isr) = 0.0
-!      if (asfom(0,isr) .eq. 0.0)  asfom(0,isr)    = 1111111111111.
-!      if (asdblk(0,isr) .eq. 0.0)  asdblk(0,isr) = 1111111111111.
-!      if (aseags(0,isr) .eq. 0.0)  aseags(0,isr) = 1111111111111.
-!      if (aslagn(0,isr) .eq. 0.0) aslagn(0,isr)  = 1111111111111.
 
-      do 300 l=1,slay
-         write(luosdb(isr),2070) l, asfsan(l,isr), asfcla(l,isr),       &
-     &                  asfom(l,isr), asdsblk(l,isr), asdblk(l,isr),    &
-     &                  aslagm(l,isr), as0ags(l,isr), aslagn(l,isr),    &
-     &                  aslagx(l,isr), aseags(l,isr)
+      do 300 l=1,soil%nslay
+         write(luosdb(isr),2070) l, soil%asfsan(l), soil%asfcla(l), &
+     &                  soil%asfom(l), soil%asdsblk(l), soil%asdblk(l), &
+     &                  soil%aslagm(l), soil%as0ags(l), soil%aslagn(l), &
+     &                  soil%aslagx(l), soil%aseags(l)
   300 continue
 
       tisr = isr

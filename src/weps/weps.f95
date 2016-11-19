@@ -34,6 +34,7 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       use weps_interface_defs
+      use wepp_interface_defs
       use timer_mod, only: timer, TIMWEPS, TIMSTART, TIMSTOP, TIMPRINT
       use datetime_mod, only: update_system_time, get_systime_string, julday, lstday, isleap, &
                               update_simulation_date, get_simdate, get_simdate_doy
@@ -75,8 +76,6 @@
       include 'm1subr.inc'
       include 'm1sim.inc'  ! am0jd
       include 'm1flag.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
       include 'c1info.inc'
       include 'c1gen.inc'
       include 'c1db1.inc'
@@ -108,6 +107,8 @@
       integer :: SURF_UPD_FLG              ! erosion surface updating (0 - disabled, 1 - enabled)
       integer :: nsubr                     ! total number of subregions (read in inprun, derived from allocated subr_poly)
 
+      type(soil_def), dimension(:), allocatable :: soil_in          ! structure with soil state and parameters input from ifc
+      type(soil_def), dimension(:), allocatable :: soil             ! structure with soil state and parameters as updated suring simulation
       type(biomatter), dimension(:), allocatable :: crop            ! structure with crop state and parameters
       type(biototal), dimension(:), allocatable :: croptot          ! structure with totalized values of crop state
       type(biomatter), dimension(:,:), allocatable :: residue       ! structure with residue state and parameters
@@ -307,10 +308,15 @@
       sum_stat = sum_stat + alloc_stat
       allocate(noerod(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
+      allocate(soil_in(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(soil(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
 
       ! done before allocations which use layers
       do isr = 1, nsubr 
-         call input_ifc(isr, subrsurf(isr))  ! read soil file and setup layers
+         ! read soil file and setup layers
+         call input_ifc(isr, soil_in(isr))
       end do
 
       ! allocate subregion crop and residue pool arrays
@@ -359,37 +365,30 @@
 
       do isr = 1, nsubr
          ! complete allocation of layers
-         crop(isr) = create_biomatter(nslay(isr), mncz)
-         croptot(isr) = create_biototal(nslay(isr), mncz)
+         crop(isr) = create_biomatter(soil_in(isr)%nslay, mncz)
+         croptot(isr) = create_biototal(soil_in(isr)%nslay, mncz)
          do ipl = 1, mnbpls
-            residue(ipl,isr) = create_biomatter(nslay(isr), mncz)
+            residue(ipl,isr) = create_biomatter(soil_in(isr)%nslay, mncz)
          end do
          ! allocate layer arrays in totaling structures
-         restot(isr) = create_biototal(nslay(isr), mncz)
-         biotot(isr) = create_biototal(nslay(isr), mncz)
-         decompfac(isr) = create_decomp_factors(nslay(isr))
+         restot(isr) = create_biototal(soil_in(isr)%nslay, mncz)
+         biotot(isr) = create_biototal(soil_in(isr)%nslay, mncz)
+         decompfac(isr) = create_decomp_factors(soil_in(isr)%nslay)
          ! allocate layer and per/day in subregion surface state passed to erosion
-         call create_subregionsurfacestate(nslay(isr), 24, subrsurf(isr))
-         wp(isr) = create_wepp_param(nslay(isr))
+         call create_subregionsurfacestate(soil_in(isr)%nslay, 24, subrsurf(isr))
+         wp(isr) = create_wepp_param(soil_in(isr)%nslay)
       end do
 
       ! allocate debug local arrays
       call create_decomp_debug(nsubr)
 
-! save variabled for each subregion by JG
-      do isr = 1, nsubr 
-         call save_soil(isr, subrsurf(isr))  
-      end do
-
       call openfils(residue)
 
 9898  continue    !Start of initialization section (calibration)
 
-      ! moved from input.for so that IFC file can be re-read and re-initialized
-      ! for calibration run purposes.
-      ! call input_ifc  !Changed bck for now
-      do  isr =1, nsubr   
-         call restore_soil(isr, subrsurf(isr))
+      ! Assign input soil values to changeable soil arrays.
+      do  isr = 1, nsubr   
+         soil(isr) = soil_in(isr)
       end do
 
       do isr = 1, nsubr
@@ -468,7 +467,7 @@
 
       do isr = 1, nsubr
          ! this prints header to plot.out file
-         call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), subrsurf(isr), cellstate )  ! print to plot data file
+         call plotdata( isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
          ! this prints header to decomp.out file
          call bpools( isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr) )
       end do
@@ -481,22 +480,23 @@
          call decopen(isr) ! prints headers in above.out and below.out
          call cropinit(isr, crop(isr))
          ! initialize all dependent variables
-         call updres(isr, residue(1:size(residue,1), isr), restot(isr))
+         call updres(soil(isr), residue(1:size(residue,1), isr), restot(isr))
          call sci_stir_init(isr)
          ! Initialize the water holding capacity variable
-         call hydrinit(isr, h1et(isr), wp(isr))
+         call hydrinit(isr, soil(isr), h1et(isr), wp(isr))
          ! initialize soil depth to bottom of layers (mm) from layer thickness (mm)
-         call soilinit(isr)
+         call soilinit(soil(isr))
          ! initialize croptot variables
-         call cropupdate( subrsurf(isr)%aszrgh, aszlyd(1,isr), ac0rg(isr), acxrow(isr), nslay(isr), ac0ssa(isr), ac0ssb(isr), &
-                          acdpop(isr), ahztranspdepth(isr), ahzfurcut(isr), ahztransprtmin(isr), ahztransprtmax(isr), &
+         call cropupdate( soil(isr)%aszrgh, soil(isr)%aszlyd, ac0rg(isr), acxrow(isr), soil(isr)%nslay, ac0ssa(isr), &
+                          ac0ssb(isr), acdpop(isr), &
+                          ahztranspdepth(isr), ahzfurcut(isr), ahztransprtmin(isr), ahztransprtmax(isr), &
                           crop(isr), croptot(isr) )
-         call sumbio(isr, crop(isr), residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr), subrsurf(isr))
+         call sumbio(soil(isr), crop(isr), residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))
 
       !write(*,*) 'biotot, croptot, restot', biotot(isr), croptot(isr), restot(isr)
 
          if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
-            call init_wepp(isr, 0)        ! specific wepp initializations
+            call init_wepp(isr, 0, soil(isr))        ! specific wepp initializations
          end if
       end do
 ! Subregion running loop
@@ -543,14 +543,15 @@
             write(6,*) 'Year', yrsim, ' of', simyrs, '(initialization)'
             call flush(6)
          end if
-         do isr=1,nsubr   ! do multiple subregion      
-          ! isr = 1 !Note: we are no longer dealing with multiple subregions here
-          call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
-     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr), subrsurf(isr))
+         do isr=1,nsubr
+          ! do multiple subregion      
+          call submodels(isr, soil(isr), crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
+     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
 
-          call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), subrsurf(isr), cellstate )  ! print to plot data file
+          call plotdata( isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
+
           ! write decomposition biomass pool amounts to files
           call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
 !        write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',                 &
@@ -628,10 +629,10 @@
 
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
-            call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),&
-     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr), subrsurf(isr))
+            call submodels(isr, soil(isr), crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
+     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
 
-            call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), subrsurf(isr), cellstate )  ! print to plot data file
+            call plotdata( isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
 
             ! write decomposition biomass pool amounts to files
             call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
@@ -696,7 +697,7 @@
 
          if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
             do isr = 1, nsubr
-               call init_wepp(isr, 1)        ! specific wepp initializations
+               call init_wepp(isr, 1, soil(isr))        ! specific wepp initializations
             end do
          end if
 
@@ -751,12 +752,16 @@
                call flush(6)
             end if
 
-!           if (am0jd.eq.ijday+1) call dbgdmp(daysim, isr, crop(isr), residue(isr), croptot(isr), biotot(isr), h1et(isr))
-!           if (am0jd.eq.ljday) call dbgdmp(daysim, isr, crop(isr), residue(isr), croptot(isr), biotot(isr), h1et(isr))
-
             do isr=1,nsubr   ! do multiple subregion     
-               call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
-                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr), subrsurf(isr))
+               !if (am0jd.eq.ijday+1) then
+               !   call dbgdmp(daysim, isr, soil(isr), crop(isr), residue(1:size(residue,1),isr),croptot(isr),biotot(isr),h1et(isr))
+               !end if
+               !if (am0jd.eq.ljday) then
+               !   call dbgdmp(daysim, isr, soil(isr), crop(isr), residue(1:size(residue,1),isr),croptot(isr),biotot(isr),h1et(isr))
+               !end if
+
+               call submodels(isr, soil(isr), crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
+                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
             end do
 
             ! set the barrier interpolation in time
@@ -766,7 +771,7 @@
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
                   ! transfer data values from submodel structures into erosion input structure
                   do isr=1,nsubr   ! do multiple subregion
-                     call erodsubr_update( isr, restot(isr), croptot(isr), biotot(isr), h1et(isr), subrsurf(isr) )
+                     call erodsubr_update( isr, soil(isr), restot(isr), croptot(isr), biotot(isr), h1et(isr), subrsurf(isr) )
                   end do
                   ! write(*,*) "Start calcwu"
                   call calcwu
@@ -802,11 +807,11 @@
 
             do isr=1,nsubr   ! do multiple subregion     
                if ((run_erosion .eq. 2) .or. (run_erosion .eq. 3)) then
-                  call water_erosion( isr, cd, cm, cy, restot(isr), croptot(isr), subrsurf(isr) )
+                  call water_erosion( isr, cd, cm, cy, soil(isr), restot(isr), croptot(isr) )
                end if
 
                call sci_cum( isr, restot(isr), cellstate )   ! Keep running total for soil conditioning index (SCI)
-               call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), subrsurf(isr), cellstate )  ! print to plot data file
+               call plotdata( isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
                ! write decomposition biomass pool amounts to files
                call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
 
@@ -871,8 +876,8 @@
                end if
 
                ! Compute period values
-               call update_period_update_vars(isr, rep_update(isr)%period_update, restot(isr), croptot(isr), biotot(isr), &
-                                              cellstate, h1et(isr), subrsurf(isr))
+               call update_period_update_vars(isr, rep_update(isr)%period_update, soil(isr), &
+                    restot(isr), croptot(isr), biotot(isr), cellstate, h1et(isr), subrsurf(isr))
                                              
                ! print *, pd, "  ",cy,cm,cd,"  ", rep_dates(isr)%period(pd(isr))
 

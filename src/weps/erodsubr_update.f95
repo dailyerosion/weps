@@ -3,19 +3,21 @@
 !$Revision$
 !$HeadURL$
 
-subroutine erodsubr_update( sr, restot, croptot, biotot, h1et, subrsurf )
+subroutine erodsubr_update( sr, soil, restot, croptot, biotot, h1et, subrsurf )
 
 !     +++ PURPOSE +++
 !     print out input file for stand alone erosion
 
 !     + + + Modules Used + + +
     use subregions_mod
+    use soil_data_struct_defs, only: soil_def
     use biomaterial, only: biototal
     use hydro_data_struct_defs, only: hydro_derived_et
     use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     +++ ARGUMENT DECLARATIONS +++
     integer sr                               ! subregion index (eventually obsolete)
+    type(soil_def), intent(in) :: soil  ! soil for this subregion
     type(biototal), intent(in) :: restot
     type(biototal), intent(in) :: croptot
     type(biototal), intent(in) :: biotot
@@ -26,10 +28,6 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, h1et, subrsurf )
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
-      include  's1dbh.inc'
-      include  's1layr.inc'
-      include  's1phys.inc'
-      include  's1agg.inc'
       include  'h1db1.inc'
 
 !     +++ LOCAL VARIABLES +++
@@ -54,24 +52,36 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, h1et, subrsurf )
 
     subrsurf%abffcv = biotot%ffcvtot
 
-    do idx = 1, nslay(sr)
+    subrsurf%asfcr = soil%asfcr
+    subrsurf%aszcr = soil%aszcr
+    subrsurf%asflos = soil%asflos
+    subrsurf%asmlos = soil%asmlos
+    subrsurf%asdcr = soil%asdcr
+    subrsurf%asecr = soil%asecr
+    subrsurf%aslrr = soil%aslrr
+    subrsurf%aszrgh = soil%aszrgh
+    subrsurf%asxrgs = soil%asxrgs
+    subrsurf%asxrgw = soil%asxrgw
+    subrsurf%asargo = soil%asargo
 
-        subrsurf%bsl(idx)%aszlyt = aszlyt(idx,sr)
-        subrsurf%bsl(idx)%asdblk = asdblk(idx,sr)
-        subrsurf%bsl(idx)%asfsan = asfsan(idx,sr)
-        subrsurf%bsl(idx)%asfvfs = asfvfs(idx,sr)
-        subrsurf%bsl(idx)%asfsil = asfsil(idx,sr)
-        subrsurf%bsl(idx)%asfcla = asfcla(idx,sr)
-        subrsurf%bsl(idx)%asvroc = asvroc(idx,sr)
-        subrsurf%bsl(idx)%asdagd = asdagd(idx,sr)
-        subrsurf%bsl(idx)%aseags = aseags(idx,sr)
-        subrsurf%bsl(idx)%aslagm = aslagm(idx,sr)
-        subrsurf%bsl(idx)%aslagn = aslagn(idx,sr)
-        subrsurf%bsl(idx)%aslagx = aslagx(idx,sr)
-        subrsurf%bsl(idx)%as0ags = as0ags(idx,sr)
+    do idx = 1, soil%nslay
 
-        subrsurf%bsl(idx)%ahrwcw = ahrwcw(idx,sr)
-        subrsurf%bsl(idx)%ahrwca = ahrwca(idx,sr)
+        subrsurf%bsl(idx)%aszlyt = soil%aszlyt(idx)
+        subrsurf%bsl(idx)%asdblk = soil%asdblk(idx)
+        subrsurf%bsl(idx)%asfsan = soil%asfsan(idx)
+        subrsurf%bsl(idx)%asfvfs = soil%asfvfs(idx)
+        subrsurf%bsl(idx)%asfsil = soil%asfsil(idx)
+        subrsurf%bsl(idx)%asfcla = soil%asfcla(idx)
+        subrsurf%bsl(idx)%asvroc = soil%asvroc(idx)
+        subrsurf%bsl(idx)%asdagd = soil%asdagd(idx)
+        subrsurf%bsl(idx)%aseags = soil%aseags(idx)
+        subrsurf%bsl(idx)%aslagm = soil%aslagm(idx)
+        subrsurf%bsl(idx)%aslagn = soil%aslagn(idx)
+        subrsurf%bsl(idx)%aslagx = soil%aslagx(idx)
+        subrsurf%bsl(idx)%as0ags = soil%as0ags(idx)
+
+        subrsurf%bsl(idx)%ahrwcw = soil%ahrwcw(idx)
+        subrsurf%bsl(idx)%ahrwca = soil%ahrwca(idx)
 
     end do
 

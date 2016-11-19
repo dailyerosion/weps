@@ -278,8 +278,6 @@ module sweep_io_mod
 
       ! +++ SOIL +++
 
-        ! s1layr.inc, s1phys.inc & s1agg.inc
-
         ! Number of soil layers (in this subregion)
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%nslay
@@ -313,7 +311,6 @@ module sweep_io_mod
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%asvroc, l=1,subrsurf(sr)%nslay)
 
-        ! s1agg.inc
         ! Soil layer aggregate density
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%asdagd, l=1,subrsurf(sr)%nslay)
@@ -781,8 +778,6 @@ module sweep_io_mod
 
       ! +++ SOIL +++
 
-        ! s1layr.inc, s1phys.inc & s1agg.inc
-
         ! Number of soil layers (in this subregion)
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%nslay
@@ -816,7 +811,6 @@ module sweep_io_mod
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%asvroc, l=1,subrsurf(sr)%nslay)
 
-        ! s1agg.inc
         ! Soil layer aggregate density
         line = getline(i_unit)
         read (line,*) (subrsurf(sr)%bsl(l)%asdagd, l=1,subrsurf(sr)%nslay)

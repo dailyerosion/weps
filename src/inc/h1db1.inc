@@ -12,19 +12,20 @@
 !
 !     + + + VARIABLE DECLARATIONS + + +
 !
-      real             ahrwcr(mnsz, mnsub)
-      real             ahrwcw(mnsz, mnsub)
-      real             ahrwcf(mnsz, mnsub)
-      real             ahrwcs(mnsz, mnsub)
-      real             ahrwca(mnsz, mnsub)
+!      real             ahrwcr(mnsz, mnsub)
+!      real             ahrwcw(mnsz, mnsub)
+!      real             ahrwcf(mnsz, mnsub)
+!      real             ahrwcs(mnsz, mnsub)
+!      real             ahrwca(mnsz, mnsub)
       real             ahrwc0(mnhhrs, mnsub)
       real             ahzsnd(mnsub)
-      real             ahrwc1(mnsz,mnsub)
-      real             ahfredsat(mnsz, mnsub)
+!      real             ahrwc1(mnsz,mnsub)
+!      real             ahfredsat(mnsz, mnsub)
 !
-      common / h1db1 /                                                  &
-     &         ahrwcr, ahrwcw, ahrwcf, ahrwcs, ahrwca, ahrwc0, ahzsnd,  &
-     &         ahrwc1, ahfredsat
+!      common / h1db1 /                                                  &
+!     &         ahrwcr, ahrwcw, ahrwcf, ahrwcs, ahrwca, ahrwc0, ahzsnd,  &
+!     &         ahrwc1, ahfredsat
+      common / h1db1 /  ahrwc0, ahzsnd
 
       save :: /h1db1/
 !

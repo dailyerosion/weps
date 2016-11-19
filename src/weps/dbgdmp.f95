@@ -3,13 +3,14 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine dbgdmp(day, sr, crop, residue, croptot, biotot, h1et, subrsurf)
+      subroutine dbgdmp(day, sr, soil, crop, residue, croptot, biotot, h1et)
 ! ****************************************************************** wjr
 !     The dumps variables that have gone out of range
 
 !       EDIT HISTORY
 !       01-Mar-99       wjr     original coding
 
+      use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: awdair, awadir, awhrmx, awudmx, awudmn, awudav, subday, ntstep
       use climate_input_mod, only: cli_today, cli_tyav
@@ -19,12 +20,12 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: day
       integer, intent(in) :: sr
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(biomatter), intent(in) :: crop
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(hydro_derived_et), intent(inout) :: h1et
-      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
 
 !     + + + GLOBAL COMMON BLOCKS + + +
 
@@ -33,11 +34,6 @@
       include 'm1subr.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
-      include 's1agg.inc'
-      include 's1dbh.inc'
-      include 's1dbc.inc'
       include 'c1info.inc'
       include 'c1gen.inc'
       include 'c1db1.inc'
@@ -70,30 +66,30 @@
 
       if (dmpflg) write(*,*) 's1surf'
 
-      if (subrsurf%aszcr.lt.0.0.or.subrsurf%aszcr.gt.23.0) &
-        write(*,*) 'day ',day,' aszcr ', subrsurf%aszcr
+      if (soil%aszcr.lt.0.0.or.soil%aszcr.gt.23.0) &
+        write(*,*) 'day ',day,' aszcr ', soil%aszcr
 
-      if (subrsurf%asfcr.lt.0.0.or.subrsurf%asfcr.gt.1.0) &
-        write(*,*) 'day ',day,' asfcr ', subrsurf%asfcr
+      if (soil%asfcr.lt.0.0.or.soil%asfcr.gt.1.0) &
+        write(*,*) 'day ',day,' asfcr ', soil%asfcr
 
-      if (subrsurf%asmlos.lt.0.0.or.subrsurf%asmlos.gt.2.0) &
-        write(*,*) 'day ',day,' asmlos ', subrsurf%asmlos
+      if (soil%asmlos.lt.0.0.or.soil%asmlos.gt.2.0) &
+        write(*,*) 'day ',day,' asmlos ', soil%asmlos
 
-      if (subrsurf%asflos.lt.0.0.or.subrsurf%asflos.gt.1.0) &
-        write(*,*) 'day ',day,' asflos ', subrsurf%asflos
+      if (soil%asflos.lt.0.0.or.soil%asflos.gt.1.0) &
+        write(*,*) 'day ',day,' asflos ', soil%asflos
 
 ! wjr,  test values based on definition
-      if (subrsurf%asdcr.lt.0.6.or.subrsurf%asdcr.gt.2.0) &
-        write(*,*) 'day ',day,' asdcr ', subrsurf%asdcr
+      if (soil%asdcr.lt.0.6.or.soil%asdcr.gt.2.0) &
+        write(*,*) 'day ',day,' asdcr ', soil%asdcr
 
-      if (subrsurf%asecr.lt.0.1.or.subrsurf%asecr.gt.7.0) &
-        write(*,*) 'day ',day,' asecr ', subrsurf%asecr
+      if (soil%asecr.lt.0.1.or.soil%asecr.gt.7.0) &
+        write(*,*) 'day ',day,' asecr ', soil%asecr
 
-      if (subrsurf%asfald.lt.0.05.or.subrsurf%asfald.gt.0.25) &
-        write(*,*) 'day ',day,' asfald ', subrsurf%asfald
+      if (soil%asfald.lt.0.05.or.soil%asfald.gt.0.25) &
+        write(*,*) 'day ',day,' asfald ', soil%asfald
 
-      if (subrsurf%asfalw.lt.0.05.or.subrsurf%asfalw.gt.0.2) &
-        write(*,*) 'day ',day,' asfalw ', subrsurf%asfalw
+      if (soil%asfalw.lt.0.05.or.soil%asfalw.gt.0.2) &
+        write(*,*) 'day ',day,' asfalw ', soil%asfalw
 !
 ! w1info
 !     
@@ -113,28 +109,28 @@
 !
       if (dmpflg) write(*,*) 's1sgeo'
 !      
-      if (subrsurf%aszrgh.lt.0.0.or.subrsurf%aszrgh.gt.500.0) &
-     &  write(*,*) 'day ',day,' aszrgh ', subrsurf%aszrgh
+      if (soil%aszrgh.lt.0.0.or.soil%aszrgh.gt.500.0) &
+     &  write(*,*) 'day ',day,' aszrgh ', soil%aszrgh
 !
-      if (subrsurf%asxrgw.lt.10.0.or.subrsurf%asxrgw.gt.4000.0) &
-     &  write(*,*) 'day ',day,' asxrgw ', subrsurf%asxrgw
+      if (soil%asxrgw.lt.10.0.or.soil%asxrgw.gt.4000.0) &
+     &  write(*,*) 'day ',day,' asxrgw ', soil%asxrgw
 !
-      if (subrsurf%asxrgs.lt.10.0.or.subrsurf%asxrgs.gt.2000.0)                   &
-     &  write(*,*) 'day ',day,' asxrgs ', subrsurf%asxrgs
+      if (soil%asxrgs.lt.10.0.or.soil%asxrgs.gt.2000.0)                   &
+     &  write(*,*) 'day ',day,' asxrgs ', soil%asxrgs
 !
-      if (subrsurf%asargo.lt.0.0.or.subrsurf%asargo.gt.179.0)                     &
-     &  write(*,*) 'day ',day,' asargo ', subrsurf%asargo
-!
-! wjr,  test values based on definition
-      if (subrsurf%asxdks.lt.0.0.or.subrsurf%asxdks.gt.1000.0)                    &
-     &  write(*,*) 'day ',day,' asxdks ', subrsurf%asxdks
+      if (soil%asargo.lt.0.0.or.soil%asargo.gt.179.0)                     &
+     &  write(*,*) 'day ',day,' asargo ', soil%asargo
 !
 ! wjr,  test values based on definition
-      if (subrsurf%asxdkh.lt.0.0.or.subrsurf%asxdkh.gt.1000.0)                    &
-     &  write(*,*) 'day ',day,' asxdkh ', subrsurf%asxdkh
+      if (soil%asxdks.lt.0.0.or.soil%asxdks.gt.1000.0)                    &
+     &  write(*,*) 'day ',day,' asxdks ', soil%asxdks
 !
-      if (subrsurf%aslrr.lt.1.0.or.subrsurf%aslrr.gt.30.0) &
-     &  write(*,*) 'day ',day,' aslrr ', subrsurf%aslrr
+! wjr,  test values based on definition
+      if (soil%asxdkh.lt.0.0.or.soil%asxdkh.gt.1000.0)                    &
+     &  write(*,*) 'day ',day,' asxdkh ', soil%asxdkh
+!
+      if (soil%aslrr.lt.1.0.or.soil%aslrr.gt.30.0) &
+     &  write(*,*) 'day ',day,' aslrr ', soil%aslrr
 !
 ! w1wind
 !
@@ -159,7 +155,7 @@
       if (awudav.lt.0.0.or.awudav.gt.35.0)                              &
      &  write(*,*) 'day ',day,' awudav ', awudav
 !
-      do 10 idx=1,mntime
+      do 10 idx=1,size(subday)
 ! wjr,  test values based on definition
         if( subday(idx)%awu .lt. 0.0 .or. subday(idx)%awu .gt. 35.0 )   &
      &    write(*,*) 'day ',day,' awu(',idx,') ',  subday(idx)%awu
@@ -253,12 +249,12 @@
 !
       if (dmpflg) write(*,*) 's1layd'
 !      
-      do 50 idx=1,nslay(sr)
-      if (asdsblk(idx, sr).lt.tstmin.or.asdsblk(idx, sr).gt.tstmax)     &
-     &  write(*,*) 'day ',day,' asdsblk(',idx,') ', asdsblk(idx, sr)
+      do 50 idx=1,soil%nslay
+      if (soil%asdsblk(idx).lt.tstmin.or.soil%asdsblk(idx).gt.tstmax)     &
+     &  write(*,*) 'day ',day,' asdsblk(',idx,') ', soil%asdsblk(idx)
 !
-      if (aszlyd(idx, sr).lt.tstmin.or.aszlyd(idx, sr).gt.tstmax)       &
-     &  write(*,*) 'day ',day,' aszlyd(',idx,') ', aszlyd(idx, sr)
+      if (soil%aszlyd(idx).lt.tstmin.or.soil%aszlyd(idx).gt.tstmax)       &
+     &  write(*,*) 'day ',day,' aszlyd(',idx,') ', soil%aszlyd(idx)
 !
 ! ***      if (aszlym(idx, sr).lt.tstmin.or.aszlym(idx, sr).gt.tstmax)
 ! ***     *  write(*,*) 'day ',day,' aszlym(',idx,') ', aszlym(idx, sr)
@@ -271,131 +267,99 @@
 !
       if (dmpflg) write(*,*) 's1layr'
 !      
-      if (nslay(sr).lt.1.or.nslay(sr).gt.10)                            &
-     &  write(*,*) 'day ',day,' nslay ', nslay(sr)
+      if (soil%nslay.lt.1.or.soil%nslay.gt.10)                            &
+     &  write(*,*) 'day ',day,' nslay ', soil%nslay
 !
-      if (aszlyt(1, sr).lt.10.0.or.aszlyt(1, sr).gt.10.0)               &
-     &  write(*,*) 'day ',day,' aszlyt(1) ', aszlyt(1, sr)
+      if (soil%aszlyt(1).lt.10.0.or.soil%aszlyt(1).gt.10.0)               &
+     &  write(*,*) 'day ',day,' aszlyt(1) ', soil%aszlyt(1)
 !
-      if (nslay(sr).gt.1.and.                                           &
-     & (aszlyt(2, sr).lt.40.0.or.aszlyt(2, sr).gt.40.0))                &
-     &  write(*,*) 'day ',day,' aszlyt(2) ', aszlyt(2, sr)
+      if (soil%nslay.gt.1.and.                                           &
+     & (soil%aszlyt(2).lt.40.0.or.soil%aszlyt(2).gt.40.0))                &
+     &  write(*,*) 'day ',day,' aszlyt(2) ', soil%aszlyt(2)
 !
-      if (nslay(sr).gt.2.and.                                           &
-     & (aszlyt(3, sr).lt.50.0.or.aszlyt(3, sr).gt.100.0))               &
-     &  write(*,*) 'day ',day,' aszlyt(3) ', aszlyt(3, sr)
+      if (soil%nslay.gt.2.and.                                           &
+     & (soil%aszlyt(3).lt.50.0.or.soil%aszlyt(3).gt.100.0))               &
+     &  write(*,*) 'day ',day,' aszlyt(3) ', soil%aszlyt(3)
 !
-      if (nslay(sr).gt.3.and.                                           &
-     & (aszlyt(4, sr).lt.50.0.or.aszlyt(4, sr).gt.100.0))               &
-     &  write(*,*) 'day ',day,' aszlyt(4) ', aszlyt(4, sr)
+      if (soil%nslay.gt.3.and.                                           &
+     & (soil%aszlyt(4).lt.50.0.or.soil%aszlyt(4).gt.100.0))               &
+     &  write(*,*) 'day ',day,' aszlyt(4) ', soil%aszlyt(4)
 !
-      do 60 idx=5,mnsz+1
-      if (nslay(sr).ge.idx.and.                                         &
-     & (aszlyt(idx, sr).lt.1.0.or.aszlyt(idx, sr).gt.1000.0))           &
-     &  write(*,*) 'day ',day,' aszlyt(',idx,') ', aszlyt(idx, sr)
+      do 60 idx=5,soil%nslay
+      if (soil%nslay.ge.idx.and.                                         &
+     & (soil%aszlyt(idx).lt.1.0.or.soil%aszlyt(idx).gt.1000.0))           &
+     &  write(*,*) 'day ',day,' aszlyt(',idx,') ', soil%aszlyt(idx)
    60 continue     
 !
 ! s1phys
 !
       if (dmpflg) write(*,*) 's1phys'
 !      
-      do 70 idx=0,mnsz
-      if (asdblk(idx, sr).lt.0.50.or.asdblk(idx, sr).gt.2.5)            &
-     &  write(*,*) 'day ',day,' asdblk(',idx,') ', asdblk(idx, sr)
+      do 70 idx=1, soil%nslay
+      if (soil%asdblk(idx).lt.0.50.or.soil%asdblk(idx).gt.2.5)            &
+     &  write(*,*) 'day ',day,' asdblk(',idx,') ', soil%asdblk(idx)
   70  continue
 !
 ! s1dbh
 !
       if (dmpflg) write(*,*) 's1dbh'
 !      
-      do 80 idx=0,mnsz
-      if (asfsan(idx, sr).lt.0.0.or.asfsan(idx, sr).gt.1.0)             &
-     &  write(*,*) 'day ',day,' asfsan(',idx,') ', asfsan(idx, sr)
+      do 80 idx=1,soil%nslay
+      if (soil%asfsan(idx).lt.0.0.or.soil%asfsan(idx).gt.1.0)             &
+     &  write(*,*) 'day ',day,' asfsan(',idx,') ', soil%asfsan(idx)
 !
-      if (asfsil(idx, sr).lt.0.0.or.asfsil(idx, sr).gt.1.0)             &
-     &  write(*,*) 'day ',day,' asfsil(',idx,') ', asfsil(idx, sr)
+      if (soil%asfsil(idx).lt.0.0.or.soil%asfsil(idx).gt.1.0)             &
+     &  write(*,*) 'day ',day,' asfsil(',idx,') ', soil%asfsil(idx)
 !
-      if (asfcla(idx, sr).lt.0.0.or.asfcla(idx, sr).gt.1.0)             &
-     &  write(*,*) 'day ',day,' asfcla(',idx,') ', asfcla(idx, sr)
+      if (soil%asfcla(idx).lt.0.0.or.soil%asfcla(idx).gt.1.0)             &
+     &  write(*,*) 'day ',day,' asfcla(',idx,') ', soil%asfcla(idx)
 !
-      if (asvroc(idx, sr).lt.0.0.or.asvroc(idx, sr).gt.1.0)             &
-     &  write(*,*) 'day ',day,' asvroc(',idx,') ', asvroc(idx, sr)
+      if (soil%asvroc(idx).lt.0.0.or.soil%asvroc(idx).gt.1.0)             &
+     &  write(*,*) 'day ',day,' asvroc(',idx,') ', soil%asvroc(idx)
    80 continue     
 !
 ! s1agg
 !
       if (dmpflg) write(*,*) 's1agg'
 !      
-      do 90 idx=0,mnsz
-      if (asdagd(idx, sr).lt.0.6.or.asdagd(idx, sr).gt.2.5)             &
-     &  write(*,*) 'day ',day,' asdagd(',idx,') ', asdagd(idx, sr)
+      do 90 idx=1, soil%nslay
+      if (soil%asdagd(idx).lt.0.6.or.soil%asdagd(idx).gt.2.5)             &
+     &  write(*,*) 'day ',day,' asdagd(',idx,') ', soil%asdagd(idx)
 !
-      if (aseags(idx, sr).lt.0.1.or.aseags(idx, sr).gt.7.0)             &
-     &  write(*,*) 'day ',day,' aseags(',idx,') ', aseags(idx, sr)
+      if (soil%aseags(idx).lt.0.1.or.soil%aseags(idx).gt.7.0)             &
+     &  write(*,*) 'day ',day,' aseags(',idx,') ', soil%aseags(idx)
 !
-      if (aslagm(idx, sr).lt.0.03.or.aslagm(idx, sr).gt.30.0)           &
-     &  write(*,*) 'day ',day,' aslagm(',idx,') ', aslagm(idx, sr)
+      if (soil%aslagm(idx).lt.0.03.or.soil%aslagm(idx).gt.30.0)           &
+     &  write(*,*) 'day ',day,' aslagm(',idx,') ', soil%aslagm(idx)
 !
-      if (aslagn(idx, sr).lt.0.001.or.aslagn(idx, sr).gt.5.0)           &
-     &  write(*,*) 'day ',day,' aslagn(',idx,') ', aslagn(idx, sr)
+      if (soil%aslagn(idx).lt.0.001.or.soil%aslagn(idx).gt.5.0)           &
+     &  write(*,*) 'day ',day,' aslagn(',idx,') ', soil%aslagn(idx)
 !
-      if (aslagx(idx, sr).lt.1.0.or.aslagx(idx, sr).gt.1000.0)          &
-     &  write(*,*) 'day ',day,' aslagx(',idx,') ', aslagx(idx, sr)
+      if (soil%aslagx(idx).lt.1.0.or.soil%aslagx(idx).gt.1000.0)          &
+     &  write(*,*) 'day ',day,' aslagx(',idx,') ', soil%aslagx(idx)
 !
-      if (as0ags(idx, sr).lt.1.0.or.as0ags(idx, sr).gt.20.0)            &
-     &  write(*,*) 'day ',day,' as0ags(',idx,') ', as0ags(idx, sr)
+      if (soil%as0ags(idx).lt.1.0.or.soil%as0ags(idx).gt.20.0)            &
+     &  write(*,*) 'day ',day,' as0ags(',idx,') ', soil%as0ags(idx)
    90 continue     
 !
 ! s1dbc
 !
       if (dmpflg) write(*,*) 's1dbc'
-!      
-      if (asfom(0, sr).lt.tstmin.or.asfom(0, sr).gt.tstmax)             &
-     &  write(*,*) 'day ',day,' asfom(0) ', asfom(0, sr)
-!
-      do 100 idx=1,mnsz
-      if (as0ph(idx, sr).lt.0.0.or.as0ph(idx, sr).gt.14.0)              &
-     &  write(*,*) 'day ',day,' as0ph(',idx,') ', as0ph(idx, sr)
-!
-      if (ascmg(idx, sr).lt.0.0.or.ascmg(idx, sr).gt.tstmax)            &
-     &  write(*,*) 'day ',day,' ascmg(',idx,') ', ascmg(idx, sr)
-!
-      if (ascna(idx, sr).lt.0.0.or.ascna(idx, sr).gt.tstmax)            &
-     &  write(*,*) 'day ',day,' ascna(',idx,') ', ascna(idx, sr)
-!
-      if (asfcce(idx, sr).lt.0.0.or.asfcce(idx, sr).gt.100.0)           &
-     &  write(*,*) 'day ',day,' asfcce(',idx,') ', asfcce(idx, sr)
-!
-      if (asfcec(idx, sr).lt.0.0.or.asfcec(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' asfcec(',idx,') ', asfcec(idx, sr)
-!
-      if (asfesp(idx, sr).lt.0.0.or.asfesp(idx, sr).gt.100.0)           &
-     &  write(*,*) 'day ',day,' asfesp(',idx,') ', asfesp(idx, sr)
-!
-      if (asfom(idx, sr).lt.0.0.or.asfom(idx, sr).gt.tstmax)            &
-     &  write(*,*) 'day ',day,' asfom(',idx,') ', asfom(idx, sr)
-!
-      if (asfnoh(idx, sr).lt.0.0.or.asfnoh(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' asfnoh(',idx,') ', asfnoh(idx, sr)
-!
-      if (asfpoh(idx, sr).lt.0.0.or.asfpoh(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' asfpoh(',idx,') ', asfpoh(idx, sr)
-!
-      if (asfpsp(idx, sr).lt.0.0.or.asfpsp(idx, sr).gt.1.0)             &
-     &  write(*,*) 'day ',day,' asfpsp(',idx,') ', asfpsp(idx, sr)
-!
-      if (asfsmb(idx, sr).lt.0.0.or.asfsmb(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' asfsmb(',idx,') ', asfsmb(idx, sr)
-!
-      if (asftap(idx, sr).lt.0.0.or.asftap(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' asftap(',idx,') ', asftap(idx, sr)
-!
-      if (asftan(idx, sr).lt.0.0.or.asftan(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' asftan(',idx,') ', asftan(idx, sr)
+      
+      do 100 idx=1, soil%nslay
+      if (soil%as0ph(idx).lt.0.0.or.soil%as0ph(idx).gt.14.0)              &
+     &  write(*,*) 'day ',day,' as0ph(',idx,') ', soil%as0ph(idx)
+
+      if (soil%asfcce(idx).lt.0.0.or.soil%asfcce(idx).gt.100.0)           &
+     &  write(*,*) 'day ',day,' asfcce(',idx,') ', soil%asfcce(idx)
+
+      if (soil%asfcec(idx).lt.0.0.or.soil%asfcec(idx).gt.tstmax)          &
+     &  write(*,*) 'day ',day,' asfcec(',idx,') ', soil%asfcec(idx)
+
+      if (soil%asfom(idx).lt.0.0.or.soil%asfom(idx).gt.tstmax)            &
+     &  write(*,*) 'day ',day,' asfom(',idx,') ', soil%asfom(idx)
   100 continue
-!
-      if (asmno3(sr).lt.0.0.or.asmno3(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' asmno3 ', asmno3(sr)
+
 !
 ! m1sim
 !
@@ -468,18 +432,18 @@
 !
       if (dmpflg) write(*,*) 'h1hydro'
 !      
-      do 120 idx=1,mnsz
-      if (ahrwc(idx, sr).lt.0.011.or.ahrwc(idx, sr).gt.0.379)           &
-     &  write(*,*) 'day ',day,' ahrwc(',idx,') ', ahrwc(idx, sr)
+      do 120 idx=1, soil%nslay
+      if (soil%ahrwc(idx).lt.0.011.or.soil%ahrwc(idx).gt.0.379)           &
+     &  write(*,*) 'day ',day,' ahrwc(',idx,') ', soil%ahrwc(idx)
 !
-      if (aheaep(idx, sr).lt.-17.91.or.aheaep(idx, sr).gt.0.0)          &
-     &  write(*,*) 'day ',day,' aheaep(',idx,') ', aheaep(idx, sr)
+      if (soil%aheaep(idx).lt.-17.91.or.soil%aheaep(idx).gt.0.0)          &
+     &  write(*,*) 'day ',day,' aheaep(',idx,') ', soil%aheaep(idx)
 !
-      if (ahrsk(idx, sr).lt.0.0.or.ahrsk(idx, sr).gt.0.001)             &
-     &  write(*,*) 'day ',day,' ahrsk(',idx,') ', ahrsk(idx, sr)
+      if (soil%ahrsk(idx).lt.0.0.or.soil%ahrsk(idx).gt.0.001)             &
+     &  write(*,*) 'day ',day,' ahrsk(',idx,') ', soil%ahrsk(idx)
 !
-      if (ah0cb(idx, sr).lt.0.917.or.ah0cb(idx, sr).gt.27.927)          &
-     &  write(*,*) 'day ',day,' ah0cb(',idx,') ', ah0cb(idx, sr)
+      if (soil%ah0cb(idx).lt.0.917.or.soil%ah0cb(idx).gt.27.927)          &
+     &  write(*,*) 'day ',day,' ah0cb(',idx,') ', soil%ah0cb(idx)
   120 continue
 !
       if (ahfwsf(sr).lt.tstmin.or.ahfwsf(sr).gt.tstmax)                 &
@@ -514,18 +478,18 @@
 !
       if (dmpflg) write(*,*) 'h1db1'
 !      
-      do 130 idx=1,mnsz
-      if (ahrwcw(idx, sr).lt.0.005.or.ahrwcw(idx, sr).gt.0.242)         &
-     &  write(*,*) 'day ',day,' ahrwcw(',idx,') ', ahrwcw(idx, sr)
+      do 130 idx=1, soil%nslay
+      if (soil%ahrwcw(idx).lt.0.005.or.soil%ahrwcw(idx).gt.0.242)         &
+     &  write(*,*) 'day ',day,' ahrwcw(',idx,') ', soil%ahrwcw(idx)
 !
-      if (ahrwcf(idx, sr).lt.0.012.or.ahrwcf(idx, sr).gt.0.335)         &
-     &  write(*,*) 'day ',day,' ahrwcf(',idx,') ', ahrwcf(idx, sr)
+      if (soil%ahrwcf(idx).lt.0.012.or.soil%ahrwcf(idx).gt.0.335)         &
+     &  write(*,*) 'day ',day,' ahrwcf(',idx,') ', soil%ahrwcf(idx)
 !
-      if (ahrwcs(idx, sr).lt.0.208.or.ahrwcs(idx, sr).gt.0.440)         &
-     &  write(*,*) 'day ',day,' ahrwcs(',idx,') ', ahrwcs(idx, sr)
+      if (soil%ahrwcs(idx).lt.0.208.or.soil%ahrwcs(idx).gt.0.440)         &
+     &  write(*,*) 'day ',day,' ahrwcs(',idx,') ', soil%ahrwcs(idx)
 !
-      if (ahrwca(idx, sr).lt.0.0.or.ahrwca(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' ahrwca(',idx,') ', ahrwca(idx, sr)
+      if (soil%ahrwca(idx).lt.0.0.or.soil%ahrwca(idx).gt.tstmax)          &
+     &  write(*,*) 'day ',day,' ahrwca(',idx,') ', soil%ahrwca(idx)
   130 continue     
 !
       do 140 idx=1,mnhhrs
@@ -544,7 +508,7 @@
          write(*,*) 'day ',day,' residue(',idx,')%deriv%mf', residue(idx)%deriv%mf
    end do
 
-   do idx=1,mnsz
+   do idx=1, soil%nslay
       do jdx=1,mnbpls
          if (residue(jdx)%deriv%mbgz(idx) .lt. 0.0 .or. residue(jdx)%deriv%mbgz(idx) .gt. tstmax) &
             write(*,*) 'day ',day,' residue(',jdx,')%deriv%mbgz(',idx,') ', residue(jdx)%deriv%mbgz(idx)
@@ -633,7 +597,7 @@
       if (croptot%mrttot.lt.0.0.or.croptot%mrttot.gt.tstmax) &
          write(*,*) 'day ',day,' croptot%mrttot ', croptot%mrttot
 !
-      do 2000 idx = 1, nslay(sr)
+      do 2000 idx = 1, soil%nslay
         if (croptot%mrtz(idx).lt.0.0.or.croptot%mrtz(idx).gt.tstmax) &
            write(*,*) 'day ',day,' croptot%mrtz ', croptot%mrtz(idx)
 2000  continue

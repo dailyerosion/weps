@@ -2,9 +2,10 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine decomp(isr, crop, residue, decompfac, h1et)
+      subroutine decomp(isr, soil, crop, residue, decompfac, h1et)
 
       use weps_interface_defs, ignore_me=>decomp
+      use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, decomp_factors
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_today
@@ -39,6 +40,7 @@
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr                               ! current subregion
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(biomatter), intent(inout) :: crop  ! structure containing biomatter state and parameters
       type(biomatter), dimension(:), intent(inout) :: residue  ! structure containing biomatter state and parameters
       type(decomp_factors), intent(inout) :: decompfac
@@ -137,8 +139,8 @@
 !     code changed to use hydrology global variables  HHS 1- 4- 1994
 !     old code >    decompfac%iwcf = theta(1)/thetaf(1)
 
-      decompfac%iwcf = ahrwc0(12,isr) / ahrwcf(1,isr) !use water content at surface at 12 noon
-      !decompfac%iwcf = ahrwc(1,isr) / ahrwcf(1,isr) !use water content of soil layer 1
+      decompfac%iwcf = ahrwc0(12,isr) / soil%ahrwcf(1) !use water content at surface at 12 noon
+      !decompfac%iwcf = ahrwc(1,isr) / soil%ahrwcf(1) !use water content of soil layer 1
 
 !     water factor = water content of top soil layer / optimum water content of top soil layer
       if (decompfac%iwcf.gt.1.0) decompfac%iwcf = 1.0
@@ -166,7 +168,7 @@
       if (dbgflg) write(*,*) 'decomp 3'
 
       do isz = 1 , nslay
-         decompfac%iwcg(isz) = ahrwc(isz,isr)/ ahrwcf(isz,isr)
+         decompfac%iwcg(isz) = soil%ahrwc(isz)/ soil%ahrwcf(isz)
 !        water factor = water content of soil layer / optimum water content of soil layer
          if (decompfac%iwcg(isz) .gt. 1.0) decompfac%iwcg(isz) = 1.0
       end do

@@ -38,7 +38,6 @@ module sci_report_mod
 !     + + + INCLUDE + + +
       include 'p1werm.inc'
       include 'command.inc'
-      include 's1dbh.inc'
       include 'm1subr.inc'
       include 'manage/man.inc'
 

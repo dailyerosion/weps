@@ -10,11 +10,11 @@
 
 !     + + + VARIABLE DECLARATIONS + + +
 
-      real             ahrwc(mnsz,mnsub)
-      real             ahrwcdmx(mnsz,mnsub)
-      real             aheaep(mnsz,mnsub)
-      real             ah0cb(mnsz,mnsub)
-      real             ahrsk(mnsz,mnsub)
+!      real             ahrwc(mnsz,mnsub)
+!      real             ahrwcdmx(mnsz,mnsub)
+!      real             aheaep(mnsz,mnsub)
+!      real             ah0cb(mnsz,mnsub)
+!      real             ahrsk(mnsz,mnsub)
       real             ahfwsf(mnsub)
       real             ahzsno(mnsub)
       real             ahtsno(mnsub)
@@ -42,7 +42,8 @@
       real             ahztransprtmax(mnsub)
 
       common / h1hydro /                                                &
-     &                  ahrwc, ahrwcdmx, aheaep, ah0cb, ahrsk, ahfwsf,  &
+     &                  ahfwsf,                                         &
+!     &                  ahrwc, ahrwcdmx, aheaep, ah0cb, ahrsk, ahfwsf,  &
      &                  ahzsno, ahtsno, ahfsnfrz,                       &
      &                  ahzdmaxirr, ahratirr, ahdurirr,                 &
 !     &                  ahzirr, ahzdmaxirr, ahratirr, ahdurirr,         &

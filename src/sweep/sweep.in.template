@@ -192,7 +192,7 @@ Version:   100 multiple subregions
 #
 #     +++ SOIL +++
 #
-#     nslay(s), I, (s1layr.inc) Number of soil layers (1-100)
+#     nslay(s), I, Number of soil layers (1-100)
 #                  NOTE:  Only surface soil layer necessary
  1
 #

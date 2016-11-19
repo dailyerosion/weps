@@ -19,7 +19,6 @@
       include 'c1report.inc'
       include 'c1db1.inc'
       include 'c1db2.inc'
-      include 's1layr.inc'
       include 'manage/tcrop.inc'
       include 'crop/gcrop.inc'
 

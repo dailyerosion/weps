@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine tdbug(sr, slay, output, crop, residue, subrsurf)
+      subroutine tdbug(sr, output, soil, crop, residue)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -15,27 +15,21 @@
 
       use weps_interface_defs, ignore_me=>tdbug
       use file_io_mod, only: luotdb
+      use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter
-      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer sr, slay, output
+      integer sr, output
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(biomatter), intent(in) :: crop
       type(biomatter), dimension(:), intent(in) :: residue
-      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr      - subregion number
-!     slay    - number of soil layers
 !     output  - process number for debugging output
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
-      include 's1agg.inc'
-      include 's1dbh.inc'
-      include 's1dbc.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -76,50 +70,50 @@
  2067     format('aslrr') 
  2062     format (f7.2)
           write(luotdb(sr),2067)
-          write(luotdb(sr),2062) subrsurf%aslrr
+          write(luotdb(sr),2062) soil%aslrr
 
       case (3) ! oriented roughness ridge only process (process code 03)
  2070     format(3x,'aszrgh asxrgw asxrgs asargo asxdks asxdkh')
  2071     format (4x,6(2x,f7.3))
           write(luotdb(sr),2070)
-          write(luotdb(sr),2071) subrsurf%aszrgh, subrsurf%asxrgw, subrsurf%asxrgs, &
-            subrsurf%asargo, subrsurf%asxdks, subrsurf%asxdkh
+          write(luotdb(sr),2071) soil%aszrgh, soil%asxrgw, soil%asxrgs, &
+            soil%asargo, soil%asxdks, soil%asxdkh
 
       case (4) ! oriented roughness process dike only (process code 04)
           write(luotdb(sr),2070)
-          write(luotdb(sr),2071) subrsurf%aszrgh, subrsurf%asxrgw, subrsurf%asxrgs, &
-            subrsurf%asargo, subrsurf%asxdks, subrsurf%asxdkh
+          write(luotdb(sr),2071) soil%aszrgh, soil%asxrgw, soil%asxrgs, &
+            soil%asargo, soil%asxdks, soil%asxdkh
 
       case (5) ! oriented roughness process (process code 05)
  2072     format(3x,'asfcr  asflos')
  2073     format (1x,2f7.3)
           write(luotdb(sr),2072)
-          write(luotdb(sr),2073) subrsurf%asfcr, subrsurf%asflos
+          write(luotdb(sr),2073) soil%asfcr, soil%asflos
           write(luotdb(sr),2070)
-          write(luotdb(sr),2071) subrsurf%aszrgh, subrsurf%asxrgw, subrsurf%asxrgs, &
-            subrsurf%asargo, subrsurf%asxdks, subrsurf%asxdkh
+          write(luotdb(sr),2071) soil%aszrgh, soil%asxrgw, soil%asxrgs, &
+            soil%asargo, soil%asxdks, soil%asxdkh
 
       case (11) ! crushing process (process code 11)
  2040     format(3x,'aslagn aslagx aslagm as0ags') 
  2050     format (1x,4f7.2)
           write(luotdb(sr),2040) 
-          do idx = 1,slay
-            write(luotdb(sr),2050) aslagn(idx,sr), aslagx(idx,sr),          &
-     &        aslagm(idx,sr), as0ags(idx,sr) 
+          do idx = 1,soil%nslay
+            write(luotdb(sr),2050) soil%aslagn(idx),  soil%aslagx(idx), &
+     &         soil%aslagm(idx),  soil%as0ags(idx) 
           end do
 
       case (12) ! loosening process (process code 12)
  2041     format(3x,'asdblk  asdsblk   aszlyt') 
  2051     format (1x,f7.2,2x,f7.2,2x,f7.2)
           write(luotdb(sr),2041) 
-          do idx = 1,slay
+          do idx = 1,soil%nslay
             write(luotdb(sr),2051)                                          &
-     &      asdblk(idx,sr), asdsblk(idx,sr), aszlyt(idx,sr)
+     &      soil%asdblk(idx), soil%asdsblk(idx), soil%aszlyt(idx)
           end do 
 
       case (13) ! mixing process (process code 13)
- 2060     format (1x,i4,1x,f7.2,1x,f7.2,f6.2,4f7.2,f6.2,3f7.2)
- 2061     format (4f7.3,f6.2,4f7.2,f6.2,3f7.2)
+ 2060     format (1x,i4,1x,f7.2,1x,f7.2,f6.2,5f7.2)
+ 2061     format (f7.3,4f7.2,f6.2,3f7.2)
  2063     format (4x,i1,6(1x,f8.4))
  2065     format (3x,'layer asdblk aszlyt sfsan asfsil asfcla ',        &
      &       'as0ph  ascmg ascna asfcce asfcec asfesp')
@@ -128,41 +122,37 @@
  2068     format(3x,'layer residue(1)%deriv%mrtz(s)  residue(2)%deriv%mrtz(s)  residue(3)%deriv%mrtz(s) ',           &
      &               ' residue(1)%deriv%mbgz(s)  residue(2)%deriv%mbgz(s)  residue(3)%deriv%mbgz(s)') 
           write(luotdb(sr),2065)
-          do idx = 1,slay
-            write(luotdb(sr),2060) idx, asdblk(idx,sr), aszlyt(idx,sr),     &
-     &        asfsan(idx,sr), asfsil(idx,sr), asfcla(idx,sr),           &
-     &        as0ph(idx,sr), ascmg(idx,sr), ascna(idx,sr),              &
-     &        asfcce(idx,sr), asfcec(idx,sr), asfesp(idx,sr)
+          do idx = 1,soil%nslay
+            write(luotdb(sr),2060) idx, soil%asdblk(idx), soil%aszlyt(idx), &
+     &        soil%asfsan(idx), soil%asfsil(idx), soil%asfcla(idx), &
+     &        soil%as0ph(idx), soil%asfcce(idx), soil%asfcec(idx)
           end do 
           write(luotdb(sr),2066)
-          do idx = 1,slay
-            write(luotdb(sr),2061) asfom(idx,sr), asfnoh(idx,sr),           &
-     &        asfpoh(idx,sr), asfpsp(idx,sr), asfsmb(idx,sr),           &
-     &        asdagd(idx,sr), aseags(idx,sr), ahrwc(idx,sr),            &
-     &        aheaep(idx,sr), ahrwcw(idx,sr), ahrwcf(idx,sr),           &
-     &        ahrwca(idx,sr), ahrwcs(idx,sr)
+          do idx = 1,soil%nslay
+            write(luotdb(sr),2061) soil%asfom(idx), &
+     &        soil%asdagd(idx), soil%aseags(idx), soil%ahrwc(idx), &
+     &        soil%aheaep(idx), soil%ahrwcw(idx), soil%ahrwcf(idx), &
+     &        soil%ahrwca(idx), soil%ahrwcs(idx)
           end do 
           write(luotdb(sr),2068)
-          do idx = 1,slay
+          do idx = 1,soil%nslay
             write(luotdb(sr),2063)                                          &
      &        idx, residue(1)%deriv%mrtz(idx), residue(2)%deriv%mrtz(idx), residue(3)%deriv%mrtz(idx),&
      &        residue(1)%deriv%mbgz(idx), residue(2)%deriv%mbgz(idx), residue(3)%deriv%mbgz(idx)
           end do 
 
       case (14) ! inversion process (process code 14)
-          do idx = 1,slay
-            write(luotdb(sr),2060) idx, asdblk(idx,sr), aszlyt(idx,sr),     &
-     &        asfsan(idx,sr), asfsil(idx,sr), asfcla(idx,sr),           &
-     &        as0ph(idx,sr), ascmg(idx,sr), ascna(idx,sr),              &
-     &        asfcce(idx,sr), asfcec(idx,sr), asfesp(idx,sr)
+          do idx = 1,soil%nslay
+            write(luotdb(sr),2060) idx, soil%asdblk(idx), soil%aszlyt(idx), &
+     &        soil%asfsan(idx), soil%asfsil(idx), soil%asfcla(idx), &
+     &        soil%as0ph(idx), soil%asfcce(idx), soil%asfcec(idx)
           end do 
           write(luotdb(sr),2066)
-          do idx = 1,slay
-            write(luotdb(sr),2061) asfom(idx,sr), asfnoh(idx,sr),           &
-     &        asfpoh(idx,sr), asfpsp(idx,sr), asfsmb(idx,sr),           &
-     &        asdagd(idx,sr), aseags(idx,sr), ahrwc(idx,sr),            &
-     &        aheaep(idx,sr), ahrwcw(idx,sr), ahrwcf(idx,sr),           &
-     &        ahrwca(idx,sr),ahrwcs(idx,sr)
+          do idx = 1,soil%nslay
+            write(luotdb(sr),2061) soil%asfom(idx), &
+     &        soil%asdagd(idx), soil%aseags(idx), soil%ahrwc(idx), &
+     &        soil%aheaep(idx), soil%ahrwcw(idx), soil%ahrwcf(idx), &
+     &        soil%ahrwca(idx), soil%ahrwcs(idx)
           end do 
 
       case (21) ! below layer compaction (process code 21)
@@ -224,7 +214,7 @@
      &      ' residue(2)%deriv%mst residue(3)%deriv%mst')
  2075     format (6(2x,f7.3))
           write(luotdb(sr),2068)
-          do idx = 1,slay
+          do idx = 1,soil%nslay
             write(luotdb(sr),2063) idx, residue(1)%deriv%mrtz(idx), residue(2)%deriv%mrtz(idx), &
      &        residue(3)%deriv%mrtz(idx), residue(1)%deriv%mbgz(idx), residue(2)%deriv%mbgz(idx),     &
      &        residue(3)%deriv%mbgz(idx)

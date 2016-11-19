@@ -297,7 +297,7 @@ module sae_in_out_mod
  2160 format('#',/, &
       '#     +++ SOIL +++',/, &
       '#',/, &
-      '#     nslay(s), I, (s1layr.inc) Number of soil layers (3-10)')
+      '#     nslay(s), I, Number of soil layers (3-10)')
 
       write(luo_saeinp,*) subrsurf(sr)%nslay
 
@@ -305,55 +305,55 @@ module sae_in_out_mod
  2165 format('#',/, &
       '#     NOTE: Remaining SOIL inputs are repeated for each layer specified',/, &
       '#',/, &
-      '#     aszlyt(l,s), R, (s1layr.inc) Soil layer thickness (mm)')
+      '#     aszlyt(l,s), R, Soil layer thickness (mm)')
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%aszlyt, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2170)
  2170 format('#',/, &
-      '#     asdblk(l,s), R, (s1phys.inc) Soil layer bulk density (Mg/m^3')
+      '#     asdblk(l,s), R, Soil layer bulk density (Mg/m^3')
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asdblk, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2175)
  2175 format('#',/, &
-      '#     asfsan(l,s),R,(s1dbh.inc) Soil layer sand content (Mg/Mg)')
+      '#     asfsan(l,s),R, Soil layer sand content (Mg/Mg)')
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asfsan, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2177)
  2177 format('#',/, &
-      '#     asfvfs(l,s), R, (s1dbh.inc) Soil layer very fine sand (Mg/Mg)')
+      '#     asfvfs(l,s), R, Soil layer very fine sand (Mg/Mg)')
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asfvfs, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2180)
  2180 format('#',/, &
-      '#     asfsil(l,s),R,(s1dbh.inc) Soil layer silt content (Mg/Mg)')
+      '#     asfsil(l,s),R, Soil layer silt content (Mg/Mg)')
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asfsil, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2185)
  2185 format('#',/, &
-      '#     asfcla(l,s),R,(s1dbh.inc) Soil layer clay content (Mg/Mg)')
+      '#     asfcla(l,s),R, Soil layer clay content (Mg/Mg)')
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asfcla, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2190)
  2190 format('#',/, &
-      '#     asvroc(l,s), R, (s1dbh.inc) Soil layer rock volume (m^3/m^3)')
+      '#     asvroc(l,s), R, Soil layer rock volume (m^3/m^3)')
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asvroc, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2195)
  2195 format('#',/, &
-      '#     asdagd(l,s),R,(s1agg.inc) Soil layer agg density (Mg/m^3)')
+      '#     asdagd(l,s),R, Soil layer agg density (Mg/m^3)')
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asdagd, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2200)
  2200 format('#',/, &
-      '#     aseags(l,s), R, (s1agg.inc) Soil layer agg stability ln(J/kg)')
+      '#     aseags(l,s), R, Soil layer agg stability ln(J/kg)')
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%aseags, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2205)
  2205 format('#',/, &
-      '#     aslagm(l,s), R, (s1agg.inc) Soil layer GMD (mm)')
+      '#     aslagm(l,s), R, Soil layer GMD (mm)')
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%aslagm, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2210)
  2210 format('#',/, &
-      '#     aslagn(l,s), R, (s1agg.inc) Soil layer minimum agg size (mm)')
+      '#     aslagn(l,s), R, Soil layer minimum agg size (mm)')
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%aslagn, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2215)
  2215 format('#',/, &
-      '#     aslagx(l,s), R, (s1agg.inc) Soil layer maximum agg size (mm)')
+      '#     aslagx(l,s), R, Soil layer maximum agg size (mm)')
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%aslagx, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2220)
  2220 format('#',/, &
-      '#     as0ags(l,s), R, (s1agg.inc) Soil layer GSD (mm/mm)')
+      '#     as0ags(l,s), R, Soil layer GSD (mm/mm)')
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%as0ags, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2225)
  2225 format('#',/, &

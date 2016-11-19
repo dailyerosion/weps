@@ -3,13 +3,12 @@
 !$Revision$
 !$HeadURL$
 
-      SUBROUTINE water_erosion(isr, cd, cm, cy, restot, croptot,        &
-     &                         subrsurf)
+      SUBROUTINE water_erosion(isr, cd, cm, cy, soil, restot, croptot)
       
       use wepp_interface_defs, ignore_me=>water_erosion
+      use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biototal
       use file_io_mod, only: luowepperod, luoweppsum
-      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !----------------------------------------------------------------------
 !     water_erosion()
@@ -27,8 +26,8 @@
 	include 'wepp_erosion.inc'
 
       integer, intent(in):: isr,cd,cm,cy
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(biototal), intent(in) :: restot, croptot
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
 !     Local Variables
 !
@@ -143,7 +142,7 @@
 
       call getfromweps(isr,sand,silt,clay,orgmat,                       &
      &  thetdr,rrc,dg,st,thdp,frdp, thetfc, por, rh,                    &
-     &  frctrl, frcsol, prcp, subrsurf)
+     &  frctrl, frcsol, prcp, soil)
 
       call soil_adj(wp_ki,wp_kr,wp_shcrit,kiadj,kradj,shcrtadj,rrc,     &
      &   croptot%zht_ave, croptot%ftcancov,                             &

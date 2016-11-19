@@ -21,32 +21,34 @@ module soil_data_struct_defs
      real :: asfalw     ! Wet soil albedo
      real :: restrict_depth    ! depth to impermeable layer/restricting zone (mm)
      real :: bedrock_depth     ! depth to bedrock (mm)
-     real, dimension(:), pointer :: asvroc    ! Soil layer rock volume (m^3/m^3)
-     real, dimension(:), pointer :: asfsan    ! Soil layer sand content (Mg/Mg)
-     real, dimension(:), pointer :: asfsil    ! Soil layer silt content (Mg/Mg)
-     real, dimension(:), pointer :: asfcla    ! Soil layer clay content (Mg/Mg)
-     real, dimension(:), pointer :: as0ph     ! PH (0-14)
-     real, dimension(:), pointer :: asfcce    ! Soil layer calcium carbonate equivalent [CaCO3] (kg/kg) ? (dec %)
-     real, dimension(:), pointer :: asfcec    ! Soil layer cation exchange capacity (cmol/kg) (meq/100g)
-     real, dimension(:), pointer :: asfom     ! Soil layer organic matter content (Mg/Mg)
-     real, dimension(:), pointer :: asdwblk   ! Soil layer bulk density at 1/3 bar (Mg/m^3)
-     real, dimension(:), pointer :: asdsblk   ! Soil layer settled bulk density (Mg/m^3)
-     real, dimension(:), pointer :: asdprocblk ! Soil layer proctor bulk density (Mg/m^3)
-     real, dimension(:), pointer :: aslagn    ! minimum agg size (mm)
-     real, dimension(:), pointer :: aslagx    ! maximum agg size (mm)
-     real, dimension(:), pointer :: aseagm    ! soil layer mean aggregate stabillity (J/m^2)
-     real, dimension(:), pointer :: aseagmn   ! soil layer minimum aggregate stability
-     real, dimension(:), pointer :: aseagmx   ! soil layer maximum aggregate stability
-     real, dimension(:), pointer :: ask4d     ! soil layer drying stability coefficient
-     real, dimension(:), pointer :: aslmin    ! min values of geom. mean agg. diameter (eq. S-45, S-46)
-     real, dimension(:), pointer :: aslmax    ! max values of geom. mean agg. diameter (eq. S-45, S-46)
-     real, dimension(:), pointer :: asfcle    ! Linear extensibility ((Mg/m^3)/(Mg/m^3))
-     real, dimension(:), pointer :: asfvcs    ! Soil layer content of very coarse sand (Mg/Mg)
-     real, dimension(:), pointer :: asfcs     ! Soil layer content of coarse sand (Mg/Mg)
-     real, dimension(:), pointer :: asfms     ! Soil layer content of medium sand (Mg/Mg)
-     real, dimension(:), pointer :: asffs     ! Soil layer content of fine sand (Mg/Mg)
-     real, dimension(:), pointer :: asfvfs    ! Soil layer content of very fine sand sand (Mg/Mg)
-     real, dimension(:), pointer :: asfwdc    ! Soil layer content of water dispersible clay (Mg/Mg)
+     real :: amrslp            ! Average subregion slope (m/m)
+     real :: SFCov             ! NRCS "Surface Fragment Cover" or "Surface Layer Fragment" fraction (%)
+     real, dimension(:), allocatable :: asvroc    ! Soil layer rock volume (m^3/m^3)
+     real, dimension(:), allocatable :: asfsan    ! Soil layer sand content (Mg/Mg)
+     real, dimension(:), allocatable :: asfsil    ! Soil layer silt content (Mg/Mg)
+     real, dimension(:), allocatable :: asfcla    ! Soil layer clay content (Mg/Mg)
+     real, dimension(:), allocatable :: as0ph     ! PH (0-14)
+     real, dimension(:), allocatable :: asfcce    ! Soil layer calcium carbonate equivalent [CaCO3] (kg/kg) ? (dec %)
+     real, dimension(:), allocatable :: asfcec    ! Soil layer cation exchange capacity (cmol/kg) (meq/100g)
+     real, dimension(:), allocatable :: asfom     ! Soil layer organic matter content (Mg/Mg)
+     real, dimension(:), allocatable :: asdwblk   ! Soil layer bulk density at 1/3 bar (Mg/m^3)
+     real, dimension(:), allocatable :: asdsblk   ! Soil layer settled bulk density (Mg/m^3)
+     real, dimension(:), allocatable :: asdprocblk ! Soil layer proctor bulk density (Mg/m^3)
+     real, dimension(:), allocatable :: aslagn    ! minimum agg size (mm)
+     real, dimension(:), allocatable :: aslagx    ! maximum agg size (mm)
+     real, dimension(:), allocatable :: aseagm    ! soil layer mean aggregate stabillity (J/m^2)
+     real, dimension(:), allocatable :: aseagmn   ! soil layer minimum aggregate stability
+     real, dimension(:), allocatable :: aseagmx   ! soil layer maximum aggregate stability
+     real, dimension(:), allocatable :: ask4d     ! soil layer drying stability coefficient
+     real, dimension(:), allocatable :: aslmin    ! min values of geom. mean agg. diameter (eq. S-45, S-46)
+     real, dimension(:), allocatable :: aslmax    ! max values of geom. mean agg. diameter (eq. S-45, S-46)
+     real, dimension(:), allocatable :: asfcle    ! Linear extensibility ((Mg/m^3)/(Mg/m^3))
+     real, dimension(:), allocatable :: asfvcs    ! Soil layer content of very coarse sand (Mg/Mg)
+     real, dimension(:), allocatable :: asfcs     ! Soil layer content of coarse sand (Mg/Mg)
+     real, dimension(:), allocatable :: asfms     ! Soil layer content of medium sand (Mg/Mg)
+     real, dimension(:), allocatable :: asffs     ! Soil layer content of fine sand (Mg/Mg)
+     real, dimension(:), allocatable :: asfvfs    ! Soil layer content of very fine sand sand (Mg/Mg)
+     real, dimension(:), allocatable :: asfwdc    ! Soil layer content of water dispersible clay (Mg/Mg)
                                               ! Not used - not input in Version 1.0 IFC file
 
      ! state - properties indicating the state of the soil (can change without material changing)
@@ -66,12 +68,12 @@ module soil_data_struct_defs
      real :: asdcr      ! Soil crust density (Mg/m^3)
      real :: asecr      ! Soil crust stability ln(J/kg)
      real :: watertable_depth  ! depth to watertable (mm)
-     real, dimension(:), pointer :: aszlyt    ! Soil layer thickness (mm)
-     real, dimension(:), pointer :: asdblk    ! Soil layer bulk density (Mg/m^3)
-     real, dimension(:), pointer :: asdagd    ! agg density (Mg/m^3)
-     real, dimension(:), pointer :: aseags    ! agg stability ln(J/kg)
-     real, dimension(:), pointer :: aslagm    ! GMD (mm)
-     real, dimension(:), pointer :: as0ags    ! GSD (mm/mm)
+     real, dimension(:), allocatable :: aszlyt    ! Soil layer thickness (mm)
+     real, dimension(:), allocatable :: asdblk    ! Soil layer bulk density (Mg/m^3)
+     real, dimension(:), allocatable :: asdagd    ! agg density (Mg/m^3)
+     real, dimension(:), allocatable :: aseags    ! agg stability ln(J/kg)
+     real, dimension(:), allocatable :: aslagm    ! GMD (mm)
+     real, dimension(:), allocatable :: as0ags    ! GSD (mm/mm)
 
      ! derived - calculate values from state and intrinsics that are used by other process modules
      real :: acanag     ! coefficient of abrasion for aggregates (1/m)
@@ -79,38 +81,40 @@ module soil_data_struct_defs
      real :: asf10an    ! soil fraction pm10 in abraded suspension
      real :: asf10en    ! soil fraction pm10 in emitted suspension
      real :: asf10bk    ! soil fraction pm10 in saltation breakage suspension
-     real, dimension(:), pointer :: asdpart   ! Soil layer average particle density adjusted from mineral only
+     real, dimension(:), allocatable :: asdpart   ! Soil layer average particle density adjusted from mineral only
                                               ! to include organic matter content
-     real, dimension(:), pointer :: aszlyd    ! Depth to bottom of each soil layer for each subregion (mm)
-     real, dimension(:), pointer :: asdwsrat  ! Nondimensional ratio of wet to settled bulk density
-     real, dimension(:), pointer :: asdblk0   ! Soil layer bulk density from previous day
+     real, dimension(:), allocatable :: aszlyd    ! Depth to bottom of each soil layer for each subregion (mm)
+     real, dimension(:), allocatable :: asdwsrat  ! Nondimensional ratio of wet to settled bulk density
+     real, dimension(:), allocatable :: asdblk0   ! Soil layer bulk density from previous day
                                               ! for use in hydro to update parameters based on bulk density changes
 
-     real, dimension(:), pointer :: ahrwc     ! Soil water content (Mg/Mg)
-     real, dimension(:), pointer :: ahrwcdmx  ! daily maximum soil water content (Mg/Mg)
-     real, dimension(:), pointer :: aheaep    ! Soil air entry potential (J/kg)
-     real, dimension(:), pointer :: ah0cb     ! Power of Brooks and Corey water release curve model (unitless)
-     real, dimension(:), pointer :: ahrsk     ! Saturated soil hydraulic conductivity (m/s)
+     real, dimension(:), allocatable :: ahrwc     ! Soil water content (Mg/Mg)
+     real, dimension(:), allocatable :: ahrwcdmx  ! daily maximum soil water content (Mg/Mg)
+     real, dimension(:), allocatable :: aheaep    ! Soil air entry potential (J/kg)
+     real, dimension(:), allocatable :: ah0cb     ! Power of Brooks and Corey water release curve model (unitless)
+     real, dimension(:), allocatable :: ahrsk     ! Saturated soil hydraulic conductivity (m/s)
 
-     real, dimension(:), pointer :: ahrwcr    ! Soil layer residual water content (Mg/Mg)
-     real, dimension(:), pointer :: ahrwcw    ! Soil layer wilting point water content (Mg/Mg)
-     real, dimension(:), pointer :: ahrwcf    ! Soil layer field capacity water content (Mg/Mg)
-     real, dimension(:), pointer :: ahrwcs    ! Soil layer saturated water content (Mg/Mg)
-     real, dimension(:), pointer :: ahrwca    ! Available soil layer water content (Mg/Mg)
-     real, dimension(:), pointer :: ahrwc1    ! Soil layer water content at 0.1 bar (Mg/Mg)
-     real, dimension(:), pointer :: ahfredsat ! fraction of soil porosity that will be filled with water
-                       ! while wetting under normal field conditions due to entrapped air
+     real, dimension(:), allocatable :: ahrwcr    ! Soil layer residual water content (Mg/Mg)
+     real, dimension(:), allocatable :: ahrwcw    ! Soil layer wilting point water content (Mg/Mg)
+     real, dimension(:), allocatable :: ahrwcf    ! Soil layer field capacity water content (Mg/Mg)
+     real, dimension(:), allocatable :: ahrwcs    ! Soil layer saturated water content (Mg/Mg)
+     real, dimension(:), allocatable :: ahrwca    ! Available soil layer water content (Mg/Mg)
+     real, dimension(:), allocatable :: ahrwc1    ! Soil layer water content at 0.1 bar (Mg/Mg)
+     real, dimension(:), allocatable :: ahfredsat ! fraction of soil porosity that will be filled with water
+                                              ! while wetting under normal field conditions due to entrapped air
   end type soil_def
 
 contains
 
-  subroutine allocate_soil(nsoillay, soil)
-     integer, intent(in) :: nsoillay
+  subroutine allocate_soil(soil)
      type(soil_def), intent(inout) :: soil
 
      ! local variable
+     integer :: nsoillay
      integer :: alloc_stat  ! allocation status return
      integer :: sum_stat    ! summation of status return values
+
+     nsoillay = soil%nslay
 
      ! allocate below ground arrays
      sum_stat = 0

@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine  hdbug(isr, slay, crop, restot, h1et, subrsurf)
+      subroutine  hdbug(isr, soil, crop, restot, h1et)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -19,19 +19,18 @@
 
       use datetime_mod, only: get_simdate
       use file_io_mod, only: luohdb
+      use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biototal, biomatter
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use hydro_data_struct_defs, only: hydro_derived_et
-      use erosion_data_struct_defs, only: subregionsurfacestate
       use climate_input_mod, only: cli_today
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr                   
-      integer slay                   
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(biomatter), intent(in) :: crop
       type(biototal), intent(in) :: restot
       type(hydro_derived_et), intent(in) :: h1et
-      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     isr       - subregion index.
@@ -41,11 +40,6 @@
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
-      include 's1agg.inc'
-      include 's1dbh.inc'
-      include 's1dbc.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -141,23 +135,22 @@
                     ahzsmt(isr), h1et%zeta, h1et%zetp, h1et%zpta
       write(luohdb(isr),2054) isr, isr, isr, isr
       write(luohdb(isr),2055) h1et%zea, h1et%zep, h1et%zptp, ah0cng(isr), &
-                    ah0cnp(isr), subrsurf%aslrr
+                    ah0cnp(isr), soil%aslrr
       write(luohdb(isr),2056)
 
-      do 200 l = 1,slay
-         write(luohdb(isr),2060) l, aszlyt(l,isr), ahrsk(l,isr),        &
-     &                  ahrwc(l,isr),                                   &
-     &                  ahrwcs(l,isr), ahrwca(l,isr), ahrwcf(l,isr),    &
-     &                  ahrwcw(l,isr), ah0cb(l,isr), aheaep(l,isr),     &
+      do 200 l = 1,soil%nslay
+         write(luohdb(isr),2060) l, soil%aszlyt(l), soil%ahrsk(l), soil%ahrwc(l), &
+     &                  soil%ahrwcs(l), soil%ahrwca(l), soil%ahrwcf(l), &
+     &                  soil%ahrwcw(l), soil%ah0cb(l), soil%aheaep(l), &
      &                  ahtsmx(l,isr), ahtsmn(l,isr)
   200 continue
          write(luohdb(isr),2065)
 
-      do 300 l=1,slay
-         write(luohdb(isr),2070) l, asfsan(l,isr), asfsil(l,isr),       &
-     &                  asfcla(l,isr), asfom(l,isr), asdblk(l,isr),     &
-     &                  aslagm(l,isr), as0ags(l,isr), aslagn(l,isr),    &
-     &                  aslagx(l,isr), aseags(l,isr)
+      do 300 l=1,soil%nslay
+         write(luohdb(isr),2070) l, soil%asfsan(l), soil%asfsil(l), &
+     &                  soil%asfcla(l), soil%asfom(l), soil%asdblk(l), &
+     &                  soil%aslagm(l), soil%as0ags(l), soil%aslagn(l), &
+     &                  soil%aslagx(l), soil%aseags(l)
   300 continue
 
 

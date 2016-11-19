@@ -3,13 +3,13 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine plotdata(sr, crop, restot, croptot, biotot, noerod, subrsurf, cellstate)
+      subroutine plotdata(sr, soil, crop, restot, croptot, biotot, noerod, cellstate)
 
       use datetime_mod, only: get_simdate, get_simdate_doy
       use file_io_mod, only: luoplt
+      use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: threshold
-      use erosion_data_struct_defs, only: subregionsurfacestate
       use erosion_data_struct_defs, only: cellsurfacestate
       use erosion_data_struct_defs, only: awadir, awudmx
       use erosion_data_struct_defs, only: am0efl
@@ -23,12 +23,12 @@
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: sr
-      type(biomatter), intent(inout) :: crop
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
+      type(biomatter), intent(in) :: crop
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(threshold), intent(in) :: noerod
-      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
  
 !       Edit History
@@ -37,9 +37,6 @@
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'h1db1.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
-      include 's1agg.inc'
       include 'h1hydro.inc'
       include 'm1subr.inc'
       include 'main/main.inc'
@@ -135,7 +132,7 @@
         doy = get_simdate_doy()
 
         ! make operation name available for this day
-        if ((lastoper(sr)%day .eq. day) .and. (lastoper(sr)%mon .eq. month) .and.           &
+        if ((lastoper(sr)%day .eq. day) .and. (lastoper(sr)%mon .eq. month) .and. &
      &      (lastoper(sr)%yr .eq. amnryr(sr))) then
            operat = lastoper(sr)%name
            crname = crop%bname
@@ -155,9 +152,9 @@
      &                    day, month, year,                             &
      &                    total, suspen, pmten,                         &
      &                    awudmx, awadir, cli_today%zdpt, ahrwc0(12, sr), &
-     &                    subrsurf%aszrgh, subrsurf%asargo, subrsurf%aslrr, &
-     &                    aslagm(1,sr), aseags(1,sr), subrsurf%asfcr, &
-     &                    subrsurf%asmlos, subrsurf%asflos, asdblk(1,sr), &
+     &                    soil%aszrgh, soil%asargo, soil%aslrr, &
+     &                    soil%aslagm(1), soil%aseags(1), soil%asfcr, &
+     &                    soil%asmlos, soil%asflos, soil%asdblk(1), &
      &                    biotot%ffcvtot, biotot%fscvtot,               &
      &                    croptot%rlaitot, croptot%rsaitot,             &
      &                    croptot%msttot, croptot%ftcancov

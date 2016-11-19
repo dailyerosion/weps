@@ -2,26 +2,26 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine callcrop(daysim, sr, crop, residue, restot, croptot, h1et, subrsurf)
+      subroutine callcrop(daysim, sr, soil, crop, residue, restot, croptot, h1et)
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
       use weps_interface_defs, ignore_me=>callcrop
+      use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal
       use timer_mod, only: timer, TIMCROP, TIMSTART, TIMSTOP
       use crop_data_struct_defs, only: am0cdb
       use hydro_data_struct_defs, only: hydro_derived_et
-      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer daysim
       integer sr
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue  ! structure containing full residue pool description
       type(biototal), intent(in) :: restot
       type(biototal), intent(inout) :: croptot
       type(hydro_derived_et), intent(in) :: h1et
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
 ! Includes
       include 'p1werm.inc'
@@ -30,10 +30,6 @@
       include 'c1info.inc'
       include 'c1gen.inc'
       include 'm1flag.inc'
-      include 's1layr.inc'
-      include 's1dbc.inc'
-      include 's1dbh.inc'
-      include 's1phys.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'
       include 'crop/prevstate.inc'
@@ -63,9 +59,9 @@
 !     only continue if crop is growing
       if( crop%growth%am0cgf ) then
 
-         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), crop, restot, h1et, subrsurf)
+         if (am0cdb(sr).eq.1) call cdbug(sr, soil, crop, restot, h1et)
 
-         call cropgrow(sr, nslay(sr), aszlyd(1,sr),                     &
+         call cropgrow(sr, soil%nslay, soil%aszlyd,                     &
      &   crop%database%ck, acgrf(sr), acehu0(sr), aczmxc(sr),                  &
      &   crop%bname,ac0idc(sr), acxrow(sr),                             &
      &   actdtm(sr), aczmrt(sr), actmin(sr), actopt(sr),                &
@@ -109,7 +105,7 @@
      &   agmbgstemz(1,sr),                                              &
      &   agzht(sr), agdstm(sr), agxstmrep(sr), aggrainf(sr) )
 
-         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), crop, restot, h1et, subrsurf)
+         if (am0cdb(sr).eq.1) call cdbug(sr, soil, crop, restot, h1et)
       end if
 
       ! check for abandoned stems in crop regrowth
@@ -119,7 +115,7 @@
           ! zero out residue pools which crop is not transferring
           agmflatrootstore(sr) = 0.0
           agmflatrootfiber(sr) = 0.0
-          do lay = 1, nslay(sr)
+          do lay = 1, soil%nslay
               agmbgleafz(lay,sr) = 0.0
               agmbgstorez(lay,sr) = 0.0
               agmbgrootstorez(lay,sr) = 0.0
@@ -135,14 +131,14 @@
      &      crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck, &
      &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg, &
      &      crop%database%resevapa, crop%database%resevapb, &
-     &      nslay(sr), residue)
+     &      soil%nslay, residue)
       end if
 
       ! update all derived globals for crop global variables
       call cropupdate(                                                  &
-            subrsurf%aszrgh, aszlyd(1,sr), &
+            soil%aszrgh, soil%aszlyd, &
      &      ac0rg(sr), acxrow(sr), &
-     &      nslay(sr), ac0ssa(sr), ac0ssb(sr), &
+     &      soil%nslay, ac0ssa(sr), ac0ssb(sr), &
      &      acdpop(sr), &
      &      ahztranspdepth(sr), ahzfurcut(sr),                          &
      &      ahztransprtmin(sr), ahztransprtmax(sr), crop, croptot  )
