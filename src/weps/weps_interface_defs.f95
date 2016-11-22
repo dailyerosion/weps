@@ -275,47 +275,9 @@
       real bc0shoot, bcdmaxshoot
       end subroutine growth
 !----------------------------------
-      subroutine nconc (po, p5,p1, a)
-      real a, po, p5, p1
-      end subroutine nconc
-!----------------------------------
-      subroutine nmnim (k)           
-      integer k
-      end subroutine nmnim
-!----------------------------------
-      subroutine npcy()
-      end subroutine npcy
-!----------------------------------
-      subroutine npmin (j)          
-      integer j
-      end subroutine npmin
-!----------------------------------
-      subroutine nuse (bn1, bn2, bn3, bp1, bp2, bp4, un1, un2, sup, cnt,&
-     & hui,dm, uno3, cpt, up2, up1, upp, rw, ir, wno3,sunn, ap, wt,     &
-     & a_s11,b_s11,up,rwt,suno3,un,tno3,rmnr,tap,wmp)
-    
-      real, intent(in) :: bn1, bn2, bn3, bp1, bp2, bp4
-      real, intent(out) :: un1,sup,cnt,uno3,cpt,up2,upp
-      real, intent(in) :: hui,dm,rw,un(*),rmnr,wmp
-      real, intent(in) :: wt(*),a_s11,b_s11,rwt(*)
-      integer, intent(in) :: ir
-      real, intent(inout) :: sunn,un2,wno3(*),up(*),up1
-      real, intent(inout) :: suno3,ap(*),tno3,tap   
-      end subroutine nuse
-!----------------------------------
-      subroutine nuts (y1, y2, uu, a_s8, b_s8)
-      real, intent(in) :: y1, y2, a_s8, b_s8
-      real, intent(inout) :: uu   
-      end subroutine nuts
-!----------------------------------
       subroutine scrv1 (x1, y1, x2, y2, a, b)
       real a,b,x1,x2,y1,y2 
       end subroutine scrv1
-!---------------------------------
-      subroutine sdst (x,dg,dg1,i)
-      integer i
-      real dg, dg1, x(*)  
-      end subroutine sdst
 !---------------------------------
       subroutine shoot_grow( isr, bnslay, bszlyd, bcdpop,               &
      &                 bczmxc, bcfleafstem,                             &
