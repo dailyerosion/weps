@@ -49,7 +49,7 @@ module input_soil_mod
       integer linnum
       data linnum /1/
 
-      call fopenk (lui1, sinfil(isr), 'old') ! open IFC file
+      call fopenk (lui1, soil%sinfil, 'old') ! open IFC file
        
 !     Check to see if this is a "versioned" IFC file
       read (lui1,'(a)',err=901) line
@@ -127,7 +127,7 @@ module input_soil_mod
         endif
 
 !      output for soil file screening
-!        write(*,1000) sinfil,lay, soil%aszlyt(lay),
+!        write(*,1000) soil%sinfil,lay, soil%aszlyt(lay),
 !     &        soil%asfsan(lay), soil%asfcla(lay), soil%asfom(lay),
 !     &        soil%asdwblk(lay), soil%asdblk(lay), soil%ahrwcs(lay),
 !     &        soil%ahrwcf(lay), soil%ahrwcw(lay),
@@ -177,7 +177,7 @@ module input_soil_mod
 
       return
 
- 901  write(*,9001) trim(sinfil(isr)), linnum, trim(line)
+ 901  write(*,9001) trim(soil%sinfil), linnum, trim(line)
 9001  format(' Error in IFC file ',a,' on line #',i4,' ',a)
       call exit(1)
 
@@ -405,12 +405,12 @@ module input_soil_mod
 
       return
 
- 901  write(*,9001) trim(sinfil(isr)), linnum, trim(line)
+ 901  write(*,9001) trim(soil%sinfil), linnum, trim(line)
 9001  format(' Error in v1 IFC file ',a,' on line #',i4,' ',a)
       call exit(1)
 
 
- 902  write(*,9002) trim(sinfil(isr)), linnum, typeidx, trim(line)
+ 902  write(*,9002) trim(soil%sinfil), linnum, typeidx, trim(line)
 9002  format(' Error in v1 IFC file ',a,' on line #',i4,'(',i2,') ',a)
       call exit(1)
 
@@ -650,12 +650,12 @@ module input_soil_mod
 
       return
 
- 901  write(*,9001) trim(sinfil(isr)), linnum, trim(line)
+ 901  write(*,9001) trim(soil%sinfil), linnum, trim(line)
 9001  format(' Error in v1.1 IFC file ',a,' on line #',i4,' ',a)
       call exit(1)
 
 
- 902  write(*,9002) trim(sinfil(isr)), linnum, typeidx, trim(line)
+ 902  write(*,9002) trim(soil%sinfil), linnum, typeidx, trim(line)
 9002  format(' Error in v1.1 IFC file ',a,' on line #',i4,'(',i2,') ',a)
       call exit(1)
 
@@ -715,7 +715,7 @@ module input_soil_mod
       max_typidx = 54   ! new ifc format (additional parms)
 
 !     open simulation run file
-      call fopenk (lui1, sinfil(isr), 'old')
+      call fopenk (lui1, soil%sinfil, 'old')
 
 !     read subregion information
   100   if (typidx.eq. max_typidx) go to 190  !do subregion initializations
@@ -978,7 +978,7 @@ module input_soil_mod
         endif
 
 !      output for soil file screening
-!        write(*,1000) sinfil,lay,soil%aszlyt(lay),
+!        write(*,1000) soil%sinfil,lay,soil%aszlyt(lay),
 !     &        soil%asfsan(lay),soil%asfcla(lay),soil%asfom(lay),
 !     &        soil%asdwblk(lay),soil%asdblk(lay),soil%ahrwcs(lay),
 !     &        soil%ahrwcf(lay),soil%ahrwcw(lay),
@@ -1016,12 +1016,12 @@ module input_soil_mod
       close (lui1)
 
       return
-   81 write(*,9001) trim(sinfil(isr)), linnum, trim(line)
+   81 write(*,9001) trim(soil%sinfil), linnum, trim(line)
 9001  format (' inpsub error - original format IFC file ',a,            &
      &' on line #',i4,' ',a)
       call exit(1)
 
-   82 write(*,9002) trim(sinfil(isr)), linnum, typidx, trim(line)
+   82 write(*,9002) trim(soil%sinfil), linnum, typidx, trim(line)
 9002  format (' inpsub error - original format IFC file ',a,            &
      &' on line #',i4,'(',i2,')',' ',a)
       call exit(1)

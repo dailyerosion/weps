@@ -13,7 +13,7 @@ module soil_data_struct_defs
                                                      ! 1 = output
   type soil_def
      ! metadata
-     character*(512) :: sinfile        ! soil input file name
+     character*(512) :: sinfil        ! soil input file name
      character*(160) :: am0sid        ! soil identification
      character*(80)  :: am0tax        ! soil taxonomic order
      character*(80)  :: am0localphase ! soil local phase

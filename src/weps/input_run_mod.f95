@@ -358,7 +358,7 @@ contains
             end if
 
             ! read in initial field conditions file name
-            sinfil(isr) = rootp(1:len_trim(rootp)) // line
+            soil(isr)%sinfil = rootp(1:len_trim(rootp)) // line
 
          case (16)
             ! read in management file name
@@ -986,7 +986,7 @@ contains
 
          case (31)
             ! read in initial field conditions file name
-            sinfil(isr) = rootp(1:len_trim(rootp)) // line
+            soil(isr)%sinfil = rootp(1:len_trim(rootp)) // line
 
          case (32)
             ! read in management file name
