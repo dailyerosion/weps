@@ -271,13 +271,6 @@
 !     shoot_flg - used to control the behavior of the shootnum subroutine
 !             1 - returns the shoot number unconstrained by bcdmaxshoot
 
-!     + + + SUBROUTINES CALLED + + +
-!     nuse       !disabled
-!     najn       !disabled
-!     najna      !disabled
-!     nuts       !disabled
-!     waters     !disabled
-
 !     + + + END OF SPECIFICATIONS + + +
 
       yr = get_simdate_year()
@@ -408,19 +401,6 @@
       ! end if
       bhfwsf_adj = max( water_stress_max, bhfwsf )
       !bhfwsf_adj = 1 !no water stress
-
-!     begin stress factor section
-
-!     calculate N & P demand and supply
-!      call nuse
-!     calculate N & P uptake with increase in supply if necessary
-!      call najn
-!      call najna
-!     calculate N stress
-!      call nuts (un1,un2,sn)
-!      call nuts (sun,un2,sn)
-!     calculate P stress
-!      call nuts (up1,up2,sp)
 
 !     calculate temperature stress
       ts = temp_stress(bctopt, bctmin)

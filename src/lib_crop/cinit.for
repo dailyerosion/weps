@@ -163,7 +163,6 @@
 
 !     + + + SUBROUTINES CALLED + + +
 !     scrv1
-!     sdst
 
 !     + + + OUTPUT FORMATS + + +
  2120 format (i5, i7, i9, i11, i10, 2x, 2f10.1)
