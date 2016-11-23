@@ -36,7 +36,6 @@
       include 'm1flag.inc'
       include 'c1info.inc'
       include 'c1gen.inc'
-      include 'c1db2.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'
@@ -619,19 +618,19 @@
 
       if (dmpflg) write(*,*) 'c1db2'
       
-      if (actopt(sr).lt.0.0.or.actopt(sr).gt.40.0)                      &
-     &  write(*,*) 'day ',day,' actopt ', actopt(sr)
+      if (crop%database%topt.lt.0.0.or.crop%database%topt.gt.40.0) &
+     &  write(*,*) 'day ',day,' actopt ', crop%database%topt
 
-      if (actmin(sr).lt.0.0.or.actmin(sr).gt.20.0)                      &
-     &  write(*,*) 'day ',day,' actmin ', actmin(sr)
+      if (crop%database%tmin.lt.0.0.or.crop%database%tmin.gt.20.0) &
+     &  write(*,*) 'day ',day,' actmin ', crop%database%tmin
 
       do 200 idx=1,2
 
-      if (ac0fd1(idx, sr).lt.0.0.or.ac0fd1(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' ac0fd1(',idx,') ', ac0fd1(idx, sr)
+      if (crop%database%fd1(idx).lt.0.0.or.crop%database%fd1(idx).gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0fd1(',idx,') ', crop%database%fd1(idx)
 
-      if (ac0fd2(idx, sr).lt.0.0.or.ac0fd2(idx, sr).gt.1.0)             &
-     &  write(*,*) 'day ',day,' ac0fd2(',idx,') ', ac0fd2(idx, sr)
+      if (crop%database%fd2(idx).lt.0.0.or.crop%database%fd2(idx).gt.1.0) &
+     &  write(*,*) 'day ',day,' ac0fd2(',idx,') ', crop%database%fd2(idx)
   200 continue     
 
       if (crop%database%ck.lt.0.0.or.crop%database%ck.gt.1.0)                         &

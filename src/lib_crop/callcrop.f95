@@ -25,7 +25,6 @@
 
 ! Includes
       include 'p1werm.inc'
-      include 'c1db2.inc'
       include 'c1info.inc'
       include 'c1gen.inc'
       include 'm1flag.inc'
@@ -62,9 +61,9 @@
 
          call cropgrow(sr, soil%nslay, soil%aszlyd, &
      &   crop%database%ck, crop%database%grf, crop%database%ehu0, crop%database%zmxc, &
-     &   crop%bname,ac0idc(sr), acxrow(sr),                             &
-     &   crop%database%tdtm, crop%database%zmrt, actmin(sr), actopt(sr), &
-     &   ac0fd1(1,sr), ac0fd2(1,sr), ac0fd1(2,sr), ac0fd2(2,sr),        &
+     &   crop%bname,ac0idc(sr), acxrow(sr), &
+     &   crop%database%tdtm, crop%database%zmrt, crop%database%tmin, crop%database%topt, &
+     &   crop%database%fd1(1), crop%database%fd2(1), crop%database%fd1(2), crop%database%fd2(2), &
      &   crop%database%bceff, &
      &   crop%database%alf, crop%database%blf, crop%database%clf, &
      &   crop%database%dlf, crop%database%arp, crop%database%brp, crop%database%crp, &

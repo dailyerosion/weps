@@ -35,7 +35,6 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'c1db2.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'
@@ -127,8 +126,8 @@
      &               crop%database%tdtm, crop%growth%thucum, crop%deriv%mst, crop%deriv%mrt, &
      &               h1et%zeta, h1et%zetp, h1et%zpta
       write(luocdb(isr),2054) isr, isr, isr, isr
-      write(luocdb(isr),2055) h1et%zea, h1et%zep, h1et%zptp, actmin(isr),        &
-     &               actopt(isr), soil%aslrr
+      write(luocdb(isr),2055) h1et%zea, h1et%zep, h1et%zptp, crop%database%tmin, &
+     &               crop%database%topt, soil%aslrr
       write(luocdb(isr),2056)
 
       do 200 l = 1,soil%nslay

@@ -33,7 +33,6 @@
       include 'm1flag.inc'
       include 'm1sim.inc'
       include 'c1gen.inc'
-      include 'c1db2.inc'
       include 'c1info.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
@@ -1798,13 +1797,13 @@
         line = mtbl(mcur(sr))
 !     read crop growth parameters
         read(line(2:len_trim(line)), *, err=901)                        &
-     &    crop%database%zmxc, crop%database%growdepth, crop%database%zmrt, actmin(sr), &
-     &    actopt(sr), acthudf(sr), crop%database%tdtm, crop%database%thum
+     &    crop%database%zmxc, crop%database%growdepth, crop%database%zmrt, crop%database%tmin, &
+     &    crop%database%topt, acthudf(sr), crop%database%tdtm, crop%database%thum
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)), *, err=901)                        &
-     &    ac0fd1(1,sr), ac0fd2(1,sr), ac0fd1(2,sr), ac0fd2(2,sr),       &
+     &    crop%database%fd1(1), crop%database%fd2(1), crop%database%fd1(2), crop%database%fd2(2), &
      &    crop%database%tverndel, crop%database%bceff
 
         mcur(sr) = mcur(sr) + 1

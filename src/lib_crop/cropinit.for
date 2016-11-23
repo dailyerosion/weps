@@ -17,7 +17,6 @@
       include 'c1info.inc'
       include 'c1gen.inc'
       include 'c1report.inc'
-      include 'c1db2.inc'
       include 'manage/tcrop.inc'
       include 'crop/gcrop.inc'
 

@@ -161,6 +161,10 @@ module biomaterial
      real :: yld_coef   ! yield coefficient (kg/kg)     harvest_residue = acyld_coef(kg/kg) * Yield + acresid_int (kg/m^2)
      real :: resid_int  ! residue intercept (kg/m^2)   harvest_residue = acyld_coef(kg/kg) * Yield + acresid_int (kg/m^2)
      real :: zloc_regrow ! location of regrowth point (+ on stem, 0 or negative from crown)
+     real :: topt       ! Optimal temperature for plant growth (deg C)
+     real :: tmin       ! Minimum temperature for plant growth (deg C)
+     real :: fd1(1:2)   ! xy coordinate for 1st pt on frost damage curve
+     real :: fd2(1:2)   ! xy coordinate for 2nd pt on frost damage curve
 
      real, dimension(1:5) :: dkrate ! array of decomposition rate parameters
                                     ! acdkrate(1) - standing residue mass decomposition rate (d<1) (g/g/day)
