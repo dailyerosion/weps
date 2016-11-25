@@ -17,7 +17,6 @@
       include 'p1werm.inc'
       include 'm1flag.inc'      !am0cropupfl
       include 'main/main.inc'   !daysim, iy
-      include 'c1gen.inc'       !ac0rg, acxrow
       include 'h1hydro.inc'     !ahztranspdepth, ahzfurcut, ahztransprtmin, ahztransprtmax
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -41,9 +40,9 @@
             ! update all derived globals for crop global variables
             call cropupdate( &
      &      soil%aszrgh, soil%aszlyd, &
-     &      ac0rg(isr), acxrow(isr), &
+     &      crop%geometry%rg, crop%geometry%xrow, &
      &      soil%nslay, crop%database%ssa, crop%database%ssb, &
-     &      acdpop(isr), &
+     &      crop%geometry%dpop, &
      &      ahztranspdepth(isr), ahzfurcut(isr), &
      &      ahztransprtmin(isr), ahztransprtmax(isr), crop, croptot  )
 

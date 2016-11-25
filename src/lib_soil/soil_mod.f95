@@ -693,7 +693,7 @@ module soil_mod
      &        ' aslrr(',i2,')')
  2053 format (5f10.2,2f12.2)
  2054 format (' asfcr(',i2,')  asecr(',i2,') asmlos(',i2,')',           &
-     &        ' asflos(',i2,')  croptot%c0rg(',i2,') aszcr(',i2,')')
+     &        ' asflos(',i2,')  croptot%rg(',i2,') aszcr(',i2,')')
  2055 format (2f10.2,2f10.3,i10,2f12.2)
  2056 format('layer aszlyt  ahrsk ahrwc ahrwcs ahrwca',                 &
      &       ' ahrwcf ahrwcw ah0cb aheaep ahtsmx ahtsmn')
@@ -725,7 +725,7 @@ module soil_mod
                      ahzsmt(isr), soil%asxrgs,soil%aszrgh,soil%aslrr
       write(luosdb(isr),2054) isr,isr,isr,isr,isr,isr,isr
       write(luosdb(isr),2055) soil%asfcr, soil%asecr, soil%asmlos, &
-     &               soil%asflos, croptot%c0rg, soil%aszcr
+     &               soil%asflos, croptot%rg, soil%aszcr
       write(luosdb(isr),2056)
 
       do 200 l = 1,soil%nslay

@@ -39,7 +39,6 @@ contains
       include 'wpath.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
-      include 'c1gen.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
 

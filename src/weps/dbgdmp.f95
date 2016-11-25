@@ -35,7 +35,6 @@
       include 'm1sim.inc'
       include 'm1flag.inc'
       include 'c1info.inc'
-      include 'c1gen.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'
@@ -532,18 +531,16 @@
      &  write(*,*) 'day ',day,' residue(',idx,')%geometry%dstm ', residue(idx)%geometry%dstm
    end do
 
-! c1gen
-!
       if (dmpflg) write(*,*) 'c1gen'
 !      
-      if (ac0rg(sr).lt.0.or.ac0rg(sr).gt.1)                             &
-     &  write(*,*) 'day ',day,' ac0rg ', ac0rg(sr)
+      if (crop%geometry%rg.lt.0.or.crop%geometry%rg.gt.1)                             &
+     &  write(*,*) 'day ',day,' ac0rg ', crop%geometry%rg
 !
-      if (acdpop(sr).lt.0.0.or.acdpop(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' acdpop ', acdpop(sr)
+      if (crop%geometry%dpop.lt.0.0.or.crop%geometry%dpop.gt.tstmax)                    &
+     &  write(*,*) 'day ',day,' acdpop ', crop%geometry%dpop
 !
-      if (acxrow(sr).lt.0.0.or.acxrow(sr).gt.1.0)                       &
-     &  write(*,*) 'day ',day,' acxrow ', acxrow(sr)
+      if (crop%geometry%xrow.lt.0.0.or.crop%geometry%xrow.gt.1.0)                       &
+     &  write(*,*) 'day ',day,' acxrow ', crop%geometry%xrow
 
       if (croptot%rsaitot.lt.0.0.or.croptot%rsaitot.gt.tstmax) &
           write(*,*) 'day ',day,' croptot%rsaitot ', croptot%rsaitot

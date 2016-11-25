@@ -15,7 +15,6 @@
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'c1info.inc'
-      include 'c1gen.inc'
       include 'c1report.inc'
       include 'manage/tcrop.inc'
       include 'crop/gcrop.inc'
@@ -43,7 +42,7 @@
           crop%mass%rootfiberz(idx) = 0.0
       end do
 
-      acxrow(isr) = 0.0
+      crop%geometry%xrow = 0.0
       crop%geometry%zht = 0.0
       crop%geometry%dstm = 0.0
       crop%geometry%zrtd = 0.0
@@ -91,17 +90,17 @@
 
 !     initialize crop yield reporting parameters in case harvest call before planting
       crop%bname = ''
-      acynmu(isr) = ''
-      acycon(isr) = 1.0
-      acywct(isr) = 0.0
+      crop%database%ynmu = ''
+      crop%database%ycon = 1.0
+      crop%database%ywct = 0.0
 
 !     initialize crop type id to 0 indicating no crop type is growing
       ac0idc(isr) = 0
       crop%database%sla = 0.0
-      acdpop(isr) = 0.0
+      crop%geometry%dpop = 0.0
 
 !     initialize row placement to be on the ridge
-      ac0rg(isr) = 1
+      crop%geometry%rg = 1
 !     initialize harvestable yield fraction flag
       crop%geometry%hyfg = 0
 

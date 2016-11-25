@@ -32,7 +32,6 @@
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'm1sim.inc'
-      include 'c1gen.inc'
       include 'c1info.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
@@ -631,7 +630,7 @@
 
         else
           ! set matrix potential parameters to match 1/3 bar and 15 bar water contents
-          call param_pot_bc( tlayer, soil%asdblk, soil%asdpart,       &
+          call param_pot_bc( tlayer, soil%asdblk, soil%asdpart, &
      &                     soil%ahrwcf, soil%ahrwcw,                  &
      &                     soil%asfcla, soil%asfom,                   &
      &                     soil%ah0cb, soil%aheaep )
@@ -761,7 +760,7 @@
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) bioflg, afvt(1),       &
+        read(line(2:len_trim(line)),* , err=901) bioflg, afvt(1), &
      &                      afvt(2), afvt(3), afvt(4), afvt(5)
 
 !     do process
@@ -834,7 +833,7 @@
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) mfvt(1), mfvt(2),      &
+        read(line(2:len_trim(line)),* , err=901) mfvt(1), mfvt(2), &
      &                                mfvt(3), mfvt(4), mfvt(5)
 
       ! Lift processes only sees the decomp biomass pools. This default gets them all.
@@ -962,7 +961,7 @@
      &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
      &           atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),          &
      &           atmbgstemz(1,sr),                                      &
-     &           atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr),      &
+     &           atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr), &
      &           atgrainf(sr) )
              ! attach a crop name to non-harvest termination in stir report
              call stir_crop(sr, crop%bname, 2)
@@ -973,7 +972,7 @@
                call crop_endseason( sr, bmrotation, mperod(sr), &
      &         crop%bname, am0cfl(sr), &
      &         soil%nslay, ac0idc(sr), crop%growth%dayam, &
-     &         aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),      &
+     &         crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &         crop%database%thum, crop%geometry%xstmrep, &
      &         prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &         prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -981,7 +980,7 @@
      &         prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
      &         prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &         prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &         prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &         prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
      &         prevcancov(sr), prevdayspring(sr), mature_warn_flg )
                ! set to stop additional report in this operation
                rpt_season_flg = .false.
@@ -1058,7 +1057,7 @@
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
-     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
+     &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1066,7 +1065,7 @@
      &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
@@ -1124,7 +1123,7 @@
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
-     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
+     &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1132,7 +1131,7 @@
      &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
@@ -1225,7 +1224,7 @@
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
-     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
+     &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1233,7 +1232,7 @@
      &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
@@ -1288,7 +1287,7 @@
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
-     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
+     &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1296,7 +1295,7 @@
      &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
@@ -1322,10 +1321,10 @@
 
       if ( temp_present .gt. 0.0 ) then
           call trans(                                                   &
-     &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),      &
+     &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
      &      atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),         &
      &      atmflatrootstore(sr), atmflatrootfiber(sr),                 &
-     &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
+     &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
      &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
      &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
      &      crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck,   &
@@ -1400,7 +1399,7 @@
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
-     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
+     &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1408,7 +1407,7 @@
      &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
@@ -1468,7 +1467,7 @@
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
-     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
+     &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1476,7 +1475,7 @@
      &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
@@ -1537,7 +1536,7 @@
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
-     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
+     &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1545,7 +1544,7 @@
      &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
@@ -1595,7 +1594,7 @@
             harv_calib_not_selected(sr) = .false.
           end if
           call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
-     &                         harv_unit_flg, harv_report_flg,      &
+     &                         harv_unit_flg, harv_report_flg, &
      &                         mandate, crop )
           ! attach a crop name to the harvest operation in stir report
           call stir_crop(sr, crop%bname, 2)
@@ -1605,7 +1604,7 @@
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
-     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
+     &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1613,7 +1612,7 @@
      &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
@@ -1732,13 +1731,13 @@
      &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
      &           atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),          &
      &           atmbgstemz(1,sr),                                      &
-     &           atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr),      &
+     &           atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr), &
      &           atgrainf(sr) )
           call trans(                                                   &
-     &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),      &
+     &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
      &      atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),         &
      &      atmflatrootstore(sr), atmflatrootfiber(sr),                 &
-     &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
+     &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
      &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
      &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
      &      crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck,   &
@@ -1752,7 +1751,7 @@
           call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
-     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
+     &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1760,7 +1759,7 @@
      &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
           ! set to guarantee corresponding report hydrolbal at end of planting
           rpt_season_flg = .true.
@@ -1772,25 +1771,25 @@
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)),* , err=901)                        &
-     &    acrsfg(sr), acxrow(sr), ac0rg(sr)
+     &    crop%geometry%rsfg, crop%geometry%xrow, crop%geometry%rg
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)),* , err=901)                        &
-     &    acdpop(sr), crop%database%dmaxshoot, crop%database%baflg, acytgt(sr), &
+     &    crop%geometry%dpop, crop%database%dmaxshoot, crop%database%baflg, crop%database%ytgt, &
      &    crop%database%baf, crop%database%yraf, crop%geometry%hyfg
 
 !     get additional line of data
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
 !     read yield reporting name
-          acynmu(sr) = line(2:71)   !at present, line ends with < symbol at 72
+          crop%database%ynmu = line(2:71)   !at present, line ends with < symbol at 72
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
 !     read yield reporting values and growth characteristics
         read(line(2:len_trim(line)), *, err=901)                        &
-     &    acywct(sr), acycon(sr), ac0idc(sr), crop%database%grf,                &
+     &    crop%database%ywct, crop%database%ycon, ac0idc(sr), crop%database%grf, &
      &    crop%database%ck, crop%database%ehu0
 
         mcur(sr) = mcur(sr) + 1
@@ -1798,7 +1797,7 @@
 !     read crop growth parameters
         read(line(2:len_trim(line)), *, err=901)                        &
      &    crop%database%zmxc, crop%database%growdepth, crop%database%zmrt, crop%database%tmin, &
-     &    crop%database%topt, acthudf(sr), crop%database%tdtm, crop%database%thum
+     &    crop%database%topt, crop%database%thudf, crop%database%tdtm, crop%database%thum
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
@@ -1844,8 +1843,7 @@
 
         ! adjust yield coefficient to generate values on dry weight basis
         ! from total above ground biomass increments
-        crop%database%yld_coef = (crop%database%yld_coef + 1.0 - acywct(sr)/100.0)      &
-     &                 / (1.0-acywct(sr)/100.0)
+        crop%database%yld_coef = (crop%database%yld_coef + 1.0 - crop%database%ywct/100.0) / (1.0-crop%database%ywct/100.0)
 
         ! check crop type to see if yield coefficient and grain fraction are used
         if( cook_yield .eq. 1 ) then
@@ -1870,9 +1868,9 @@
         end if
 
 !       set planting date vars (day, month, rotation year)
-        aplant_day(sr) = lastoper(sr)%day
-        aplant_month(sr) = lastoper(sr)%mon
-        aplant_rotyr(sr) = lastoper(sr)%yr
+        crop%database%plant_day = lastoper(sr)%day
+        crop%database%plant_month = lastoper(sr)%mon
+        crop%database%plant_rotyr = lastoper(sr)%yr
 
         ! initialize flag to prevent multiple calibration harvests for single crop
         harv_calib_not_selected(sr) = .true.
@@ -1882,14 +1880,14 @@
         ahztransprtmin(sr) = 0.0
         ahztransprtmax(sr) = 0.0
 !       set row spacing based on flag
-        select case( acrsfg(sr) )
+        select case( crop%geometry%rsfg )
         case(0) ! Broadcast Planting
-            acxrow(sr) = 0.0
+            crop%geometry%xrow = 0.0
         case(1) ! Use Implement Ridge Spacing
             if(imprs.gt.0.001) then
-              acxrow(sr) = imprs * mmtom
+              crop%geometry%xrow = imprs * mmtom
               ! check for implement seed placement and ridging
-              if( (ac0rg(sr) .eq. 0) .and. (rdgflag .eq. 1) ) then
+              if( (crop%geometry%rg .eq. 0) .and. (rdgflag .eq. 1) ) then
                 ! seed placed in furrow bottom and ridge made unconditionally
                 ! set transpiration depth parameters (meters)
                 ahzfurcut(sr) = mmtom * furrowcut(soil%aszrgh,soil%asxrgw,soil%asxrgs)
@@ -1897,18 +1895,18 @@
                 ahztransprtmax(sr) = crop%database%zmrt
               end if
            else  ! no ridges, so this is a broadcast crop
-              acxrow(sr) = 0.0
+              crop%geometry%xrow = 0.0
            endif
         case(2) ! Use Specified Row Spacing
 !           convert incoming mm to meters used in acxrow
-            acxrow(sr) = acxrow(sr)*mmtom
+            crop%geometry%xrow = crop%geometry%xrow*mmtom
         case default
             write(*,*) 'Invalid row spacing flag value'
         end select
 
 !       do process
 !       do not initialize crop if no crop is present
-        if( (acdpop(sr) .gt. 0.0) .and. (ac0idc(sr) .gt. 0) ) then
+        if( (crop%geometry%dpop .gt. 0.0) .and. (ac0idc(sr) .gt. 0) ) then
 !         set flag for crop initialization - jt
           crop%growth%am0cif = .true.
 !         set crop growth flag on - jt
@@ -1990,7 +1988,7 @@
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
-     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
+     &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -1998,7 +1996,7 @@
      &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
@@ -2068,7 +2066,7 @@
             call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
-     &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
+     &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
@@ -2076,7 +2074,7 @@
      &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
             rpt_season_flg = .false.
@@ -2170,10 +2168,10 @@
      &    .gt. 0.0 ) then
           ! biomass was added, so do transfer
           call trans(                                                   &
-     &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),      &
+     &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
      &      atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),         &
      &      atmflatrootstore(sr), atmflatrootfiber(sr),                 &
-     &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
+     &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
      &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
      &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
      &      cropname, txstm, trbc, t0sla, t0ck,                         &
@@ -2298,10 +2296,10 @@
      &    .gt. 0.0 ) then
           ! biomass was added, so do transfer
           call trans(                                                   &
-     &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),      &
+     &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
      &      atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),         &
      &      atmflatrootstore(sr), atmflatrootfiber(sr),                 &
-     &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
+     &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
      &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
      &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
      &      cropname, txstm, trbc, t0sla, t0ck,                         &

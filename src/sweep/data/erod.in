@@ -114,8 +114,8 @@
 #       adrlaitot(s), R, (d1glob.inc) Residue leaf area index (m^2/m^2)
  0.02  0.00
 #
-#      acxrow(s), R, (c1gen.inc) crop row spacing (m), 0=broadcast
-#      ac0rg(s) , I, (c1gen.inc) seed location (0=furrow,1=ridge)
+#      acxrow(s), R, crop row spacing (m), 0=broadcast
+#      ac0rg(s) , I, seed location (0=furrow,1=ridge)
   0.3, 0
 # These are not implemented within EROSION
 #       abrsaz(h,s), R, (b1geom.inc) Biomass stem area index by ht (1/m)

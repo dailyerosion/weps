@@ -29,7 +29,6 @@ SUBROUTINE get_calib_crops(sr, crop)
 !   + + + PARAMETERS AND COMMON BLOCKS + + +
     include 'p1werm.inc'
     include 'm1flag.inc'
-    include 'c1gen.inc'
     include 'command.inc'
 
 !   + + + LOCAL DECLARATIONS + + +
@@ -79,14 +78,14 @@ SUBROUTINE get_calib_crops(sr, crop)
     Calib_Crop%CP%CData%Index = calib_crop_cnt
     Calib_Crop%CP%CData%calib_crop_info%idx = calib_crop_cnt
     Calib_Crop%CP%CData%calib_crop_info%crop_name = trim(crop%bname)
-    Calib_Crop%CP%CData%calib_crop_info%plant_day = aplant_day(sr)
-    Calib_Crop%CP%CData%calib_crop_info%plant_month = aplant_month(sr)
-    Calib_Crop%CP%CData%calib_crop_info%plant_rotyear = aplant_rotyr(sr)
+    Calib_Crop%CP%CData%calib_crop_info%plant_day = crop%database%plant_day
+    Calib_Crop%CP%CData%calib_crop_info%plant_month = crop%database%plant_month
+    Calib_Crop%CP%CData%calib_crop_info%plant_rotyear = crop%database%plant_rotyr
     Calib_Crop%CP%CData%calib_crop_info%harv_day = lastoper(sr)%day
     Calib_Crop%CP%CData%calib_crop_info%harv_month = lastoper(sr)%mon
     Calib_Crop%CP%CData%calib_crop_info%harv_rotyear = lastoper(sr)%yr
     Calib_Crop%CP%CData%calib_crop_info%bio_adj_val = crop%database%baf
-    Calib_Crop%CP%CData%calib_crop_info%target_yield = (acytgt(sr)/acycon(sr)) * (1.0-(acywct(sr)/100.0))
+    Calib_Crop%CP%CData%calib_crop_info%target_yield = (crop%database%ytgt/crop%database%ycon) * (1.0-(crop%database%ywct/100.0))
     CLink = TRANSFER (Calib_Crop, CLink)
     CALL LI_Add_To_Head (CLink, Calib_Crop_List)
 

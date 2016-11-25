@@ -41,6 +41,16 @@ module biomaterial
                             ! 5     GRF applied to below ground storage mass (potatoes, peanuts)
      real :: zshoot         ! length of actively growing shoot from root biomass (m)
      real :: zrtd           ! root depth (m)
+
+     integer :: rg      ! seeding location in relation to ridge, 0 - plant in furrow, 1 - plant on ridge
+     integer :: rsfg    ! row spacing flag
+                        ! 0      o Broadcast Planting
+                        ! 1      o Use Specified Row Spacing
+                        ! 2      o Use Existing Ridge Spacing
+     real :: xrow       ! row spacing (m)
+     real :: dpop       ! Crop seeding density (#/m^2)
+
+
   end type biostate_geometry
 
   type biostate_growth
@@ -113,7 +123,7 @@ module biomaterial
      real :: fcancov      ! fraction of soil surface covered by canopy (m^2/m^2)
   end type bioderived
 
-  type biodatabase ! from c1db1.inc, c1gen.inc
+  type biodatabase ! from c1db1, c1gen .inc
      integer :: baflg   ! flag for biomass adjustment action
                           ! 0 - normal crop growth
                           ! 1 - find biomass adjustment factor for target yield
@@ -165,6 +175,17 @@ module biomaterial
      real :: tmin       ! Minimum temperature for plant growth (deg C)
      real :: fd1(1:2)   ! xy coordinate for 1st pt on frost damage curve
      real :: fd2(1:2)   ! xy coordinate for 2nd pt on frost damage curve
+
+     real :: ytgt       ! target yield (in units shown below)
+     character*(80) :: ynmu ! string for name of units in which yield of interest will be reported
+     real :: ycon       ! conversion factor from Kg/m^2 to units named in acynmu (all dry weight)
+     real :: ywct       ! water content at which yield is to be reported (percent)
+     integer :: thudf   ! heat units or days to maturity flag
+                        ! 0      o Days to maturity and average conditions used to find heat units
+                        ! 1      o Heat units specified used directly
+     integer :: plant_day   ! planting date (day of month)
+     integer :: plant_month ! planting date (month of rotation year)
+     integer :: plant_rotyr ! planting date (rotation year)
 
      real, dimension(1:5) :: dkrate ! array of decomposition rate parameters
                                     ! acdkrate(1) - standing residue mass decomposition rate (d<1) (g/g/day)
@@ -240,8 +261,8 @@ module biomaterial
      real :: ftcancov     ! fraction of soil surface covered by canopy across pools (m^2/m^2)
      real :: evapredu     ! composite evaporation reduction from across pools (ea/ep ratio)
 
-     real :: xrow         ! row spacing (m)
-     integer :: c0rg      ! seeding location in relation to ridge, 0 - plant in furrow, 1 - plant on ridge
+     integer :: rg      ! seeding location in relation to ridge, 0 - plant in furrow, 1 - plant on ridge
+     real :: xrow       ! row spacing (m)
 
 !     abdstm - Total number of stems (#/m^2) (live and dead) May be a weighted summation.
 !     abzht  - Composite weighted average biomass height (m)
@@ -265,10 +286,6 @@ module biomaterial
 !              (sum of abffcv and abfscv)
 !     abfcancov - fraction of soil surface covered by all canopy (m^2/m^2)
 !     abevapredu - composite evaporation reduction from crop and residue materials (ea/ep ratio)
-!     acxrow - Crop row spacing (m)
-!     ac0rg  - Crop seeding location in relation to ridge
-!         0     o plant in furrow
-!         1     o plant on ridge
 
   end type biototal
 

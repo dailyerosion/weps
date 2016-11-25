@@ -48,7 +48,7 @@ subroutine erodsubr_update( sr, soil, restot, croptot, biotot, h1et, subrsurf )
     subrsurf%adrlaitot = restot%rlaitot
 
     subrsurf%acxrow = croptot%xrow
-    subrsurf%ac0rg = croptot%c0rg
+    subrsurf%ac0rg = croptot%rg
 
     subrsurf%abffcv = biotot%ffcvtot
 

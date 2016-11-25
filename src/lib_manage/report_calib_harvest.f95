@@ -28,7 +28,6 @@
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'c1gen.inc'
       include 'c1report.inc'
 
 !     + + + LOCAL DECLARATIONS + + +
@@ -86,10 +85,10 @@
 
       !Print out the "planting" and "harvest" dates and "crop name"
       write(unit=luoharvest_calib(sr),fmt=1015,advance='NO')            &
-     &      aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),         &
+     &      crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &      lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr, trim(crop%bname)
       write(unit=luoharvest_calib_parm(sr),fmt=1015,advance='NO')       &
-     &      aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),         &
+     &      crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &      lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr, trim(crop%bname)
 
       tot_mass = mass_rem + mass_left
@@ -106,20 +105,20 @@
       !Print out "harvest index", "wet weight yield" and "yield water content"
       write(unit=luoharvest_calib(sr),fmt=1030,advance='NO')            &
      &      harvest_index, "HI",                                        &
-     &      mass_rem/(1.0-(acywct(sr)/100.0)), "kg/m^2",                &
-     &      acywct(sr), '% H2O'
+     &      mass_rem/(1.0-(crop%database%ywct/100.0)), "kg/m^2", &
+     &      crop%database%ywct, '% H2O'
 
       !Print out "biomass adj factor", "yield adj factor",
       !          "target yield" and "target yield units"
       write(unit=luoharvest_calib(sr),fmt=1040,advance='NO')            &
-     &    crop%database%baflg,crop%database%baf,crop%database%yraf,acytgt(sr),trim(acynmu(sr))
+     &    crop%database%baflg,crop%database%baf,crop%database%yraf,crop%database%ytgt,trim(crop%database%ynmu)
       write(unit=luoharvest_calib_parm(sr),fmt=1041,advance='NO')       &
      &    crop%database%baf
 
       !Print out "wet target yield" (metric) and "dry target yield" (metric)
       write(unit=luoharvest_calib(sr),fmt=1050,advance='NO')            &
-     &    acytgt(sr)/acycon(sr), 'kg/m^2',                              &
-     &    (acytgt(sr)/acycon(sr)) * (1.0-(acywct(sr)/100.0)), 'kg/m^2'
+     &    crop%database%ytgt/crop%database%ycon, 'kg/m^2', &
+     &    (crop%database%ytgt/crop%database%ycon) * (1.0-(crop%database%ywct/100.0)), 'kg/m^2'
 
 
       return

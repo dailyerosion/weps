@@ -37,7 +37,6 @@
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'c1gen.inc'
       include 'c1report.inc'
 
 !     + + + LOCAL DECLARATIONS + + +
@@ -77,9 +76,9 @@
      &      mass_rem, 'kg/m^2',                                         &
      &      mass_left, 'kg/m^2',                                        &
      &      harvest_index, "Harvest Index",                             &
-     &      mass_rem / ( 1.0-acywct(sr)/100.0 ),                        &
+     &      mass_rem / ( 1.0-crop%database%ywct/100.0 ),                &
      &      'kg/m^2',                                                   &
-     &      acywct(sr), 'percent water'
+     &      crop%database%ywct, 'percent water'
 
         if( harv_unit_flg .eq. 0 ) then
           ! the conversion is from dry mass to wet weight
@@ -90,9 +89,9 @@
      &      mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',                &
      &      mass_left*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',               &
      &      harvest_index, "Harvest Index",                             &
-     &      mass_rem * acycon(sr) / ( 1.0-acywct(sr)/100.0 ),           &
-     &      acynmu(sr)(1:len_trim(acynmu(sr))),                         &
-     &      acywct(sr), 'percent water'
+     &      mass_rem*crop%database%ycon/(1.0-crop%database%ywct/100.0), &
+     &      crop%database%ynmu(1:len_trim(crop%database%ynmu)),         &
+     &      crop%database%ywct, 'percent water'
         else
           ! the conversion is from dry mass to wet weight
           ! and from kg/m^2 to lbs/ac units
@@ -101,10 +100,10 @@
      &      harv_report_flg, trim(crop%bname),                          &
      &      mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',                &
      &      mass_left*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',               &
-     &      harvest_index, "Harvest Index",                             &
-     &      mass_rem*KG_per_M2_to_LBS_per_ACRE/( 1.0-acywct(sr)/100.0 ),&
+     &      harvest_index, "Harvest Index", mass_rem *                  &
+     &      KG_per_M2_to_LBS_per_ACRE/( 1.0-crop%database%ywct/100.0 ), &
      &      'lb/ac',                                                    &
-     &      acywct(sr), 'percent water'
+     &      crop%database%ywct, 'percent water'
         end if
 
 ! Update the mandate structure so that 'harvest' operations

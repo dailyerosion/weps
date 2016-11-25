@@ -31,7 +31,6 @@
 
 ! Includes
       include 'p1werm.inc'
-      include 'c1gen.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
@@ -47,7 +46,7 @@
 
       call hydro( isr, soil%nslay, soil%amrslp, biotot%zht_ave,         &
      &            crop%deriv%rlai, crop%deriv%rsai, crop%geometry%zht, crop%growth%dayap,   &
-     &       acxrow(isr), ac0rg(isr), biotot%ftcancov, crop%growth%fliveleaf,&
+     &       crop%geometry%xrow, crop%geometry%rg, biotot%ftcancov, crop%growth%fliveleaf,&
      &         biotot%mftot, biotot%evapredu, crop%geometry%zrtd, ahfwsf(isr), &
      &            soil%aszlyd, soil%asdblk, soil%asdblk0, &
      &            soil%asdpart, soil%asdwblk, soil%ahrwc, &

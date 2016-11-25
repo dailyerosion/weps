@@ -255,7 +255,6 @@ module sweep_io_mod
             subrsurf(sr)%abzht = ( subrsurf(sr)%adzht_ave*subrsurf(sr)%adrsaitot                   &
                                + subrsurf(sr)%aczht*subrsurf(sr)%acrsai ) / subrsurf(sr)%abrsai
         endif
-      ! c1gen.inc
 
         ! addition to code for biodrag
         ! crop row spacing and seed location
@@ -753,7 +752,6 @@ module sweep_io_mod
             subrsurf(sr)%abzht = ( subrsurf(sr)%adzht_ave*subrsurf(sr)%adrsaitot                   &
                                + subrsurf(sr)%aczht*subrsurf(sr)%acrsai ) / subrsurf(sr)%abrsai
         endif
-      ! c1gen.inc
 
         ! addition to code for biodrag
         ! crop row spacing and seed location

@@ -81,7 +81,7 @@
 !     compute "effective biomass (live and dead) drag coefficient
 !     from SAI and LAI values
       biotot%rcdtot = biodrag( restot%rlaitot, restot%rsaitot, croptot%rlaitot,&
-                  croptot%rsaitot, croptot%c0rg, croptot%xrow, croptot%zht_ave, &
+                  croptot%rsaitot, croptot%rg, croptot%xrow, croptot%zht_ave, &
                   soil%aszrgh )
 ! *****************************************************************
 !     sum the stem area index and leaf area index values by height
