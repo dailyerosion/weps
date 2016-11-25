@@ -261,9 +261,6 @@ module biomaterial
      real :: ftcancov     ! fraction of soil surface covered by canopy across pools (m^2/m^2)
      real :: evapredu     ! composite evaporation reduction from across pools (ea/ep ratio)
 
-     integer :: rg      ! seeding location in relation to ridge, 0 - plant in furrow, 1 - plant on ridge
-     real :: xrow       ! row spacing (m)
-
 !     abdstm - Total number of stems (#/m^2) (live and dead) May be a weighted summation.
 !     abzht  - Composite weighted average biomass height (m)
 !     abzmht - Tallest biomass height (m) greatest of daily crop or residue height

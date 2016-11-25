@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-subroutine erodsubr_update( sr, soil, restot, croptot, biotot, h1et, subrsurf )
+subroutine erodsubr_update( sr, soil, crop, restot, croptot, biotot, h1et, subrsurf )
 
 !     +++ PURPOSE +++
 !     print out input file for stand alone erosion
@@ -11,13 +11,14 @@ subroutine erodsubr_update( sr, soil, restot, croptot, biotot, h1et, subrsurf )
 !     + + + Modules Used + + +
     use subregions_mod
     use soil_data_struct_defs, only: soil_def
-    use biomaterial, only: biototal
+    use biomaterial, only: biototal, biomatter
     use hydro_data_struct_defs, only: hydro_derived_et
     use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     +++ ARGUMENT DECLARATIONS +++
     integer sr                               ! subregion index (eventually obsolete)
     type(soil_def), intent(in) :: soil  ! soil for this subregion
+    type(biomatter), intent(in) :: crop
     type(biototal), intent(in) :: restot
     type(biototal), intent(in) :: croptot
     type(biototal), intent(in) :: biotot
@@ -47,8 +48,8 @@ subroutine erodsubr_update( sr, soil, restot, croptot, biotot, h1et, subrsurf )
     subrsurf%adrsaitot = restot%rsaitot
     subrsurf%adrlaitot = restot%rlaitot
 
-    subrsurf%acxrow = croptot%xrow
-    subrsurf%ac0rg = croptot%rg
+    subrsurf%acxrow = crop%geometry%xrow
+    subrsurf%ac0rg = crop%geometry%rg
 
     subrsurf%abffcv = biotot%ffcvtot
 

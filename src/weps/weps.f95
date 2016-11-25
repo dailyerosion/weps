@@ -767,7 +767,8 @@
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
                   ! transfer data values from submodel structures into erosion input structure
                   do isr=1,nsubr   ! do multiple subregion
-                     call erodsubr_update( isr, soil(isr), restot(isr), croptot(isr), biotot(isr), h1et(isr), subrsurf(isr) )
+                     call erodsubr_update( isr, soil(isr), crop(isr), restot(isr), croptot(isr), &
+                                           biotot(isr), h1et(isr), subrsurf(isr) )
                   end do
                   ! write(*,*) "Start calcwu"
                   call calcwu

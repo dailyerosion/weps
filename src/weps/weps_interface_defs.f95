@@ -942,13 +942,14 @@
       character*(*) filnam
       end subroutine dmpall
 !------------------------------
-    subroutine erodsubr_update( sr, soil, restot, croptot, biotot, h1et, subrsurf )
+    subroutine erodsubr_update( sr, soil, crop, restot, croptot, biotot, h1et, subrsurf )
       use soil_data_struct_defs, only: soil_def
-    use biomaterial, only: biototal
+    use biomaterial, only: biototal, biomatter
     use hydro_data_struct_defs, only: hydro_derived_et
     use erosion_data_struct_defs, only: subregionsurfacestate
     integer sr                               ! subregion index (eventually obsolete)
     type(soil_def), intent(in) :: soil  ! soil for this subregion
+    type(biomatter), intent(in) :: crop
     type(biototal), intent(in) :: restot
     type(biototal), intent(in) :: croptot
     type(biototal), intent(in) :: biotot

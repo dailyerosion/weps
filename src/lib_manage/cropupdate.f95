@@ -161,11 +161,8 @@
           croptot%rlaz(idx) = crop%deriv%rlai / mncz           ! leaf area index by height (1/m)
       end do
 
-      croptot%xrow = bcxrow
-      croptot%rg = bc0rg
-
       ! effective Biomass silhouette area across pools (SAI+LAI) (m^2/m^2) (combination of leaf area and stem area indices)
-      croptot%rcdtot = biodrag(0.0,0.0,croptot%rlaitot,croptot%rsaitot, croptot%rg, croptot%xrow, croptot%zht_ave, bszrgh) 
+      croptot%rcdtot = biodrag(0.0,0.0,croptot%rlaitot,croptot%rsaitot, bc0rg, bcxrow, croptot%zht_ave, bszrgh) 
 
       croptot%ffcvtot = crop%deriv%ffcv      ! biomass cover across pools - flat (m^2/m^2)
       croptot%fscvtot = crop%deriv%fscv      ! biomass cover across pools - standing (m^2/m^2)
