@@ -23,6 +23,7 @@
       use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use hydro_data_struct_defs, only: hydro_derived_et
+      use crop_data_struct_defs, only: tisr, tday, tmo, tyr
       use climate_input_mod, only: cli_today
 
 !     + + +   ARGUMENT DECLARATIONS + + +
@@ -40,7 +41,6 @@
       include 'h1temp.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'crop/tcdbug.inc'
       include 'main/main.inc'
 
 !     + + + LOCAL VARIABLES + + +

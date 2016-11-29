@@ -11,6 +11,10 @@ module crop_data_struct_defs
   integer, dimension(:), allocatable :: am0cdb    ! flag to print CROP variables before and after the call to CROP
                                                      ! 0 = no output
                                                      ! 1 = output
+  integer :: tday
+  integer :: tmo
+  integer :: tyr
+  integer :: tisr
 
   type crop_residue
     ! contains the crop growth values that are "eventually" going to be moved into the
