@@ -117,7 +117,7 @@ module stir_report_mod
 !     for the current operation and adds it to the total.
 
 !     + + + LOCAL VARIABLES + + +
-      real stir_op_avg, local_op_energy
+      real stir_op_avg
       integer idx, jdx, kdx
 
 !     + + + LOCAL DEFINITIONS + + +
@@ -152,16 +152,17 @@ module stir_report_mod
 
           if( ostir .ge. 0.0 ) then
               scisum(isr)%stir = scisum(isr)%stir + ostir
-              ! set stir and energy value for each operation
+              ! set stir value for each operation
               stircum(isr)%phop(stircum(isr)%phopidx)%phop_stir = ostir
           else
               scisum(isr)%stir = scisum(isr)%stir + stir_op_avg
               stircum(isr)%phop(stircum(isr)%phopidx)%phop_stir = stir_op_avg
           end if
 
-          stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy = oenergyarea
+          stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy = oenergyarea * get_stir_soil_multiplier(isr)
           if( oenergyarea .ge. 0.0 ) then
-              scisum(isr)%energy = scisum(isr)%energy + oenergyarea
+              ! set energy value for each operation
+              scisum(isr)%energy = scisum(isr)%energy + stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy
           end if
 
           ! reset values for next operation
@@ -199,22 +200,15 @@ module stir_report_mod
                 end do
               end if
              
-              !multiple the energy by the soil multiplier
-              if( stircum(isr)%phop(idx)%phop_energy .ge. 0.0 ) then
-                local_op_energy = stircum(isr)%phop(idx)%phop_energy * get_stir_soil_multiplier(isr)
-              else
-                local_op_energy = 0.0
-              end if
-           
               if( stircum(isr)%phop(idx)%phop_skip .eq. 0 ) then
                 ! print this line
                 write(luostir(isr),1000) stircum(isr)%phop(idx)%phopday, stircum(isr)%phop(idx)%phopmon, &
-     &                         stircum(isr)%phop(idx)%phopyr,                         &
-     &                         trim(stircum(isr)%phop(idx)%stir_opname),              &
-     &                         trim(stircum(isr)%phop(idx)%stir_cropname),            &
-     &                         trim(stircum(isr)%phop(idx)%stir_fuelname),            &
-     &                         stircum(isr)%phop(idx)%phop_stir, local_op_energy,     &
-     &                         stircum(isr)%phop(idx)%crop_num, stircum(isr)%phop(idx)%last_harv
+                              stircum(isr)%phop(idx)%phopyr, &
+                              trim(stircum(isr)%phop(idx)%stir_opname), &
+                              trim(stircum(isr)%phop(idx)%stir_cropname), &
+                              trim(stircum(isr)%phop(idx)%stir_fuelname), &
+                              stircum(isr)%phop(idx)%phop_stir, stircum(isr)%phop(idx)%phop_energy, &
+                              stircum(isr)%phop(idx)%crop_num, stircum(isr)%phop(idx)%last_harv
               end if
             end do
          end if
