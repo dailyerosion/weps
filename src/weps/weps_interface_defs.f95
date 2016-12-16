@@ -43,32 +43,6 @@
       
 !-------------------- CROP Routines --------------------------------
 !------------------------
-      subroutine callcrop(daysim, sr, soil, crop, cropprev, residue, restot, croptot, h1et)
-      use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal, bio_prevday
-      use hydro_data_struct_defs, only: hydro_derived_et
-      integer daysim
-      integer sr
-      type(soil_def), intent(in) :: soil  ! soil for this subregion
-      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
-      type(bio_prevday), intent(inout) :: cropprev    ! structure containing crop previous day values
-      type(biomatter), dimension(:), intent(inout) :: residue  ! structure containing full residue pool description
-      type(biototal), intent(in) :: restot
-      type(biototal), intent(inout) :: croptot
-      type(hydro_derived_et), intent(in) :: h1et
-      end subroutine callcrop
-!----------------------
-      subroutine  cdbug(isr, soil, crop, restot, h1et)
-      use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal
-      use hydro_data_struct_defs, only: hydro_derived_et
-      integer, intent(in) :: isr    ! subregion index
-      type(soil_def), intent(in) :: soil  ! soil for this subregion
-      type(biomatter), intent(in) :: crop    ! structure containing full crop description
-      type(biototal), intent(in) :: restot   ! structure containing residue totals
-      type(hydro_derived_et), intent(in) :: h1et
-      end subroutine cdbug
-!----------------------
       subroutine cinit(isr, bnslay, bszlyd,                             &
      &           bctopt, bctmin,                                        &
      &           bcthudf, bctdtm, bcthum, bc0hue, bcdmaxshoot,          &
@@ -116,10 +90,6 @@
       real bcmrootstorez(*), lost_mass
       real bcyld_coef, bcresid_int, bcgrf          
       end subroutine cookyield
-!-------------------------------
-      subroutine cpout( isr )
-      integer, intent(in) :: isr   ! subregion number
-      end subroutine cpout
 !-------------------------------
       subroutine cprnl (hmx,bcthucum,day,mo,yr)
       integer   day, mo, yr
@@ -220,12 +190,6 @@
       real    bgmbgstemz(*)
       real    bgzht, bgdstm, bgxstmrep, bggrainf
       end subroutine cropgrow
-!---------------------------
-      subroutine cropinit(isr, crop)
-      use biomaterial, only: biomatter
-      integer isr
-      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
-      end subroutine cropinit
 !---------------------------
       subroutine growth(isr, bnslay, bszlyd, bc0ck, bcgrf,              &
      &                 bcehu0, bczmxc, bc0idc, bc0nam,                  &
@@ -330,38 +294,6 @@
       integer n  
       end subroutine splint
 !-------------------------------------
-      subroutine crop_endseason ( isr, bmrotation, bmperod, &
-     &                 bc0nam, bm0cfl,       &
-     &                 bnslay, bc0idc, bcdayam,                         &
-     &                 bplant_day, bplant_month, bplant_rotyr,          &
-     &                 bcthum, bcxstmrep,                               &
-     &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
-     &                 bprevflatstem, bprevflatleaf, bprevflatstore,    &
-     &                 bprevbgstemz,                                    &
-     &                 bprevrootstorez, bprevrootfiberz,                &
-     &                 bprevht, bprevstm, bprevrtd,                     &
-     &                 bprevdayap, bprevhucum, bprevrthucum,            &
-     &                 bprevgrainf, bprevchillucum, bprevliveleaf,      &
-     &                 bprevcancov, bprevdayspring, mature_warn_flg )
-      integer, intent(in) :: isr   ! subregion number
-      integer, intent(in) :: bmrotation ! rotation count updated in manage.for
-      integer, intent(in) :: bmperod ! number of years for a management cycle
-      character*(80) bc0nam
-      integer bm0cfl, bnslay, bc0idc, bcdayam
-      integer bplant_day, bplant_month, bplant_rotyr
-      real bcthum, bcxstmrep
-      real bprevstandstem, bprevstandleaf, bprevstandstore
-      real bprevflatstem, bprevflatleaf, bprevflatstore
-      real bprevbgstemz(*)
-      real bprevrootstorez(*), bprevrootfiberz(*)
-      real bprevht, bprevstm, bprevrtd
-      integer bprevdayap
-      real bprevhucum, bprevrthucum
-      real bprevgrainf, bprevchillucum, bprevliveleaf
-      real bprevcancov
-      integer bprevdayspring, mature_warn_flg
-      end subroutine crop_endseason
-!--------------------------------------  
 
 !-------------- DECOMP Routines ------------------------------
       subroutine  ddbug(isr, slay, residue)

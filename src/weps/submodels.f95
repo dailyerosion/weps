@@ -13,6 +13,7 @@
       use hydro_data_struct_defs, only: hydro_derived_et
       use wepp_param_mod, only: wepp_param
       use soil_mod, only: callsoil
+      use crop_mod, only: callcrop
 
       include 'p1werm.inc'
       include 'm1flag.inc'      !am0cropupfl

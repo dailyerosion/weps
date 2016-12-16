@@ -26,6 +26,7 @@
       use soilden_mod, only: setbdproc_wc
       use hydro_data_struct_defs, only: hydro_derived_et
       use soil_mod, only: depthini
+      use crop_mod, only: crop_endseason
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'command.inc'

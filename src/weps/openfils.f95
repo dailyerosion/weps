@@ -1,9 +1,8 @@
-!
 !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
-!
+
       subroutine openfils(residue)
 ! ***************************************************************** wjr
 ! Contains init code from main
@@ -22,6 +21,7 @@
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use input_run_mod, only: old_run_file
+      use crop_mod, only: cpout
 
       include 'p1werm.inc'
       include 'wpath.inc'

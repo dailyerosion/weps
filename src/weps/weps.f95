@@ -49,6 +49,7 @@
       use input_soil_mod, only: input_ifc
       use soil_data_struct_defs, only: soil_def
       use soil_mod, only: soilinit
+      use crop_mod, only: cropinit
       use biomaterial
       use debug_mod
       use mandate_mod
