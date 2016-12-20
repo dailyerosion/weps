@@ -62,6 +62,7 @@ contains
       integer       lui1
       integer    :: sum_stat, alloc_stat
       character*80     awwisn   ! made local since not used anywhere else
+      integer, parameter :: max_simyear = 100000  ! value used to test simulation year input range
 
 !     + + + Local Variable Definitions + + +
 !     isr - subregion index counter
@@ -186,7 +187,7 @@ contains
                write (*,2250)
                goto 80
             end if
-            if (((iy .lt. 0) .or. (iy .gt.9999)) .or. ((ly .lt. 0) .or. (ly .gt. 9999))) then
+            if (((iy .lt. 0) .or. (iy .gt.max_simyear)) .or. ((ly .lt. 0) .or. (ly .gt. max_simyear))) then
                write (*,2260)
                goto 80
             end if
@@ -711,7 +712,7 @@ contains
                write (*,2250)
                goto 80
             end if
-            if (((iy .lt. 0) .or. (iy .gt.9999)) .or. ((ly .lt. 0) .or. (ly .gt. 9999))) then
+            if (((iy .lt. 0) .or. (iy .gt.max_simyear)) .or. ((ly .lt. 0) .or. (ly .gt. max_simyear))) then
                write (*,2260)
                goto 80
             end if
@@ -1203,7 +1204,7 @@ contains
  2250 format (/,' error, initial or last day or month of simulation is o&
      &ut of bounds',/,'  - please check run file')
  2260 format (/,' error, initial or last year of simulation is not betwe&
-     &en 0 and 99',/,'  - please check run file')
+     &en 0 and max_simyear',/,'  - please check run file')
  2265 format (/,' error, initial year of simulation is greater than the &
      &last year of simulation',/,'  - please check run file')
 
