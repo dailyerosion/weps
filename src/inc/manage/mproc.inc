@@ -19,7 +19,7 @@
 
       real             fracarea
       integer          bioflg
-      logical          rpt_season_flg
+      logical          rpt_season_flg(mnsub)
 
       integer          cropno
       character*80     cropname

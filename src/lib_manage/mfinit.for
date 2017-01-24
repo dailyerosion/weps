@@ -33,6 +33,7 @@
       include 'manage/man.inc'
       include 'manage/asd.inc'
       include 'manage/tcrop.inc'
+      include 'manage/mproc.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr
@@ -95,6 +96,8 @@
       lastoper(sr)%day = 0
       lastoper(sr)%mon = 0
       lastoper(sr)%yr = 0
+
+      rpt_season_flg(sr) = .true.
 
 !     + + + END SPECIFICATIONS + + +
 

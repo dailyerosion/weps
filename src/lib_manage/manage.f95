@@ -138,7 +138,7 @@
         mansimyr = simyr - mod (simyr-startyr, mperod(sr)) + manyr - 1
         if( difdat (simdd,simmm,simyr,manday,manmon,mansimyr).ne.0) then
            ! initialize end of season / hydrobal reporting flag to true to generate a report
-           rpt_season_flg = .true.
+           rpt_season_flg(sr) = .true.
            return
         end if
       case ('*')
