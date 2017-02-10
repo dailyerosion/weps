@@ -119,7 +119,7 @@
 !     real    intens, rrimpl
       real    kappa
       real    thinval
-    real :: start_depth ! depth in soil at which tillage loosening/compaction begins (mm)
+      real :: start_depth ! depth in soil at which tillage loosening/compaction begins (mm)
       real    pyieldf, pstalkf, rstandf
       integer harv_report_flg, harv_calib_flg, harv_unit_flg
       integer mature_warn_flg
@@ -149,6 +149,8 @@
       real    manure_buried_fraction, manure_total_mass
       real :: compact_load  ! 
       real, dimension(:), allocatable :: procbdadj
+      real :: gmd, gsd  ! geometric mean dia. (mm) and geometric std. deviation (mm/mm)
+      integer :: i,j
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 
@@ -240,6 +242,9 @@
 !     manure_total_mass - total mass of manure added to field (dry weight)
 !     manure_buried_fraction - fraction of total manure applied that is buried
 
+!     gmd        - geometric mean dia. (mm)
+!     gsd        - geometric std. deviation (mm/mm)
+
 !     + + + SUBROUTINES CALLED + + +
 !
 !     asd2m     - aggregate size distribution to mass fraction converter
@@ -257,6 +262,7 @@
 !     remove    - performs the biomass removal during a harvest, burn, etc.
 !                 and updates the decomposition pools accordingly.
 !     rough     - calculated the post tillage random roughness
+!     set_asd   - set the asd (gmd,gsd) parameter values
 !     tdbug     - subroutine which writes out variables for debugging purposes
 
 !     + + + DATA INITIALIZATIONS + + +
@@ -2417,6 +2423,131 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 !-----END terminate irrigation monitoring process (process code 74)
+
+      case (91)
+!-----START initialize soil layer asd (process code 91)
+!     pre-process stuff
+        if (am0tdb(sr) .eq. 1) then
+          write (luotdb(sr),*)
+          write (luotdb(sr),*) '//Before initialize soil layer asd conditions//'
+          call tdbug(sr, prcode, soil, crop, residue)
+        end if
+
+        write (UNIT=0,FMT="(A)",ADVANCE="NO") '//Before set_asd process// '
+        write(0,*) 'no. of soil layers to modify/total are: ', tlayer, soil%nslay
+        do i=1, tlayer
+          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+      &       i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+        end do
+        write(0,*) ""
+        do i=tlayer+1, soil%nslay
+          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+      &       i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+        end do
+
+!       Convert ASD from modified log-normal to sieve classes
+        call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
+
+        write(0,*) 'msieve: ', msieve, 'nsieve: ', nsieve
+
+        do i=1, tlayer
+          write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
+          do j=1, msieve+1
+           if (j < msieve+1) then
+             write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
+           else
+             write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
+           endif
+         end do
+       end do
+
+
+
+ !     read in asd variables here
+       mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) gmd, gsd
+
+!       check for valid asd parameters
+        if (gmd .gt. soil%aslagx(1)) then
+           write(0,*) 'Process 91:ASD:gmd=',gmd,                         &
+     &                'must be less than gmd_max=',soil%aslagx(1)
+ !!!          call exit (-1)
+        endif
+        if (gmd .lt. soil%aslagn(1)) then
+           write(0,*) 'Process 91:ASD:gmd=',gmd,                         &
+     &                'must be greater than gmd_min=',soil%aslagn(1)
+           call exit (-1)
+        endif
+
+
+
+!     do process
+        call set_asd(gmd, gsd, tlayer, soil)
+
+!     post-process stuff
+        if (am0tdb(sr) .eq. 1) then
+          write (luotdb(sr),*) '//After initialize soil layer asd conditions//'
+          call tdbug(sr, prcode, soil, crop, residue)
+        end if
+
+        write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_asd process// '
+        write(0,*) 'no. of modified soil layers/total are: ', tlayer, soil%nslay
+        do i=1, tlayer
+          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+      &       i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+        end do
+        write(0,*) ""
+        do i=tlayer+1, soil%nslay
+          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+      &       i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+        end do
+
+
+!       Convert ASD from modified log-normal to sieve classes
+        call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
+
+        write(0,*) 'msieve: ', msieve, 'nsieve: ', nsieve
+
+        write(UNIT=0, FMT="('           ')",ADVANCE="NO")
+        do j=1, msieve+1
+          write(UNIT=0, FMT="(27(i9))",ADVANCE="NO") j
+          if (j == msieve+1) write(0,*) ''
+        end do
+        write(UNIT=0, FMT="('massf(x,yy)')",ADVANCE="NO")
+	do j=1, msieve+1
+          write(UNIT=0, FMT="(27(f9.4))",ADVANCE="NO") sdia(j)
+          if (j == msieve+1) write(0,*) ""
+        end do
+        do i=1, tlayer
+          write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
+          do j=1, msieve+1
+           write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
+           if (j == msieve+1) write(0,*) ""
+          end do
+        end do
+
+!       Convert ASD back from sieve classes to modified log-normal
+        call m2asd(massf, soil%nslay, soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags)
+
+        write(0,*) 'no. of modified soil layers/total are: ', tlayer, soil%nslay
+        do i=1, tlayer
+          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+      &       i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+        end do
+        write(0,*) ""
+        do i=tlayer+1, soil%nslay
+          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+      &       i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+        end do
+
+
+
+
+
+
+
+!-----END terminate initialize soil layer asd process (process code 91)
 
       case default
         goto 902

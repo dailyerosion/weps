@@ -235,11 +235,14 @@ module soil_mod
  2100 format('#daysim idoy yr cump dcump bszrgh bsxrgs bszrr bszcr bsfcr&
      & bsecr bsmlos bsflos bcanag bcancr')
  2200 format( 3(1x,i4), 10(1x,f8.4) )
- 2300 format('#daysim idoy yr layer depth bszlyt bsdblk bseags bseagmn b&
-     &seagm bseagmx bslagn bslmin bslagm bslmax bslagx bs0ags bsdagd rel&
-     &_ag_stab rel_geo_mean freeze freeze_thaw thaw frozen wetting dryin&
-     &g warm_puddling wet_bulk_den ')
- 2400 format( i6, 1x,i3, 1x,i4, 1x,i3, 16(1x,f10.4), 8(1x,b1) )
+ 2300 format('#daysim|idoy|yr| layer|&
+     &cntr_dpth|lay_depth|lay_thick| bulk_dens|&
+     &    agstab|min_agstab|ave_agstab|max_agstab|&
+     &       gmd|       gsd|min_agsize|max_agsize|&
+     &   min_gmd|   max_gmd|   rel_gmd|&
+     &   ag_dens| rel_agden|&
+     &  freeze|frz_thw|   thaw| frozen|wetting| drying|puddling|wet_bulk_den')
+ 2400 format( i6, 1x,i3, 1x,i4, 1x,i3, 17(1x,f10.4), 8(7x,b1) )
 
 !  + + +  OUTPUT SECTION  + + +
 
@@ -274,13 +277,15 @@ module soil_mod
             else
               laycenter(ldx) = 0.5 * ( szlyd(ldx-1) + szlyd(ldx) )
             end if
+
             write (luosoillay(isr),2400) daysim, idoy, yr, ldx,         &
-     &          laycenter(ldx), soil%aszlyt(ldx), soil%asdblk(ldx), &
+     &          laycenter(ldx), soil%aszlyd(ldx), soil%aszlyt(ldx), soil%asdblk(ldx), &
      &          soil%aseags(ldx), soil%aseagmn(ldx), soil%aseagm(ldx), soil%aseagmx(ldx),   &
-     &          soil%aslagn(ldx), soil%aslmin(ldx), soil%aslagm(ldx), soil%aslmax(ldx),     &
-     &          soil%aslagx(ldx), soil%as0ags(ldx), soil%asdagd(ldx),                  &
-     &          (soil%aseags(ldx)-soil%aseagmn(ldx))/(soil%aseagmx(ldx)-soil%aseagmn(ldx)), &
+
+     &          soil%aslagm(ldx), soil%as0ags(ldx), soil%aslagn(ldx), soil%aslagx(ldx), &
+     &          soil%aslmin(ldx), soil%aslmax(ldx),     &
      &          (soil%aslagm(ldx) - soil%aslmin(ldx))/(soil%aslmax(ldx) - soil%aslmin(ldx)),&
+     &          soil%asdagd(ldx), (soil%aseags(ldx)-soil%aseagmn(ldx))/(soil%aseagmx(ldx)-soil%aseagmn(ldx)), &
      &          ibits(trigger(ldx),0,1), ibits(trigger(ldx),1,1),       &
      &          ibits(trigger(ldx),2,1), ibits(trigger(ldx),3,1),       &
      &          ibits(trigger(ldx),4,1), ibits(trigger(ldx),5,1),       &
