@@ -3,34 +3,55 @@
 !$Revision$
 !$HeadURL$
 
+      Program tstasd
+
+      use soil_data_struct_defs, only: soil_def
+
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 's1layr.inc'
       include 's1agg.inc'
       include 'manage/asd.inc'
 
-      integer sr,lay,i,iter
-      real    massf(msieve+1,mnsz)
-      real    initgmd, initgsd
+      type(soil_def), dimension(:), allocatable :: soil             ! structure with soil state and parameters as updated suring simulation
+
+      integer :: alloc_stat, sum_stat
+      integer :: nsubr
+
+      integer :: sr,lay,i,iter
+      real    :: massf(msieve+1,mnsz)
+      real    :: initgmd, initgsd
 
       nsubr = 1
+      sum_stat = 0
+      allocate(soil(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      if( sum_stat .gt. 0 ) then
+!        write(0,*) "ERROR: unable to allocate enough memory for weps main data arrays."
+      end if
+
+
+
       do sr=1, nsubr
-          nslay(sr) = 29
+        soil(sr)%nslay = 29
+        call allocate_soil(soil) ! allocate layer arrays
       end do
+
+      write (0,*) 'soil(1)%nslay: ', soil(1)%nslay
 
       logcas = 3
 
       call asdini()
 
 !      do sr=1, nsubr
-!         do lay=1, nslay(sr)
-!            aslagm(lay,sr) = .84*sr
-!            as0ags(lay,sr) = 1.0+1.0/(0.0124484131375676
-!     &                     + 0.00246316704248082*aslagm(lay,sr)
-!     &                     + 0.0934666574302924/sqrt(aslagm(lay,sr)))
-!            aslagn(lay,sr) = 0.01
-!            aslagx(lay,sr) =  aslagm(lay,sr)
-!     &         * (as0ags(lay,sr)**(1.52 * aslagm(lay,sr)**(-0.449)))
+!         do lay=1, soil(sr)%nslay
+!            soil(sr)%aslagm(lay) = .84*sr
+!            soil(sr)%as0ags(lay) = 1.0+1.0/(0.0124484131375676
+!     &                     + 0.00246316704248082*soil(sr)%aslagm(lay)
+!     &                     + 0.0934666574302924/sqrt(soil(sr)%aslagm(lay)))
+!            soil(sr)%aslagn(lay) = 0.01
+!            soil(sr)%aslagx(lay) =  soil(sr)%aslagm(lay)
+!     &         * (soil(sr)%as0ags(lay)**(1.52 * soil(sr)%aslagm(lay)**(-0.449)))
 !         end do
 !      end do
 
@@ -50,48 +71,48 @@
 
 !         do iter=1,110
 
-!         aslagn(lay,sr) = 0.01
-!         aslagm(lay,sr) = exp(log(aslagn(lay,sr))                       &
-!     &            + iter*(log(10000.)-log(aslagn(lay,sr)))/(110.))
+!         soil(sr)%aslagn(lay) = 0.01
+!         soil(sr)%aslagm(lay) = exp(log(soil(sr)%aslagn(lay))                       &
+!     &            + iter*(log(10000.)-log(soil(sr)%aslagn(lay)))/(110.))
 
-!         initgmd = aslagm(lay,sr)
-!         as0ags(lay,sr) = 1.0+1.0/(0.0124484131375676                   &
-!     &                  + 0.00246316704248082*aslagm(lay,sr)            &
-!     &                  + 0.0934666574302924/sqrt(aslagm(lay,sr)))
+!         initgmd = soil(sr)%aslagm(lay)
+!         soil(sr)%as0ags(lay) = 1.0+1.0/(0.0124484131375676                   &
+!     &                  + 0.00246316704248082*soil(sr)%aslagm(lay)            &
+!     &                  + 0.0934666574302924/sqrt(soil(sr)%aslagm(lay)))
 
 !         this is a test function for gsd that keeps it high for 
 !         high values of gmd.
-!         as0ags(lay,sr) = -41.46857 + 57.4838                           &
-!     &                  / (1+exp(-(aslagm(lay,sr)+0.953397)/0.836953))
+!         soil(sr)%as0ags(lay) = -41.46857 + 57.4838                           &
+!     &                  / (1+exp(-(soil(sr)%aslagm(lay)+0.953397)/0.836953))
 
-!         as0ags(lay,sr) = min(5.0,as0ags(lay,sr))
+!         soil(sr)%as0ags(lay) = min(5.0,soil(sr)%as0ags(lay))
 
-!         initgsd = as0ags(lay,sr)
-!         aslagx(lay,sr) = aslagm(lay,sr)                                &
-!     &       * (as0ags(lay,sr)**(1.52 * aslagm(lay,sr)**(-0.449)))
+!         initgsd = soil(sr)%as0ags(lay)
+!         soil(sr)%aslagx(lay) = soil(sr)%aslagm(lay)                                &
+!     &       * (soil(sr)%as0ags(lay)**(1.52 * soil(sr)%aslagm(lay)**(-0.449)))
 
 !         print*,'lognormal case:', logcas, 'subregion',sr
 !         print*,'inter, gmd, gsd, mnot, minf'
-!         do lay=1, nslay(sr)
-!            print*, 0, aslagm(lay,sr), as0ags(lay,sr),                  &
-!     &              aslagn(lay,sr), aslagx(lay,sr)
+!         do lay=1, soil(sr)%nslay
+!            print*, 0, soil(sr)%aslagm(lay), soil(sr)%as0ags(lay),                  &
+!     &              soil(sr)%aslagn(lay), soil(sr)%aslagx(lay)
 !            print*, (massf(i,lay),i=1,nsieve+1)
 !         end do
 
-!         call asd2m(aslagn(1,sr), aslagx(1,sr), aslagm(1,sr),
-!     &              as0ags(1,sr), nslay(sr), massf)
+!         call asd2m(soil(sr)%aslagn(1,sr), soil(sr)%aslagx(1,sr), soil(sr)%aslagm(1,sr),
+!     &              soil(sr)%as0ags(1,sr), soil(sr)%nslay, massf)
 
 !         print*,'----1------subregion',sr,' after asd2m --------------'
-!         do lay=1, nslay(sr)
-!            print*, aslagm(lay,sr), as0ags(lay,sr),
-!     &              aslagn(lay,sr), aslagx(lay,sr)
+!         do lay=1, soil(sr)%nslay
+!            print*, soil(sr)%aslagm(lay), soil(sr)%as0ags(lay),
+!     &              soil(sr)%aslagn(lay), soil(sr)%aslagx(lay)
 !            print*, (massf(i,lay),i=1,nsieve+1)
 !         end do
 
       sr = 1
 ! massf(msieve+1, lay)
-       aslagn( 1 , 1 ) =  9.99999978E-03
-       aslagx( 1 , 1 ) =  34.1721382
+       soil(1)%aslagn( 1 ) =  9.99999978E-03
+       soil(1)%aslagx( 1 ) =  34.1721382
        massf( 1 , 1 ) = 3.26654903E-04
        massf( 2 , 1 ) = 7.21673341E-03
        massf( 3 , 1 ) = 2.01139003E-02
@@ -119,8 +140,8 @@
        massf( 25 , 1 ) = 0.00000000E+00
        massf( 26 , 1 ) = 0.00000000E+00
        massf( 27 , 1 ) = 0.00000000E+00
-       aslagn( 2 , 1 ) =  9.99999978E-03
-       aslagx( 2 , 1 ) =  34.7214241
+       soil(1)%aslagn( 2 ) =  9.99999978E-03
+       soil(1)%aslagx( 2 ) =  34.7214241
        massf( 1 , 2 ) = 2.96762533E-04
        massf( 2 , 2 ) = 6.48128474E-03
        massf( 3 , 2 ) = 1.67055521E-02
@@ -148,8 +169,8 @@
        massf( 25 , 2 ) = 0.00000000E+00
        massf( 26 , 2 ) = 0.00000000E+00
        massf( 27 , 2 ) = 0.00000000E+00
-       aslagn( 3 , 1 ) =  9.99999978E-03
-       aslagx( 3 , 1 ) =  34.8627777
+       soil(1)%aslagn( 3 ) =  9.99999978E-03
+       soil(1)%aslagx( 3 ) =  34.8627777
        massf( 1 , 3 ) = 2.92250421E-04
        massf( 2 , 3 ) = 6.37632981E-03
        massf( 3 , 3 ) = 1.63181107E-02
@@ -177,8 +198,8 @@
        massf( 25 , 3 ) = 0.00000000E+00
        massf( 26 , 3 ) = 0.00000000E+00
        massf( 27 , 3 ) = 0.00000000E+00
-       aslagn( 4 , 1 ) =  9.99999978E-03
-       aslagx( 4 , 1 ) =  40.2471161
+       soil(1)%aslagn( 4 ) =  9.99999978E-03
+       soil(1)%aslagx( 4 ) =  40.2471161
        massf( 1 , 4 ) = 1.66178812E-04
        massf( 2 , 4 ) = 3.61970882E-03
        massf( 3 , 4 ) = 9.16925538E-03
@@ -206,8 +227,8 @@
        massf( 25 , 4 ) = 0.00000000E+00
        massf( 26 , 4 ) = 0.00000000E+00
        massf( 27 , 4 ) = 0.00000000E+00
-       aslagn( 5 , 1 ) =  9.99999978E-03
-       aslagx( 5 , 1 ) =  39.3305817
+       soil(1)%aslagn( 5 ) =  9.99999978E-03
+       soil(1)%aslagx( 5 ) =  39.3305817
        massf( 1 , 5 ) = 1.84754608E-04
        massf( 2 , 5 ) = 4.01705550E-03
        massf( 3 , 5 ) = 1.00384625E-02
@@ -235,8 +256,8 @@
        massf( 25 , 5 ) = 0.00000000E+00
        massf( 26 , 5 ) = 0.00000000E+00
        massf( 27 , 5 ) = 0.00000000E+00
-       aslagn( 6 , 1 ) =  9.99999978E-03
-       aslagx( 6 , 1 ) =  42.5451279
+       soil(1)%aslagn( 6 ) =  9.99999978E-03
+       soil(1)%aslagx( 6 ) =  42.5451279
        massf( 1 , 6 ) = 1.24782047E-04
        massf( 2 , 6 ) = 2.73581850E-03
        massf( 3 , 6 ) = 7.26578943E-03
@@ -264,8 +285,8 @@
        massf( 25 , 6 ) = 0.00000000E+00
        massf( 26 , 6 ) = 0.00000000E+00
        massf( 27 , 6 ) = 0.00000000E+00
-       aslagn( 7 , 1 ) =  9.99999978E-03
-       aslagx( 7 , 1 ) =  42.5451279
+       soil(1)%aslagn( 7 ) =  9.99999978E-03
+       soil(1)%aslagx( 7 ) =  42.5451279
        massf( 1 , 7 ) = 1.24782047E-04
        massf( 2 , 7 ) = 2.73581850E-03
        massf( 3 , 7 ) = 7.26578943E-03
@@ -293,8 +314,8 @@
        massf( 25 , 7 ) = 0.00000000E+00
        massf( 26 , 7 ) = 0.00000000E+00
        massf( 27 , 7 ) = 0.00000000E+00
-       aslagn( 8 , 1 ) =  9.99999978E-03
-       aslagx( 8 , 1 ) =  39.8283195
+       soil(1)%aslagn( 8 ) =  9.99999978E-03
+       soil(1)%aslagx( 8 ) =  39.8283195
        massf( 1 , 8 ) = 1.74528570E-04
        massf( 2 , 8 ) = 3.79820727E-03
        massf( 3 , 8 ) = 9.55770351E-03
@@ -322,8 +343,8 @@
        massf( 25 , 8 ) = 0.00000000E+00
        massf( 26 , 8 ) = 0.00000000E+00
        massf( 27 , 8 ) = 0.00000000E+00
-       aslagn( 9 , 1 ) =  9.99999978E-03
-       aslagx( 9 , 1 ) =  39.0524673
+       soil(1)%aslagn( 9 ) =  9.99999978E-03
+       soil(1)%aslagx( 9 ) =  39.0524673
        massf( 1 , 9 ) = 1.90604856E-04
        massf( 2 , 9 ) = 4.14241804E-03
        massf( 3 , 9 ) = 1.03168627E-02
@@ -351,8 +372,8 @@
        massf( 25 , 9 ) = 0.00000000E+00
        massf( 26 , 9 ) = 0.00000000E+00
        massf( 27 , 9 ) = 0.00000000E+00
-       aslagn( 10 , 1 ) =  9.99999978E-03
-       aslagx( 10 , 1 ) =  36.7751274
+       soil(1)%aslagn( 10 ) =  9.99999978E-03
+       soil(1)%aslagx( 10 ) =  36.7751274
        massf( 1 , 10 ) = 2.42009861E-04
        massf( 2 , 10 ) = 5.25301788E-03
        massf( 3 , 10 ) = 1.29520195E-02
@@ -380,8 +401,8 @@
        massf( 25 , 10 ) = 0.00000000E+00
        massf( 26 , 10 ) = 0.00000000E+00
        massf( 27 , 10 ) = 0.00000000E+00
-       aslagn( 11 , 1 ) =  9.99999978E-03
-       aslagx( 11 , 1 ) =  36.8878746
+       soil(1)%aslagn( 11 ) =  9.99999978E-03
+       soil(1)%aslagx( 11 ) =  36.8878746
        massf( 1 , 11 ) = 0.00000000E+00
        massf( 2 , 11 ) = 4.19050455E-03
        massf( 3 , 11 ) = 1.15625858E-02
@@ -409,8 +430,8 @@
        massf( 25 , 11 ) = 0.00000000E+00
        massf( 26 , 11 ) = 0.00000000E+00
        massf( 27 , 11 ) = 0.00000000E+00
-       aslagn( 12 , 1 ) =  9.99999978E-03
-       aslagx( 12 , 1 ) =  36.8483849
+       soil(1)%aslagn( 12 ) =  9.99999978E-03
+       soil(1)%aslagx( 12 ) =  36.8483849
        massf( 1 , 12 ) = 0.00000000E+00
        massf( 2 , 12 ) = 4.20689583E-03
        massf( 3 , 12 ) = 1.16102099E-02
@@ -438,8 +459,8 @@
        massf( 25 , 12 ) = 0.00000000E+00
        massf( 26 , 12 ) = 0.00000000E+00
        massf( 27 , 12 ) = 0.00000000E+00
-       aslagn( 13 , 1 ) =  9.99999978E-03
-       aslagx( 13 , 1 ) =  39.5941772
+       soil(1)%aslagn( 13 ) =  9.99999978E-03
+       soil(1)%aslagx( 13 ) =  39.5941772
        massf( 1 , 13 ) = 0.00000000E+00
        massf( 2 , 13 ) = 3.13174725E-03
        massf( 3 , 13 ) = 8.79931450E-03
@@ -467,8 +488,8 @@
        massf( 25 , 13 ) = 0.00000000E+00
        massf( 26 , 13 ) = 0.00000000E+00
        massf( 27 , 13 ) = 0.00000000E+00
-       aslagn( 14 , 1 ) =  9.99999978E-03
-       aslagx( 14 , 1 ) =  38.4066277
+       soil(1)%aslagn( 14 ) =  9.99999978E-03
+       soil(1)%aslagx( 14 ) =  38.4066277
        massf( 1 , 14 ) = 0.00000000E+00
        massf( 2 , 14 ) = 3.58003378E-03
        massf( 3 , 14 ) = 9.91261005E-03
@@ -496,8 +517,8 @@
        massf( 25 , 14 ) = 0.00000000E+00
        massf( 26 , 14 ) = 0.00000000E+00
        massf( 27 , 14 ) = 0.00000000E+00
-       aslagn( 15 , 1 ) =  9.99999978E-03
-       aslagx( 15 , 1 ) =  38.1134644
+       soil(1)%aslagn( 15 ) =  9.99999978E-03
+       soil(1)%aslagx( 15 ) =  38.1134644
        massf( 1 , 15 ) = 0.00000000E+00
        massf( 2 , 15 ) = 3.69483232E-03
        massf( 3 , 15 ) = 1.02081299E-02
@@ -525,8 +546,8 @@
        massf( 25 , 15 ) = 0.00000000E+00
        massf( 26 , 15 ) = 0.00000000E+00
        massf( 27 , 15 ) = 0.00000000E+00
-       aslagn( 16 , 1 ) =  9.99999978E-03
-       aslagx( 16 , 1 ) =  39.1325493
+       soil(1)%aslagn( 16 ) =  9.99999978E-03
+       soil(1)%aslagx( 16 ) =  39.1325493
        massf( 1 , 16 ) = 0.00000000E+00
        massf( 2 , 16 ) = 3.30263376E-03
        massf( 3 , 16 ) = 9.21744108E-03
@@ -554,8 +575,8 @@
        massf( 25 , 16 ) = 0.00000000E+00
        massf( 26 , 16 ) = 0.00000000E+00
        massf( 27 , 16 ) = 0.00000000E+00
-       aslagn( 17 , 1 ) =  9.99999978E-03
-       aslagx( 17 , 1 ) =  38.8608475
+       soil(1)%aslagn( 17 ) =  9.99999978E-03
+       soil(1)%aslagx( 17 ) =  38.8608475
        massf( 1 , 17 ) = 0.00000000E+00
        massf( 2 , 17 ) = 3.40527296E-03
        massf( 3 , 17 ) = 9.47195292E-03
@@ -583,8 +604,8 @@
        massf( 25 , 17 ) = 0.00000000E+00
        massf( 26 , 17 ) = 0.00000000E+00
        massf( 27 , 17 ) = 0.00000000E+00
-       aslagn( 18 , 1 ) =  9.99999978E-03
-       aslagx( 18 , 1 ) =  37.3938179
+       soil(1)%aslagn( 18 ) =  9.99999978E-03
+       soil(1)%aslagx( 18 ) =  37.3938179
        massf( 1 , 18 ) = 0.00000000E+00
        massf( 2 , 18 ) = 3.98290157E-03
        massf( 3 , 18 ) = 1.09768510E-02
@@ -612,8 +633,8 @@
        massf( 25 , 18 ) = 0.00000000E+00
        massf( 26 , 18 ) = 0.00000000E+00
        massf( 27 , 18 ) = 0.00000000E+00
-       aslagn( 19 , 1 ) =  9.99999978E-03
-       aslagx( 19 , 1 ) =  36.7600632
+       soil(1)%aslagn( 19 ) =  9.99999978E-03
+       soil(1)%aslagx( 19 ) =  36.7600632
        massf( 1 , 19 ) = 0.00000000E+00
        massf( 2 , 19 ) = 4.24367189E-03
        massf( 3 , 19 ) = 1.17177963E-02
@@ -641,8 +662,8 @@
        massf( 25 , 19 ) = 0.00000000E+00
        massf( 26 , 19 ) = 0.00000000E+00
        massf( 27 , 19 ) = 0.00000000E+00
-       aslagn( 20 , 1 ) =  9.99999978E-03
-       aslagx( 20 , 1 ) =  36.6222725
+       soil(1)%aslagn( 20 ) =  9.99999978E-03
+       soil(1)%aslagx( 20 ) =  36.6222725
        massf( 1 , 20 ) = 0.00000000E+00
        massf( 2 , 20 ) = 4.30124998E-03
        massf( 3 , 20 ) = 1.18889809E-02
@@ -670,8 +691,8 @@
        massf( 25 , 20 ) = 0.00000000E+00
        massf( 26 , 20 ) = 0.00000000E+00
        massf( 27 , 20 ) = 0.00000000E+00
-       aslagn( 21 , 1 ) =  9.99999978E-03
-       aslagx( 21 , 1 ) =  36.3896484
+       soil(1)%aslagn( 21 ) =  9.99999978E-03
+       soil(1)%aslagx( 21 ) =  36.3896484
        massf( 1 , 21 ) = 0.00000000E+00
        massf( 2 , 21 ) = 4.39929962E-03
        massf( 3 , 21 ) = 1.21878982E-02
@@ -699,8 +720,8 @@
        massf( 25 , 21 ) = 0.00000000E+00
        massf( 26 , 21 ) = 0.00000000E+00
        massf( 27 , 21 ) = 0.00000000E+00
-       aslagn( 22 , 1 ) =  9.99999978E-03
-       aslagx( 22 , 1 ) =  35.0875130
+       soil(1)%aslagn( 22 ) =  9.99999978E-03
+       soil(1)%aslagx( 22 ) =  35.0875130
        massf( 1 , 22 ) = 0.00000000E+00
        massf( 2 , 22 ) = 4.97603416E-03
        massf( 3 , 22 ) = 1.42389536E-02
@@ -728,8 +749,8 @@
        massf( 25 , 22 ) = 0.00000000E+00
        massf( 26 , 22 ) = 0.00000000E+00
        massf( 27 , 22 ) = 0.00000000E+00
-       aslagn( 23 , 1 ) =  9.99999978E-03
-       aslagx( 23 , 1 ) =  43.1936340
+       soil(1)%aslagn( 23 ) =  9.99999978E-03
+       soil(1)%aslagx( 23 ) =  43.1936340
        massf( 1 , 23 ) = 0.00000000E+00
        massf( 2 , 23 ) = 1.97649002E-03
        massf( 3 , 23 ) = 6.04480505E-03
@@ -757,8 +778,8 @@
        massf( 25 , 23 ) = 0.00000000E+00
        massf( 26 , 23 ) = 0.00000000E+00
        massf( 27 , 23 ) = 0.00000000E+00
-       aslagn( 24 , 1 ) =  9.99999978E-03
-       aslagx( 24 , 1 ) =  41.9258575
+       soil(1)%aslagn( 24 ) =  9.99999978E-03
+       soil(1)%aslagx( 24 ) =  41.9258575
        massf( 1 , 24 ) = 0.00000000E+00
        massf( 2 , 24 ) = 2.34484673E-03
        massf( 3 , 24 ) = 6.92212582E-03
@@ -786,8 +807,8 @@
        massf( 25 , 24 ) = 0.00000000E+00
        massf( 26 , 24 ) = 0.00000000E+00
        massf( 27 , 24 ) = 0.00000000E+00
-       aslagn( 25 , 1 ) =  9.99999978E-03
-       aslagx( 25 , 1 ) =  35.7278252
+       soil(1)%aslagn( 25 ) =  9.99999978E-03
+       soil(1)%aslagx( 25 ) =  35.7278252
        massf( 1 , 25 ) = 0.00000000E+00
        massf( 2 , 25 ) = 4.68474627E-03
        massf( 3 , 25 ) = 1.31267309E-02
@@ -815,8 +836,8 @@
        massf( 25 , 25 ) = 0.00000000E+00
        massf( 26 , 25 ) = 0.00000000E+00
        massf( 27 , 25 ) = 0.00000000E+00
-       aslagn( 26 , 1 ) =  9.99999978E-03
-       aslagx( 26 , 1 ) =  35.4029770
+       soil(1)%aslagn( 26 ) =  9.99999978E-03
+       soil(1)%aslagx( 26 ) =  35.4029770
        massf( 1 , 26 ) = 0.00000000E+00
        massf( 2 , 26 ) = 4.82988358E-03
        massf( 3 , 26 ) = 1.36559606E-02
@@ -844,8 +865,8 @@
        massf( 25 , 26 ) = 0.00000000E+00
        massf( 26 , 26 ) = 0.00000000E+00
        massf( 27 , 26 ) = 0.00000000E+00
-       aslagn( 27 , 1 ) =  9.99999978E-03
-       aslagx( 27 , 1 ) =  34.4231033
+       soil(1)%aslagn( 27 ) =  9.99999978E-03
+       soil(1)%aslagx( 27 ) =  34.4231033
        massf( 1 , 27 ) = 0.00000000E+00
        massf( 2 , 27 ) = 5.32758236E-03
        massf( 3 , 27 ) = 1.59782767E-02
@@ -873,8 +894,8 @@
        massf( 25 , 27 ) = 0.00000000E+00
        massf( 26 , 27 ) = 0.00000000E+00
        massf( 27 , 27 ) = 0.00000000E+00
-       aslagn( 28 , 1 ) =  9.99999978E-03
-       aslagx( 28 , 1 ) =  36.5747108
+       soil(1)%aslagn( 28 ) =  9.99999978E-03
+       soil(1)%aslagx( 28 ) =  36.5747108
        massf( 1 , 28 ) = 0.00000000E+00
        massf( 2 , 28 ) = 2.17258930E-04
        massf( 3 , 28 ) = 2.15524435E-03
@@ -902,8 +923,8 @@
        massf( 25 , 28 ) = 0.00000000E+00
        massf( 26 , 28 ) = 0.00000000E+00
        massf( 27 , 28 ) = 0.00000000E+00
-       aslagn( 29 , 1 ) =  9.99999978E-03
-       aslagx( 29 , 1 ) =  34.4231033
+       soil(1)%aslagn( 29 ) =  9.99999978E-03
+       soil(1)%aslagx( 29 ) =  34.4231033
        massf( 1 , 29 ) = 0.00000000E+00
        massf( 2 , 29 ) = 5.32758236E-03
        massf( 3 , 29 ) = 1.59782767E-02
@@ -932,14 +953,15 @@
        massf( 26 , 29 ) = 0.00000000E+00
        massf( 27 , 29 ) = 0.00000000E+00
 
-         call m2asd(massf, nslay(sr),                                   &
-     &   aslagn(1,sr), aslagx(1,sr), aslagm(1,sr), as0ags(1,sr))
+         call m2asd(massf, soil(1)%nslay,                                   &
+     &   soil(1)%aslagn(1), soil(1)%aslagx(1),                              &
+     &   soil(1)%aslagm(1), soil(1)%as0ags(1))
 
 !         print*,'subregion',sr,' after m2asd, iteration',iter
-!         do lay=1, nslay(sr)
-!            print*, iter, initgmd, aslagm(lay,sr), initgsd,
-!     &              as0ags(lay,sr),
-!     &              aslagn(lay,sr), aslagx(lay,sr)
+!         do lay=1, soil(1)%nslay
+!            print*, iter, initgmd, soil(1)%aslagm(lay), initgsd,
+!     &              soil(1)%as0ags(lay),
+!     &              soil(1)%aslagn(lay), soil(1)%aslagx(lay)
 !            do i=1,nsieve+1
 !                print*, mdia(i),'massf(',i,',',lay,')',massf(i,lay)
 !            end do
@@ -947,10 +969,9 @@
 
          initgmd = 0.0
          initgsd = 0.0
-         do lay=1, nslay(sr)
-
-         write(*,*) initgmd, aslagm(lay,sr), initgsd, as0ags(lay,sr)
-
+         do lay=1, soil(1)%nslay
+           write(*,*) initgmd, soil(1)%aslagm(lay),                        &
+     &                initgsd, soil(1)%as0ags(lay)
          end do
 !      end do
 
