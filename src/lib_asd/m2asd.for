@@ -31,7 +31,7 @@
 !     a) the sieve cut size array, "mdia" must consist of 2 or more sizes
 !        and contain values which increase in size,
 !     b) "mnot" must be greater than or equal to zero,
-!     c) "mnot" must be greater than "minf" (with at least two sieve cut
+!     c) "mnot" must be less than "minf" (with at least two sieve cut
 !        sizes between them),
 !     d) and the mass fractions, "mf" cannot be less than zero.
 

@@ -13,18 +13,20 @@
       include 's1agg.inc'
       include 'manage/asd.inc'
 
-      type(soil_def), dimension(:), allocatable :: soil             ! structure with soil state and parameters as updated suring simulation
+      type(soil_def), dimension(:), allocatable :: soil, soil2             ! structure with soil state and parameters as updated suring simulation
 
       integer :: alloc_stat, sum_stat
       integer :: nsubr
 
-      integer :: sr,lay,i,iter
+      integer :: sr,lay,l,i,iter
       real    :: massf(msieve+1,mnsz)
       real    :: initgmd, initgsd
 
       nsubr = 1
       sum_stat = 0
       allocate(soil(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(soil2(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       if( sum_stat .gt. 0 ) then
 !        write(0,*) "ERROR: unable to allocate enough memory for weps main data arrays."
@@ -34,7 +36,9 @@
 
       do sr=1, nsubr
         soil(sr)%nslay = 29
-        call allocate_soil(soil(sr)) ! allocate layer arrays
+        soil2(sr)%nslay = 29
+        call allocate_soil(soil(sr))  ! allocate layer arrays
+        call allocate_soil(soil2(sr)) ! allocate layer arrays
       end do
 
       write (0,*) 'soil(1)%nslay: ', soil(1)%nslay
@@ -970,10 +974,56 @@
          initgmd = 0.0
          initgsd = 0.0
          do lay=1, soil(1)%nslay
-           write(*,*) initgmd, soil(1)%aslagm(lay),                        &
+           write(*,*) lay, initgmd, soil(1)%aslagm(lay),                        &
      &                initgsd, soil(1)%as0ags(lay)
          end do
 !      end do
+      write(0,*)
+
+! New data test code here - 2/14/2017 - LEW
+
+!     Initialize "soil2" data to "soil" data
+      do sr=1, nsubr
+         soil2(sr)%aslagn = soil(sr)%aslagn
+         soil2(sr)%aslagm = soil(sr)%aslagm
+         soil2(sr)%as0ags = soil(sr)%as0ags
+         soil2(sr)%aslagx = soil(sr)%aslagx
+      end do
+
+      write(UNIT=6,FMT="(2(A), 4(A))",ADVANCE="YES") '  sr', ' lay',            &
+     &        '     m_not', '       gsd', '       gsd', '     m_inf'
+
+      do sr=1, nsubr
+        do lay=1, soil(sr)%nslay
+          write(UNIT=6,FMT="(2(i4), 4(f10.4))",ADVANCE="YES") sr, lay,          &
+     &              soil(sr)%aslagn(lay), soil(sr)%aslagm(lay),                 &
+     &              soil(sr)%as0ags(lay), soil(sr)%aslagx(lay)
+        end do
+      end do
+      write(0,*)
+
+! Convert to massf and back again, then print
+      do sr=1, nsubr
+        do l=1, soil(sr)%nslay
+          call asd2m(soil(sr)%aslagn(l), soil(sr)%aslagx(l),                &
+     &         soil(sr)%aslagm(l), soil(sr)%as0ags(l),                      &
+     &         soil(sr)%nslay, massf)
+          call m2asd(massf, soil2(sr)%nslay,                                    &
+     &         soil2(sr)%aslagn(l), soil2(sr)%aslagx(l),                    &
+     &         soil2(sr)%aslagm(l), soil2(sr)%as0ags(l))
+ 
+         write(UNIT=6,FMT="(2(i4), 8(f10.4))",ADVANCE="YES") sr, lay,           &
+     &              soil2(sr)%aslagn(l), soil2(sr)%aslagm(l),               &
+     &              soil2(sr)%as0ags(l), soil2(sr)%aslagx(l),               &
+     &    (soil(sr)%aslagn(l)-soil2(sr)%aslagn(l))/soil(sr)%aslagn(l),    &
+     &    (soil(sr)%aslagm(l)-soil2(sr)%aslagm(l))/soil(sr)%aslagm(l),    &
+     &    (soil(sr)%as0ags(l)-soil2(sr)%as0ags(l))/soil(sr)%as0ags(l),    &
+     &    (soil(sr)%aslagx(l)-soil2(sr)%aslagx(l))/soil(sr)%aslagx(l)
+
+
+        end do
+      end do
+      write(0,*)
 
       stop
       end
