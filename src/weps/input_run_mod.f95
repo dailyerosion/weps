@@ -2,28 +2,10 @@
 !$Date$
 !$Revision$
 !$HeadURL$
+
 module input_run_mod
 
-   logical :: old_run_file
-   character*512 :: clifil  ! climate file name
-   character*512 :: runfil  ! run file name
-   character*512 :: subfil  ! subdaily wind file name
-   character*512 :: winfil  ! wind file name
-   character*256 :: usrnam  ! user name
-   character*256 :: farmid  ! Farm identifier
-   character*256 :: tractid ! Tract identifier
-   character*256 :: fieldid ! Field identifier
-
-   integer :: run_rot_cycles ! number of rotation cycles
-
-   integer :: id     ! initial simulation day of month
-   integer :: im     ! initial simulation month of year
-   integer :: iy     ! initial simulation year
-   integer :: ld     ! final (last) simulation day of month
-   integer :: lm     ! final (last) simulation month of year
-   integer :: ly     ! final (last) simulation year
-
-   character*512 :: rootp*512  ! the root path from which the weps command was started.
+  use weps_main_mod
 
 contains
 
@@ -33,24 +15,10 @@ contains
 !     This subroutine perforns some screen I/O, reads in the
 !     run files and performs various error checkings.
 
-!     author: John Tatarko
-!     version: 95.08
-
-!     EDIT History
-!     06-Feb-99   wjr   changed crop_db, etc., location
-!                       to be scenario dir
-!     06-Feb-99   wjr   made inprun and inpsub into separate subrs
-!     06-Feb-99   wjr   used select statement to read config files
-!     06-Feb-99   wjr   moved opening of sinfil from inprun to inpsub
-!     06-Feb-99   wjr   changed files.inc to file.inc
-!     06-Feb-99   wjr   added luolog & luodbg
-!     06-Nov-03   LEW   removed cmdline processing and put in "cmdline.for"
-
-!     + + + KEY WORDS + + +
-!     WEPS, cligen, windgen
-
 !     + + + GLOBAL COMMON BLOCKS + + +
       use soil_data_struct_defs, only: soil_def
+      use flib_sax
+      use input_run_xml_mod
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
@@ -62,23 +30,42 @@ contains
       include 'main/main.inc'
 
 !     + + + LOCAL VARIABLES + + +
-      logical       fexist
+      logical :: fexist
+      type(xml_t) :: fxml
+      integer :: iostat
 
 !     + + + LOCAL DEFINITIONS + + +
 !   fexist    - flag used to indicate result of file existence
 
 !     + + + END SPECIFICATIONS + + +
 
-!     open simulation run file
-      runfil = rootp(1:len_trim(rootp)) // 'weps.run'
+      ! check for xml format input run file
+      runfil = rootp(1:len_trim(rootp)) // 'weps.run.xml'
       inquire(file = runfil(1:len_trim(runfil)), exist = fexist)
-      if (.not.fexist) then
-        write(0,*) ' simulation run file not found '
-        call exit(1)
+      if (fexist) then
+        ! open simulation run file
+        write (*,*) 'runfil is ', '>>', runfil(1:len_trim(runfil)), '<<'
+        call open_xmlfile(runfil(1:len_trim(runfil)),fxml,iostat)
+        if (iostat /= 0) stop "Cannot open runfil"
+        ! read in xml based run file
+        call init_run_xml()
+        call xml_parse(fxml, &
+             begin_element_handler = begin_element_handler, &
+             end_element_handler = end_element_handler, &
+             pcdata_chunk_handler = pcdata_chunk_handler, &
+             verbose = .false.)
+      else
+        ! check for old fixed format run file
+        runfil = rootp(1:len_trim(rootp)) // 'weps.run'
+        inquire(file = runfil(1:len_trim(runfil)), exist = fexist)
+        if (fexist) then
+          ! read in old fixed format run file
+          call inprun(soil)
+        else
+          write(0,*) ' simulation run file not found '
+          call exit(1)
+        end if
       end if
-
-!     load the simulation run file
-      call inprun(soil)
 
 !     If this is a simulation that does water erosion read any extra WEPP
 !     input data.

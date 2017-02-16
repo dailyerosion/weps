@@ -188,11 +188,15 @@
        integer, dimension(:), allocatable :: cnt_cycles    ! number of cycles for each subregion date array to fill 0 array cycle
        integer, dimension(:), allocatable :: idx_cycles    ! index indicating the present subregion date array cycle
        integer, dimension(:), allocatable :: add_yr    ! number of years too add subregion date to make it match multiple cycles
-
-       if( allocated( mandatbs(lbound(mandatbs,1))%mandate ) ) then
+       logical, save :: first_entry = .true.
+       if ( .not. first_entry) then
+       !if( allocated( mandatbs(lbound(mandatbs,1))%mandate ) ) then
           ! already allocated so values are already populated (calibration mode)
+          write(*,*) 'ALLMANDATES already allocated'
           return
        end if
+
+       first_entry = .false.
 
        ! note: this structure is passed with the (0) index array used to hold the result
        osr = lbound(mandatbs,1)

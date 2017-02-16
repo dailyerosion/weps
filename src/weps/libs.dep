@@ -19,5 +19,6 @@ util/minpack
 util/misc
 util/normal
 util/odepack
+util/sax
 util/solar
 util/timer

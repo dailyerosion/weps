@@ -3,7 +3,6 @@
 !$Revision$
 !$HeadURL$
 
-
 module input_run_xml_mod
   ! It defines the routines that are called by the XML parser in response
   ! to particular events.
@@ -15,7 +14,7 @@ module input_run_xml_mod
 
   private
 
-  public :: begin_element_handler, end_element_handler, pcdata_chunk_handler
+  public :: begin_element_handler, end_element_handler, init_run_xml, pcdata_chunk_handler
 
   interface read_param
     module procedure read_param_real_1
@@ -272,7 +271,7 @@ contains
   end subroutine init_run_xml
 
   subroutine pcdata_chunk_handler(chunk)
-    use input_run_mod
+    use weps_main_mod
     use datetime_mod, only: lstday, difdat
     use Polygons_Mod, only: polygon, create_polygon, destroy_polygon, set_area_polygon
     use subregions_mod, only: acct_poly, subr_poly
