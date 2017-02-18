@@ -1015,15 +1015,39 @@
          write(UNIT=6,FMT="(2(i4), 8(f10.4))",ADVANCE="YES") sr, lay,           &
      &              soil2(sr)%aslagn(l), soil2(sr)%aslagm(l),               &
      &              soil2(sr)%as0ags(l), soil2(sr)%aslagx(l),               &
-     &    (soil(sr)%aslagn(l)-soil2(sr)%aslagn(l))/soil(sr)%aslagn(l),    &
-     &    (soil(sr)%aslagm(l)-soil2(sr)%aslagm(l))/soil(sr)%aslagm(l),    &
-     &    (soil(sr)%as0ags(l)-soil2(sr)%as0ags(l))/soil(sr)%as0ags(l),    &
-     &    (soil(sr)%aslagx(l)-soil2(sr)%aslagx(l))/soil(sr)%aslagx(l)
-
-
+     &  100*(soil(sr)%aslagn(l)-soil2(sr)%aslagn(l))/soil(sr)%aslagn(l),    &
+     &  100*(soil(sr)%aslagm(l)-soil2(sr)%aslagm(l))/soil(sr)%aslagm(l),    &
+     &  100*(soil(sr)%as0ags(l)-soil2(sr)%as0ags(l))/soil(sr)%as0ags(l),    &
+     &  100*(soil(sr)%aslagx(l)-soil2(sr)%aslagx(l))/soil(sr)%aslagx(l)
         end do
       end do
       write(0,*)
+
+! Convert to massf and back again, then print
+      do sr=1, nsubr
+        do l=1, soil(sr)%nslay
+          call asd2m(soil(sr)%aslagn(l), soil(sr)%aslagx(l),                &
+     &         (soil(sr)%aslagm(l)-soil(sr)%aslagn(l))*                     &
+     &         (soil(sr)%aslagx(l)-soil(sr)%aslagn(l))/                     &
+     &         (soil(sr)%aslagx(l)-soil(sr)%aslagm(l)),                     &
+     &         (soil(sr)%as0ags(l)-soil(sr)%aslagn(l))*                     &
+     &         (soil(sr)%aslagx(l)-soil(sr)%aslagn(l))/                     &
+     &         (soil(sr)%aslagx(l)-soil(sr)%as0ags(l)),                     &
+     &         soil(sr)%nslay, massf)
+
+          call m2asd(massf, soil2(sr)%nslay,                                    &
+     &         soil2(sr)%aslagn(l), soil2(sr)%aslagx(l),                    &
+     &         soil2(sr)%aslagm(l), soil2(sr)%as0ags(l))
+ 
+         write(UNIT=6,FMT="(2(i4), 8(f10.4))",ADVANCE="YES") sr, lay,           &
+     &              soil2(sr)%aslagn(l), soil2(sr)%aslagm(l),               &
+     &              soil2(sr)%as0ags(l), soil2(sr)%aslagx(l),               &
+     &  100*(soil(sr)%aslagn(l)-soil2(sr)%aslagn(l))/soil(sr)%aslagn(l),    &
+     &  100*(soil(sr)%aslagm(l)-soil2(sr)%aslagm(l))/soil(sr)%aslagm(l),    &
+     &  100*(soil(sr)%as0ags(l)-soil2(sr)%as0ags(l))/soil(sr)%as0ags(l),    &
+     &  100*(soil(sr)%aslagx(l)-soil2(sr)%aslagx(l))/soil(sr)%aslagx(l)
+        end do
+      end do
 
       stop
       end
