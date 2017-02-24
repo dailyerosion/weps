@@ -351,7 +351,7 @@ contains
         write(UNIT=luo_barr,FMT='(i3," ")',advance='NO') &
              barrier(bdx)%np
         do pdx = 1, barrier(bdx)%np
-          write(UNIT=luo_barr,FMT='(3(" ",f6.4)," ")',advance='NO') &
+          write(UNIT=luo_barr,FMT='(3(" ",f7.4))',advance='NO') &
             barrier(bdx)%param(pdx)%amzbr, barrier(bdx)%param(pdx)%amxbrw, barrier(bdx)%param(pdx)%ampbr
         end do
         max_ntm = max(max_ntm, barseas(bdx)%ntm)

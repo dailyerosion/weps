@@ -14,8 +14,6 @@ module input_run_xml_mod
 
   private
 
-  public :: begin_element_handler, end_element_handler, init_run_xml, pcdata_chunk_handler
-
   interface read_param
     module procedure read_param_real_1
     module procedure read_param_real_2
@@ -48,78 +46,62 @@ module input_run_xml_mod
   integer, parameter :: BegTranBase = 10
   integer, parameter :: BegTranFlg = 11
   integer, parameter :: BegTranThresh = 12
-  !integer, parameter :: cligen.station = 13
-  integer, parameter :: climateFile = 14
-  integer, parameter :: ClimateFlag = 15
-  integer, parameter :: coordinate = 16
-  integer, parameter :: coordinates = 17
-  integer, parameter :: coord = 18
-  integer, parameter :: coordI = 19
-  integer, parameter :: coordNo = 20
-  integer, parameter :: crop = 21
-  integer, parameter :: CycleCount = 22
-  integer, parameter :: DebugOutput = 23
-  integer, parameter :: decomp = 24
-  integer, parameter :: Elevation = 25
-  integer, parameter :: EndDate = 26
-  integer, parameter :: EndTranBase = 27
-  integer, parameter :: EndTranFlg = 28
-  integer, parameter :: EndTranThresh = 29
-  integer, parameter :: ErosionSubmodelOutput = 30
-  integer, parameter :: FarmId = 31
-  integer, parameter :: FieldId = 32
-  integer, parameter :: height = 33
-  integer, parameter :: hydro = 34
-  integer, parameter :: n_index = 35
-  integer, parameter :: LatLong = 36
-  integer, parameter :: ManageFile = 37
-  integer, parameter :: man = 38
-  integer, parameter :: Number = 39
-  integer, parameter :: OriginCoord = 40
-  integer, parameter :: pointBarCli = 41
-  integer, parameter :: porosity = 42
-  integer, parameter :: RegionAngle = 43
-  integer, parameter :: RotationYears = 44
-  integer, parameter :: runFileData = 45
-  integer, parameter :: RunTypeDisp = 46
-  integer, parameter :: Site = 47
-  integer, parameter :: SoilFile = 48
-  integer, parameter :: soil = 49
-  integer, parameter :: SoilRockFragments = 50
-  integer, parameter :: StartDate = 51
-  integer, parameter :: subDailyFile = 52
-  integer, parameter :: SubmodelOutput = 53
-  integer, parameter :: Subregion = 54
-  integer, parameter :: SubregionNo = 55
-  integer, parameter :: TimeDesc = 56
-  integer, parameter :: TimeMark = 57
-  integer, parameter :: TimeSteps = 58
-  integer, parameter :: TractId = 59
-  integer, parameter :: UserName = 60
-  integer, parameter :: WaterErosionLoss = 61
-  integer, parameter :: width = 62
-  integer, parameter :: windFile = 63
-  integer, parameter :: WindFlag = 64
-  !integer, parameter :: windgen.station = 65
-  integer, parameter :: XGrid = 66
-  integer, parameter :: XLength = 67
-  integer, parameter :: x = 68
-  integer, parameter :: YGrid = 69
-  integer, parameter :: YLength = 70
-  integer, parameter :: y = 71
+  integer, parameter :: climateFile = 13
+  integer, parameter :: coordinate = 14
+  integer, parameter :: coordinates = 15
+  integer, parameter :: coord = 16
+  integer, parameter :: coordI = 17
+  integer, parameter :: coordNo = 18
+  integer, parameter :: crop = 19
+  integer, parameter :: CycleCount = 20
+  integer, parameter :: DebugOutput = 21
+  integer, parameter :: decomp = 22
+  integer, parameter :: Description = 23
+  integer, parameter :: Elevation = 24
+  integer, parameter :: EndDate = 25
+  integer, parameter :: EndTranBase = 26
+  integer, parameter :: EndTranFlg = 27
+  integer, parameter :: EndTranThresh = 28
+  integer, parameter :: ErosionSubmodelOutput = 29
+  integer, parameter :: height = 30
+  integer, parameter :: hydro = 31
+  integer, parameter :: n_index = 32
+  integer, parameter :: LatLong = 33
+  integer, parameter :: ManageFile = 34
+  integer, parameter :: man = 35
+  integer, parameter :: Number = 36
+  integer, parameter :: OriginCoord = 37
+  integer, parameter :: pointBarCli = 38
+  integer, parameter :: porosity = 39
+  integer, parameter :: RegionAngle = 40
+  integer, parameter :: runFileData = 41
+  integer, parameter :: SoilFile = 42
+  integer, parameter :: soil = 43
+  integer, parameter :: SoilRockFragments = 44
+  integer, parameter :: StartDate = 45
+  integer, parameter :: subDailyFile = 46
+  integer, parameter :: SubmodelOutput = 47
+  integer, parameter :: Subregion = 48
+  integer, parameter :: SubregionNo = 49
+  integer, parameter :: TimeDesc = 50
+  integer, parameter :: TimeMark = 51
+  integer, parameter :: TimeSteps = 52
+  integer, parameter :: WaterErosionLoss = 53
+  integer, parameter :: width = 54
+  integer, parameter :: windFile = 55
+  integer, parameter :: XGrid = 56
+  integer, parameter :: XLength = 57
+  integer, parameter :: x = 58
+  integer, parameter :: YGrid = 59
+  integer, parameter :: YLength = 60
+  integer, parameter :: y = 61
 
-  integer, parameter :: max_simyear = 100000  ! value used to test simulation year input range
   integer :: nacctr   ! Number of accounting regions
-  integer :: nsubr    ! Number of subregions
   integer :: nbr      ! number of barriers
-  integer :: seas_flg ! barrier season flag
-  integer :: ntm_seas ! number of time marks for seasonal barrier
-  integer :: poly_np  ! number of points in polygon or polyline
-  integer :: isr      ! index for subregion reading
-  integer :: iar      ! index for accounting region reading
-  integer :: ibr      ! index for barrier reading
-  integer :: ipol     ! index for polygon reading
-  integer :: iseas    ! index for barrier season reading
+  logical, dimension(2) :: runfile_complete
+
+  public :: begin_element_handler, end_element_handler, init_run_xml, pcdata_chunk_handler
+  public :: runFileData, run_tag
 
 contains
 
@@ -144,15 +126,107 @@ contains
   end subroutine begin_element_handler
 
   subroutine end_element_handler(name)
+    use subregions_mod, only: acct_poly
+    use barriers_mod, only: barrier, barseas
     character(len=*), intent(in)     :: name
 
     integer :: idx
+    integer :: alloc_stat
 
     do idx = 1, size(run_tag)
       if( run_tag(idx)%name .eq. name ) then
         run_tag(idx)%in_tag = .false.
         ! write(*,*) 'In tag ', trim(name)
+
+        if (idx .eq. runFileData) then
+            !write(*,*) 'Tags', run_tag(CycleCount)%acquired &
+            !           , run_tag(LatLong)%acquired &
+            !           , run_tag(Elevation)%acquired &
+            !           , run_tag(StartDate)%acquired &
+            !           , run_tag(EndDate)%acquired &
+            !           , run_tag(TimeSteps)%acquired &
+            !           , run_tag(climateFile)%acquired &
+            !           , run_tag(windFile)%acquired &
+            !           , run_tag(ErosionSubmodelOutput)%acquired &
+            !           , run_tag(RegionAngle)%acquired &
+            !           , run_tag(OriginCoord)%acquired &
+            !           , run_tag(XLength)%acquired &
+            !           , run_tag(YLength)%acquired &
+            !           , run_tag(XGrid)%acquired &
+            !           , run_tag(YGrid)%acquired &
+            !           , run_tag(AccNo)%acquired &
+            !           , run_tag(Account)%acquired &
+            !           , run_tag(SubregionNo)%acquired &
+            !           , run_tag(Subregion)%acquired &
+            !           , run_tag(BarrierNo)%acquired &
+            !           , run_tag(Barrier_tag)%acquired
+
+          if (run_tag(AccNo)%acquired) then
+            if (nacctr .le. 0) then
+              runfile_complete(1) = .true.
+            else
+              if (run_tag(Account)%acquired) then
+                runfile_complete(1) = .true.
+              end if
+            end if
+          else
+            runfile_complete(1) = .true.
+            ! create array of accounting region polygons (zero size array allowed)
+            allocate(acct_poly(0), stat = alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+              write(*,*) 'ERROR: memory alloc., accounting region polygons'
+            end if
+          end if
+
+          if (run_tag(BarrierNo)%acquired) then
+            if (nbr .le. 0) then
+              runfile_complete(2) = .true.
+            else
+              if (run_tag(Barrier_tag)%acquired) then
+                runfile_complete(2) = .true.
+              end if
+            end if
+          else
+            runfile_complete(2) = .true.
+            ! allocate structure for barriers (zero size array allowed)
+            allocate(barrier(0), stat = alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+              write(*,*) 'ERROR: memory alloc., barrier'
+            end if
+            allocate(barseas(0), stat = alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+              write(*,*) 'ERROR: memory alloc., seasonal barrier'
+            end if
+          end if
+
+          ! check for acquisition of all required elements
+          if (    run_tag(CycleCount)%acquired &
+            .and. run_tag(LatLong)%acquired &
+            .and. run_tag(Elevation)%acquired &
+            .and. run_tag(StartDate)%acquired &
+            .and. run_tag(EndDate)%acquired &
+            .and. run_tag(TimeSteps)%acquired &
+            .and. run_tag(climateFile)%acquired &
+            .and. run_tag(windFile)%acquired &
+            .and. run_tag(ErosionSubmodelOutput)%acquired &
+            .and. run_tag(RegionAngle)%acquired &
+            .and. run_tag(OriginCoord)%acquired &
+            .and. run_tag(XLength)%acquired &
+            .and. run_tag(YLength)%acquired &
+            .and. run_tag(XGrid)%acquired &
+            .and. run_tag(YGrid)%acquired &
+            .and. run_tag(SubregionNo)%acquired &
+            .and. run_tag(Subregion)%acquired &
+            .and. runfile_complete(1) &
+            .and. runfile_complete(2) &
+            ) then
+            run_tag(runFileData)%acquired = .true.
+          end if
+
+        end if
+
         exit  ! found tag, no need to look further
+
       end if
     end do
 
@@ -163,7 +237,7 @@ contains
     integer :: idx
     integer :: alloc_stat
 
-    max_tags = 71   ! count of unique tags from all dtd files
+    max_tags = 61   ! count of unique tags needed from all dtd files
     allocate( run_tag(max_tags), stat=alloc_stat)
     if( alloc_stat .gt. 0 ) then
       write(*,*) 'ERROR: memory alloc., run_tag'
@@ -185,93 +259,73 @@ contains
     ! assign tag names
     run_tag(1)%name = "AccNo"
     run_tag(2)%name = "Account"
-    ! children (coordinates)
     run_tag(3)%name = "AverageSlope"
     run_tag(4)%name = "BarCli"
-    ! children (index, BegTranFlg?, BegTranThresh?, BegTranBase?, EndTranFlg?, EndTranThresh?, EndTranBase?, TimeMark, TimeDesc)
     run_tag(5)%name = "BarCliI"
     run_tag(6)%name = "BarCliNo"
     run_tag(7)%name = "Barrier"
-    ! children (BarrierSeasonFlag, BarCliNo, coordNo, BarCli*, coord*, pointBarCli*)
     run_tag(8)%name = "BarrierNo"
     run_tag(9)%name = "BarrierSeasonFlag"
     run_tag(10)%name = "BegTranBase"
     run_tag(11)%name = "BegTranFlg"
     run_tag(12)%name = "BegTranThresh"
-    run_tag(13)%name = "cligen.station"
-    run_tag(14)%name = "climateFile"
-    run_tag(15)%name = "ClimateFlag"
-    run_tag(16)%name = "coordinate"
-    run_tag(17)%name = "coordinates"
-    ! children (Number, coordinate+)
-    run_tag(18)%name = "coord"
-    ! children (index, x, y)
-    run_tag(19)%name = "coordI"
-    run_tag(20)%name = "coordNo"
-    run_tag(21)%name = "crop"
-    run_tag(22)%name = "CycleCount"
-    run_tag(23)%name = "DebugOutput"
-    ! children (hydro, soil, man, crop, decomp)
-    run_tag(24)%name = "decomp"
-    run_tag(25)%name = "Elevation"
-    run_tag(26)%name = "EndDate"
-    run_tag(27)%name = "EndTranBase"
-    run_tag(28)%name = "EndTranFlg"
-    run_tag(29)%name = "EndTranThresh"
-    run_tag(30)%name = "ErosionSubmodelOutput"
-    run_tag(31)%name = "FarmId"
-    run_tag(32)%name = "FieldId"
-    run_tag(33)%name = "height"
-    run_tag(34)%name = "hydro"
-    run_tag(35)%name = "n_index"
-    run_tag(36)%name = "LatLong"
-    run_tag(37)%name = "ManageFile"
-    run_tag(38)%name = "man"
-    run_tag(39)%name = "Number"
-    run_tag(40)%name = "OriginCoord"
-    run_tag(41)%name = "pointBarCli"
-    ! children (coordI, BarCliI, height, width, porosity)
-    run_tag(42)%name = "porosity"
-    run_tag(43)%name = "RegionAngle"
-    run_tag(44)%name = "RotationYears"
-    run_tag(45)%name = "runFileData"
-    ! children (UserName, FarmId, TractId, FieldId, RunTypeDisp, RotationYears, CycleCount, Site, LatLong, Elevation, ClimateFlag, cligen.station, WindFlag, windgen.station, StartDate, EndDate, TimeSteps, climateFile, windFile, subDailyFile, ErosionSubmodelOutput, RegionAngle, OriginCoord, XLength, YLength, XGrid, YGrid, AccNo?, Account*, SubregionNo, Subregion+, BarrierNo?, Barrier*)
-    run_tag(46)%name = "RunTypeDisp"
-    run_tag(47)%name = "Site"
-    run_tag(48)%name = "SoilFile"
-    run_tag(49)%name = "soil"
-    run_tag(50)%name = "SoilRockFragments"
-    run_tag(51)%name = "StartDate"
-    run_tag(52)%name = "subDailyFile"
-    run_tag(53)%name = "SubmodelOutput"
-    ! children (hydro, soil, man, crop, decomp)
-    run_tag(54)%name = "Subregion"
-    ! children (index, SubmodelOutput, DebugOutput, coordinates, AverageSlope, SoilRockFragments, 
-    run_tag(55)%name = "SubregionNo"
-    run_tag(56)%name = "TimeDesc"
-    run_tag(57)%name = "TimeMark"
-    run_tag(58)%name = "TimeSteps"
-    run_tag(59)%name = "TractId"
-    run_tag(60)%name = "UserName"
-    run_tag(61)%name = "WaterErosionLoss"
-    run_tag(62)%name = "width"
-    run_tag(63)%name = "windFile"
-    run_tag(64)%name = "WindFlag"
-    run_tag(65)%name = "windgen.station"
-    run_tag(66)%name = "XGrid"
-    run_tag(67)%name = "XLength"
-    run_tag(68)%name = "x"
-    run_tag(69)%name = "YGrid"
-    run_tag(70)%name = "YLength"
-    run_tag(71)%name = "y"
+    run_tag(13)%name = "climateFile"
+    run_tag(14)%name = "coordinate"
+    run_tag(15)%name = "coordinates"
+    run_tag(16)%name = "coord"
+    run_tag(17)%name = "coordI"
+    run_tag(18)%name = "coordNo"
+    run_tag(19)%name = "crop"
+    run_tag(20)%name = "CycleCount"
+    run_tag(21)%name = "DebugOutput"
+    run_tag(22)%name = "decomp"
+    run_tag(23)%name = "Description"
+    run_tag(24)%name = "Elevation"
+    run_tag(25)%name = "EndDate"
+    run_tag(26)%name = "EndTranBase"
+    run_tag(27)%name = "EndTranFlg"
+    run_tag(28)%name = "EndTranThresh"
+    run_tag(29)%name = "ErosionSubmodelOutput"
+    run_tag(30)%name = "height"
+    run_tag(31)%name = "hydro"
+    run_tag(32)%name = "index"
+    run_tag(33)%name = "LatLong"
+    run_tag(34)%name = "ManageFile"
+    run_tag(35)%name = "man"
+    run_tag(36)%name = "Number"
+    run_tag(37)%name = "OriginCoord"
+    run_tag(38)%name = "pointBarCli"
+    run_tag(39)%name = "porosity"
+    run_tag(40)%name = "RegionAngle"
+    run_tag(41)%name = "runFileData"
+    run_tag(42)%name = "SoilFile"
+    run_tag(43)%name = "soil"
+    run_tag(44)%name = "SoilRockFragments"
+    run_tag(45)%name = "StartDate"
+    run_tag(46)%name = "subDailyFile"
+    run_tag(47)%name = "SubmodelOutput"
+    run_tag(48)%name = "Subregion"
+    run_tag(49)%name = "SubregionNo"
+    run_tag(50)%name = "TimeDesc"
+    run_tag(51)%name = "TimeMark"
+    run_tag(52)%name = "TimeSteps"
+    run_tag(53)%name = "WaterErosionLoss"
+    run_tag(54)%name = "width"
+    run_tag(55)%name = "windFile"
+    run_tag(56)%name = "XGrid"
+    run_tag(57)%name = "XLength"
+    run_tag(58)%name = "x"
+    run_tag(59)%name = "YGrid"
+    run_tag(60)%name = "YLength"
+    run_tag(61)%name = "y"
 
-    ! create integer variable names for parents (just above children) and assign index number.
+    ! create integer variable names for tags and assign index number.
     ! makes chunk code more understandable.
 
   end subroutine init_run_xml
 
   subroutine pcdata_chunk_handler(chunk)
-    use weps_main_mod
+
     use datetime_mod, only: lstday, difdat
     use Polygons_Mod, only: polygon, create_polygon, destroy_polygon, set_area_polygon
     use subregions_mod, only: acct_poly, subr_poly
@@ -282,61 +336,64 @@ contains
     use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
     use hydro_data_struct_defs, only: am0hfl, am0hdb
     use soil_data_struct_defs, only: am0sfl, am0sdb
+
     use manage_data_struct_defs, only: am0tfl, am0tdb, tinfil
     use crop_data_struct_defs, only: am0cfl, am0cdb
     use decomp_data_struct_defs, only: am0dfl, am0ddb
     use input_soil_mod, only: soil_def, soil_in
     use Points_Mod, only: point
+    use weps_main_mod
     use barriers_mod, only: create_barrier, barrier, barseas
     use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate
 
-    ! arguments
     character(len=*), intent(in) :: chunk
 
     character(len=80) :: param_value
     integer :: sum_stat, alloc_stat, dealloc_stat
     integer :: read_stat
     real :: cligen_version
-    logical, dimension(:), allocatable :: subregion_complete
-    logical, dimension(:), allocatable :: season_complete
-    logical, dimension(:), allocatable :: points_complete
-    logical, dimension(:,:), allocatable :: clipar_complete
-    integer :: count_complete
-    ! temporary holder for array elements until index is read
-    integer :: t_am0hfl
-    integer :: t_am0sfl
-    integer :: t_am0tfl
-    integer :: t_am0cfl
-    integer :: t_am0dfl
-    integer :: t_am0hdb
-    integer :: t_am0sdb
-    integer :: t_am0tdb
-    integer :: t_am0cdb
-    integer :: t_am0ddb
-    type(polygon) :: t_polygon
-    type(soil_def) :: t_soil
-    character(len=512) :: t_tinfil
-    type(point) :: t_point
-    type(barrier_day_state) :: t_day_state
-    type(barrier_params) :: t_params
-    type(barrier_climate) :: t_climate
+
+    integer, parameter :: max_simyear = 100000  ! value used to test simulation year input range
+    integer, save :: nsubr    ! Number of subregions
+    integer, save :: seas_flg ! barrier season flag
+    integer, save :: ntm_seas ! number of time marks for seasonal barrier
+    integer, save :: poly_np  ! number of points in polygon or polyline
+    integer, save :: isr      ! index for subregion reading
+    integer, save :: iar      ! index for accounting region reading
+    integer, save :: ibr      ! index for barrier reading
+    integer, save :: ipol     ! index for polygon reading
+    integer, save :: iseas    ! index for barrier season reading
+    logical, save, dimension(:), allocatable :: subregion_complete
+    logical, save, dimension(:), allocatable :: season_complete
+    logical, save, dimension(:), allocatable :: points_complete
+    logical, save, dimension(:,:), allocatable :: clipar_complete
+    integer, save :: count_complete
+  ! temporary holder for array elements until index is read
+    integer, save :: t_am0hfl
+    integer, save :: t_am0sfl
+    integer, save :: t_am0tfl
+    integer, save :: t_am0cfl
+    integer, save :: t_am0dfl
+    integer, save :: t_am0hdb
+    integer, save :: t_am0sdb
+    integer, save :: t_am0tdb
+    integer, save :: t_am0cdb
+    integer, save :: t_am0ddb
+    type(polygon), save :: t_polygon
+    type(soil_def), save :: t_soil
+    character(len=512), save :: t_tinfil
+    type(point), save :: t_point
+    type(barrier_day_state), save :: t_day_state
+    type(barrier_params), save :: t_params
+    type(barrier_climate), save :: t_climate
+    character(len=80), save :: t_amzbt
 
     param_value = trim(chunk)
 
     if (run_tag(runFileData)%in_tag) then
-
-      ! if (run_tag(UserName)%in_tag) then
-      ! else if (run_tag(FarmId)%in_tag) then
-      ! else if (run_tag(TractId)%in_tag) then
-      ! else if (run_tag(FieldId)%in_tag) then
-      ! else if (run_tag(RunTypeDisp)%in_tag) then
-      ! else if (run_tag(RotationYears)%in_tag) then
-
       if (run_tag(CycleCount)%in_tag) then
         call read_param(CycleCount, param_value, run_rot_cycles)
         run_tag(CycleCount)%acquired = .true.
-
-      ! else if (run_tag(Site)%in_tag) then
 
       else if (run_tag(LatLong)%in_tag) then
         call read_param(LatLong, param_value, amalat, amalon)
@@ -357,12 +414,6 @@ contains
       else if (run_tag(Elevation)%in_tag) then
         call read_param(Elevation, param_value, amzele)
         run_tag(Elevation)%acquired = .true.
-
-      ! else if (run_tag(ClimateFlag)%in_tag) then
-      ! else if (run_tag(cligen.station)%in_tag) then
-      ! else if (run_tag(WindFlag)%in_tag) then
-      ! else if (run_tag(windgen.station)%in_tag) then
-
       else if (run_tag(StartDate)%in_tag) then
         call read_param(StartDate, param_value, id, im, iy)
         if ((id .lt. 1) .or. (id .gt. lstday(im,iy))) then
@@ -529,17 +580,15 @@ contains
 
       else if (run_tag(AccNo)%in_tag) then
         call read_param(AccNo, param_value, nacctr)
+        run_tag(AccNo)%acquired = .true.
         if (nacctr .gt. 0) then
-          run_tag(AccNo)%required = .true.
           ! set counter iar for reading in Accounting Regions
           iar = 1
-        else
-          run_tag(AccNo)%acquired = .true.
         end if
         ! create array of accounting region polygons (zero size array allowed)
         allocate(acct_poly(nacctr), stat = alloc_stat)
         if( alloc_stat .gt. 0 ) then
-          Write(*,*) 'ERROR: memory alloc., accounting region polygons'
+          write(*,*) 'ERROR: memory alloc., accounting region polygons'
         end if
 
       else if (run_tag(Account)%in_tag) then
@@ -584,13 +633,12 @@ contains
           call exit(1)
         end if
         run_tag(SubregionNo)%acquired = .true.
+
+        sum_stat = 0
         ! create array of subregion polygons
         allocate(subr_poly(nsubr), stat = alloc_stat)
-        if( alloc_stat .gt. 0 ) then
-          Write(*,*) 'ERROR: memory alloc., subregion polygons'
-        end if
+        sum_stat = sum_stat + alloc_stat
         ! create arrays for submodel output flags
-        sum_stat = 0
         allocate(am0hfl(nsubr), stat=alloc_stat)
         sum_stat = sum_stat + alloc_stat
         allocate(am0sfl(nsubr), stat=alloc_stat)
@@ -601,10 +649,6 @@ contains
         sum_stat = sum_stat + alloc_stat
         allocate(am0dfl(nsubr), stat=alloc_stat)
         sum_stat = sum_stat + alloc_stat
-        if( alloc_stat .gt. 0 ) then
-           write(*,*) 'ERROR: memory alloc., submodel output flags'
-        end if
-
         ! create arrays for submodel debug flags
         sum_stat = 0
         allocate(am0hdb(nsubr), stat=alloc_stat)
@@ -617,18 +661,14 @@ contains
         sum_stat = sum_stat + alloc_stat
         allocate(am0ddb(nsubr), stat=alloc_stat)
         sum_stat = sum_stat + alloc_stat
-        if( alloc_stat .gt. 0 ) then
-           write(*,*) 'ERROR: memory alloc., debug output flags'
-        end if
-
         allocate(soil_in(nsubr), stat=alloc_stat)
-        if( alloc_stat .gt. 0 ) then
-           write(*,*) 'ERROR: memory alloc., soil_in structure array'
-        end if
-
+        sum_stat = sum_stat + alloc_stat
         allocate(tinfil(nsubr), stat=alloc_stat)
-        if( alloc_stat .gt. 0 ) then
-           write(*,*) 'ERROR: memory alloc., soil structure array'
+        sum_stat = sum_stat + alloc_stat
+        allocate(subregion_complete(nsubr), stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        if( sum_stat .gt. 0 ) then
+           write(*,*) 'ERROR: memory alloc., subregion arrays'
         end if
 
       else if (run_tag(Subregion)%in_tag) then
@@ -740,19 +780,17 @@ contains
             t_soil%sinfil = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
             run_tag(SoilFile)%acquired = .true.
 
+            write(*,*) 'SOILFILE: ', param_value(1:len_trim(param_value))
+
           else if (run_tag(ManageFile)%in_tag) then
             ! read in management file name
             t_tinfil = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
             run_tag(ManageFile)%acquired = .true.
 
           else if (run_tag(WaterErosionLoss)%in_tag) then
-            call read_param(WaterErosionLoss, param_value, soil_in(isr)%WaterErosion)
+            call read_param(WaterErosionLoss, param_value, t_soil%WaterErosion)
             run_tag(WaterErosionLoss)%acquired = .true.
 
-          end if
-          if (isr .gt. nsubr) then
-            run_tag(Subregion)%acquired = .true.
-            run_tag(Number)%acquired = .false.
           end if
           if (    run_tag(n_index)%acquired &
             .and. run_tag(SubmodelOutput)%acquired &
@@ -802,12 +840,10 @@ contains
         end if
       else if (run_tag(BarrierNo)%in_tag) then
         call read_param(BarrierNo, param_value, nbr)
+        run_tag(BarrierNo)%acquired = .true.
         if (nbr .gt. 0) then
-          run_tag(BarrierNo)%required = .true.
           ! set counter ibr for reading in Barriers Regions
           ibr = 1
-        else
-          run_tag(BarrierNo)%acquired = .true.
         end if
         ! allocate structure for barriers (nbr .lt. 1 gives zero size array)
         allocate(barrier(nbr), stat = alloc_stat)
@@ -839,8 +875,13 @@ contains
         !  leaves are at a maximum and the data values for porosity correspond to that.
 
         ! read in barrier info
-        if (run_tag(BarrierNo)%required) then
-          if (run_tag(BarrierSeasonFlag)%in_tag) then
+        if (run_tag(BarrierNo)%acquired) then
+          if (run_tag(Description)%in_tag) then
+            t_amzbt = trim(param_value)
+            !  also place in fixed barrier structure
+            t_amzbt = barseas(ibr)%amzbt
+            run_tag(Description)%acquired = .true.
+          else if (run_tag(BarrierSeasonFlag)%in_tag) then
             call read_param(BarrierSeasonFlag, param_value, seas_flg)
             run_tag(BarrierSeasonFlag)%acquired = .true.
           else if (run_tag(BarCliNo)%in_tag) then
@@ -869,6 +910,11 @@ contains
             ! this also sets values for barr%np and barr%ntm
             barrier(ibr) = create_barrier(poly_np)
             barseas(ibr) = create_barrier(poly_np,ntm_seas,seas_flg)
+            if( run_tag(Description)%acquired ) then
+              ! acquired so assign value to description
+              barseas(ibr)%amzbt = t_amzbt
+              barrier(ibr)%amzbt = t_amzbt
+            end if
             ! create storage for season, points and climate parameter index tracking
             sum_stat = 0
             allocate(season_complete(ntm_seas), stat = alloc_stat)
@@ -877,6 +923,22 @@ contains
             sum_stat = sum_stat + alloc_stat
             allocate(clipar_complete(poly_np, ntm_seas), stat = alloc_stat)
             sum_stat = sum_stat + alloc_stat
+            if( sum_stat .gt. 0 ) then
+              ! deallocation failed
+              write(*,*) "ERROR: unable to allocate memory for _complete arrays"
+            end if
+            ! initialize _complete arrays to false
+            do iseas = 1, ntm_seas
+              season_complete(iseas) = .false.
+            end do
+            do ipol = 1, poly_np
+              points_complete(ipol) = .false.
+            end do
+            do iseas = 1, ntm_seas
+              do ipol = 1, poly_np
+                clipar_complete(ipol, iseas) = .false.
+              end do
+            end do
 
           else if (run_tag(BarCli)%in_tag) then
             ! BarCli Climate transition parameters
@@ -889,7 +951,7 @@ contains
               call read_param(TimeMark, param_value, t_day_state%doy)
               run_tag(TimeMark)%acquired = .true.
             else if (run_tag(TimeDesc)%in_tag) then
-              t_day_state%st_desc = param_value
+              t_day_state%st_desc = param_value(1:80)
               run_tag(TimeDesc)%acquired = .true.
             else if (run_tag(BegTranFlg)%in_tag) then
               call read_param(BegTranFlg, param_value, t_climate%beg_flg)
@@ -951,7 +1013,14 @@ contains
                 run_tag(n_index)%acquired = .false.
                 run_tag(TimeMark)%acquired = .false.
                 run_tag(TimeDesc)%acquired = .false.
-                if (iseas .gt. ntm_seas) then
+                season_complete(iseas) = .true.
+                count_complete = 0
+                do iseas = 1, ntm_seas
+                  if (season_complete(iseas)) then
+                    count_complete = count_complete + 1
+                  end if
+                end do
+                if (count_complete .ge. ntm_seas) then
                   run_tag(BarCli)%acquired = .true.
                 end if
               end if
@@ -1044,17 +1113,20 @@ contains
               end if
             end if
           end if
-          if (    run_tag(BarrierSeasonFlag)%acquired &
+
+          if (    run_tag(Description)%acquired &
+            .and. run_tag(BarrierSeasonFlag)%acquired &
             .and. run_tag(BarCliNo)%acquired &
-            .and. run_tag(coordNo)%acquired &
             .and. run_tag(BarCli)%acquired &
+            .and. run_tag(coordNo)%acquired &
             .and. run_tag(coord)%acquired &
             .and. run_tag(pointBarCli)%acquired &
             ) then
+            run_tag(Description)%acquired = .false.
             run_tag(BarrierSeasonFlag)%acquired = .false.
             run_tag(BarCliNo)%acquired = .false.
-            run_tag(coordNo)%acquired = .false.
             run_tag(BarCli)%acquired = .false.
+            run_tag(coordNo)%acquired = .false.
             run_tag(coord)%acquired = .false.
             run_tag(pointBarCli)%acquired = .false.
             ibr = ibr + 1
@@ -1071,71 +1143,16 @@ contains
             sum_stat = sum_stat + dealloc_stat
             if( sum_stat .gt. 0 ) then
               ! deallocation failed
-              write(*,*) "ERROR: unable to deallocate memory for Polygon"
+              write(*,*) "ERROR: unable to deallocate memory for _complete arrays"
             end if
 
           end if
         else
           write(*,*) 'Error: Number of barriers must be specified before reading in barrier data'
         end if
-        if (isr .gt. nsubr) then
-          run_tag(Subregion)%acquired = .true.
-          run_tag(Number)%acquired = .false.
-        end if
 
       end if
-      if ( (run_tag(AccNo)%required .and. run_tag(Account)%acquired) ) then
-        ! AccNo wa present and had value greater than zero and Account was acquired 
-        run_tag(AccNo)%acquired = .true.
-      end if
-      if ( (run_tag(BarrierNo)%required .and. run_tag(Barrier_tag)%acquired) ) then
-        ! BarrierNo wa present and had value greater than zero and Barrier_tag was acquired 
-        run_tag(BarrierNo)%acquired = .true.
-      end if
-      ! check for acquisition of all required elements
-      if ( &   !run_tag(UserName)%acquired
-        !.and. run_tag(FarmId)%acquired &
-        !.and. run_tag(TractId)%acquired &
-        !.and. run_tag(FieldId)%acquired &
-        !.and. run_tag(RunTypeDisp)%acquired &
-        !.and. run_tag(RotationYears)%acquired &
-        run_tag(CycleCount)%acquired &
-        !.and. run_tag(Site)%acquired &
-        .and. run_tag(LatLong)%acquired &
-        .and. run_tag(Elevation)%acquired &
-        !.and. run_tag(ClimateFlag)%acquired &
-        !.and. run_tag(cligen.station)%acquired &
-        !.and. run_tag(WindFlag)%acquired &
-        !.and. run_tag(windgen.station)%acquired &
-        .and. run_tag(StartDate)%acquired &
-        .and. run_tag(EndDate)%acquired &
-        .and. run_tag(TimeSteps)%acquired &
-        .and. run_tag(climateFile)%acquired &
-        .and. run_tag(windFile)%acquired &
-        !.and. run_tag(subDailyFile)%acquired &
-        .and. run_tag(ErosionSubmodelOutput)%acquired &
-        .and. run_tag(RegionAngle)%acquired &
-        .and. run_tag(OriginCoord)%acquired &
-        .and. run_tag(XLength)%acquired &
-        .and. run_tag(YLength)%acquired &
-        .and. run_tag(XGrid)%acquired &
-        .and. run_tag(YGrid)%acquired &
-        .and. run_tag(AccNo)%required &
-        .and. run_tag(AccNo)%acquired &
-        !.and. run_tag(Account)%acquired &
-        .and. run_tag(SubregionNo)%acquired &
-        .and. run_tag(Subregion)%acquired &
-        .and. run_tag(BarrierNo)%required &
-        .and. run_tag(BarrierNo)%acquired &
-        !.and. run_tag(Barrier_tag)%acquired &
-        ) then
-        run_tag(runFileData)%acquired = .true.
-        deallocate(subregion_complete, stat=dealloc_stat)
-        if( dealloc_stat .gt. 0 ) then
-          ! deallocation failed
-          write(*,*) "ERROR: unable to deallocate memory for subregion_complete"
-        end if
-      end if
+
     end if
 
   end subroutine pcdata_chunk_handler

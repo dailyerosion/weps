@@ -43,6 +43,7 @@ contains
       runfil = rootp(1:len_trim(rootp)) // 'weps.run.xml'
       inquire(file = runfil(1:len_trim(runfil)), exist = fexist)
       if (fexist) then
+        old_run_file = .false.
         ! open simulation run file
         write (*,*) 'runfil is ', '>>', runfil(1:len_trim(runfil)), '<<'
         call open_xmlfile(runfil(1:len_trim(runfil)),fxml,iostat)
@@ -54,6 +55,10 @@ contains
              end_element_handler = end_element_handler, &
              pcdata_chunk_handler = pcdata_chunk_handler, &
              verbose = .false.)
+        if (.not. run_tag(runFileData)%acquired) then
+          write(*,*) 'Simulation run file incomplete'
+          call exit(1)
+        end if
       else
         ! check for old fixed format run file
         runfil = rootp(1:len_trim(rootp)) // 'weps.run'
@@ -117,7 +122,6 @@ contains
       character     line*256
       real          sclsim, sclbar
       real          cligen_version
-      logical       fexist
       real          wepsrun_version
       integer       lui1
       integer    :: sum_stat, alloc_stat
@@ -137,9 +141,6 @@ contains
 !     sclbar - scaling factor used by interface, not within WEPS
 
 !     cligen_version - version of the specified cligen file
-
-!     fexist - flag indicating existence of file
-
 !     wepsrun_version - version of the weps.run file being read
 
 !     subr_poly - polygons defining each subregion extent
@@ -621,7 +622,7 @@ contains
 
          case (36)
             if( nbr .ge. 1 ) then
-               read (line,*,err=80) barseas(ibr)%amzbt
+               barseas(ibr)%amzbt = line(1:80)
                !  also place in fixed barrier structure
                barrier(ibr)%amzbt = barseas(ibr)%amzbt
             end if
@@ -1244,8 +1245,6 @@ contains
      &en 0 and max_simyear',/,'  - please check run file')
  2265 format (/,' error, initial year of simulation is greater than the &
      &last year of simulation',/,'  - please check run file')
-
- 2270  format (/,' using the sub-daily wind file: ',a80)
 
  9001  format('Error in file ',a,' on line #',i4,i3,' ',a)
  9002  format('Error in file: ',a,' reading: ',a)
