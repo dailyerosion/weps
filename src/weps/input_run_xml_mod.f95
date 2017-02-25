@@ -11,6 +11,25 @@ module input_run_xml_mod
   ! to numerical arrays, and to populate specific data structures.
 
   use flib_sax
+  use datetime_mod, only: lstday, difdat
+  use Polygons_Mod, only: polygon, create_polygon, destroy_polygon, set_area_polygon
+  use subregions_mod, only: acct_poly, subr_poly
+  use file_io_mod, only: fopenk, luicli, luiwin, luolog
+  use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
+  use climate_input_mod, only: amalat, amalon, amzele
+  use erosion_data_struct_defs, only: subday, ntstep, am0efl
+  use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
+  use hydro_data_struct_defs, only: am0hfl, am0hdb
+  use soil_data_struct_defs, only: am0sfl, am0sdb
+
+  use manage_data_struct_defs, only: am0tfl, am0tdb, tinfil
+  use crop_data_struct_defs, only: am0cfl, am0cdb
+  use decomp_data_struct_defs, only: am0dfl, am0ddb
+  use input_soil_mod, only: soil_def, soil_in
+  use Points_Mod, only: point
+  use weps_main_mod
+  use barriers_mod, only: create_barrier, barrier, barseas
+  use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate
 
   private
 
@@ -96,8 +115,41 @@ module input_run_xml_mod
   integer, parameter :: YLength = 60
   integer, parameter :: y = 61
 
+  integer, parameter :: max_simyear = 100000  ! value used to test simulation year input range
   integer :: nacctr   ! Number of accounting regions
+  integer :: nsubr    ! Number of subregions
   integer :: nbr      ! number of barriers
+  integer :: seas_flg ! barrier season flag
+  integer :: ntm_seas ! number of time marks for seasonal barrier
+  integer :: poly_np  ! number of points in polygon or polyline
+  integer :: isr      ! index for subregion reading
+  integer :: iar      ! index for accounting region reading
+  integer :: ibr      ! index for barrier reading
+  integer :: ipol     ! index for polygon reading
+  integer :: iseas    ! index for barrier season reading
+  logical, dimension(:), allocatable :: subregion_complete
+  logical, dimension(:), allocatable :: season_complete
+  logical, dimension(:), allocatable :: points_complete
+  logical, dimension(:,:), allocatable :: clipar_complete
+  integer :: count_complete
+  ! temporary holder for array elements until index is read
+  integer :: t_am0hfl
+  integer :: t_am0sfl
+  integer :: t_am0tfl
+  integer :: t_am0cfl
+  integer :: t_am0dfl
+  integer :: t_am0hdb
+  integer :: t_am0sdb
+  integer :: t_am0tdb
+  integer :: t_am0cdb
+  integer :: t_am0ddb
+  type(polygon) :: t_polygon
+  type(soil_def) :: t_soil
+  character(len=512) :: t_tinfil
+  type(point) :: t_point
+  type(barrier_day_state) :: t_day_state
+  type(barrier_params) :: t_params
+  type(barrier_climate) :: t_climate
   logical, dimension(2) :: runfile_complete
 
   public :: begin_element_handler, end_element_handler, init_run_xml, pcdata_chunk_handler
@@ -126,8 +178,6 @@ contains
   end subroutine begin_element_handler
 
   subroutine end_element_handler(name)
-    use subregions_mod, only: acct_poly
-    use barriers_mod, only: barrier, barseas
     character(len=*), intent(in)     :: name
 
     integer :: idx
@@ -325,67 +375,12 @@ contains
   end subroutine init_run_xml
 
   subroutine pcdata_chunk_handler(chunk)
-
-    use datetime_mod, only: lstday, difdat
-    use Polygons_Mod, only: polygon, create_polygon, destroy_polygon, set_area_polygon
-    use subregions_mod, only: acct_poly, subr_poly
-    use file_io_mod, only: fopenk, luicli, luiwin, luolog
-    use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
-    use climate_input_mod, only: amalat, amalon, amzele
-    use erosion_data_struct_defs, only: subday, ntstep, am0efl
-    use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
-    use hydro_data_struct_defs, only: am0hfl, am0hdb
-    use soil_data_struct_defs, only: am0sfl, am0sdb
-
-    use manage_data_struct_defs, only: am0tfl, am0tdb, tinfil
-    use crop_data_struct_defs, only: am0cfl, am0cdb
-    use decomp_data_struct_defs, only: am0dfl, am0ddb
-    use input_soil_mod, only: soil_def, soil_in
-    use Points_Mod, only: point
-    use weps_main_mod
-    use barriers_mod, only: create_barrier, barrier, barseas
-    use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate
-
     character(len=*), intent(in) :: chunk
 
     character(len=80) :: param_value
     integer :: sum_stat, alloc_stat, dealloc_stat
     integer :: read_stat
     real :: cligen_version
-
-    integer, parameter :: max_simyear = 100000  ! value used to test simulation year input range
-    integer, save :: nsubr    ! Number of subregions
-    integer, save :: seas_flg ! barrier season flag
-    integer, save :: ntm_seas ! number of time marks for seasonal barrier
-    integer, save :: poly_np  ! number of points in polygon or polyline
-    integer, save :: isr      ! index for subregion reading
-    integer, save :: iar      ! index for accounting region reading
-    integer, save :: ibr      ! index for barrier reading
-    integer, save :: ipol     ! index for polygon reading
-    integer, save :: iseas    ! index for barrier season reading
-    logical, save, dimension(:), allocatable :: subregion_complete
-    logical, save, dimension(:), allocatable :: season_complete
-    logical, save, dimension(:), allocatable :: points_complete
-    logical, save, dimension(:,:), allocatable :: clipar_complete
-    integer, save :: count_complete
-  ! temporary holder for array elements until index is read
-    integer, save :: t_am0hfl
-    integer, save :: t_am0sfl
-    integer, save :: t_am0tfl
-    integer, save :: t_am0cfl
-    integer, save :: t_am0dfl
-    integer, save :: t_am0hdb
-    integer, save :: t_am0sdb
-    integer, save :: t_am0tdb
-    integer, save :: t_am0cdb
-    integer, save :: t_am0ddb
-    type(polygon), save :: t_polygon
-    type(soil_def), save :: t_soil
-    character(len=512), save :: t_tinfil
-    type(point), save :: t_point
-    type(barrier_day_state), save :: t_day_state
-    type(barrier_params), save :: t_params
-    type(barrier_climate), save :: t_climate
 
     param_value = trim(chunk)
 
@@ -609,6 +604,8 @@ contains
                 call read_param(coordinate, param_value, acct_poly(iar)%points(ipol)%x, acct_poly(iar)%points(ipol)%y)
                 ipol = ipol + 1
                 if (ipol .gt. poly_np) then
+                  ! finished with this accounting region
+                  call set_area_polygon( acct_poly(iar) )
                   iar = iar + 1
                 end if
               else
@@ -820,6 +817,8 @@ contains
             am0cdb(isr) = t_am0cdb
             am0ddb(isr) = t_am0ddb
             subr_poly(isr) = t_polygon
+            ! polygon complete
+            call set_area_polygon(subr_poly(isr))
             call destroy_polygon(t_polygon)
             soil_in(isr) = t_soil
             tinfil(isr) = t_tinfil
