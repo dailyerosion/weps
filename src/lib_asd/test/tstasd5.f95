@@ -48,21 +48,23 @@
      write(0,*)
 
      write(UNIT=6,FMT="(8(A))",ADVANCE="YES") '     m_not', '     m_inf', &
-                                               '   initgmd', '   initgsd', &
-                                               '       gmd', '       gsd', &
-                                               ' gmd_prime', ' gsd_prime'
+          '   initgmd', '   initgsd', '       gmd', '       gsd', ' gmd_prime', ' gsd_prime'
 
      write(UNIT=6,FMT="(4(f10.4))",ADVANCE="NO") m_not, m_inf, initgmd, initgsd
 
-     gmd = ((initgmd *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (initgmd + m_inf)
-     gsd = ((initgsd *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (initgsd + m_inf)
+     gmd = ((initgmd * m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (initgmd + m_inf)
+     gsd = ((initgsd * m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (initgsd + m_inf)
 !		Mbar = (xGMD*m_inf+2.0*m_inf*m_not-m_not*m_not)/(m_inf+xGMD);
-     gmd_prime = (gmd - m_not) * (m_inf - m_not) / (m_inf-gmd)
-     gsd_prime = (gsd - m_not) * (m_inf - m_not) / (m_inf-gsd)
+     gmd_prime = (gmd - m_not) * (m_inf - m_not) / (m_inf - gmd)
+     gsd_prime = (gsd - m_not) * (m_inf - m_not) / (m_inf - gsd)
 
-     write(UNIT=6,FMT="(2(f10.4))",ADVANCE="NO") gmd, gsd
-     write(UNIT=6,FMT="(2(f10.4))",ADVANCE="YES") gmd_prime, gsd_prime
+     write(UNIT=6,FMT="(2(f10.4))",ADVANCE="YES") gmd, gsd, gmd_prime, gsd_prime
      write(0,*)
+
+     if (initgmd .ne. gmd_prime) then
+        write(6,*) "Error!!! ", "initgmd", initgmd, "!=", gmd_prime, "gmd_prime"
+        write(6,*)
+     end if
 
 ! Convert to mass fractions - massf()
      call asd2m(m_not, m_inf, initgmd, initgsd, 1, massf)
