@@ -1,23 +1,23 @@
-      Program tstasd5
+      Program tstasd6
 
 !      use soil_data_struct_defs, only: soil_def, allocate_soil
 
 !      include 'p1werm.inc'
 !      include 'm1subr.inc'
 !      include 's1layr.inc'
-!      include 's1agg.inc'
-!      include 'manage/asd.inc' !msieve = 26 (allocation for maximum number of sieves) and sdia(msieve) defined here
+!     include 's1agg.inc'
+      include 'manage/asd.inc' !msieve = 26 (allocation for maximum number of sieves) and sdia(msieve) defined here
 
-      integer          msieve
-      real             mingsd
+ !     integer          msieve
+ !     real             mingsd
 
-      parameter (msieve = 26)
-      parameter (mingsd = 2.0)
+!      parameter (msieve = 26)
+!      parameter (mingsd = 2.0)
 
-      integer          nsieve
+!      integer          nsieve
 
-      real    :: sdia(msieve)
-      real    :: mdia(msieve+1)
+!      real    :: sdia(msieve)
+!      real    :: mdia(msieve+1)
       real    :: total = 0.0
 
       integer :: sr,l,i
