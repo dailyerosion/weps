@@ -16,7 +16,7 @@
 
      integer :: sr,l,i
      real    :: massf(msieve+1,1) ! allocate space for the maximum number of sieve "cuts" (msieve+1)
-     real    :: gmd_prime, gsd_prime, gmd2_prime, gsd2_prime
+     real    :: gmd_prime, gsd_prime, gmd2_prime, gsd2_prime, gmdbad, gsdbad
 
      real    :: initgmd = 3.75 , initgsd = 39.55
      real    :: m_not = 0.005, m_inf = 1000.0
@@ -52,16 +52,13 @@
 
      write(UNIT=6,FMT="(4(f10.4))",ADVANCE="NO") m_not, m_inf, initgmd, initgsd
 
-!     gmd = ((initgmd * m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (initgmd + m_inf)
-!     gsd = ((initgsd * m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (initgsd + m_inf)
-!		Mbar = (xGMD*m_inf+2.0*m_inf*m_not-m_not*m_not)/(m_inf+xGMD);
     gmd = ((initgmd * m_inf) + (m_inf * m_not) - (m_not * m_not)) / (initgmd + m_inf - m_not)
     gsd = ((initgsd * m_inf) + (m_inf * m_not) - (m_not * m_not)) / (initgsd + m_inf - m_not)
 
      gmd_prime = (gmd - m_not) * (m_inf - m_not) / (m_inf - gmd)
      gsd_prime = (gsd - m_not) * (m_inf - m_not) / (m_inf - gsd)
 
-     write(UNIT=6,FMT="(2(f10.4))",ADVANCE="YES") gmd, gsd, gmd_prime, gsd_prime
+     write(UNIT=6,FMT="(6(f10.4))",ADVANCE="YES") gmd, gsd, gmd_prime, gsd_prime
      write(0,*)
 
      if (initgmd .ne. gmd_prime) then
@@ -88,8 +85,6 @@
 
 ! Convert to GMD, GSD again
      call m2asd(massf, 1, m_not, m_inf, gmd_prime, gsd_prime)
-!     gmd = ((gmd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf)
-!     gsd = ((gsd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf)
 
       gmd = ((gmd_prime *m_inf) + (m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf - m_not)
       gsd = ((gsd_prime *m_inf) + (m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf - m_not)
@@ -107,8 +102,6 @@
      write(0,*)
 ! Convert to GMD, GSD
      call m2asd(massf, 1, m_not, m_inf, gmd_prime, gsd_prime)
-!     gmd = ((gmd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf)
-!     gsd = ((gsd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf)
 
       gmd = ((gmd_prime *m_inf) + (m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf - m_not)
       gsd = ((gsd_prime *m_inf) + (m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf - m_not)

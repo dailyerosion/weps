@@ -1,65 +1,65 @@
 Program tstasd6
 
-      include 'manage/asd.inc' !msieve = 26 (allocation for maximum number of sieves) and sdia(msieve) defined here
+!      include 'manage/asd.inc' !msieve = 26 (allocation for maximum number of sieves) and sdia(msieve) defined here
 
- !     integer          msieve
- !     real             mingsd
+     include 'dummy.inc'  ! Dummy include file to allow cook to work correctly
 
-!      parameter (msieve = 26)
-!      parameter (mingsd = 2.0)
+     integer          msieve
+     real             mingsd
 
-!      integer          nsieve
+     parameter (msieve = 26)
+     parameter (mingsd = 2.0)
 
-!      real    :: sdia(msieve)
-!      real    :: mdia(msieve+1)
-      real    :: total = 0.0
+     integer          nsieve
 
-      integer :: sr,l,i
-      real    :: massf(msieve+1,1) ! allocate space for the maximum number of sieve "cuts" (msieve+1)
-      real    :: gmd_prime, gsd_prime, gmd2_prime, gsd2_prime
+     real    :: sdia(msieve)
+     real    :: mdia(msieve+1)
+     real    :: total = 0.0
 
-      real    :: initgmd = 3.75, initgsd = 39.55
-      real    :: m_not = 0.005, m_inf = 1000.0
+     integer :: sr,l,i
+     real    :: mnsize, mxsize
+     real    :: massf(msieve+1,1) ! allocate space for the maximum number of sieve "cuts" (msieve+1)
+     real    :: gmd_prime, gsd_prime, gmd2_prime, gsd2_prime
 
-      nsieve = msieve - 1 ! number of sieves set to 25 here therefore (nsieve+1) is the number of sieve "cuts" used
-      mnsize = 0.005
-      mxsize = 1000.0
+     real    :: initgmd = 3.75, initgsd = 39.55
+     real    :: m_not = 0.005, m_inf = 1000.0
+
+     nsieve = msieve - 1 ! number of sieves set to 25 here therefore (nsieve+1) is the number of sieve "cuts" used
+     mnsize = 0.005
+     mxsize = 1000.0
 
 
-!     compute geometric mean (lognormal) distribution of sieve sizes (dia.) for each sieve cut
-      write(0,*) "sieve sizes - dia. in (mm): sdia(i) values"
-      do i = 1, nsieve
-          sdia(i) = exp(log(mnsize) + i*(log(mxsize)-log(mnsize))/(nsieve+1))
-      end do
-      write(UNIT=0,FMT="(30(i8))",ADVANCE="YES") (i, i=1,nsieve)
-      write(UNIT=0,FMT="(30(f8.3))",ADVANCE="YES") (sdia(i), i=1, nsieve)
-      write(0,*)
+!    compute geometric mean (lognormal) distribution of sieve sizes (dia.) for each sieve cut
+     write(0,*) "sieve sizes - dia. in (mm): sdia(i) values"
+     do i = 1, nsieve
+        sdia(i) = exp(log(mnsize) + i*(log(mxsize)-log(mnsize))/(nsieve+1))
+     end do
+     write(UNIT=0,FMT="(30(i8))",ADVANCE="YES") (i, i=1,nsieve)
+     write(UNIT=0,FMT="(30(f8.3))",ADVANCE="YES") (sdia(i), i=1, nsieve)
+     write(0,*)
 
-!     compute geometric mean value - dia. size in (mm) for each sieve "cut"
-      write(0,*) "compute geometric mean value for each sieve cut"
-      mdia(1) = sqrt(mnsize*sdia(1))
-      do i = 2, nsieve
-           mdia(i) = sqrt(sdia(i)*sdia(i-1))
-      end do
-      mdia(nsieve+1) = sqrt(mxsize*sdia(nsieve))
+!    compute geometric mean value - dia. size in (mm) for each sieve "cut"
+     write(0,*) "compute geometric mean value for each sieve cut"
+     mdia(1) = sqrt(mnsize*sdia(1))
+     do i = 2, nsieve
+        mdia(i) = sqrt(sdia(i)*sdia(i-1))
+     end do
+     mdia(nsieve+1) = sqrt(mxsize*sdia(nsieve))
 
-      write(UNIT=0,FMT="(30(i8))",ADVANCE="YES") (i, i=1,nsieve+1)
-      write(UNIT=0,FMT="(30(f8.3))",ADVANCE="YES") (mdia(i), i=1, nsieve+1)
-      write(0,*)
+     write(UNIT=0,FMT="(30(i8))",ADVANCE="YES") (i, i=1,nsieve+1)
+     write(UNIT=0,FMT="(30(f8.3))",ADVANCE="YES") (mdia(i), i=1, nsieve+1)
+     write(0,*)
 
-      write(UNIT=6,FMT="(6(A))",ADVANCE="YES") '     m_not','     m_inf', &
+     write(UNIT=6,FMT="(6(A))",ADVANCE="YES") '     m_not','     m_inf', &
                    '   initgmd', '   initgsd', ' gmd_prime', ' gsd_prime'
 
-      write(UNIT=6,FMT="(4(f10.4))",ADVANCE="NO") m_not, m_inf, initgmd, initgsd
+     write(UNIT=6,FMT="(4(f10.4))",ADVANCE="NO") m_not, m_inf, initgmd, initgsd
 
-!          gmd = ((initgmd * m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (initgmd + m_inf)
-!          gsd = ((initgsd * m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (initgsd + m_inf)
+     gmd = ((initgmd * m_inf) + (m_inf * m_not) - (m_not * m_not)) / (initgmd + m_inf - m_not)
+     gsd = ((initgsd * m_inf) + (m_inf * m_not) - (m_not * m_not)) / (initgsd + m_inf - m_not)
 
-          gmd = ((initgmd * m_inf) + (m_inf * m_not) - (m_not * m_not)) / (initgmd + m_inf - m_not)
-          gsd = ((initgsd * m_inf) + (m_inf * m_not) - (m_not * m_not)) / (initgsd + m_inf - m_not)
-
-     write(UNIT=6,FMT="(2(f10.4))",ADVANCE="YES") gmd, gsd
-     write(0,*)
+    write(UNIT=6,FMT="(2(f10.4))",ADVANCE="YES") gmd, gsd
+    write(0,*)
 
 ! Convert to mass fractions - massf()
 
@@ -86,9 +86,6 @@ Program tstasd6
                   ' gmd_prime', ' gsd_prime', '       gmd', '       gsd' 
      write(UNIT=6,FMT="(4(f10.4))",ADVANCE="NO") m_not, m_inf, gmd_prime, gsd_prime
 
-!          gmd = ((gmd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf)
-!          gsd = ((gsd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf)
-
           gmd = ((gmd_prime *m_inf) + (m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf - m_not)
           gsd = ((gsd_prime *m_inf) + (m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf - m_not)
 
@@ -111,9 +108,6 @@ Program tstasd6
                   ' gmd_prime', ' gsd_prime', '       gmd', '       gsd' 
      write(UNIT=6,FMT="(4(f10.4))",ADVANCE="NO") m_not, m_inf, gmd_prime, gsd_prime
 
-!          gmd = ((gmd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf)
-!          gsd = ((gsd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf)
-
           gmd = ((gmd_prime *m_inf) + (m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf - m_not)
           gsd = ((gsd_prime *m_inf) + (m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf - m_not)
 
@@ -127,7 +121,7 @@ Program tstasd6
 
 subroutine asd2m1 (nsieve, sdiam, mfr, mnot, minf, gmd_p, gsd_p)
 
-integer parameter :: msieves = 26
+  INTEGER, PARAMETER :: msieves = 25   ! Maximum number of sieves that can be used
 
 integer :: nsieve
 real    :: sdiam(msieves)

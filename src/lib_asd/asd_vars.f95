@@ -1,8 +1,10 @@
 MODULE asd_vars
 
   IMPLICIT NONE
+  include "dummy.inc"
 
   INTEGER :: alloc_asd_vars            ! Allocate status return
+  INTEGER :: asd_flg = 0               ! Initialize asd debug flag level (higher "bit" numbers means more detailed info)
 
   INTEGER, PARAMETER :: msieves = 25   ! Maximum number of sieves that can be used
   INTEGER :: nsieves                   ! Number of sieves actually used
@@ -11,13 +13,13 @@ MODULE asd_vars
   REAL, DIMENSION(:), ALLOCATABLE :: trdia   ! Array holding the transformed sieve size diameters used to compute the sieve cuts (mm)
   REAL, DIMENSION(:), ALLOCATABLE :: gmdia   ! Array holding the geometric mean diameters of the sieve cuts (mm)
   REAL, DIMENSION(:), ALLOCATABLE :: mf      ! Array holding the actual number of sieve "cuts" (nsieve+1)
-  REAL :: mnsize                       ! Minimum sieve size to use for computing the lower sieve cut geometric mean diameter (mm)
-  REAL :: mxsize                       ! Maximum sieve size to use for computing the upper sieve cut geometric mean diameter (mm)
+  REAL :: mnsize = 0.005                     ! Minimum aggregate size to use for computing the lower sieve cut geometric mean diameter (mm)
+  REAL :: mxsize = 1000.0                    ! Maximum aggregate size to use for computing the upper sieve cut geometric mean diameter (mm)
 
   REAL :: m_not                        ! Minimum sized diameter aggregate (mm)
   REAL :: m_inf                        ! Maximum sized diamater aggregate (mm)
 
-  include "p1werm.inc"
+
 
 contains
   FUNCTION asd_init_vars(ns, minsize, maxsize, mnot, minf) result (ret_status)
@@ -32,20 +34,19 @@ contains
     INTEGER :: ret_status               ! Local status return
 
     INTEGER :: i                        ! local loop variable
-    INTEGER :: debug = 1                ! Initialize local "debug" variable
 
     INTRINSIC ASSOCIATED                ! use to verify status of pointers
 
     ret_status = 0                      ! initialize to zero (won't let me in definition)
 
     IF (ns > 0 .and. ns <= msieves) THEN
-      nsieves = ns                      ! Set the actual number of sieves to use to 25
+      nsieves = ns                      ! Set the actual number of sieves to use
     ELSE
       write(0,*) "Error: The number of sieves specified", ns, "is less than 1 or greater than ", msieves
       ret_status = ret_status + 1
       call EXIT (ret_status)
     END IF
-    IF (debug > 1) THEN
+    IF (btest(asd_flg, 0)) THEN
       write(0,*) "nsieves: ", nsieves
     END IF
 
@@ -89,7 +90,7 @@ contains
     DO i = 1, nsieves
           sdia(i) = exp(log(minsize) +  i*(log(maxsize)-log(minsize))/(nsieves+1))
     END DO
-    IF (debug > 0) THEN
+    IF (btest(asd_flg, 0)) THEN
       write(0,*) "sieve sizes - dia. in (mm): sdia(i) values"
       write(UNIT=0,FMT="(30(i8))",ADVANCE="YES") (i, i=1,nsieves)
       write(UNIT=0,FMT="(30(f8.3))",ADVANCE="YES") (sdia(i), i=1, nsieves)
@@ -113,7 +114,7 @@ contains
       ret_status = ret_status +1
       call EXIT (ret_status)
     END IF
-    IF (debug > 0) THEN
+    IF (btest(asd_flg, 0)) THEN
       write(UNIT=0,FMT="(A,f8.3,A,f8.3)",ADVANCE="YES") "m_not: ", m_not, " m_inf: ", m_inf
     END IF
 
@@ -123,22 +124,23 @@ contains
       gmdia(i) = sqrt(sdia(i)*sdia(i-1))
     END DO
     gmdia(nsieves+1) = sqrt(maxsize*sdia(nsieves))
-    IF (debug > 0) THEN
+    IF (btest(asd_flg, 0)) THEN
       write(0,*) "compute geometric mean value for each sieve cut"
       write(UNIT=0,FMT="(30(i8))",ADVANCE="YES") (i, i=1,nsieves+1)
       write(UNIT=0,FMT="(30(f8.3))",ADVANCE="YES") (gmdia(i), i=1, nsieves+1)
       write(0,*)
     END IF
 
-    write(0,*) "asd_init_vars() ret_status: ", ret_status
+    !write(0,*) "asd_init_vars() ret_status: ", ret_status
    END FUNCTION asd_init_vars
 !-----------------------------------------------------------------------------------------------------------------------------------------
   ! Compute the mass fractions in each sieve cut when given gmdx,gsdx,minf,mnot values
   SUBROUTINE asd2mf (gmdx, gsdx, mnot, minf, mfr)
 
-    REAL :: gmdx, gsdx, mnot, minf, mfr(*)
+    REAL, INTENT (IN) :: gmdx, gsdx
+    REAL, INTENT (IN) :: mnot, minf
+    REAL, INTENT (OUT):: mfr(*)
 
-    INTEGER :: debug = 1                ! Initialize local "debug" variable
     INTEGER :: i                        ! local loop variable
     REAL :: this, prev                  ! local temporary probability variables
 
@@ -169,7 +171,7 @@ contains
       ! Compute mass fraction between prev and this dia
       mfr(i) = prev - this
       prev = this
-!      IF (debug > 0) THEN
+!      IF (btest(asd_flg, 0)) THEN
 !        write(0,*) 'asd2mf:',i,sdia(i),this,mfr(i)
 !      END IF
 
@@ -179,7 +181,7 @@ contains
       ELSE
         prev = this
       END IF
-!      IF (debug > 0) THEN
+!      IF (btest(asd_flg, 0)) THEN
 !        write(0,*) 'asd2mf: mfr(',i,')',mfr(i)
 !      END IF
     END DO
@@ -191,12 +193,57 @@ contains
       mfr(i) = 0.0
     END DO
 
-    IF (debug > 0) THEN
-     write(0,*)'asd2mf: mfr(nsieves+1)'
+    IF (btest(asd_flg, 0)) THEN
+     write(UNIT=0,FMT="(A,4(f12.3))") 'asd2mf: mfr(nsieves+1)', gmdx, gsdx, mnot, minf
      write(UNIT=0,FMT="(30(i8))",ADVANCE="YES") (i, i=1,nsieves+1) 
      write(UNIT=0,FMT="(30(f8.3))",ADVANCE="YES") (mfr(i), i=1, nsieves+1)
     END IF
 
   END SUBROUTINE asd2mf
+!-----------------------------------------------------------------------------------------------------------------------------------------
+  ! Compute the gmdx, gsdx when given the number of sieve cuts, the mass fractions in each sieve cut, and minf andmnot values
+  SUBROUTINE mf2asd (gmdx, gsdx, mnot, minf, mfr)
 
+    REAL, INTENT (OUT):: gmdx, gsdx
+    REAL, INTENT (IN) :: mnot, minf
+    REAL, INTENT (IN) ::mfr(*)
+
+!   initialize accumulators
+    REAL :: alpha = 0.0
+    REAL :: beta = 0.0
+    REAL :: tmd(nsieves)
+    INTEGER :: istart, istop, i
+    INTEGER :: sdia_start, sdia_istop, sdia_temp
+
+    ! Initialize local variables
+    istart = 1
+    istop = nsieves + 1
+
+    ! do transformations for "modified" log-normal cases
+    DO i= istart, istop
+       trdia(i) = (gmdia(i)-mnot)*(minf-mnot)/(minf-gmdia(i))
+
+       ! now compute the log of the gmd dia
+       trdia(i) = log(trdia(i))
+
+       ! sum diameters  & their squares, over all aggregate sizes
+       alpha = alpha + (mfr(i)*trdia(i))
+       beta = beta + (mfr(i)*trdia(i)*trdia(i))
+     END DO
+
+     ! compute geometric mean and standard deviation
+     gmdx = exp(alpha)
+!     IF ( beta - alpha*alpha .le. 0.0 ) THEN
+!        gsdx = mingsd
+!     ELSE 
+!        gsdx = max(mingsd,exp(sqrt(beta-alpha*alpha)))
+!     END IF
+
+     gsdx = exp(sqrt(beta-alpha*alpha))
+
+     ! restore modified geometric mean bin diameters
+!     sdia(istart) = sdia_istart
+!     sdia(istop) = sdia_istop
+
+  END SUBROUTINE mf2asd
 END MODULE asd_vars
