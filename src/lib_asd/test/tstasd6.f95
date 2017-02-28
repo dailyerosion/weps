@@ -1,11 +1,5 @@
-      Program tstasd6
+Program tstasd6
 
-!      use soil_data_struct_defs, only: soil_def, allocate_soil
-
-!      include 'p1werm.inc'
-!      include 'm1subr.inc'
-!      include 's1layr.inc'
-!     include 's1agg.inc'
       include 'manage/asd.inc' !msieve = 26 (allocation for maximum number of sieves) and sdia(msieve) defined here
 
  !     integer          msieve
@@ -58,8 +52,11 @@
 
       write(UNIT=6,FMT="(4(f10.4))",ADVANCE="NO") m_not, m_inf, initgmd, initgsd
 
-          gmd = ((initgmd *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (initgmd + m_inf)
-          gsd = ((initgsd *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (initgsd + m_inf)
+!          gmd = ((initgmd * m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (initgmd + m_inf)
+!          gsd = ((initgsd * m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (initgsd + m_inf)
+
+          gmd = ((initgmd * m_inf) + (m_inf * m_not) - (m_not * m_not)) / (initgmd + m_inf - m_not)
+          gsd = ((initgsd * m_inf) + (m_inf * m_not) - (m_not * m_not)) / (initgsd + m_inf - m_not)
 
      write(UNIT=6,FMT="(2(f10.4))",ADVANCE="YES") gmd, gsd
      write(0,*)
@@ -89,8 +86,11 @@
                   ' gmd_prime', ' gsd_prime', '       gmd', '       gsd' 
      write(UNIT=6,FMT="(4(f10.4))",ADVANCE="NO") m_not, m_inf, gmd_prime, gsd_prime
 
-          gmd = ((gmd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf)
-          gsd = ((gsd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf)
+!          gmd = ((gmd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf)
+!          gsd = ((gsd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf)
+
+          gmd = ((gmd_prime *m_inf) + (m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf - m_not)
+          gsd = ((gsd_prime *m_inf) + (m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf - m_not)
 
      write(UNIT=6,FMT="(2(f10.4))",ADVANCE="YES") gmd, gsd
      write(0,*)
@@ -111,8 +111,11 @@
                   ' gmd_prime', ' gsd_prime', '       gmd', '       gsd' 
      write(UNIT=6,FMT="(4(f10.4))",ADVANCE="NO") m_not, m_inf, gmd_prime, gsd_prime
 
-          gmd = ((gmd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf)
-          gsd = ((gsd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf)
+!          gmd = ((gmd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf)
+!          gsd = ((gsd_prime *m_inf) + (2.0 * m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf)
+
+          gmd = ((gmd_prime *m_inf) + (m_inf * m_not) - (m_not * m_not)) / (gmd_prime + m_inf - m_not)
+          gsd = ((gsd_prime *m_inf) + (m_inf * m_not) - (m_not * m_not)) / (gsd_prime + m_inf - m_not)
 
      write(UNIT=6,FMT="(2(f10.4))",ADVANCE="YES") gmd, gsd
      write(0,*)
@@ -122,53 +125,55 @@
       end program
 
 
-subroutine m2asd1 (msieve, nsieve, sdia, mf, mnot, minf, gmd_p, gsd_p)
+subroutine asd2m1 (nsieve, sdiam, mfr, mnot, minf, gmd_p, gsd_p)
 
-integer :: msieve, nsieve
-real :: sdia(msieve)
-real :: mf(msieve+1)
-real :: mnot, minf, gmd_p, gsd_p
+integer parameter :: msieves = 26
 
-real   ::  d(msieve)
-real   ::  lngmd, lngsd
-real   ::  prev, this
-integer::  i, j
+integer :: nsieve
+real    :: sdiam(msieves)
+real    :: mfr(msieves+1)
+real    :: mnot, minf, gmd_p, gsd_p
+
+real    ::  d(msieves)
+real    ::  lngmdp, lngsdp
+real    ::  prev, this
+integer ::  i, j
 
     do i = 1, nsieve
-          d(i) = (sdia(i)-mnot)*(minf-mnot)/(minf-sdia(i))
+          d(i) = (sdiam(i)-mnot)*(minf-mnot)/(minf-sdiam(i))
     end do
 
-   lngmd= log(gmd_p)
-   lngsd= sqrt(2.0) * log(gsd_p)
+   lngmdp= log(gmd_p)
+   lngsdp= sqrt(2.0) * log(gsd_p)
    prev= 1.0
 
 ! compute each dia. cumulative probability
    do i = 1, nsieve
-      if (sdia(i) .le. mnot) then
+      if (sdiam(i) .le. mnot) then
          this = 1.0
-         else if (sdia(i) .lt. minf) then
-           this = 0.5 -0.5*erf((alog(d(i)) - lngmd) / lngsd)
+         else if (sdiam(i) .lt. minf) then
+           this = 0.5 -0.5*erf((alog(d(i)) - lngmdp) / lngsdp)
          else
            this = 0.0
       end if
 !  compute mass fraction between prev and this dia
-      mf(i) = prev - this
+      mfr(i) = prev - this
       prev = this
-!     write(*,*) 'asd2m:',i,sdia(i),this,mf(i,j)
+!     write(*,*) 'asd2m:',i,sdiam(i),this,mfr(i,j)
 
 !     if roundoff errors or otherwise results in negative
 !     mass fraction then set to zero mass
-      if (mf(i) .lt. 0.0) then
-         mf(i) = 0.0
+      if (mfr(i) .lt. 0.0) then
+         mfr(i) = 0.0
       else
          prev = this
       endif
-!     if(j.eq.4) write(*,*) 'asd2m: mf(',i,j,')',mf(i,j)
+!     if(j.eq.4) write(*,*) 'asd2m: mfr(',i,j,')',mfr(i,j)
   end do
 
 ! get mass fraction for upper-most sieve cut
-  mf(nsieve+1) = prev
-! if( j.eq.1 )write(*,*)'asd2m: mf(',nsieve+1,j,')',mf(nsieve+1,j)
+  mfr(nsieve+1) = prev
+! if( j.eq.1 )write(*,*)'asd2m: mfr(',nsieve+1,j,')',mfr(nsieve+1,j)
 
 return
-end
+end subroutine asd2m1
