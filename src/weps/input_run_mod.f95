@@ -18,7 +18,8 @@ contains
 !     + + + GLOBAL COMMON BLOCKS + + +
       use soil_data_struct_defs, only: soil_def
       use flib_sax
-      use input_run_xml_mod
+      use input_run_xml_mod, only: run_tag, runFileData, init_run_xml
+      use input_run_xml_mod, only: begin_element_handler, end_element_handler, pcdata_chunk_handler
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 

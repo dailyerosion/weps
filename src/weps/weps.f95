@@ -715,7 +715,7 @@
 
          ! settings for creation of erosion submodel detailed outputs
          mksaeinp%maxday = ljday - ijday + 1  ! set maximum daysim possible for saeinp file name extension
-         mksaeout%maxday = ljday - ijday + 1  ! set maximum daysim possible for saeinp file name extension
+         mksaeout%maxday = ljday - ijday + 1  ! set maximum daysim possible for saeout file name extension
          if( saeinp_all .gt. 0 ) then
             ! creating many SWEEP input files
             mksaeinp%fullpath = trim(rootp)//'sae_in_out_files/'

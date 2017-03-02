@@ -31,17 +31,7 @@ module input_run_xml_mod
   use barriers_mod, only: create_barrier, barrier, barseas
   use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate
 
-  private
-
-  interface read_param
-    module procedure read_param_real_1
-    module procedure read_param_real_2
-    module procedure read_param_int_1
-    module procedure read_param_int_2
-    module procedure read_param_int_3
-  end interface
-
-  integer, parameter, public   :: MAX_NAME_LEN  = 40
+  integer, parameter :: MAX_NAME_LEN  = 40
 
   type :: tag_def
     character(len=MAX_NAME_LEN)  :: name   ! tag name
@@ -49,9 +39,17 @@ module input_run_xml_mod
     logical :: acquired                    ! .true. if tag has been read
     logical :: in_tag                      ! .true. if inside tag now
   end type tag_def
-  
+
   type(tag_def), dimension(:), allocatable :: run_tag
   integer :: max_tags
+  
+  interface read_param
+    module procedure read_param_real_1
+    module procedure read_param_real_2
+    module procedure read_param_int_1
+    module procedure read_param_int_2
+    module procedure read_param_int_3
+  end interface
 
   integer, parameter :: SCI_AccNo = 1
   integer, parameter :: SCI_Account = 2
@@ -152,9 +150,6 @@ module input_run_xml_mod
   type(barrier_params) :: t_params
   type(barrier_climate) :: t_climate
   logical, dimension(2) :: runfile_complete
-
-  public :: begin_element_handler, end_element_handler, init_run_xml, pcdata_chunk_handler
-  public :: runFileData, run_tag
 
 contains
 
