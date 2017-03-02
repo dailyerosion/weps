@@ -40,7 +40,7 @@ module sae_in_out_mod
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer, intent(inout) :: luo_saeinp      ! output unit number
-      type(subregionsurfacestate), dimension(:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(subregionsurfacestate), dimension(0:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
 
 !     +++ LOCAL VARIABLES +++
       integer k,l, sr, ip

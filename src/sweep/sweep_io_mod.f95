@@ -18,7 +18,7 @@ module sweep_io_mod
    parameter (xchl = 12)
 
    integer :: mrcl       ! length of line to be read in with getline
-   parameter (mrcl = 512)
+   parameter (mrcl = 1024)
 
    public :: erodin
    public :: erodout
@@ -194,7 +194,7 @@ module sweep_io_mod
 
       ! create data array to hold input and derived values for each subregion
       sum_stat = 0
-      allocate(subrsurf(nsubr), stat=alloc_stat)
+      allocate(subrsurf(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       ! create subregion polygon array
       allocate(subr_poly(nsubr), stat=alloc_stat)
@@ -681,7 +681,7 @@ module sweep_io_mod
 
       ! create data array to hold input and derived values for each subregion
       sum_stat = 0
-      allocate(subrsurf(nsubr), stat=alloc_stat)
+      allocate(subrsurf(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       ! create subregion polygon array
       allocate(subr_poly(nsubr), stat=alloc_stat)
@@ -1072,7 +1072,6 @@ module sweep_io_mod
 
       use file_io_mod, only: fopenk
       use erosion_data_struct_defs, only: subregionsurfacestate
-      use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
       use grid_mod, only: amxsim
 
 

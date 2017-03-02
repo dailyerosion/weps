@@ -407,8 +407,8 @@
          call erodin(i_unit, o_unit, force_debug_flag, hagen_plot_flag, subrsurf)  !Doesn't echo input to file
       endif
 
-      ! Set based on allocated size of subrsurf
-      nsubr = size(subrsurf)
+      ! Set based on allocated size of subrsurf (accounting for 0 based index)
+      nsubr = size(subrsurf) - 1
 
 ! Check for invalid commandline input values which are dependent
 ! upon erodin input values.
