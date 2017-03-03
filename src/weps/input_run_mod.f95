@@ -28,12 +28,9 @@ contains
       include 'command.inc'
 
 !     + + + LOCAL VARIABLES + + +
-      logical :: fexist
-      type(xml_t) :: fxml
-      integer :: iostat
-
-!     + + + LOCAL DEFINITIONS + + +
-!   fexist    - flag used to indicate result of file existence
+      logical :: fexist     ! flag used to indicate result of file existence
+      type(xml_t) :: fxml   ! xml file handle structure
+      integer :: iostat     ! input/output status
 
 !     + + + END SPECIFICATIONS + + +
 

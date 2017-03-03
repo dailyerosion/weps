@@ -336,7 +336,7 @@ contains
     run_tag(29)%name = "SCI_ErosionSubmodelOutput"
     run_tag(30)%name = "SCI_height"
     run_tag(31)%name = "SCI_hydro"
-    run_tag(32)%name = "index"
+    run_tag(32)%name = "SCI_index"
     run_tag(33)%name = "SCI_LatLong"
     run_tag(34)%name = "SCI_ManageFile"
     run_tag(35)%name = "SCI_man"
