@@ -30,7 +30,7 @@ INTEGER :: result
 
     call mf2asd (gmdp, gsdp, initmnot, initminf, mf)
 
-    write(0,*) 'gmdp gsdp', gmdp, gsdp
+!    write(0,*) 'gmdp gsdp', gmdp, gsdp
 
 STOP
 END PROGRAM tstasd7
