@@ -2436,8 +2436,9 @@
 
         write (UNIT=0,FMT="(A)",ADVANCE="NO") '//Before set_asd process// '
         write(0,*) 'no. of soil layers to modify/total are: ', tlayer, soil%nslay
+        write(UNIT=0,FMT="(A3,4(A10))") 'lay', 'GMDx', 'GSDx', 'm_not', 'm_inf'
         do i=1, tlayer
-          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+          write (UNIT=0,FMT="(i3,4(f10.4))",ADVANCE="YES")                                        &
       &       i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
         end do
         write(0,*) ""
