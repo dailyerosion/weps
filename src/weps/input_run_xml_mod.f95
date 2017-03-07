@@ -390,10 +390,6 @@ contains
 
       else if (run_tag(SCI_LatLong)%in_tag) then
         call read_param(SCI_LatLong, param_value, amalat, amalon)
-        if (read_stat .gt. 0) then
-          write(*,*) 'Error reading ', run_tag(SCI_LatLong)%name, ' Value: ', param_value
-          call exit(1)
-        end if
         if ((amalat .lt. -90.) .or. (amalat .gt. 90.)) then
            write (*,*)'ERROR: latitude is not between -90. and 90. degrees. Please check run file'
            call exit(1)
@@ -568,11 +564,11 @@ contains
         end if
 
       else if (run_tag(SCI_XGrid)%in_tag) then
-        call read_param(SCI_XGrid, param_value, xgdpt, ygdpt)
+        call read_param(SCI_XGrid, param_value, xgdpt)
         run_tag(SCI_XGrid)%acquired = .true.
 
       else if (run_tag(SCI_YGrid)%in_tag) then
-        call read_param(SCI_YGrid, param_value, xgdpt, ygdpt)
+        call read_param(SCI_YGrid, param_value, ygdpt)
         run_tag(SCI_YGrid)%acquired = .true.
 
       else if (run_tag(SCI_AccNo)%in_tag) then
@@ -649,7 +645,6 @@ contains
         allocate(am0dfl(nsubr), stat=alloc_stat)
         sum_stat = sum_stat + alloc_stat
         ! create arrays for submodel debug flags
-        sum_stat = 0
         allocate(am0hdb(nsubr), stat=alloc_stat)
         sum_stat = sum_stat + alloc_stat
         allocate(am0sdb(nsubr), stat=alloc_stat)
@@ -1028,10 +1023,10 @@ contains
               ipol = ipol + 1
               run_tag(SCI_index)%acquired = .true.
             else if (run_tag(SCI_x)%in_tag) then
-              call read_param(SCI_EndTranBase, param_value, t_point%x)
+              call read_param(SCI_x, param_value, t_point%x)
               run_tag(SCI_x)%acquired = .true.
             else if (run_tag(SCI_y)%in_tag) then
-              call read_param(SCI_EndTranBase, param_value, t_point%y)
+              call read_param(SCI_y, param_value, t_point%y)
               run_tag(SCI_y)%acquired = .true.
             end if
             if(     run_tag(SCI_index)%acquired &

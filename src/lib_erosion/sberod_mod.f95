@@ -15,7 +15,7 @@ module sberod_mod
 !     To update the threshold friction velocity as the loose material
 !         depletes upwind and increases downwind
 
-      use erosion_data_struct_defs
+      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate
       use grid_mod, only: i1, i2, i3, i4, i5, i6, sin_awa, cos_awa, tan_awa, imax, jmax, ix, jy
       use timer_mod, only: timer, TIMSBEROD, TIMSBQOUT, TIMSTART, TIMSTOP
       use process_mod, only: sbqout

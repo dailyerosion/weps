@@ -171,6 +171,8 @@ module erosion_data_struct_defs
                               ! 15 - all bits set, full output enabled
  ! end type simulationregionvalues
 
+     type(subregionsurfacestate), dimension(:), allocatable :: subrsurf   ! subregion surface state needed by erosion
+
 contains
 
   function create_cellsurfacestate(xdim, ydim) result(cellstate)

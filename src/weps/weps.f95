@@ -58,7 +58,7 @@
       use manage_data_struct_defs, only: lastoper, tinfil
       use erosion_mod, only: erosion, erodinit
       use erosion_data_struct_defs, only: create_subregionsurfacestate, subregionsurfacestate, threshold, cellsurfacestate, &
-                                          erod_interval, awudmx, am0eif, am0efl
+                                          erod_interval, awudmx, am0eif, am0efl, subrsurf
       use wind_mod, only: anemometer_init
       use grid_mod, only: sbgrid, sbigrd, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
       use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
@@ -115,7 +115,6 @@
       type(decomp_factors), dimension(:), allocatable :: decompfac  ! structure with decompisition factors
       type(mandate_array), dimension(:), allocatable :: mandatbs    ! structure with management dates, operation names and crops
 
-      type(subregionsurfacestate), dimension(:), allocatable :: subrsurf   ! subregion surface state needed by erosion
       type(threshold), dimension(:), allocatable :: noerod                 ! report values to show which factors prevented erosion
       type(cellsurfacestate), dimension(:,:), allocatable :: cellstate     ! grid cell state values (allocate in erodinit)
 

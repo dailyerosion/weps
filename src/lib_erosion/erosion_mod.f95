@@ -19,7 +19,9 @@ module erosion_mod
 !     - updates soil  variables changed by erosion.
 
       use file_io_mod, only: fopenk, makenamnum, luo_erod, luo_egrd, luo_emit, luo_sgrd
-      use erosion_data_struct_defs
+      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, threshold &
+                                        , ntstep, erod_interval, anemht, awzzo &
+                                        , wzoflg, awadir, awudmx, subday, am0efl
       use sae_in_out_mod, only: mksaeinp, mksaeout, saeinp, daily_erodout, sb1out, sb2out, sbemit
       use p1unconv_mod, only: SEC_PER_DAY, degtorad
       use timer_mod, only: timer, TIMEROS, TIMSBEROD, TIMSBWIND, TIMSTART, TIMSTOP
