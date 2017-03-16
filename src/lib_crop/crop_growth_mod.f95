@@ -540,7 +540,7 @@ module crop_growth_mod
           hui = 0.0
       else
           ! previous day heat unit index
-          huiy = bcthucum / bcthum
+          huiy = min(1.0, bcthucum / bcthum)
           huirty = bctrthucum / bcthum
           ! check for growth completion
           if( huiy .lt. 1.0 ) then
@@ -566,7 +566,7 @@ module crop_growth_mod
               ! in growth.for
               ! bctrthucum = min(bctrthucum, bcthum)
               ! calculate heat unit index
-              hui = bcthucum / bcthum
+              hui = min(1.0, bcthucum / bcthum)
               huirt = bctrthucum / bcthum
           end if
       endif
@@ -1044,6 +1044,11 @@ module crop_growth_mod
                if (d2(j)%day.eq.hdate) ephu = d2(j)%cumheatunits
             end do
             phu = ephu - bphu
+         end if
+         if (phu .le. 10*(bctopt-bctmin)) then
+            write(*,"(a,i3,a)") 'Warning: Crop will not grow in the',   &
+                                 dtm, &
+                                 ' days specified. Insufficient heat units accumulate. Check planting date.'
          end if
       end if
 
