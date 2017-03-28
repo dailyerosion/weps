@@ -185,7 +185,7 @@
           write (luoplt(sr), 2086, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
         end if
 
-        if( noerod%wust .gt. 0.0 ) then
+        if( noerod%wust .gt. tiny(noerod%wust) ) then
           ! ratios of friction velocity threshold outputs
           write (luoplt(sr), 2086, ADVANCE="NO")                            &
      &       noerod%bare/noerod%wust, noerod%flat_cov/noerod%wust,      &
