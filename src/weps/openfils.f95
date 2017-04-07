@@ -329,14 +329,21 @@
          end do
       endif
 
-      if (maxval(am0tfl) .eq. 1) then
+      if (maxval(am0tfl) .ge. 1) then
          allocate( luomanage(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luomanage array'
          end if
+        allocate( luoasd(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luoasd array'
+         end if
          do idx = 1, nsubr
-            if (am0tfl(idx) .eq. 1) then
+            if (BTEST(am0tfl(idx),0)) then
                call fopenk (luomanage(idx), trim(rootp) // trim(subr_text(idx)) // 'manage.out', 'unknown')
+            end if
+            if (BTEST(am0tfl(idx),0)) then
+               call fopenk (luoasd(idx), trim(rootp) // trim(subr_text(idx)) // 'asd.out', 'unknown')
             end if
          end do
       end if
@@ -369,6 +376,7 @@
             end if
          end do
       end if
+write(0,*) 'am0tdb is: ', am0tdb
       if (maxval(am0tdb) .eq. 1) then
          allocate( luotdb(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
@@ -380,6 +388,7 @@
             end if
          end do
       end if
+
       if (maxval(am0cdb) .eq. 1) then
          allocate( luocdb(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then

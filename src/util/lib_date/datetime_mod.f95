@@ -48,6 +48,7 @@ module datetime_mod
   end interface get_simdate
 
   public :: get_simdate
+  public :: get_simdate_jday
   public :: get_simdate_doy
   public :: get_simdate_year
 
@@ -128,6 +129,11 @@ contains
       call get_time_jday_doy( sim_date, julian_day, day_of_year )
     end subroutine get_simdate_jday_doy
 
+    function get_simdate_jday() result( julian_day )
+      integer :: julian_day
+      julian_day = get_time_jday( sim_date )
+    end function get_simdate_jday
+
     function get_simdate_doy() result( day_of_year )
       integer :: day_of_year
       day_of_year = get_time_doy( sim_date )
@@ -165,6 +171,12 @@ contains
       julian_day = datetime%julian_day
       day_of_year = datetime%day_of_year
     end subroutine get_time_jday_doy
+
+   function get_time_jday( datetime ) result( julian_day )
+      type(date_time_numbers_strings), intent(in) :: datetime
+      integer :: julian_day
+      julian_day = datetime%julian_day
+    end function get_time_jday
 
     function get_time_doy( datetime ) result( day_of_year )
       type(date_time_numbers_strings), intent(in) :: datetime

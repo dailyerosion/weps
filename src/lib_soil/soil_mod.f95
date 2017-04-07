@@ -205,9 +205,9 @@ module soil_mod
      &  bhtsmn, bhtmx0(1,isr), bhtsmx, &
      &  soil%aslmin, soil%aslmax, &
      &  soil%aslagm, &
-     &  soil%as0ags, soil%aslagx, soil%asdblk, &
+     &  soil%as0ags, soil%aslagn, soil%aslagx, soil%asdblk, &
      &  soil%aszlyt, soil%asdagd, bslay, &
-     &  soil%asdsblk, bhzinf, bhzwid, trigger)
+     &  soil%asdsblk, bhzinf, bhzwid, trigger, isr)
 
         ! update surface properties based on surface layer properties
         ! crust stability

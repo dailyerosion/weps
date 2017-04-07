@@ -37,7 +37,6 @@
          if (am0tdb(idx) .eq. 1) close(luotdb(idx))
          if (am0cdb(idx) .eq. 1) close(luocdb(idx))
          if (am0ddb(idx) .eq. 1) close(luoddb(idx))
-         if (am0tfl(idx) .eq. 1) close(luomanage(idx))
       end do
 
       ! files opened in cmdline.for
@@ -109,6 +108,12 @@
          if ((am0hfl(idx) .eq. 4) .or. (am0hfl(idx) .eq. 5) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 7)) then
             close(luotempsoil(idx))
          end if
+      end do
+
+      ! detailed output files for management (& asd)
+      do idx = 1, nsubr
+         if (BTEST(am0tfl(idx),0)) close(luomanage(idx)) ! manage.out
+         if (BTEST(am0tfl(idx),0)) close(luoasd(idx))    ! asd.out - LEW
       end do
 
       ! files for outputing the crop and decomp biomass variables - LEW

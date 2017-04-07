@@ -7,17 +7,21 @@ module soil_processes_mod
 
   contains
 
-    subroutine updlay(daysim, szlyd,                                  &
-     &  bhrwc0, bhrwc, bhrwcdmx,                                        &
-     &  bseagmx, bseagmn, bseags,                                       &
-     &  bhrwcw, bhrwcs,                                         &
-     &  bhtsmn, bhtmx0, bhtsmx,                                         &
-     &  bslmin, bslmax,                                          &
-     &  bslagm,                                                         &
-     &  bs0ags, bslagx, bsdblk,                                         &
-     &  bszlyt, bsdagd, bslay,                                          &
-     &  bsdsblk,                                               &
-     &  bhzinf, bhzwid, trigger)
+    subroutine updlay(daysim, szlyd,                                    &
+       bhrwc0, bhrwc, bhrwcdmx,                                        &
+       bseagmx, bseagmn, bseags,                                       &
+       bhrwcw, bhrwcs,                                                 &
+       bhtsmn, bhtmx0, bhtsmx,                                         &
+       bslmin, bslmax,                                                 &
+       bslagm,                                                         &
+       bs0ags, bslagn, bslagx, bsdblk,                                 &
+       bszlyt, bsdagd, bslay,                                          &
+       bsdsblk,                                                        &
+       bhzinf, bhzwid, trigger, sr)
+
+      use file_io_mod, only: luoasd                       ! Only for printing out ASD results
+      use manage_data_struct_defs, only: am0tfl, asdhflag ! Only for printing out ASD results
+      use datetime_mod, only: get_simdate, get_simdate_jday, get_simdate_doy
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -32,19 +36,20 @@ module soil_processes_mod
       real  bhtsmn(*), bhtmx0(*), bhtsmx(*)
       real bslmin(*), bslmax(*)
       real bslagm(*)
-      real bs0ags(*), bslagx(*)
+      real bs0ags(*), bslagn(*), bslagx(*)
       real bsdblk(*), bhzinf
       real bszlyt(*), bsdagd(*)
       real bsdsblk(*)
       real bhzwid
 
-      integer bslay, trigger(bslay)
+      integer bslay, trigger(bslay), sr
+
 
 !     + + + LOCAL VARIABLES + + + 
       real k4f, k4fs, k4fd, k4td, k4w,k4d
       parameter(k4f=1.4, k4fs=4.25, k4fd=5.08, k4w=1)
       real se0, se1
-      integer ldx
+      integer ldx, cd, cm, cy
 
 !     + + + LOCAL DEFINITIONS + + +
 !   k4f  - water migration & freezing expansion coef. for agg. stab.
@@ -77,9 +82,30 @@ module soil_processes_mod
           se0,se1,  trigger(ldx),  &
           k4f, k4fs, k4fd, k4td, k4w, k4d)
 
+!+++++++++++++++++++++++++++++++++++++++++++++++
+         call get_simdate(cd, cm, cy)
+         if (BTEST(am0tfl(sr),0) .and. (asdhflag(sr) .eq. 1) .and. (ldx .eq. 1)) then
+           write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
+           write (UNIT=luoasd(sr),FMT="(i10,5(f10.4),A)",ADVANCE="YES")   &
+             1, bszlyt(1),                                               &
+             bslagm(1), bs0ags(1), bslagn(1), bslagx(1),  &
+             ' Before soil values'
+         end if
+!+++++++++++++++++++++++++++++++++++++++++++++++
+
          call asd(bslagm(ldx), bslmin(ldx), &
           bslmax(ldx), bhtsmx(ldx), bhtmx0(ldx), bs0ags(ldx), &
           bslagx(ldx), se0, se1)
+
+!+++++++++++++++++++++++++++++++++++++++++++++++
+         if (BTEST(am0tfl(sr),0) .and. (asdhflag(sr) .eq. 1) .and. (ldx .eq. 1)) then
+           write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
+           write (UNIT=luoasd(sr),FMT="(i10,5(f10.4),A)",ADVANCE="YES")   &
+             1, bszlyt(1),                                               &
+             bslagm(1), bs0ags(1), bslagn(1), bslagx(1),  &
+             ' After soil values'
+         end if
+!+++++++++++++++++++++++++++++++++++++++++++++++
 
          call den(bsdblk(ldx), bsdsblk(ldx), &
           bszlyt(ldx), bsdagd(ldx), &
@@ -288,6 +314,7 @@ module soil_processes_mod
       return      
     end subroutine aggsta
 
+!------------------------------------------------------------------------
     subroutine asd( cslagm, cslmin, cslmax, chtsmx, chtmx0, cs0ags,   &
      &  cslagx, se0, se1)
 
@@ -406,7 +433,7 @@ module soil_processes_mod
 
   100 return
     end subroutine asd
-
+!------------------------------------------------------------------------
     subroutine den(                                                   &
      &  csdblk, csdsblk, cszlyt, csdagd,                       &
      &  bhzinf, chzwid, trigger)

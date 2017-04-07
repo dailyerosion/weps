@@ -65,6 +65,9 @@ module file_io_mod
     integer, dimension(:), allocatable :: luoharvest_calib ! write harvest_calib.out
     integer, dimension(:), allocatable :: luoharvest_calib_parm ! write harvest_calib_param.out
 
+    integer, dimension(:), allocatable :: luoasd         ! write asd.out  - For asd analysis - LEW
+
+
 !   legacy debugging output files (when "debug" flags set)
     integer, dimension(:), allocatable :: luohdb          ! write hdbug.out
     integer, dimension(:), allocatable :: luosdb          ! write sdbug.out

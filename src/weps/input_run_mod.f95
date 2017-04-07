@@ -93,6 +93,7 @@ contains
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
       use climate_input_mod, only: amalat, amalon, amzele
+      use manage_data_struct_defs, only: asdhflag
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
@@ -119,6 +120,7 @@ contains
       integer    :: sum_stat, alloc_stat
       character*80     awwisn   ! made local since not used anywhere else
       integer, parameter :: max_simyear = 100000  ! value used to test simulation year input range
+      integer    :: i
 
 !     + + + Local Variable Definitions + + +
 !     isr - subregion index counter
@@ -386,6 +388,17 @@ contains
                write(*,*) 'ERROR: memory alloc., debug output flags'
             end if
 
+            ! create and initialize array for submodel output flags
+            sum_stat = 0
+            allocate(asdhflag(nsubr), stat=alloc_stat)
+            sum_stat = sum_stat + alloc_stat
+            if( sum_stat .gt. 0 ) then
+               write(*,*) 'ERROR: memory alloc., asd header print flags'
+            end if
+            do i=1, nsubr
+               asdhflag(i) = 0
+            end do
+
             allocate(soil(nsubr), stat=alloc_stat)
             if( alloc_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., soil structure array'
@@ -423,8 +436,6 @@ contains
 
          case (20)
             read (line,*,err=80) am0hfl(isr),am0sfl(isr),am0tfl(isr), am0cfl(isr),am0dfl(isr),am0efl
-            ! files no longer opened here
-            ! if (am0tfl .eq. 1) call fopenk(15, rootp(1:len_trim(rootp)) // 'manage.out', 'unknown')
 
          case (21)
             ! debug flag line. Add zero integer to end to make sure six values
