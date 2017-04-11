@@ -22,7 +22,7 @@ fc_free			= "-ffree-form";
 fc_default		=;
 
 /* debug flags */
-fc_debug		= "-Og -g -Wall -Wextra -fimplicit-none -fcheck=all -fbacktrace -fno-automatic";
+fc_debug		= "-Og -g -Wall -Wextra -fimplicit-none -fcheck=all -fbacktrace -fno-automatic -ffpe-trap=zero,overflow,denormal";
 
 /* optimization flags */
 fc_optimize		= "-O3";
