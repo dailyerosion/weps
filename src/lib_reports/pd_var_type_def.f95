@@ -54,14 +54,14 @@ MODULE pd_var_type_def
 !     (number of years in this case) for each year being considered
 !     in the yearly average estimate.
 
-	USE pd_dates_type_def	! definition of pd_dates_type var
+  USE pd_dates_type_def  ! definition of pd_dates_type var
 
-	IMPLICIT NONE
+  IMPLICIT NONE
 
-	TYPE :: pd_var_type
-		REAL	:: val
-		INTEGER :: cnt
-		TYPE (pd_dates_type), POINTER :: date 
-	END TYPE pd_var_type
+  TYPE :: pd_var_type
+    REAL    :: val
+    INTEGER :: cnt
+    TYPE (pd_dates_type), POINTER :: date 
+  END TYPE pd_var_type
 
 END MODULE pd_var_type_def

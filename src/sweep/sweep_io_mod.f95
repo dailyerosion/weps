@@ -106,7 +106,7 @@ module sweep_io_mod
              begin_element_handler = begin_element_handler, &
              end_element_handler = end_element_handler, &
              pcdata_chunk_handler = pcdata_chunk_handler, &
-             verbose = .true.)
+             verbose = .false.)
           if (.not. input_tag(SweepData)%acquired) then
             write(*,*) 'Simulation run file incomplete'
             call exit(1)

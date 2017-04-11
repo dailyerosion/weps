@@ -45,6 +45,7 @@ integer function lcm(a, b)
         lcm = (a * b / gcd(a, b))
     else
         write(*,*) 'LCM: Least common multiple of zero is undefined'
+        lcm = 0
     end if
 
     return

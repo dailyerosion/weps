@@ -21,11 +21,11 @@ MODULE pd_dates_type_def
 ! the start and end year values being equal, the number of days
 ! represented would depend on whether the year was a leap year or not.
 
-	IMPLICIT NONE
+  IMPLICIT NONE
 
-	TYPE :: pd_dates_type
-		INTEGER	:: sd, sm, sy	! Start date
-		INTEGER	:: ed, em, ey	! End date
-	END TYPE pd_dates_type
+  TYPE :: pd_dates_type
+    INTEGER :: sd, sm, sy ! Start date
+    INTEGER :: ed, em, ey ! End date
+  END TYPE pd_dates_type
 
 END MODULE pd_dates_type_def

@@ -171,7 +171,7 @@ contains
     do idx = 1, size(input_tag)
       if( input_tag(idx)%name .eq. name ) then
         input_tag(idx)%in_tag = .true.
-        write(*,*) 'In tag ', trim(name)
+        ! write(*,*) 'In tag ', trim(name)
         exit  ! found tag, no need to look further
       end if
     end do
@@ -858,10 +858,6 @@ contains
             end do
 
           else if (input_tag(SCI_SurfaceSubDayWater)%in_tag) then
-
-            write(*,*) isurfwat, input_tag(SCI_SurfaceSubDayWaterNo)%acquired, &
-                             loc(input_tag(SCI_SurfaceSubDayWaterNo)%acquired)
-
             if (input_tag(SCI_SurfaceSubDayWaterNo)%acquired) then
               call read_param(SCI_SurfaceSubDayWater, param_value, subrsurf(isr)%ahrwc0(isurfwat))
               surfwat_complete(isurfwat) = .true.

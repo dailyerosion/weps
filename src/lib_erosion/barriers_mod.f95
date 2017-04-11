@@ -450,7 +450,6 @@ contains
 
       use erosion_data_struct_defs, only: cellsurfacestate
       use grid_mod, only: imax, jmax, ix, jy, amxsim, awa
-      use p1unconv_mod, only: pi
       use Points_Mod, only: point
       use pnt_polyline_mod, only: location_intersect, pl_intersect
       use lin_interp_mod, only: lin_interp

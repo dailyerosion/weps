@@ -266,7 +266,6 @@ contains
 
      ! local variable
      integer :: dealloc_stat
-     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
 
      ! deallocate arrays
      deallocate(subrsurf%ahrwc0, stat=dealloc_stat)
