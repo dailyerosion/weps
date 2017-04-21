@@ -377,7 +377,7 @@
          biotot(isr) = create_biototal(soil_in(isr)%nslay, mncz)
          decompfac(isr) = create_decomp_factors(soil_in(isr)%nslay)
          ! allocate layer and per/day in subregion surface state passed to erosion
-         call create_subregionsoillay(soil_in(isr)%nslay, subrsurf(isr))
+         call create_subregionsoillayers(soil_in(isr)%nslay, subrsurf(isr))
          call create_subregionsurfacewet(24, subrsurf(isr))
          wp(isr) = create_wepp_param(soil_in(isr)%nslay)
       end do
