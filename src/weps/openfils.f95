@@ -338,12 +338,19 @@
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luoasd array'
          end if
+        allocate( luowc(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luowc array'
+         end if
          do idx = 1, nsubr
             if (BTEST(am0tfl(idx),0)) then
                call fopenk (luomanage(idx), trim(rootp) // trim(subr_text(idx)) // 'manage.out', 'unknown')
             end if
             if (BTEST(am0tfl(idx),0)) then
                call fopenk (luoasd(idx), trim(rootp) // trim(subr_text(idx)) // 'asd.out', 'unknown')
+            end if
+            if (BTEST(am0tfl(idx),1)) then
+               call fopenk (luowc(idx), trim(rootp) // trim(subr_text(idx)) // 'wc.out', 'unknown')
             end if
          end do
       end if

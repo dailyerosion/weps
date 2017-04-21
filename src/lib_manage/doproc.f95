@@ -16,12 +16,12 @@
 !     tillage, process, management
 
       use weps_interface_defs, ignore_me=>doproc
-      use file_io_mod, only: luomanage, luotdb, luoasd
+      use file_io_mod, only: luomanage, luotdb, luoasd, luowc
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
       use p1unconv_mod, only: mmtom
-      use manage_data_struct_defs, only: am0tfl, am0tdb, lastoper, asdhflag
+      use manage_data_struct_defs, only: am0tfl, am0tdb, lastoper, asdhflag, wchflag
       use crop_data_struct_defs, only: am0cfl
       use soilden_mod, only: setbdproc_wc
       use hydro_data_struct_defs, only: hydro_derived_et
@@ -151,14 +151,20 @@
       real    manure_buried_fraction, manure_total_mass
       real :: compact_load  ! 
       real, dimension(:), allocatable :: procbdadj
+
+      integer :: cd, cm, cy
+      integer :: i,j
+
       real :: gmdx, gsdx  ! transformed geometric mean dia. (mm) and geometric std. deviation (mm/mm)
       real :: mnot, minf  ! max and min aggregate size values of aggregate size distribution (mm)
-      real :: asddepth    ! Depth of soil to apply "set_asd" parameters
+      real :: asddepth    ! Depth (mm) of soil to apply "set_asd" parameters
       integer :: asdlayer ! Number of soil layers to apply "set_asd" parameters
-      integer :: i,j
-      real :: asd_tdepth !Computed depth to bottom of all soil layers affected by set_asd()
-      integer :: cd, cm, cy
+      real :: asd_tdepth  ! Computed depth (mm) to bottom of all soil layers affected by set_asd()
 
+      real :: wc          ! water content value (Mg/Mg)
+      real :: wcdepth     ! Depth (mm) of soil to apply "set_wc" parameters
+      integer :: wclayer  ! Number of soil layers to apply "set_wc" parameters
+      real :: wc_tdepth   ! Computed depth (mm) to bottom of all soil layers affected by set_wc()
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 
@@ -2435,7 +2441,7 @@
 !***************************************************************************************************************
 
       case (91)
-!-----START initialize soil layer asd (process code 91)
+!-----START initialize (set) soil layer asd (process code 91)
 !     pre-process stuff
        if (am0tdb(sr) .eq. 1) then
          write (luotdb(sr),*)
@@ -2478,12 +2484,14 @@
        write(UNIT=0,FMT="(5(f10.4))") asddepth, gmdx, gsdx, mnot, minf
        write(0,*)
 
+       ! Obtain the number of layers the ASD values will be set to,
+       ! based upon the specified depth and the individual layer thicknesses
        asdlayer = tillay(asddepth, soil%aszlyt, soil%nslay)
 
 !+++++++++++++++++++++++++++++++++++++++++++++++
        if (BTEST(am0tfl(sr),0) .and. asdhflag(sr) .eq. 0) then
          write(luoasd(sr),"(3(A5))",ADVANCE="NO") '# day', 'mon', 'year'
-         write(luoasd(sr),"(6(A10))", ADVANCE="YES") 'layer(s)', 'depth(cm)', 'GMDx', 'GSDx', 'm_not', 'm_inf'
+         write(luoasd(sr),"(6(A10))", ADVANCE="YES") 'layer(s)', 'depth(mm)', 'GMDx', 'GSDx', 'm_not', 'm_inf'
          asdhflag(sr) = 1
        end if
        if (BTEST(am0tfl(sr),0)) then
@@ -2647,10 +2655,6 @@
              i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
         end do
 
-
-
-
-
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After initialize soil layer asd conditions//'
@@ -2665,7 +2669,105 @@
 !         write(luoasd(sr),"(i10,4(i5))",ADVANCE="YES") get_simdate_jday(), cd, cm, cy, get_simdate_doy()
         end if
 
-!-----END terminate initialize soil layer asd process (process code 91)
+!-----END terminate initialize (set) soil layer asd process (process code 91)
+
+!***************************************************************************************************************
+
+      case (92)
+!-----START initialize (set) soil layer water content value (process code 92)
+!     pre-process stuff
+       if (am0tdb(sr) .eq. 1) then
+         write (luotdb(sr),*)
+         write (luotdb(sr),*) '//Before initialize soil layer water content conditions//'
+         call tdbug(sr, prcode, soil, crop, residue)
+       end if
+
+       write(0,*) 'prior to set_wc() call: ', ''
+
+       write(0,*) ""
+
+ !     read in wc variables here
+       mcur(sr) = mcur(sr) + 1
+        line = mtbl(mcur(sr))
+        read(line(2:len_trim(line)),* , err=901) wcdepth, wc
+       !New parameters for set_water content initialization process
+       write(UNIT=0,FMT="(5(f10.4))") wcdepth, wc
+       write(0,*)
+
+       ! Obtain the number of layers the water content values will be set to,
+       ! based upon the specified depth and the individual layer thicknesses
+       wclayer = tillay(wcdepth, soil%aszlyt, soil%nslay)
+
+!+++++++++++++++++++++++++++++++++++++++++++++++
+       if (BTEST(am0tfl(sr),1) .and. wchflag(sr) .eq. 0) then
+         write(luowc(sr),"(3(A5))",ADVANCE="NO") '# day', 'mon', 'year'
+         write(luowc(sr),"(3(A10))", ADVANCE="YES") 'layer(s)', 'depth(mm)', 'wc (Mg/Mg)'
+         wchflag(sr) = 1
+       end if
+       if (BTEST(am0tfl(sr),1)) then
+         call get_simdate(cd, cm, cy)
+!         write(luowc(sr),"(3(i5))",ADVANCE='NO') lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr
+         write(luowc(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
+         write(luowc(sr),"(i10,2(f10.4),A)",ADVANCE='YES') wclayer, wcdepth, wc, &
+           ' New initialization values'
+
+         wc_tdepth = 0.0
+         do i=1, wclayer
+            wc_tdepth = wc_tdepth + soil%aszlyt(i)
+         end do
+         write(luowc(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
+         write(luowc(sr),"(i10,1(f10.4),A)",ADVANCE="YES") wclayer, wc_tdepth, wc, &
+            ' Original values'
+       end if
+!+++++++++++++++++++++++++++++++++++++++++++++++
+
+       write (UNIT=0,FMT="(A)",ADVANCE="NO") '//Before set_asd process// '
+       write(0,*) 'No. of soil layers to modify/total and depth are: ', wclayer, soil%nslay, wcdepth
+       write(UNIT=0,FMT="(A3,1(A10))") 'lay', 'depth'
+       do i=1, asdlayer
+         write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
+      &      i, soil%aszlyt(i), soil%ahrwc(i)
+       end do
+       write(0,*) "layers below wclayer"
+       do i=wclayer+1, soil%nslay
+         write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
+      &      i, soil%aszlyt(i), soil%ahrwc(i)
+       end do
+
+!      do process
+       call set_wc(wc, wclayer, soil)
+
+
+       write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_wc process// '
+       write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, wcdepth
+       write(UNIT=0,FMT="(A3,2(A10))") 'lay', 'depth', 'wc'
+       do i=1, wclayer
+         write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
+      &      i, soil%aszlyt(i), soil%ahrwc(i)
+       end do
+       write(0,*) "layers below asdlayer"
+       do i=wclayer+1, soil%nslay
+         write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
+      &      i, soil%aszlyt(i), soil%ahrwc(i)
+       end do
+
+
+!     post-process stuff
+        if (am0tdb(sr) .eq. 1) then
+          write (luotdb(sr),*) '//After initialize soil layer wc conditions//'
+          call tdbug(sr, prcode, soil, crop, residue)
+        end if
+
+        if (BTEST(am0tfl(sr),1)) then
+         write(luowc(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
+         write(luowc(sr),"(i10,2(f10.4),A)",ADVANCE="YES") 1, soil%aszlyt(1), &
+            soil%ahrwc(1),   &
+            ' New values - After initialie soil layer water content conditions'
+!         write(luowc(sr),"(i10,4(i5))",ADVANCE="YES") get_simdate_jday(), cd, cm, cy, get_simdate_doy()
+        end if
+
+!-----END terminate initialize (set) soil layer wc process (process code 92)
+
 
       case default
         goto 902

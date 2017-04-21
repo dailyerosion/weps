@@ -17,6 +17,9 @@ module manage_data_struct_defs
    integer, dimension(:), allocatable :: asdhflag    ! flag to control printing ASD header info
                                                      ! 0 = ASD header line not yet printed
                                                      ! 1 = ASD header (first) line now printed
+   integer, dimension(:), allocatable :: wchflag     ! flag to control printing WC header info
+                                                     ! 0 = WC header line not yet printed
+                                                     ! 1 = WC header (first) line now printed
    type last_operation
       integer  ::    day       ! The day of the last operation.
       integer  ::    mon       ! The month, and year of the last operation.

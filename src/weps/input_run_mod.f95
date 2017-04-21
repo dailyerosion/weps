@@ -93,7 +93,7 @@ contains
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
       use climate_input_mod, only: amalat, amalon, amzele
-      use manage_data_struct_defs, only: asdhflag
+      use manage_data_struct_defs, only: asdhflag, wchflag
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
@@ -395,8 +395,14 @@ contains
             if( sum_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., asd header print flags'
             end if
-            do i=1, nsubr
+            allocate(wchflag(nsubr), stat=alloc_stat)
+            sum_stat = sum_stat + alloc_stat
+            if( sum_stat .gt. 0 ) then
+               write(*,*) 'ERROR: memory alloc., wc header print flags'
+            end if
+            do i=1, nsubr        ! Initialize the flag values
                asdhflag(i) = 0
+               wchflag(i) = 0
             end do
 
             allocate(soil(nsubr), stat=alloc_stat)

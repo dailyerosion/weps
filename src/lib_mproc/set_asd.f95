@@ -7,13 +7,13 @@
 !
 !     + + + PURPOSE + + +
 ! This subroutine assigns the ASD modified lognormal parameters,
-! e.g., the modified lognormal (transformed) GMD and GSD values,
-! (GMDmax and GMDmin are excluded - the WEPS values are assumed)
-! to all soil layers within the tillage depth.
+! e.g., the modified lognormal (transformed) GMD and GSD values
+! as well as the GMDmin and GMDmax values
+! to all soil layers within the specified depth.
 !
 ! If the user is interested in setting different ASD values to different
 ! soil layers (depths) they should call this process repeatedly with
-! smaller and smaller tillage depths specified with the "tillage" group process.
+! smaller and smaller soil depths specified.
 !
 ! Currently assumes we have "logcas = 3" condition (mnot != 0, minf != infinity)
 
@@ -58,7 +58,7 @@ SUBROUTINE set_asd (gmdx, gsdx, mnot, minf, nlay, soil)
         soil%aslagx(j) = minf
      END DO
   ELSE
-     write (0,*) "Tillage depth is negative, ASD values not assigned."
+     write (0,*) "Depth specified is negative, ASD values not assigned."
   END IF
 
 END SUBROUTINE set_asd

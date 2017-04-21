@@ -114,6 +114,7 @@
       do idx = 1, nsubr
          if (BTEST(am0tfl(idx),0)) close(luomanage(idx)) ! manage.out
          if (BTEST(am0tfl(idx),0)) close(luoasd(idx))    ! asd.out - LEW
+         if (BTEST(am0tfl(idx),0)) close(luowc(idx))     ! wc.out - LEW
       end do
 
       ! files for outputing the crop and decomp biomass variables - LEW
