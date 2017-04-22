@@ -45,7 +45,8 @@ module sweep_io_mod
       use grid_mod, only: amasim, amxsim, xgdpt, ygdpt
       use sae_in_out_mod, only: saeinp
       use flib_sax
-      use sweep_io_xml_mod, only: sweepdata_complete, init_input_xml
+      use sweep_io_xml_defs, only: init_input_xml
+      use sweep_io_xml_mod, only: sweepdata_complete
       use sweep_io_xml_mod, only: begin_element_handler, end_element_handler, pcdata_chunk_handler
 
       ! +++ ARGUMENT DECLARATIONS +++
