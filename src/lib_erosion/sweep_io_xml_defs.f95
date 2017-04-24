@@ -6,6 +6,7 @@
 module sweep_io_xml_defs
 
   implicit none
+  private
 
   integer, parameter :: MAX_NAME_LEN  = 40
 
@@ -20,89 +21,100 @@ module sweep_io_xml_defs
 
   type(tag_def), dimension(:), allocatable :: input_tag
   integer :: max_tags
-  
-  integer, parameter :: GUI_lat = 1
-  integer, parameter :: GUI_lon = 2
-  integer, parameter :: SCI_Accounts = 3
-  integer, parameter :: SCI_Account = 4
-  integer, parameter :: SCI_AerodynamicRoughness = 5
-  integer, parameter :: SCI_AggregateDensity = 6
-  integer, parameter :: SCI_AggregateGMD = 7
-  integer, parameter :: SCI_AggregateGSD = 8
-  integer, parameter :: SCI_AggregateMAX = 9
-  integer, parameter :: SCI_AggregateMIN = 10
-  integer, parameter :: SCI_AggregateStability = 11
-  integer, parameter :: SCI_AirDensity = 12
-  integer, parameter :: SCI_AnemometerFlag = 13
-  integer, parameter :: SCI_AnemometerHeight = 14
-  integer, parameter :: SCI_AverageAnnualPrecipitation = 15
-  integer, parameter :: SCI_BarPoint = 16
-  integer, parameter :: SCI_Barrier = 17
-  integer, parameter :: SCI_Barriers = 18
-  integer, parameter :: SCI_BiomassFlatCover = 19
-  integer, parameter :: SCI_BulkDensity = 20
-  integer, parameter :: SCI_Clay = 21
-  integer, parameter :: SCI_coord = 22
-  integer, parameter :: SCI_coords = 23
-  integer, parameter :: SCI_CropHeight = 24
-  integer, parameter :: SCI_CropLAI = 25
-  integer, parameter :: SCI_CropRowSpacing = 26
-  integer, parameter :: SCI_CropSAI = 27
-  integer, parameter :: SCI_CropSeedPlace = 28
-  integer, parameter :: SCI_CrustCover = 29
-  integer, parameter :: SCI_CrustDensity = 30
-  integer, parameter :: SCI_CrustFracCoverLoose = 31
-  integer, parameter :: SCI_CrustMassCoverLoose = 32
-  integer, parameter :: SCI_CrustStability = 33
-  integer, parameter :: SCI_CrustThick = 34
-  integer, parameter :: SCI_DikeSpacing = 35
-  integer, parameter :: SCI_height = 36
-  integer, parameter :: SCI_index = 37
-  integer, parameter :: SCI_LayerThickness = 38
-  integer, parameter :: SCI_number = 39
-  integer, parameter :: SCI_BarPoints = 40
-  integer, parameter :: SCI_porosity = 41
-  integer, parameter :: SCI_RandomRoughness = 42
-  integer, parameter :: SCI_RegionAngle = 43
-  integer, parameter :: SCI_ResidueHeight = 44
-  integer, parameter :: SCI_ResidueLAI = 45
-  integer, parameter :: SCI_ResidueSAI = 46
-  integer, parameter :: SCI_RidgeHeight = 47
-  integer, parameter :: SCI_RidgeOrientation = 48
-  integer, parameter :: SCI_RidgeSpacing = 49
-  integer, parameter :: SCI_RidgeWidth = 50
-  integer, parameter :: SCI_RockVolume = 51
-  integer, parameter :: SCI_Sand = 52
-  integer, parameter :: SCI_Silt = 53
-  integer, parameter :: SCI_SnowDepth = 54
-  integer, parameter :: SCI_SoilLay = 55
-  integer, parameter :: SCI_SoilLays = 56
-  integer, parameter :: SCI_Subregion = 57
-  integer, parameter :: SCI_Subregions = 58
-  integer, parameter :: SCI_SurfaceSubDayWater = 59
-  integer, parameter :: SCI_SurfaceSubDayWaters = 60
-  integer, parameter :: SCI_VeryFineSand = 61
-  integer, parameter :: SCI_WaterContent = 62
-  integer, parameter :: SCI_width = 63
-  integer, parameter :: SCI_WiltingPoint = 64
-  integer, parameter :: SCI_WindDirection = 65
-  integer, parameter :: SCI_WindSpeed = 66
-  integer, parameter :: SCI_WindSpeeds = 67
-  integer, parameter :: SCI_x = 68
-  integer, parameter :: SCI_XGrid = 69
-  integer, parameter :: SCI_XLength = 70
-  integer, parameter :: SCI_XOrigin = 71
-  integer, parameter :: SCI_y = 72
-  integer, parameter :: SCI_YGrid = 73
-  integer, parameter :: SCI_YLength = 74
-  integer, parameter :: SCI_YOrigin = 75
-  integer, parameter :: sweepData = 76
+
+  integer, parameter, public :: GUI_lat = 1
+  integer, parameter, public :: GUI_lon = 2
+  integer, parameter, public :: SCI_Accounts = 3
+  integer, parameter, public :: SCI_Account = 4
+  integer, parameter, public :: SCI_AerodynamicRoughness = 5
+  integer, parameter, public :: SCI_AggregateDensity = 6
+  integer, parameter, public :: SCI_AggregateGMD = 7
+  integer, parameter, public :: SCI_AggregateGSD = 8
+  integer, parameter, public :: SCI_AggregateMAX = 9
+  integer, parameter, public :: SCI_AggregateMIN = 10
+  integer, parameter, public :: SCI_AggregateStability = 11
+  integer, parameter, public :: SCI_AirDensity = 12
+  integer, parameter, public :: SCI_AnemometerFlag = 13
+  integer, parameter, public :: SCI_AnemometerHeight = 14
+  integer, parameter, public :: SCI_AverageAnnualPrecipitation = 15
+  integer, parameter, public :: SCI_BarPoint = 16
+  integer, parameter, public :: SCI_Barrier = 17
+  integer, parameter, public :: SCI_Barriers = 18
+  integer, parameter, public :: SCI_BiomassFlatCover = 19
+  integer, parameter, public :: SCI_BulkDensity = 20
+  integer, parameter, public :: SCI_Clay = 21
+  integer, parameter, public :: SCI_coord = 22
+  integer, parameter, public :: SCI_coords = 23
+  integer, parameter, public :: SCI_CropHeight = 24
+  integer, parameter, public :: SCI_CropLAI = 25
+  integer, parameter, public :: SCI_CropRowSpacing = 26
+  integer, parameter, public :: SCI_CropSAI = 27
+  integer, parameter, public :: SCI_CropSeedPlace = 28
+  integer, parameter, public :: SCI_CrustCover = 29
+  integer, parameter, public :: SCI_CrustDensity = 30
+  integer, parameter, public :: SCI_CrustFracCoverLoose = 31
+  integer, parameter, public :: SCI_CrustMassCoverLoose = 32
+  integer, parameter, public :: SCI_CrustStability = 33
+  integer, parameter, public :: SCI_CrustThick = 34
+  integer, parameter, public :: SCI_DikeSpacing = 35
+  integer, parameter, public :: SCI_height = 36
+  integer, parameter, public :: SCI_index = 37
+  integer, parameter, public :: SCI_LayerThickness = 38
+  integer, parameter, public :: SCI_number = 39
+  integer, parameter, public :: SCI_BarPoints = 40
+  integer, parameter, public :: SCI_porosity = 41
+  integer, parameter, public :: SCI_RandomRoughness = 42
+  integer, parameter, public :: SCI_RegionAngle = 43
+  integer, parameter, public :: SCI_ResidueHeight = 44
+  integer, parameter, public :: SCI_ResidueLAI = 45
+  integer, parameter, public :: SCI_ResidueSAI = 46
+  integer, parameter, public :: SCI_RidgeHeight = 47
+  integer, parameter, public :: SCI_RidgeOrientation = 48
+  integer, parameter, public :: SCI_RidgeSpacing = 49
+  integer, parameter, public :: SCI_RidgeWidth = 50
+  integer, parameter, public :: SCI_RockVolume = 51
+  integer, parameter, public :: SCI_Sand = 52
+  integer, parameter, public :: SCI_Silt = 53
+  integer, parameter, public :: SCI_SnowDepth = 54
+  integer, parameter, public :: SCI_SoilLay = 55
+  integer, parameter, public :: SCI_SoilLays = 56
+  integer, parameter, public :: SCI_Subregion = 57
+  integer, parameter, public :: SCI_Subregions = 58
+  integer, parameter, public :: SCI_SurfaceSubDayWater = 59
+  integer, parameter, public :: SCI_SurfaceSubDayWaters = 60
+  integer, parameter, public :: SCI_VeryFineSand = 61
+  integer, parameter, public :: SCI_WaterContent = 62
+  integer, parameter, public :: SCI_width = 63
+  integer, parameter, public :: SCI_WiltingPoint = 64
+  integer, parameter, public :: SCI_WindDirection = 65
+  integer, parameter, public :: SCI_WindSpeed = 66
+  integer, parameter, public :: SCI_WindSpeeds = 67
+  integer, parameter, public :: SCI_x = 68
+  integer, parameter, public :: SCI_XGrid = 69
+  integer, parameter, public :: SCI_XLength = 70
+  integer, parameter, public :: SCI_XOrigin = 71
+  integer, parameter, public :: SCI_y = 72
+  integer, parameter, public :: SCI_YGrid = 73
+  integer, parameter, public :: SCI_YLength = 74
+  integer, parameter, public :: SCI_YOrigin = 75
+  integer, parameter, public :: sweepData = 76
 
   interface w_begin_tag
     module procedure w_begin_tag_a0
     module procedure w_begin_tag_a1
     module procedure w_begin_tag_a2
   end interface
+
+  interface w_whole_tag
+    module procedure w_whole_tag_a0
+    module procedure w_whole_tag_a1
+  end interface
+
+  public :: input_tag
+  public :: init_input_xml
+  public :: w_begin_tag
+  public :: w_end_tag
+  public :: w_whole_tag
 
 contains
 
@@ -209,50 +221,112 @@ contains
 
   end subroutine init_input_xml
 
-  subroutine w_begin_tag_a0( luo_saeinp, tag_name )
-    integer, intent(inout) :: luo_saeinp      ! output unit number
-    character(len=*) :: tag_name
-    character(len=indent) :: spaces
+  subroutine w_spaces( luo_saeinp )
+    integer, intent(in) :: luo_saeinp      ! output unit number
 
-    write(luo_saeinp,*) spaces, '<', trim(tag_name), '>'
+    integer :: idx
+
+    do idx = 1, indent
+      write(luo_saeinp,'(a1)',advance='no') ' '
+    end do
+  end subroutine w_spaces
+
+  ! write beginning tag with zero attributes
+  subroutine w_begin_tag_a0( luo_saeinp, tag_name )
+    integer, intent(in) :: luo_saeinp      ! output unit number
+    character(len=*), intent(in) :: tag_name
+
+    call w_spaces( luo_saeinp )
+    write(luo_saeinp,*) '<', trim(tag_name), '>'
 
     indent = indent + INDENT_SPACES
   end subroutine w_begin_tag_a0
 
+  ! write beginning tag with one attribute
   subroutine w_begin_tag_a1( luo_saeinp, tag_name, attrib1, attr1_value )
-    integer, intent(inout) :: luo_saeinp      ! output unit number
-    character(len=*) :: tag_name
-    character(len=*) :: attrib1
-    integer :: attr1_value
-    character(len=indent) :: spaces
+    integer, intent(in) :: luo_saeinp      ! output unit number
+    character(len=*), intent(in) :: tag_name
+    character(len=*), intent(in) :: attrib1
+    integer, intent(in) :: attr1_value
 
-    write(luo_saeinp,*) spaces, '<', trim(tag_name), &
-                        ' ', trim(attrib1), '="', attr1_value, '">'
+    character(len=MAX_NAME_LEN) :: attr1_str
+
+    write(attr1_str, '(i0)') attr1_value
+    call w_spaces( luo_saeinp )
+    write(luo_saeinp,*) '<', trim(tag_name), &
+                        ' ', trim(attrib1), '="', adjustl(trim(attr1_str)), '">'
 
     indent = indent + INDENT_SPACES
   end subroutine w_begin_tag_a1
 
+  ! write beginning tag with two attributes
   subroutine w_begin_tag_a2( luo_saeinp, tag_name, attrib1, attr1_value, attrib2, attr2_value )
-    integer, intent(inout) :: luo_saeinp      ! output unit number
-    character(len=*) :: tag_name
-    character(len=*) :: attrib1
-    integer :: attr1_value
-    character(len=*) :: attrib2
-    integer :: attr2_value
-    character(len=indent) :: spaces
+    integer, intent(in) :: luo_saeinp      ! output unit number
+    character(len=*), intent(in) :: tag_name
+    character(len=*), intent(in) :: attrib1
+    integer, intent(in) :: attr1_value
+    character(len=*), intent(in) :: attrib2
+    integer, intent(in) :: attr2_value
+
+    character(len=MAX_NAME_LEN) :: attr1_str
+    character(len=MAX_NAME_LEN) :: attr2_str
+
+    write(attr1_str, '(i0)') attr1_value
+    write(attr1_str, '(i0)') attr2_value
+    call w_spaces( luo_saeinp )
+    write(luo_saeinp,*) '<', trim(tag_name), &
+                        ' ', trim(attrib1), '="', adjustl(trim(attr1_str)), '">', &
+                        ' ', trim(attrib2), '="', adjustl(trim(attr2_str)), '">'
 
     indent = indent + INDENT_SPACES
   end subroutine w_begin_tag_a2
 
+  ! write ending tag
   subroutine w_end_tag( luo_saeinp, tag_name )
-    integer, intent(inout) :: luo_saeinp      ! output unit number
-    character(len=*) :: tag_name
-    character(len=indent) :: spaces
+    integer, intent(in) :: luo_saeinp      ! output unit number
+    character(len=*), intent(in) :: tag_name
 
     indent = indent - INDENT_SPACES
 
-    write(luo_saeinp,*) spaces, '<', trim(tag_name), '>'
+    call w_spaces( luo_saeinp )
+    write(luo_saeinp,*) '</', trim(tag_name), '>'
   end subroutine w_end_tag
+
+  ! write whole tag with zero attributes
+  subroutine w_whole_tag_a0( luo_saeinp, tag_name, value )
+    integer, intent(in) :: luo_saeinp      ! output unit number
+    character(len=*), intent(in) :: tag_name
+    real, intent(in) :: value
+
+    character(len=MAX_NAME_LEN) :: real_str
+
+    write(real_str, '(g0)') value
+    call w_spaces( luo_saeinp )
+    write(luo_saeinp,*) '<', trim(tag_name), '>', &
+                         adjustl(trim(real_str)), &
+                        '</', trim(tag_name), '>'
+  end subroutine w_whole_tag_a0
+
+  ! write whole tag with one attribute
+  subroutine w_whole_tag_a1( luo_saeinp, tag_name, attrib1, attr1_value, value )
+    integer, intent(in) :: luo_saeinp      ! output unit number
+    character(len=*), intent(in) :: tag_name
+    character(len=*), intent(in) :: attrib1
+    integer, intent(in) :: attr1_value
+    real, intent(in) :: value
+
+    character(len=MAX_NAME_LEN) :: attr1_str
+    character(len=MAX_NAME_LEN) :: real_str
+
+    write(attr1_str, '(i0)') attr1_value
+    write(real_str, '(g0)') value
+
+    call w_spaces( luo_saeinp )
+    write(luo_saeinp,*) '<', trim(tag_name), &
+                        ' ', trim(attrib1), '="', adjustl(trim(attr1_str)), '">', &
+                        adjustl(trim(real_str)), &
+                        '</', trim(tag_name), '>'
+  end subroutine w_whole_tag_a1
 
 end module sweep_io_xml_defs
 
