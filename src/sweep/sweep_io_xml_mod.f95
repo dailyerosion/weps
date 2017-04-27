@@ -336,7 +336,8 @@ contains
             if ( .not. input_tag(SCI_Accounts)%acquired) then
               do jdx = 1, size(account_complete)
                 if ( .not. account_complete(jdx)) then
-                  write(*,*) 'Tag ', trim(input_tag(SCI_Account)%name), ', SCI_index="', jdx-1, '" is missing from input file.'
+                  write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Account)%name), &
+                             ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
                 end if
               end do
             end if
@@ -361,7 +362,8 @@ contains
             if ( .not. input_tag(SCI_Barriers)%acquired ) then
               do jdx = 1, size(barrier_complete)
                 if ( .not. barrier_complete(jdx)) then
-                  write(*,*) 'Tag ', trim(input_tag(SCI_Barrier)%name), ', SCI_index="', jdx-1, '" is missing from input file.'
+                  write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Barrier)%name), &
+                             ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
                 end if
               end do
             end if
@@ -425,13 +427,14 @@ contains
                     SCI_AnemometerFlag, &
                     SCI_AverageAnnualPrecipitation)
                 if( .not. input_tag(jdx)%acquired ) then
-                  write(*,*) 'Tag ', input_tag(jdx)%name, ' is missing from input file.'
+                  write(*,*) 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
                 end if
               case (SCI_Subregions)
                 if( .not. input_tag(jdx)%acquired ) then
                   do kdx = 1, size(subregion_complete)
                     if ( .not. subregion_complete(kdx)) then
-                      write(*,*) 'Tag ', trim(input_tag(jdx)%name), ', SCI_index="', kdx-1, '" is missing from input file.'
+                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Subregion)%name), &
+                                 ' SCI_index="', kdx-1, '" is incomplete or missing from input file.'
                     end if
                   end do
                 end if
@@ -439,7 +442,8 @@ contains
                 if( .not. input_tag(jdx)%acquired ) then
                   do kdx = 1, size(wind_complete)
                     if ( .not. wind_complete(kdx)) then
-                      write(*,*) 'Tag ', trim(input_tag(jdx)%name), ', SCI_index="', kdx-1, '" is missing from input file.'
+                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_WindSpeed)%name), &
+                                ' SCI_index="', kdx-1, '" is incomplete or missing from input file.'
                     end if
                   end do
                 end if
@@ -447,7 +451,8 @@ contains
                 if( .not. input_tag(jdx)%acquired ) then
                   do kdx = 1, size(account_complete)
                     if ( .not. account_complete(kdx)) then
-                      write(*,*) 'Tag ', trim(input_tag(jdx)%name), ', SCI_index="', kdx-1, '" is missing from input file.'
+                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Account)%name), &
+                                 ' SCI_index="', kdx-1, '" is incomplete or missing from input file.'
                     end if
                   end do
                 end if
@@ -455,7 +460,8 @@ contains
                 if( .not. input_tag(jdx)%acquired ) then
                   do kdx = 1, size(barrier_complete)
                     if ( .not. barrier_complete(kdx)) then
-                      write(*,*) 'Tag ', trim(input_tag(jdx)%name), ', SCI_index="', kdx-1, '" is missing from input file.'
+                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Barrier)%name), &
+                                ' SCI_index="', kdx-1, '" is incomplete or missing from input file.'
                     end if
                   end do
                 end if
@@ -609,7 +615,8 @@ contains
                 if( .not. input_tag(jdx)%acquired ) then
                   do kdx = 1, size(coord_complete)
                     if ( .not. coord_complete(kdx)) then
-                      write(*,*) 'Tag ', trim(input_tag(jdx)%name), ', SCI_index="', kdx-1, '" is missing from input file.'
+                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_coord)%name), &
+                                 ' SCI_index="', kdx-1, '" is incomplete or missing from input file.'
                     end if
                   end do
                 end if
@@ -617,7 +624,8 @@ contains
                 if( .not. input_tag(jdx)%acquired ) then
                   do kdx = 1, size(soillay_complete)
                     if ( .not. soillay_complete(kdx)) then
-                      write(*,*) 'Tag ', trim(input_tag(jdx)%name), ', SCI_index="', kdx-1, '" is missing from input file.'
+                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_SoilLay)%name), &
+                                 ' SCI_index="', kdx-1, '" is incomplete or missing from input file.'
                     end if
                   end do
                 end if
@@ -625,7 +633,8 @@ contains
                 if( .not. input_tag(jdx)%acquired ) then
                   do kdx = 1, size(surfwat_complete)
                     if ( .not. surfwat_complete(kdx)) then
-                      write(*,*) 'Tag ', trim(input_tag(jdx)%name), ', SCI_index="', kdx-1, '" is missing from input file.'
+                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_SurfaceSubDayWater)%name), &
+                                 ' SCI_index="', kdx-1, '" is missing from input file.'
                     end if
                   end do
                 end if
@@ -755,7 +764,7 @@ contains
                     SCI_WiltingPoint, &
                     SCI_WaterContent)
                 if( .not. input_tag(jdx)%acquired ) then
-                  write(*,*) 'Tag ', input_tag(jdx)%name, ' is missing from input file.'
+                  write(*,*) 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
                 end if
               end select
             end do
@@ -784,7 +793,8 @@ contains
           else
             do kdx = 1, size(barpnts_complete)
               if ( .not. barpnts_complete(kdx)) then
-                write(*,*) 'Tag ', input_tag(SCI_BarPoint)%name, ', SCI_index="', kdx-1, '" is missing from input file.'
+                write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_BarPoint)%name), &
+                           ' SCI_index="', kdx-1, '" is incomplete or missing from input file.'
               end if
             end do
           end if
@@ -804,7 +814,10 @@ contains
             ) then
             if( barseas(ibr)%param(ipol,iseas)%amzbr .le. 0.0 ) then
               write(*,*) 'ERROR: Barrier height must be > 0'
-              write(*,FMT='(2(i0))') 'Barrier #: ', ibr-1, 'Point #: ', ipol-1, 'Season #: ', iseas-1
+              write(*,FMT='(2a,i0,3a,i0)') trim(input_tag(SCI_Barrier)%name), &
+                          ' SCI_index="', ibr-1, &
+                          ', ', trim(input_tag(SCI_BarPoint)%name), &
+                          ' SCI_index="', ipol-1
               call exit(40)
             end if
             input_tag(SCI_x)%acquired = .false.
