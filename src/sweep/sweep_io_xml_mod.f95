@@ -47,11 +47,13 @@ module sweep_io_xml_mod
   integer :: iseas    ! index for barrier season reading
   integer :: iwind    ! index for wind speed values
   integer :: isurfwat ! index for surface water content values
+  logical :: accounts_present = .false.
   logical, dimension(:), allocatable :: account_complete
   logical, dimension(:), allocatable :: subregion_complete
   logical, dimension(:), allocatable :: coord_complete
   logical, dimension(:), allocatable :: soillay_complete
   logical, dimension(:), allocatable :: surfwat_complete
+  logical :: barriers_present = .false.
   logical, dimension(:), allocatable :: barrier_complete
   logical, dimension(:), allocatable :: barpnts_complete
   logical, dimension(:), allocatable :: wind_complete
@@ -138,6 +140,7 @@ contains
             end do
           else
             write(*,*) 'Subregion or Account Coordinate polygons must have at least 3 points. Only has ', poly_np
+            call exit(1)
           end if
 
         case (SCI_SoilLays)
@@ -184,6 +187,7 @@ contains
           do idx = 1, nacctr
             account_complete(idx) = .false.
           end do
+          accounts_present = .true.
 
         case (SCI_Barriers)
           call read_param(SCI_number, param_value, nbr)
@@ -202,6 +206,7 @@ contains
           do idx = 1, nbr
             barrier_complete(idx) = .false.
           end do
+          barriers_present = .true.
 
         case (SCI_WindSpeeds)
           call read_param(SCI_number, param_value, ntstep)
@@ -226,6 +231,7 @@ contains
         call exit(1)
       end if
     else if ( (idx .eq. SCI_Subregion) &
+      .or. (idx .eq. SCI_Account) &
       .or. (idx .eq. SCI_coord) &
       .or. (idx .eq. SCI_SoilLay) &
       .or. (idx .eq. SCI_SurfaceSubDayWater) &
@@ -332,22 +338,7 @@ contains
         ! write(*,*) 'In tag ', trim(name)
 
         if (idx .eq. SweepData) then
-          if ( allocated(account_complete) ) then
-            if ( .not. input_tag(SCI_Accounts)%acquired) then
-              do jdx = 1, size(account_complete)
-                if ( .not. account_complete(jdx)) then
-                  write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Account)%name), &
-                             ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
-                end if
-              end do
-            end if
-            ! deallocate _complete arrays
-            deallocate(account_complete, stat=dealloc_stat)
-            if( dealloc_stat .gt. 0 ) then
-              ! deallocation failed
-              write(*,*) "ERROR: unable to deallocate memory for account_complete array"
-            end if
-          else
+          if ( .not. accounts_present) then
             ! no SCI_Accounts tag found (not needed so set to true)
             input_tag(SCI_Accounts)%acquired = .true.
             ! allocate structure for accounting regions (zero size array allowed)
@@ -357,23 +348,7 @@ contains
             end if
           end if
 
-          if ( allocated(barrier_complete) ) then
-            ! SCI_Barriers tag was read
-            if ( .not. input_tag(SCI_Barriers)%acquired ) then
-              do jdx = 1, size(barrier_complete)
-                if ( .not. barrier_complete(jdx)) then
-                  write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Barrier)%name), &
-                             ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
-                end if
-              end do
-            end if
-            ! deallocate _complete arrays
-            deallocate(barrier_complete, stat=dealloc_stat)
-            if( dealloc_stat .gt. 0 ) then
-              ! deallocation failed
-              write(*,*) "ERROR: unable to deallocate memory for barrier_complete array"
-            end if
-          else
+          if ( .not. barriers_present) then
             ! no SCI_Barriers tag found (not needed so set to true)
             input_tag(SCI_Barriers)%acquired = .true.
             ! allocate structure for barriers (zero size array allowed)
@@ -395,13 +370,13 @@ contains
             .and. input_tag(SCI_YLength)%acquired &
             .and. input_tag(SCI_XGrid)%acquired &
             .and. input_tag(SCI_YGrid)%acquired &
-            .and. input_tag(SCI_Subregions)%acquired &
             .and. input_tag(SCI_AirDensity)%acquired &
             .and. input_tag(SCI_WindDirection)%acquired &
             .and. input_tag(SCI_AnemometerHeight)%acquired &
             .and. input_tag(SCI_AerodynamicRoughness)%acquired &
             .and. input_tag(SCI_AnemometerFlag)%acquired &
             .and. input_tag(SCI_AverageAnnualPrecipitation)%acquired &
+            .and. input_tag(SCI_Subregions)%acquired &
             .and. input_tag(SCI_WindSpeeds)%acquired &
             .and. input_tag(SCI_Accounts)%acquired &
             .and. input_tag(SCI_Barriers)%acquired &
@@ -411,6 +386,7 @@ contains
             ! always true on sweep runs
             am0eif = .true.
           else
+            sweepdata_complete = .false.
             do jdx = 1, size(input_tag)
               select case (jdx)
               case (SCI_RegionAngle, &
@@ -427,59 +403,24 @@ contains
                     SCI_AnemometerFlag, &
                     SCI_AverageAnnualPrecipitation)
                 if( .not. input_tag(jdx)%acquired ) then
-                  write(*,*) 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
+                  write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
                 end if
-              case (SCI_Subregions)
+              case (SCI_Subregions, &
+                    SCI_WindSpeeds, &
+                    SCI_Accounts, &
+                    SCI_Barriers)
                 if( .not. input_tag(jdx)%acquired ) then
-                  do kdx = 1, size(subregion_complete)
-                    if ( .not. subregion_complete(kdx)) then
-                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Subregion)%name), &
-                                 ' SCI_index="', kdx-1, '" is incomplete or missing from input file.'
-                    end if
-                  end do
-                end if
-              case (SCI_WindSpeeds)
-                if( .not. input_tag(jdx)%acquired ) then
-                  do kdx = 1, size(wind_complete)
-                    if ( .not. wind_complete(kdx)) then
-                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_WindSpeed)%name), &
-                                ' SCI_index="', kdx-1, '" is incomplete or missing from input file.'
-                    end if
-                  end do
-                end if
-              case (SCI_Accounts)
-                if( .not. input_tag(jdx)%acquired ) then
-                  do kdx = 1, size(account_complete)
-                    if ( .not. account_complete(kdx)) then
-                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Account)%name), &
-                                 ' SCI_index="', kdx-1, '" is incomplete or missing from input file.'
-                    end if
-                  end do
-                end if
-              case (SCI_Barriers)
-                if( .not. input_tag(jdx)%acquired ) then
-                  do kdx = 1, size(barrier_complete)
-                    if ( .not. barrier_complete(kdx)) then
-                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Barrier)%name), &
-                                ' SCI_index="', kdx-1, '" is incomplete or missing from input file.'
-                    end if
-                  end do
+                  write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is incomplete in input file.'
                 end if
               end select
             end do
             write(*,*) 'No Results Generated.'
           end if
-          ! deallocate _complete arrays
-          sum_stat = 0
-          deallocate(subregion_complete, stat=dealloc_stat)
-          sum_stat = sum_stat + dealloc_stat
-          deallocate(wind_complete, stat=dealloc_stat)
-          sum_stat = sum_stat + dealloc_stat
+          ! deallocate Tag array
           deallocate( input_tag, stat=dealloc_stat)
-          sum_stat = sum_stat + dealloc_stat
-          if( sum_stat .gt. 0 ) then
+          if( dealloc_stat .gt. 0 ) then
             ! deallocation failed
-            write(*,*) "ERROR: unable to deallocate memory for tags and _complete arrays"
+            write(*,*) "ERROR: unable to deallocate memory for Tag array"
           end if
 
         else if (idx .eq. SCI_Subregions) then
@@ -492,6 +433,19 @@ contains
           end do
           if (count_complete .ge. nsubr) then
             input_tag(SCI_Subregions)%acquired = .true.
+          else
+            do jdx = 1, nsubr
+              if ( .not. subregion_complete(jdx)) then
+                write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Subregion)%name), &
+                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete array
+          deallocate(subregion_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for tags and subregion_complete arrays"
           end if
 
         else if (idx .eq. SCI_WindSpeeds) then
@@ -511,7 +465,19 @@ contains
                 awudmx = subday(jdx)%awu
               endif
             end do
-
+          else
+            do jdx = 1, ntstep
+              if ( .not. wind_complete(jdx)) then
+                write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_WindSpeed)%name), &
+                                     ' SCI_index="', jdx-1, '" is missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete array
+          deallocate(wind_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for tags and wind_complete array"
           end if
 
         else if (idx .eq. SCI_Subregion) then
@@ -609,49 +575,15 @@ contains
                     SCI_DikeSpacing, &      
                     SCI_SnowDepth)
                 if( .not. input_tag(jdx)%acquired ) then
-                  write(*,*) 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
+                  write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
                 end if
-              case (SCI_coords)
+              case (SCI_SoilLays, &
+                    SCI_SurfaceSubDayWaters)
                 if( .not. input_tag(jdx)%acquired ) then
-                  do kdx = 1, size(coord_complete)
-                    if ( .not. coord_complete(kdx)) then
-                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_coord)%name), &
-                                 ' SCI_index="', kdx-1, '" is incomplete or missing from input file.'
-                    end if
-                  end do
-                end if
-              case (SCI_SoilLays)
-                if( .not. input_tag(jdx)%acquired ) then
-                  do kdx = 1, size(soillay_complete)
-                    if ( .not. soillay_complete(kdx)) then
-                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_SoilLay)%name), &
-                                 ' SCI_index="', kdx-1, '" is incomplete or missing from input file.'
-                    end if
-                  end do
-                end if
-              case (SCI_SurfaceSubDayWaters)
-                if( .not. input_tag(jdx)%acquired ) then
-                  do kdx = 1, size(surfwat_complete)
-                    if ( .not. surfwat_complete(kdx)) then
-                      write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_SurfaceSubDayWater)%name), &
-                                 ' SCI_index="', kdx-1, '" is missing from input file.'
-                    end if
-                  end do
+                  write(*,'(3a)') 'Tag ', trim(input_tag(SCI_SoilLay)%name), ' is incomplete or missing from input file.'
                 end if
               end select
             end do
-          end if
-          ! deallocate _complete arrays
-          sum_stat = 0
-          deallocate(coord_complete, stat=dealloc_stat)
-          sum_stat = sum_stat + dealloc_stat
-          deallocate(soillay_complete, stat=dealloc_stat)
-          sum_stat = sum_stat + dealloc_stat
-          deallocate(surfwat_complete, stat=dealloc_stat)
-          sum_stat = sum_stat + dealloc_stat
-          if( sum_stat .gt. 0 ) then
-            ! deallocation failed
-            write(*,*) "ERROR: unable to deallocate memory for tags and _complete arrays"
           end if
 
         else if (idx .eq. SCI_coords) then
@@ -669,6 +601,19 @@ contains
             else if ( input_tag(SCI_Account)%in_tag ) then
               call set_area_polygon(acct_poly(iar))
             end if
+          else
+            do jdx = 1, poly_np
+              if ( .not. coord_complete(jdx)) then
+                write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_coord)%name), &
+                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete array
+          deallocate(coord_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for tags and coord_complete array"
           end if
 
         else if (idx .eq. SCI_SoilLays) then
@@ -680,6 +625,19 @@ contains
           end do
           if (count_complete .ge. subrsurf(isr)%nslay) then
             input_tag(SCI_SoilLays)%acquired = .true.
+          else
+            do jdx = 1, size(soillay_complete)
+              if ( .not. soillay_complete(jdx)) then
+                 write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_SoilLay)%name), &
+                                      ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete array
+          deallocate(soillay_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for tags and soillay_complete array"
           end if
 
         else if (idx .eq. SCI_SurfaceSubDayWaters) then
@@ -691,6 +649,19 @@ contains
           end do
           if (count_complete .ge. subrsurf(isr)%nswet) then
             input_tag(SCI_SurfaceSubDayWaters)%acquired = .true.
+          else
+            do jdx = 1, subrsurf(isr)%nswet
+              if ( .not. surfwat_complete(jdx)) then
+                 write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_SoilLay)%name), &
+                                      ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete array
+          deallocate(surfwat_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for tags and surfwat_complete array"
           end if
 
         else if (idx .eq. SCI_coord) then
@@ -707,7 +678,7 @@ contains
               case (SCI_x, &
                     SCI_y)
                 if( .not. input_tag(jdx)%acquired ) then
-                  write(*,*) 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
+                  write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
                 end if
               end select
             end do
@@ -770,6 +741,47 @@ contains
             end do
           end if
 
+        else if (idx .eq. SCI_Accounts) then
+          count_complete = 0
+          do jdx = 1, nacctr
+            if (account_complete(jdx)) then
+              count_complete = count_complete + 1
+            end if
+          end do
+          if (count_complete .ge. nacctr) then
+            input_tag(SCI_Accounts)%acquired = .true.
+          else
+            do jdx = 1, size(account_complete)
+              if ( .not. account_complete(jdx)) then
+                write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Account)%name), &
+                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete arrays
+          deallocate(account_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for account_complete array"
+          end if
+
+        else if (idx .eq. SCI_Account) then
+          ! check for acquisition of all required elements
+          if (    input_tag(SCI_coords)%acquired &
+            ) then 
+            input_tag(SCI_coords)%acquired = .false.
+            account_complete(iar) = .true.
+          else
+            do jdx = 1, size(input_tag)
+              select case (jdx)
+              case (SCI_coords)
+                if( .not. input_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is incomplete or missing from input file.'
+                end if
+              end select
+            end do
+          end if
+
         else if (idx .eq. SCI_Barriers) then
           count_complete = 0
           do jdx = 1, nbr
@@ -779,6 +791,19 @@ contains
           end do
           if (count_complete .ge. nbr) then
             input_tag(SCI_Barriers)%acquired = .true.
+          else
+            do jdx = 1, size(barrier_complete)
+              if ( .not. barrier_complete(jdx)) then
+                write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Barrier)%name), &
+                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete arrays
+          deallocate(barrier_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for barrier_complete array"
           end if
 
         else if (idx .eq. SCI_Barrier) then
@@ -829,6 +854,19 @@ contains
             ! copy barseas into fixed barrier
             barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
             barrier(ibr)%param(ipol) = barseas(ibr)%param(ipol,iseas)
+          else
+            do jdx = 1, size(input_tag)
+              select case (jdx)
+              case (SCI_x, &
+                    SCI_y, &
+                    SCI_height, &
+                    SCI_width, &
+                    SCI_porosity)
+                if( .not. input_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
+                end if
+              end select
+            end do
           end if
 
         end if
