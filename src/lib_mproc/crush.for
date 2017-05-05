@@ -63,14 +63,10 @@
 !              before updating mf
 !
 !     + + + FUNCTIONS CALLED + + +
-
       real     bino
 
 !     + + + END SPECIFICATIONS + + +
 
-      write(*,*) 'CRUSH: ', alpha, beta, nlay
-
-!
 !     for each soil layer
       do 500 j=1,nlay
 !         compute transition matrix
@@ -80,11 +76,6 @@
               chk = 0.0
               do 50 k=1,i
                   pmat(i,k) = bino(i-1,k-1,prob)
-
-                  write(*,*) 'I K: ', i, k, prob
-                  write(*,*) 'PMAT: ', pmat(i,k)
-                  write(*,*) 'CHK: ', chk
-
                   chk = chk+pmat(i,k)
  50           continue
               if (abs(chk-1.0) .gt. 0.001) then
