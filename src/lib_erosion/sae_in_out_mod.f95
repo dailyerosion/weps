@@ -33,7 +33,7 @@ module sae_in_out_mod
 !     + + + Modules Used + + +
       use datetime_mod, only: caldat
       use file_io_mod, only: fopenk, makenamnum
-      use climate_input_mod, only: amalat, amalon, amzele
+      use climate_input_mod, only: amalat, amalon
       use grid_mod, only: amxsim, amasim, xgdpt, ygdpt
       use subregions_mod
       use barriers_mod, only: barrier
@@ -48,7 +48,7 @@ module sae_in_out_mod
       integer k,l, sr, ip
       integer b, nbr, nacctr, nsubr
       integer day, mon, yr
-      
+      integer :: dealloc_stat
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     sr - index used in subregion loop
@@ -71,6 +71,8 @@ module sae_in_out_mod
       else
         write(luo_saeinp,*) '      REPORT OF INPUTS (read by erodin.for) '
       end if
+
+      call init_input_xml()
 
       call w_begin_tag( luo_saeinp, input_tag(sweepData)%name )
         call w_whole_tag( luo_saeinp, input_tag(GUI_lat)%name, amalat )
@@ -231,6 +233,13 @@ module sae_in_out_mod
       call w_end_tag( luo_saeinp, input_tag(sweepData)%name )
 
       close(luo_saeinp)
+
+      ! deallocate Tag array
+      deallocate( input_tag, stat=dealloc_stat)
+      if( dealloc_stat .gt. 0 ) then
+        ! deallocation failed
+        write(*,*) "ERROR: unable to deallocate memory for Tag array"
+      end if
 
    end subroutine saeinp
 

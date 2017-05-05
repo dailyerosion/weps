@@ -273,7 +273,7 @@ contains
     character(len=MAX_NAME_LEN) :: attr2_str
 
     write(attr1_str, '(i0)') attr1_value
-    write(attr1_str, '(i0)') attr2_value
+    write(attr2_str, '(i0)') attr2_value
     call w_spaces( luo_saeinp )
     write(luo_saeinp,*) '<', trim(tag_name), &
                         ' ', trim(attrib1), '="', adjustl(trim(attr1_str)), '">', &
