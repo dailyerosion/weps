@@ -31,18 +31,44 @@
 !     p      - probability value
 !
 !     + + + LOCAL VARIABLES + + +
-!
       real    factln
-      real    bico
-!
+      real    bico, lnbico
+      real    lnbino
+      real    lnfact1
+      real    lnfact2
+
+      real eps, lnsmall, lnfpmin
+
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !
 !     bico   - computed binomial coefficient
 !
 !     + + + END SPECIFICATIONS + + +
-!
+
+      eps = epsilon(eps)
+      lnsmall = log(tiny(eps))
+      lnfpmin = log(tiny(eps)/eps)
+
       bico = anint(exp(factln(n) - factln(k) - factln(n-k)))
-      bino = bico*(p**dble(k))*((1.0-p)**dble(n-k))
+      lnbico = log(bico)
+
+      !fact1 = (p**dble(k))
+      lnfact1 = k * log(p)
+
+      !fact2 = ((1.0-p)**dble(n-k))
+      lnfact2 = (n-k) * log(1.0-p)
+
+      lnbino = lnbico + lnfact1 + lnfact2
+
+      if ( lnbino .lt. lnsmall ) then
+        write(*,*) 'UNDERFLOW: ', n, k, p, lnbino, lnsmall
+        bino = 0.0
+      else
+        bino = exp(lnbino)
+      end if
+
+      !write(*,*)'BINO: ',bico*(p**dble(k))*((1.0-p)**dble(n-k)), bino
+      !bino = bico*(p**dble(k))*((1.0-p)**dble(n-k))
 
       return
       end

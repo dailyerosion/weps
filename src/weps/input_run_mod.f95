@@ -18,7 +18,7 @@ contains
 !     + + + GLOBAL COMMON BLOCKS + + +
       use soil_data_struct_defs, only: soil_def
       use flib_sax
-      use input_run_xml_mod, only: run_tag, runFileData, init_run_xml
+      use input_run_xml_mod, only: runfile_complete, init_run_xml
       use input_run_xml_mod, only: begin_element_handler, end_element_handler, pcdata_chunk_handler
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -50,7 +50,7 @@ contains
              end_element_handler = end_element_handler, &
              pcdata_chunk_handler = pcdata_chunk_handler, &
              verbose = .false.)
-        if (.not. run_tag(runFileData)%acquired) then
+        if (.not. runfile_complete) then
           write(*,*) 'Simulation run file incomplete'
           call exit(1)
         end if
@@ -392,13 +392,10 @@ contains
             sum_stat = 0
             allocate(asdhflag(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
-            if( sum_stat .gt. 0 ) then
-               write(*,*) 'ERROR: memory alloc., asd header print flags'
-            end if
             allocate(wchflag(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
             if( sum_stat .gt. 0 ) then
-               write(*,*) 'ERROR: memory alloc., wc header print flags'
+               write(*,*) 'ERROR: memory alloc., asd and wc header print flags'
             end if
             do i=1, nsubr        ! Initialize the flag values
                asdhflag(i) = 0
@@ -981,6 +978,20 @@ contains
             if( alloc_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., debug output flags'
             end if
+
+            ! create and initialize array for submodel output flags
+            sum_stat = 0
+            allocate(asdhflag(nsubr), stat=alloc_stat)
+            sum_stat = sum_stat + alloc_stat
+            allocate(wchflag(nsubr), stat=alloc_stat)
+            sum_stat = sum_stat + alloc_stat
+            if( sum_stat .gt. 0 ) then
+               write(*,*) 'ERROR: memory alloc., asd and wc header print flags'
+            end if
+            do i=1, nsubr        ! Initialize the flag values
+               asdhflag(i) = 0
+               wchflag(i) = 0
+            end do
 
             allocate(soil(nsubr), stat=alloc_stat)
             if( alloc_stat .gt. 0 ) then

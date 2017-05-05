@@ -30,6 +30,7 @@ module input_run_xml_mod
   use weps_main_mod
   use barriers_mod, only: create_barrier, barrier, barseas
   use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate
+  use manage_data_struct_defs, only: asdhflag, wchflag
 
   integer, parameter :: MAX_NAME_LEN  = 40
 
@@ -51,43 +52,43 @@ module input_run_xml_mod
     module procedure read_param_int_3
   end interface
 
-  integer, parameter :: SCI_AccNo = 1
+  integer, parameter :: SCI_Accounts = 1
   integer, parameter :: SCI_Account = 2
   integer, parameter :: SCI_AverageSlope = 3
   integer, parameter :: SCI_BarCli = 4
-  integer, parameter :: SCI_BarCliI = 5
-  integer, parameter :: SCI_BarCliNo = 6
+  integer, parameter :: SCI_BarCliIndex = 5
+  integer, parameter :: SCI_BarCliNumber = 6
   integer, parameter :: SCI_Barrier = 7
-  integer, parameter :: SCI_BarrierNo = 8
+  integer, parameter :: SCI_Barriers = 8
   integer, parameter :: SCI_BarrierSeasonFlag = 9
   integer, parameter :: SCI_BegTranBase = 10
   integer, parameter :: SCI_BegTranFlg = 11
   integer, parameter :: SCI_BegTranThresh = 12
   integer, parameter :: SCI_climateFile = 13
-  integer, parameter :: SCI_coordinate = 14
-  integer, parameter :: SCI_coordinates = 15
-  integer, parameter :: SCI_coord = 16
-  integer, parameter :: SCI_coordI = 17
-  integer, parameter :: SCI_coordNo = 18
-  integer, parameter :: SCI_crop = 19
-  integer, parameter :: SCI_CycleCount = 20
-  integer, parameter :: SCI_DebugOutput = 21
-  integer, parameter :: SCI_decomp = 22
-  integer, parameter :: SCI_Description = 23
-  integer, parameter :: SCI_Elevation = 24
-  integer, parameter :: SCI_EndDate = 25
-  integer, parameter :: SCI_EndTranBase = 26
-  integer, parameter :: SCI_EndTranFlg = 27
-  integer, parameter :: SCI_EndTranThresh = 28
-  integer, parameter :: SCI_ErosionSubmodelOutput = 29
-  integer, parameter :: SCI_height = 30
-  integer, parameter :: SCI_hydro = 31
-  integer, parameter :: SCI_index = 32
-  integer, parameter :: SCI_LatLong = 33
-  integer, parameter :: SCI_ManageFile = 34
-  integer, parameter :: SCI_man = 35
-  integer, parameter :: SCI_Number = 36
-  integer, parameter :: SCI_pointBarCli = 37
+  integer, parameter :: SCI_CoordinateNumber = 14
+  integer, parameter :: SCI_coord = 15
+  integer, parameter :: SCI_coordIndex = 16
+  integer, parameter :: SCI_coords = 17
+  integer, parameter :: SCI_crop = 18
+  integer, parameter :: SCI_CycleCount = 19
+  integer, parameter :: SCI_DebugOutput = 20
+  integer, parameter :: SCI_decomp = 21
+  integer, parameter :: SCI_Description = 22
+  integer, parameter :: SCI_Elevation = 23
+  integer, parameter :: SCI_EndDate = 24
+  integer, parameter :: SCI_EndTranBase = 25
+  integer, parameter :: SCI_EndTranFlg = 26
+  integer, parameter :: SCI_EndTranThresh = 27
+  integer, parameter :: SCI_ErosionSubmodelOutput = 28
+  integer, parameter :: SCI_height = 29
+  integer, parameter :: SCI_hydro = 30
+  integer, parameter :: SCI_index = 31
+  integer, parameter :: SCI_LatLong = 32
+  integer, parameter :: SCI_ManageFile = 33
+  integer, parameter :: SCI_man = 34
+  integer, parameter :: SCI_number = 35
+  integer, parameter :: SCI_PointBarCli = 36
+  integer, parameter :: SCI_PointBarClis = 37
   integer, parameter :: SCI_porosity = 38
   integer, parameter :: SCI_RegionAngle = 39
   integer, parameter :: runFileData = 40
@@ -98,7 +99,7 @@ module input_run_xml_mod
   integer, parameter :: SCI_subDailyFile = 45
   integer, parameter :: SCI_SubmodelOutput = 46
   integer, parameter :: SCI_Subregion = 47
-  integer, parameter :: SCI_SubregionNo = 48
+  integer, parameter :: SCI_Subregions = 48
   integer, parameter :: SCI_TimeDesc = 49
   integer, parameter :: SCI_TimeMark = 50
   integer, parameter :: SCI_TimeSteps = 51
@@ -126,30 +127,19 @@ module input_run_xml_mod
   integer :: ibr      ! index for barrier reading
   integer :: ipol     ! index for polygon reading
   integer :: iseas    ! index for barrier season reading
+  logical :: accounts_present = .false.
+  logical, dimension(:), allocatable :: account_complete
+  logical :: barriers_present = .false.
+  logical, dimension(:), allocatable :: barrier_complete
   logical, dimension(:), allocatable :: subregion_complete
   logical, dimension(:), allocatable :: season_complete
-  logical, dimension(:), allocatable :: points_complete
   logical, dimension(:,:), allocatable :: clipar_complete
+  logical :: bar_seasons = .false.
+  logical :: bar_coords = .false.
+  logical :: bar_params = .false.
+  logical, dimension(:), allocatable :: coord_complete
   integer :: count_complete
-  ! temporary holder for array elements until index is read
-  integer :: t_am0hfl
-  integer :: t_am0sfl
-  integer :: t_am0tfl
-  integer :: t_am0cfl
-  integer :: t_am0dfl
-  integer :: t_am0hdb
-  integer :: t_am0sdb
-  integer :: t_am0tdb
-  integer :: t_am0cdb
-  integer :: t_am0ddb
-  type(polygon) :: t_polygon
-  type(soil_def) :: t_soil
-  character(len=512) :: t_tinfil
-  type(point) :: t_point
-  type(barrier_day_state) :: t_day_state
-  type(barrier_params) :: t_params
-  type(barrier_climate) :: t_climate
-  logical, dimension(2) :: runfile_complete
+  logical :: runfile_complete
 
 contains
 
@@ -157,7 +147,11 @@ contains
     character(len=*), intent(in)   :: name
     type(dictionary_t), intent(in) :: attributes
 
-    integer :: idx
+    integer :: idx, jdx
+    character(len=80) :: param_value
+    integer :: ret_stat
+    integer :: alloc_stat
+    integer :: sum_stat
 
     !write(*,*) ">>Begin Element: ", name
     !write(*,*) "--- ", len(attributes), " attributes:"
@@ -171,13 +165,293 @@ contains
       end if
     end do
 
+    if (   (idx .eq. SCI_Subregions) &
+      .or. (idx .eq. SCI_coords) &
+      .or. (idx .eq. SCI_Accounts) &
+      .or. (idx .eq. SCI_Barriers) ) then
+      if ( has_key(attributes, run_tag(SCI_number)%name) ) then
+        call get_value(attributes, run_tag(SCI_number)%name, param_value, ret_stat)
+        select case (idx)
+        case (SCI_Subregions)
+          call read_param(SCI_number, param_value, nsubr)
+          !write(*,*) 'Number of Subregions: ', nsubr
+          if (nsubr .lt. 1) then
+            write(*,*) 'Error, subregion count must be 1 or greater. Value: ', nsubr
+            call exit(1)
+          end if
+          sum_stat = 0
+          ! create array of subregion polygons
+          allocate(subr_poly(nsubr), stat = alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          ! create arrays for submodel output flags
+          allocate(am0hfl(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(am0sfl(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(am0tfl(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(am0cfl(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(am0dfl(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          ! create arrays for submodel debug flags
+          allocate(am0hdb(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(am0sdb(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(am0tdb(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(am0cdb(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(am0ddb(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(soil_in(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(tinfil(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(subregion_complete(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          if( sum_stat .gt. 0 ) then
+            write(*,*) 'ERROR: memory alloc., subregion arrays'
+          end if
+          ! initialize _complete arrays to false
+          do idx = 1, nsubr
+            subregion_complete(idx) = .false.
+          end do
+
+          ! create and initialize array for submodel output flags
+          sum_stat = 0
+          allocate(asdhflag(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(wchflag(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          if( sum_stat .gt. 0 ) then
+            write(*,*) 'ERROR: memory alloc., asd and wc header print flags'
+          end if
+          do jdx=1, nsubr        ! Initialize the flag values
+            asdhflag(jdx) = 0
+            wchflag(jdx) = 0
+          end do
+
+        case (SCI_coords)
+          call read_param(SCI_number, param_value, poly_np)
+          ! write(*,*) 'Number of Subregion Coordinate Points: ', poly_np
+          if ( run_tag(SCI_Subregion)%in_tag ) then
+            if (poly_np .ge. 3) then
+              ! create polygon point storage
+              subr_poly(isr) = create_polygon(poly_np)
+            else
+              write(*,'(2(a,i0))') 'Tag SCI_Subregion SCI_index="',isr-1, &
+                                   '" Coordinate polygons must have at least 3 points. Only has ', poly_np
+              call exit(1)
+            end if
+          else if ( run_tag(SCI_Account)%in_tag ) then
+            if (poly_np .ge. 3) then
+              ! create polygon point storage
+              acct_poly(iar) = create_polygon(poly_np)
+            else
+              write(*,'(2(a,i0))') 'Tag SCI_Account SCI_Index="',iar-1, &
+                                   '" Coordinate polygons must have at least 3 points. Only has ', poly_np
+              call exit(1)
+            end if
+          end if
+          ! create storage for points index tracking
+          allocate(coord_complete(poly_np), stat = alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+            ! allocation failed
+            write(*,*) "ERROR: unable to allocate memory for coord_complete array"
+          end if
+          ! initialize _complete arrays to false
+          do idx = 1, poly_np
+            coord_complete(idx) = .false.
+          end do
+
+        case (SCI_Accounts)
+          call read_param(SCI_number, param_value, nacctr)
+          !write(*,*) 'Number of Accounting Regions: ', nacctr
+          ! allocate structure for accounting regions (nacctr .lt. 1 gives zero size array)
+          sum_stat = 0
+          allocate(acct_poly(nacctr), stat = alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(account_complete(nacctr), stat = alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          if( sum_stat .gt. 0 ) then
+            write(*,*) 'ERROR: memory alloc., accounting region arrays'
+          end if
+          ! initialize _complete arrays to .false.
+          do idx = 1, nacctr
+            account_complete(idx) = .false.
+          end do
+          accounts_present = .true.
+
+        case (SCI_Barriers)
+          call read_param(SCI_number, param_value, nbr)
+          !write(*,*) 'Number of Barriers: ', nbr
+          ! allocate structure for barriers (nbr .lt. 1 gives zero size array)
+          sum_stat = 0
+          allocate(barrier(nbr), stat = alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(barseas(nbr), stat = alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(barrier_complete(nbr), stat = alloc_stat)
+          if( sum_stat .gt. 0 ) then
+            write(*,*) 'ERROR: memory alloc., barrier arrays'
+          end if
+          ! initialize _complete arrays to .false.
+          do idx = 1, nbr
+            barrier_complete(idx) = .false.
+          end do
+          barriers_present = .true.
+
+        end select
+      else
+        write(*,*) 'SCI_number attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        call exit(1)
+      end if
+    else if ( (idx .eq. SCI_Subregion) &
+      .or. (idx .eq. SCI_coord) &
+      .or. (idx .eq. SCI_BarCli) &
+      .or. (idx .eq. SCI_Account) ) then
+      if ( has_key(attributes, run_tag(SCI_index)%name) ) then
+        call get_value(attributes, run_tag(SCI_index)%name, param_value, ret_stat)
+        select case (idx)
+        case (SCI_Subregion)
+          call read_param(SCI_index, param_value, isr)
+          ! adjust from base 0 to base 1 arrays
+          isr = isr + 1
+          !write(*,*) 'Subregion Index: ', isr
+        case (SCI_coord)
+          call read_param(SCI_index, param_value, ipol)
+          ! adjust from base 0 to base 1 arrays
+          ipol = ipol + 1
+          !write(*,*) 'Subregion Coordinates Point Index: ', ipol
+        case (SCI_BarCli)
+          call read_param(SCI_index, param_value, iseas)
+          ! adjust from base 0 to base 1 arrays
+          iseas = iseas + 1
+          !write(*,*) 'Barrier Point Index: ', ipol
+        case (SCI_Account)
+          call read_param(SCI_index, param_value, iar)
+          ! adjust from base 0 to base 1 arrays
+          iar = iar + 1
+          !write(*,*) 'Accounting region Index: ', iar
+        end select
+      else
+        write(*,*) 'SCI_index attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        call exit(1)
+      end if
+
+    else if ( (idx .eq. SCI_Barrier) ) then
+      if ( has_key(attributes, run_tag(SCI_index)%name) ) then
+        call get_value(attributes, run_tag(SCI_index)%name, param_value, ret_stat)
+        call read_param(SCI_index, param_value, ibr)
+        ! adjust from base 0 to base 1 arrays
+        ibr = ibr + 1
+        !write(*,*) 'Barrier Index: ', ibr
+      else
+        write(*,*) 'SCI_index attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        call exit(1)
+      end if
+      if ( has_key(attributes, run_tag(SCI_BarrierSeasonFlag)%name) ) then
+        call get_value(attributes, run_tag(SCI_BarrierSeasonFlag)%name, param_value, ret_stat)
+        call read_param(SCI_BarrierSeasonFlag, param_value, seas_flg)
+        !write(*,*) 'Barrier Season Flag: ', seas_flg
+        if (    (seas_flg .ne. 0) &
+          .and. (seas_flg .ne. 1) &
+          .and. (seas_flg .ne. 2) &
+          ) then
+          write(*,*) 'ERROR: Barrier season flag value must be 0, 1 or 2'
+          write(*,FMT='(i0)') 'Input value was: ', seas_flg
+          call exit(35)
+        end if
+      else
+        write(*,*) 'SCI_BarrierSeasonFlag attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        call exit(1)
+      end if
+
+    else if ( (idx .eq. SCI_PointBarClis) ) then
+      if ( has_key(attributes, run_tag(SCI_BarCliNumber)%name) ) then
+        call get_value(attributes, run_tag(SCI_BarCliNumber)%name, param_value, ret_stat)
+        call read_param(SCI_BarCliNumber, param_value, ntm_seas)
+        !write(*,*) 'Barrier Total Time Marks: ', ntm_seas
+      else
+        write(*,*) 'SCI_BarCliNumber attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        call exit(1)
+      end if
+      if ( has_key(attributes, run_tag(SCI_CoordinateNumber)%name) ) then
+        call get_value(attributes, run_tag(SCI_CoordinateNumber)%name, param_value, ret_stat)
+        call read_param(SCI_CoordinateNumber, param_value, poly_np)
+        !write(*,*) 'Number of Barrier Points: ', poly_np
+        if (poly_np .ge. 2) then
+        else
+          write(*,'(2(a,i0))') 'Tag SCI_PointBarClis SCI_CoordinateNumber="',ibr-1, &
+                               '" must have at least 2 points. Only has ', poly_np
+          call exit(1)
+        end if
+      else
+        write(*,*) 'SCI_CoordinateNumber attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        call exit(1)
+      end if
+      ! create storage for point and barrier data
+      ! this also sets values for barr%np and barr%ntm
+      call create_barrier(barrier(ibr), poly_np)
+      call create_barrier(barseas(ibr), poly_np,ntm_seas,seas_flg)
+      ! create storage for season, points and climate parameter index tracking
+      sum_stat = 0
+      allocate(season_complete(ntm_seas), stat = alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(coord_complete(poly_np), stat = alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(clipar_complete(poly_np, ntm_seas), stat = alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      if( sum_stat .gt. 0 ) then
+        ! deallocation failed
+        write(*,*) "ERROR: unable to allocate memory for _complete arrays"
+      end if
+      ! initialize _complete arrays to false
+      do iseas = 1, ntm_seas
+        season_complete(iseas) = .false.
+      end do
+      do ipol = 1, poly_np
+        coord_complete(ipol) = .false.
+      end do
+      do iseas = 1, ntm_seas
+        do ipol = 1, poly_np
+          clipar_complete(ipol, iseas) = .false.
+        end do
+      end do
+
+    else if ( (idx .eq. SCI_PointBarCli) ) then
+      if ( has_key(attributes, run_tag(SCI_BarCliIndex)%name) ) then
+        call get_value(attributes, run_tag(SCI_BarCliIndex)%name, param_value, ret_stat)
+        call read_param(SCI_BarCliIndex, param_value, iseas)
+        ! adjust from base 0 to base 1 arrays
+        iseas = iseas + 1
+        !write(*,*) 'Barrier Time Marks Index: ', iseas
+      else
+        write(*,*) 'SCI_BarCliIndex attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        call exit(1)
+      end if
+      if ( has_key(attributes, run_tag(SCI_coordIndex)%name) ) then
+        call get_value(attributes, run_tag(SCI_coordIndex)%name, param_value, ret_stat)
+        call read_param(SCI_CoordinateNumber, param_value, ipol)
+        ! adjust from base 0 to base 1 arrays
+        ipol = ipol + 1
+        !write(*,*) 'Barrier Points Index: ', ipol
+      else
+        write(*,*) 'SCI_coordIndex attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        call exit(1)
+      end if
+
+    end if
+
   end subroutine begin_element_handler
 
   subroutine end_element_handler(name)
     character(len=*), intent(in)     :: name
 
-    integer :: idx
-    integer :: alloc_stat
+    integer :: idx, jdx, kdx
+    integer :: sum_stat, alloc_stat, dealloc_stat
 
     do idx = 1, size(run_tag)
       if( run_tag(idx)%name .eq. name ) then
@@ -185,64 +459,28 @@ contains
         ! write(*,*) 'In tag ', trim(name)
 
         if (idx .eq. runFileData) then
-            !write(*,*) 'Tags', run_tag(SCI_CycleCount)%acquired &
-            !           , run_tag(SCI_LatLong)%acquired &
-            !           , run_tag(SCI_Elevation)%acquired &
-            !           , run_tag(SCI_StartDate)%acquired &
-            !           , run_tag(SCI_EndDate)%acquired &
-            !           , run_tag(SCI_TimeSteps)%acquired &
-            !           , run_tag(SCI_climateFile)%acquired &
-            !           , run_tag(SCI_windFile)%acquired &
-            !           , run_tag(SCI_ErosionSubmodelOutput)%acquired &
-            !           , run_tag(SCI_RegionAngle)%acquired &
-            !           , run_tag(SCI_XOrigin)%acquired &
-            !           , run_tag(SCI_YOrigin)%acquired &
-            !           , run_tag(SCI_XLength)%acquired &
-            !           , run_tag(SCI_YLength)%acquired &
-            !           , run_tag(SCI_XGrid)%acquired &
-            !           , run_tag(SCI_YGrid)%acquired &
-            !           , run_tag(SCI_AccNo)%acquired &
-            !           , run_tag(SCI_Account)%acquired &
-            !           , run_tag(SCI_SubregionNo)%acquired &
-            !           , run_tag(SCI_Subregion)%acquired &
-            !           , run_tag(SCI_BarrierNo)%acquired &
-            !           , run_tag(SCI_Barrier)%acquired
 
-          if (run_tag(SCI_AccNo)%acquired) then
-            if (nacctr .le. 0) then
-              runfile_complete(1) = .true.
-            else
-              if (run_tag(SCI_Account)%acquired) then
-                runfile_complete(1) = .true.
-              end if
-            end if
-          else
-            runfile_complete(1) = .true.
-            ! create array of accounting region polygons (zero size array allowed)
+          if ( .not. accounts_present) then
+            ! no SCI_Accounts tag found (not needed so set to true)
+            run_tag(SCI_Accounts)%acquired = .true.
+            ! allocate structure for accounting regions (zero size array allowed)
             allocate(acct_poly(0), stat = alloc_stat)
             if( alloc_stat .gt. 0 ) then
-              write(*,*) 'ERROR: memory alloc., accounting region polygons'
+              write(*,*) 'ERROR: memory alloc., accounting region arrays'
             end if
           end if
 
-          if (run_tag(SCI_BarrierNo)%acquired) then
-            if (nbr .le. 0) then
-              runfile_complete(2) = .true.
-            else
-              if (run_tag(SCI_Barrier)%acquired) then
-                runfile_complete(2) = .true.
-              end if
-            end if
-          else
-            runfile_complete(2) = .true.
+          if ( .not. barriers_present) then
+            ! no SCI_Barriers tag found (not needed so set to true)
+            run_tag(SCI_Barriers)%acquired = .true.
             ! allocate structure for barriers (zero size array allowed)
+            sum_stat = 0
             allocate(barrier(0), stat = alloc_stat)
-            if( alloc_stat .gt. 0 ) then
-              write(*,*) 'ERROR: memory alloc., barrier'
-            end if
+            sum_stat = sum_stat + alloc_stat
             allocate(barseas(0), stat = alloc_stat)
+            sum_stat = sum_stat + alloc_stat
             if( alloc_stat .gt. 0 ) then
-              write(*,*) 'ERROR: memory alloc., seasonal barrier'
+              write(*,*) 'ERROR: memory alloc., barriers'
             end if
           end if
 
@@ -263,12 +501,467 @@ contains
             .and. run_tag(SCI_YLength)%acquired &
             .and. run_tag(SCI_XGrid)%acquired &
             .and. run_tag(SCI_YGrid)%acquired &
-            .and. run_tag(SCI_SubregionNo)%acquired &
-            .and. run_tag(SCI_Subregion)%acquired &
-            .and. runfile_complete(1) &
-            .and. runfile_complete(2) &
+            .and. run_tag(SCI_Subregions)%acquired &
+            .and. run_tag(SCI_Accounts)%acquired &
+            .and. run_tag(SCI_Barriers)%acquired &
             ) then
-            run_tag(runFileData)%acquired = .true.
+            runfile_complete = .true.
+          else
+            runfile_complete = .false.
+            do jdx = 1, size(run_tag)
+              select case (jdx)
+              case (SCI_CycleCount, &
+                    SCI_LatLong, &
+                    SCI_Elevation, &
+                    SCI_StartDate, &
+                    SCI_EndDate, &
+                    SCI_TimeSteps, &
+                    SCI_climateFile, &
+                    SCI_windFile, &
+                    SCI_ErosionSubmodelOutput, &
+                    SCI_RegionAngle, &
+                    SCI_XOrigin, &
+                    SCI_YOrigin, &
+                    SCI_XLength, &
+                    SCI_YLength, &
+                    SCI_XGrid, &
+                    SCI_YGrid)
+                if( .not. run_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
+                end if
+              case (SCI_Subregions, &
+                    SCI_Accounts, &
+                    SCI_Barriers)
+                if( .not. run_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is incomplete in input file.'
+                end if
+              end select
+            end do
+            write(*,*) 'No Results Generated.'
+          end if
+          ! deallocate tag array
+          deallocate( run_tag, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for tag array"
+          end if
+
+        else if (idx .eq. SCI_TimeSteps) then
+          ! allocate wind direction and speed array
+          allocate(subday(ntstep), stat=alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+             write(*,*) 'ERROR: memory alloc., wind direction and speed'
+          end if
+
+        else if (idx .eq. SCI_Subregions) then
+          !write(*,*) 'SCI_Subregions end of tag nsubr: ', nsubr
+          count_complete = 0
+          do jdx = 1, nsubr
+            if (subregion_complete(jdx)) then
+              count_complete = count_complete + 1
+            end if
+          end do
+          if (count_complete .ge. nsubr) then
+            run_tag(SCI_Subregions)%acquired = .true.
+          else
+            do jdx = 1, nsubr
+              if ( .not. subregion_complete(jdx)) then
+                write(*,'(3a,i0,a)') 'Tag ', trim(run_tag(SCI_Subregion)%name), &
+                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete array
+          deallocate(subregion_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for tags and subregion_complete arrays"
+          end if
+
+        else if (idx .eq. SCI_Accounts) then
+          count_complete = 0
+          do jdx = 1, nacctr
+            if (account_complete(jdx)) then
+              count_complete = count_complete + 1
+            end if
+          end do
+          if (count_complete .ge. nacctr) then
+            run_tag(SCI_Accounts)%acquired = .true.
+          else
+            do jdx = 1, nacctr
+              if ( .not. account_complete(jdx)) then
+                write(*,'(3a,i0,a)') 'Tag ', trim(run_tag(SCI_Account)%name), &
+                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete arrays
+          deallocate(account_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for account_complete array"
+          end if
+
+        else if (idx .eq. SCI_Account) then
+          ! check for acquisition of all required elements
+          if ( run_tag(SCI_coords)%acquired ) then 
+            run_tag(SCI_coords)%acquired = .false.
+            account_complete(iar) = .true.
+          else
+            do jdx = 1, size(run_tag)
+              select case (jdx)
+              case (SCI_coords)
+                if( .not. run_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is incomplete or missing from input file.'
+                end if
+              end select
+            end do
+          end if
+
+        else if (idx .eq. SCI_Barriers) then
+          count_complete = 0
+          do jdx = 1, nbr
+            if (barrier_complete(jdx)) then
+              count_complete = count_complete + 1
+            end if
+          end do
+          if (count_complete .ge. nbr) then
+            run_tag(SCI_Barriers)%acquired = .true.
+          else
+            do jdx = 1, size(barrier_complete)
+              if ( .not. barrier_complete(jdx)) then
+                write(*,'(3a,i0,a)') 'Tag ', trim(run_tag(SCI_Barrier)%name), &
+                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete arrays
+          deallocate(barrier_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for barrier_complete array"
+          end if
+
+        else if (idx .eq. SCI_Barrier) then
+          ! check for acquisition of all required elements
+          if (    run_tag(SCI_Description)%acquired &
+            .and. run_tag(SCI_PointBarClis)%acquired ) then 
+            run_tag(SCI_Description)%acquired = .false.
+            run_tag(SCI_PointBarClis)%acquired = .false.
+            barrier_complete(ibr) = .true.
+          else
+            do jdx = 1, size(run_tag)
+              select case (jdx)
+              case (SCI_Description)
+                if( .not. run_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
+                end if
+              case (SCI_PointBarClis)
+                if( .not. run_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is incomplete or missing from input file.'
+                end if
+              end select
+            end do
+          end if
+
+        else if (idx .eq. SCI_PointBarClis) then
+          ! check for acquisition of all required elements
+          ! seasons
+          count_complete = 0
+          do jdx = 1, ntm_seas
+            if (season_complete(jdx)) then
+              count_complete = count_complete + 1
+            end if
+          end do
+          if (count_complete .ge. ntm_seas) then
+            bar_seasons = .true.
+          else
+            do jdx = 1, ntm_seas
+              if ( .not. season_complete(jdx)) then
+                write(*,'(3a,i0,a)') 'Tag ', trim(run_tag(SCI_BarCli)%name), &
+                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! points
+          count_complete = 0
+          do jdx = 1, poly_np
+            if (coord_complete(jdx)) then
+              count_complete = count_complete + 1
+            end if
+          end do
+          if (count_complete .ge. poly_np) then
+            bar_coords = .true.
+          else
+            do jdx = 1, poly_np
+              if ( .not. coord_complete(jdx)) then
+                write(*,'(3a,i0,a)') 'Tag ', trim(run_tag(SCI_coord)%name), &
+                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! barrier parameters
+          count_complete = 0
+          do jdx = 1, poly_np
+            do kdx = 1, ntm_seas
+              if (clipar_complete(jdx, kdx)) then
+                count_complete = count_complete + 1
+              end if
+            end do
+          end do
+          if (count_complete .ge. poly_np*ntm_seas) then
+            bar_params = .true.
+          else
+            do jdx = 1, poly_np
+              do kdx = 1, ntm_seas
+                if ( .not. clipar_complete(jdx, kdx)) then
+                  write(*,'(3a,i0,a)') 'Tag ', trim(run_tag(SCI_PointBarCli)%name), &
+                                       ' SCI_coordIndex="', jdx-1, '" SCI_BarCliIndex="',kdx-1, &
+                                       '" is incomplete or missing from input file.'
+                end if
+              end do
+            end do
+          end if
+          ! check for all complete
+          if ( bar_seasons .and. bar_coords .and. bar_params ) then
+            run_tag(SCI_PointBarClis)%acquired = .true.
+          end if
+          ! deallocate _complete arrays
+          sum_stat = 0
+          deallocate(season_complete, stat=dealloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          deallocate(coord_complete, stat=dealloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          deallocate(clipar_complete, stat=dealloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          if( sum_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for _complete arrays"
+          end if
+
+        else if (idx .eq. SCI_BarCli) then
+          if( seas_flg .eq. 2 ) then
+            if (    run_tag(SCI_TimeMark)%acquired & 
+              .and. run_tag(SCI_TimeDesc)%acquired &
+              .and. run_tag(SCI_BegTranFlg)%acquired &
+              .and. run_tag(SCI_BegTranThresh)%acquired &
+              .and. run_tag(SCI_BegTranBase)%acquired &
+              .and. run_tag(SCI_EndTranFlg)%acquired &
+              .and. run_tag(SCI_EndTranThresh)%acquired &
+              .and. run_tag(SCI_EndTranBase)%acquired &
+              ) then
+              run_tag(SCI_TimeMark)%acquired = .false.
+              run_tag(SCI_TimeDesc)%acquired = .false.
+              run_tag(SCI_BegTranFlg)%acquired = .false.
+              run_tag(SCI_BegTranThresh)%acquired = .false.
+              run_tag(SCI_BegTranBase)%acquired = .false.
+              run_tag(SCI_EndTranFlg)%acquired = .false.
+              run_tag(SCI_EndTranThresh)%acquired = .false.
+              run_tag(SCI_EndTranBase)%acquired = .false.
+              season_complete(iseas) = .true.
+            else
+              do jdx = 1, size(run_tag)
+                select case (jdx)
+                case (SCI_TimeMark, &
+                      SCI_TimeDesc, &
+                      SCI_BegTranFlg, &
+                      SCI_BegTranThresh, &
+                      SCI_BegTranBase, &
+                      SCI_EndTranFlg, &
+                      SCI_EndTranThresh, &
+                      SCI_EndTranBase)
+                  if( .not. run_tag(jdx)%acquired ) then
+                    write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
+                  end if
+                end select
+              end do
+            end if  
+          else 
+            if (    run_tag(SCI_TimeMark)%acquired & 
+              .and. run_tag(SCI_TimeDesc)%acquired &
+              ) then
+              run_tag(SCI_TimeMark)%acquired = .false.
+              run_tag(SCI_TimeDesc)%acquired = .false.
+              season_complete(iseas) = .true.
+            else
+              do jdx = 1, size(run_tag)
+                select case (jdx)
+                case (SCI_TimeMark, &
+                      SCI_TimeDesc)
+                  if( .not. run_tag(jdx)%acquired ) then
+                    write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
+                  end if
+                end select
+              end do
+            end if
+          end if
+
+        else if (idx .eq. SCI_PointBarCli) then
+          ! check for acquisition of all required elements
+          if (    run_tag(SCI_height)%acquired &
+            .and. run_tag(SCI_width)%acquired &
+            .and. run_tag(SCI_porosity)%acquired ) then 
+            run_tag(SCI_height)%acquired = .false.
+            run_tag(SCI_width)%acquired = .false.
+            run_tag(SCI_porosity)%acquired = .false.
+            clipar_complete(ipol,iseas) = .true.
+          else
+            do jdx = 1, size(run_tag)
+              select case (jdx)
+              case (SCI_height, &
+                    SCI_width, &
+                    SCI_porosity)
+                if( .not. run_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
+                end if
+              end select
+            end do
+          end if
+
+        else if (idx .eq. SCI_coords) then
+          count_complete = 0
+          do jdx = 1, poly_np
+            if (coord_complete(jdx)) then
+              count_complete = count_complete + 1
+            end if
+          end do
+          if (count_complete .ge. poly_np) then
+            run_tag(SCI_coords)%acquired = .true.
+          else
+            do jdx = 1, size(coord_complete)
+              if ( .not. coord_complete(jdx)) then
+                write(*,'(3a,i0,a)') 'Tag ', trim(run_tag(SCI_coords)%name), &
+                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete arrays
+          deallocate(coord_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for coord_complete array"
+          end if
+
+        else if (idx .eq. SCI_coord) then
+          ! check for acquisition of all required elements
+          if (    run_tag(SCI_x)%acquired &
+            .and. run_tag(SCI_y)%acquired ) then 
+            run_tag(SCI_x)%acquired = .false.
+            run_tag(SCI_x)%acquired = .false.
+            coord_complete(ipol) = .true.
+            if ( run_tag(SCI_Barrier)%in_tag ) then
+              !  also place in fixed barrier structure
+              barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
+            end if
+          else
+            do jdx = 1, size(run_tag)
+              select case (jdx)
+              case (SCI_x, &
+                    SCI_y )
+                if( .not. run_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
+                end if
+              end select
+            end do
+          end if
+
+        else if (idx .eq. SCI_Subregion) then
+          ! check for acquisition of all required elements
+          if (    run_tag(SCI_SubmodelOutput)%acquired &
+            .and. run_tag(SCI_DebugOutput)%acquired &
+            .and. run_tag(SCI_coords)%acquired &
+            .and. run_tag(SCI_AverageSlope)%acquired &
+            .and. run_tag(SCI_SoilRockFragments)%acquired &
+            .and. run_tag(SCI_SoilFile)%acquired &
+            .and. run_tag(SCI_ManageFile)%acquired &
+            .and. run_tag(SCI_WaterErosionLoss)%acquired &
+            ) then 
+            run_tag(SCI_SubmodelOutput)%acquired = .false.
+            run_tag(SCI_DebugOutput)%acquired = .false.
+            run_tag(SCI_coords)%acquired = .false.
+            run_tag(SCI_AverageSlope)%acquired = .false.
+            run_tag(SCI_SoilRockFragments)%acquired = .false.
+            run_tag(SCI_SoilFile)%acquired = .false.
+            run_tag(SCI_ManageFile)%acquired = .false.
+            run_tag(SCI_WaterErosionLoss)%acquired = .false.
+            subregion_complete(isr) = .true.
+          else
+            do jdx = 1, size(run_tag)
+              select case (jdx)
+              case (SCI_AverageSlope, &
+                    SCI_SoilRockFragments, &
+                    SCI_SoilFile, &
+                    SCI_ManageFile, &
+                    SCI_WaterErosionLoss)
+                if( .not. run_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
+                end if
+              case (SCI_SubmodelOutput, &
+                    SCI_DebugOutput, &
+                    SCI_coords)
+                if( .not. run_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is incomplete or missing from input file.'
+                end if
+              end select
+            end do
+          end if
+
+        else if (idx .eq. SCI_SubmodelOutput) then
+          ! check for acquisition of all required elements
+          if (    run_tag(SCI_hydro)%acquired &
+            .and. run_tag(SCI_soil)%acquired &
+            .and. run_tag(SCI_man)%acquired &
+            .and. run_tag(SCI_crop)%acquired &
+            .and. run_tag(SCI_decomp)%acquired &
+            ) then 
+            run_tag(SCI_hydro)%acquired = .false.
+            run_tag(SCI_soil)%acquired = .false.
+            run_tag(SCI_man)%acquired = .false.
+            run_tag(SCI_crop)%acquired = .false.
+            run_tag(SCI_decomp)%acquired = .false.
+            run_tag(SCI_SubmodelOutput)%acquired = .true.
+          else
+            do jdx = 1, size(run_tag)
+              select case (jdx)
+              case (SCI_hydro, &
+                    SCI_soil, &
+                    SCI_man, &
+                    SCI_crop, &
+                    SCI_decomp)
+                if( .not. run_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
+                end if
+              end select
+            end do
+          end if
+
+        else if (idx .eq. SCI_DebugOutput) then
+          ! check for acquisition of all required elements
+          if (    run_tag(SCI_hydro)%acquired &
+            .and. run_tag(SCI_soil)%acquired &
+            .and. run_tag(SCI_man)%acquired &
+            .and. run_tag(SCI_crop)%acquired &
+            .and. run_tag(SCI_decomp)%acquired &
+            ) then 
+            run_tag(SCI_hydro)%acquired = .false.
+            run_tag(SCI_soil)%acquired = .false.
+            run_tag(SCI_man)%acquired = .false.
+            run_tag(SCI_crop)%acquired = .false.
+            run_tag(SCI_decomp)%acquired = .false.
+            run_tag(SCI_DebugOutput)%acquired = .true.
+          else
+            do jdx = 1, size(run_tag)
+              select case (jdx)
+              case (SCI_hydro, &
+                    SCI_soil, &
+                    SCI_man, &
+                    SCI_crop, &
+                    SCI_decomp)
+                if( .not. run_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
+                end if
+              end select
+            end do
           end if
 
         end if
@@ -298,50 +991,44 @@ contains
       run_tag(idx)%in_tag = .false.
     end do
 
-    ! set optional items
-    run_tag(SCI_AccNo)%required = .false.
-    run_tag(SCI_Account)%required = .false.
-    run_tag(SCI_BarrierNo)%required = .false.
-    run_tag(SCI_Barrier)%required = .false.
-
     ! assign tag names
-    run_tag(1)%name = "SCI_AccNo"
+    run_tag(1)%name = "SCI_Accounts"
     run_tag(2)%name = "SCI_Account"
     run_tag(3)%name = "SCI_AverageSlope"
     run_tag(4)%name = "SCI_BarCli"
-    run_tag(5)%name = "SCI_BarCliI"
-    run_tag(6)%name = "SCI_BarCliNo"
+    run_tag(5)%name = "SCI_BarCliIndex"
+    run_tag(6)%name = "SCI_BarCliNumber"
     run_tag(7)%name = "SCI_Barrier"
-    run_tag(8)%name = "SCI_BarrierNo"
+    run_tag(8)%name = "SCI_Barriers"
     run_tag(9)%name = "SCI_BarrierSeasonFlag"
     run_tag(10)%name = "SCI_BegTranBase"
     run_tag(11)%name = "SCI_BegTranFlg"
     run_tag(12)%name = "SCI_BegTranThresh"
     run_tag(13)%name = "SCI_climateFile"
-    run_tag(14)%name = "SCI_coordinate"
-    run_tag(15)%name = "SCI_coordinates"
-    run_tag(16)%name = "SCI_coord"
-    run_tag(17)%name = "SCI_coordI"
-    run_tag(18)%name = "SCI_coordNo"
-    run_tag(19)%name = "SCI_crop"
-    run_tag(20)%name = "SCI_CycleCount"
-    run_tag(21)%name = "SCI_DebugOutput"
-    run_tag(22)%name = "SCI_decomp"
-    run_tag(23)%name = "SCI_Description"
-    run_tag(24)%name = "SCI_Elevation"
-    run_tag(25)%name = "SCI_EndDate"
-    run_tag(26)%name = "SCI_EndTranBase"
-    run_tag(27)%name = "SCI_EndTranFlg"
-    run_tag(28)%name = "SCI_EndTranThresh"
-    run_tag(29)%name = "SCI_ErosionSubmodelOutput"
-    run_tag(30)%name = "SCI_height"
-    run_tag(31)%name = "SCI_hydro"
-    run_tag(32)%name = "SCI_index"
-    run_tag(33)%name = "SCI_LatLong"
-    run_tag(34)%name = "SCI_ManageFile"
-    run_tag(35)%name = "SCI_man"
-    run_tag(36)%name = "SCI_Number"
-    run_tag(37)%name = "SCI_pointBarCli"
+    run_tag(14)%name = "SCI_CoordinateNumber"
+    run_tag(15)%name = "SCI_coord"
+    run_tag(16)%name = "SCI_coordIndex"
+    run_tag(17)%name = "SCI_coords"
+    run_tag(18)%name = "SCI_crop"
+    run_tag(19)%name = "SCI_CycleCount"
+    run_tag(20)%name = "SCI_DebugOutput"
+    run_tag(21)%name = "SCI_decomp"
+    run_tag(22)%name = "SCI_Description"
+    run_tag(23)%name = "SCI_Elevation"
+    run_tag(24)%name = "SCI_EndDate"
+    run_tag(25)%name = "SCI_EndTranBase"
+    run_tag(26)%name = "SCI_EndTranFlg"
+    run_tag(27)%name = "SCI_EndTranThresh"
+    run_tag(28)%name = "SCI_ErosionSubmodelOutput"
+    run_tag(29)%name = "SCI_height"
+    run_tag(30)%name = "SCI_hydro"
+    run_tag(31)%name = "SCI_index"
+    run_tag(32)%name = "SCI_LatLong"
+    run_tag(33)%name = "SCI_ManageFile"
+    run_tag(34)%name = "SCI_man"
+    run_tag(35)%name = "SCI_number"
+    run_tag(36)%name = "SCI_PointBarCli"
+    run_tag(37)%name = "SCI_PointBarClis"
     run_tag(38)%name = "SCI_porosity"
     run_tag(39)%name = "SCI_RegionAngle"
     run_tag(40)%name = "runFileData"
@@ -352,7 +1039,7 @@ contains
     run_tag(45)%name = "SCI_subDailyFile"
     run_tag(46)%name = "SCI_SubmodelOutput"
     run_tag(47)%name = "SCI_Subregion"
-    run_tag(48)%name = "SCI_SubregionNo"
+    run_tag(48)%name = "SCI_Subregions"
     run_tag(49)%name = "SCI_TimeDesc"
     run_tag(50)%name = "SCI_TimeMark"
     run_tag(51)%name = "SCI_TimeSteps"
@@ -377,7 +1064,6 @@ contains
     character(len=*), intent(in) :: chunk
 
     character(len=80) :: param_value
-    integer :: sum_stat, alloc_stat, dealloc_stat
     integer :: read_stat
     real :: cligen_version
 
@@ -403,6 +1089,7 @@ contains
       else if (run_tag(SCI_Elevation)%in_tag) then
         call read_param(SCI_Elevation, param_value, amzele)
         run_tag(SCI_Elevation)%acquired = .true.
+
       else if (run_tag(SCI_StartDate)%in_tag) then
         call read_param(SCI_StartDate, param_value, id, im, iy)
         if ((id .lt. 1) .or. (id .gt. lstday(im,iy))) then
@@ -443,12 +1130,6 @@ contains
       else if (run_tag(SCI_TimeSteps)%in_tag) then
         call read_param(SCI_TimeSteps, param_value, ntstep)
         run_tag(SCI_TimeSteps)%acquired = .true.
-
-        ! allocate wind direction and speed array
-        allocate(subday(ntstep), stat=alloc_stat)
-        if( alloc_stat .gt. 0 ) then
-           write(*,*) 'ERROR: memory alloc., wind direction and speed'
-        end if
 
       else if (run_tag(SCI_climateFile)%in_tag) then
         ! read CLIGEN file name
@@ -571,189 +1252,70 @@ contains
         call read_param(SCI_YGrid, param_value, ygdpt)
         run_tag(SCI_YGrid)%acquired = .true.
 
-      else if (run_tag(SCI_AccNo)%in_tag) then
-        call read_param(SCI_AccNo, param_value, nacctr)
-        run_tag(SCI_AccNo)%acquired = .true.
-        if (nacctr .gt. 0) then
-          ! set counter iar for reading in Accounting Regions
-          iar = 1
-        end if
-        ! create array of accounting region polygons (zero size array allowed)
-        allocate(acct_poly(nacctr), stat = alloc_stat)
-        if( alloc_stat .gt. 0 ) then
-          write(*,*) 'ERROR: memory alloc., accounting region polygons'
-        end if
-
-      else if (run_tag(SCI_Account)%in_tag) then
-        ! Accounting region SCI_coordinates
-        if (run_tag(SCI_AccNo)%required) then
-          if (run_tag(SCI_coordinates)%in_tag) then
-            !SCI_coordinates
-            if (run_tag(SCI_Number)%in_tag) then
-              call read_param(SCI_Number, param_value, poly_np)
-              if (poly_np .gt. 0) then
-                ! create polygon point storage
-                acct_poly(iar) = create_polygon(poly_np)
-                ! initialize polygon point counter
-                ipol = 1
-              end if
-              run_tag(SCI_Number)%acquired = .true.
-            else if (run_tag(SCI_coordinate)%in_tag) then
-              if (run_tag(SCI_Number)%acquired) then
-                call read_param(SCI_coordinate, param_value, acct_poly(iar)%points(ipol)%x, acct_poly(iar)%points(ipol)%y)
-                ipol = ipol + 1
-                if (ipol .gt. poly_np) then
-                  ! finished with this accounting region
-                  call set_area_polygon( acct_poly(iar) )
-                  iar = iar + 1
-                end if
-              else
-                write(*,*) 'Error: Number of coordinates must be specified before reading in SCI_coordinates'
+      else if (run_tag(SCI_Accounts)%in_tag) then
+        if (run_tag(SCI_Account)%in_tag) then
+          if (run_tag(SCI_coords)%in_tag) then
+            if (run_tag(SCI_coord)%in_tag) then
+              !SCI_coord
+              if (run_tag(SCI_x)%in_tag) then
+                call read_param(SCI_x, param_value, acct_poly(iar)%points(ipol)%x)
+                run_tag(SCI_x)%acquired = .true.
+              else if (run_tag(SCI_y)%in_tag) then
+                call read_param(SCI_y, param_value, acct_poly(iar)%points(ipol)%y)
+                run_tag(SCI_y)%acquired = .true.
               end if
             end if
           end if
-          if (iar .gt. nacctr) then
-            run_tag(SCI_AccNo)%acquired = .true.
-            run_tag(SCI_Account)%acquired = .true.
-            run_tag(SCI_Number)%acquired = .false.
-          end if
-        else
-          write(*,*) 'Error: Number of accounting regions must be specified before reading in accounting region data'
         end if
 
-      else if (run_tag(SCI_SubregionNo)%in_tag) then
-        call read_param(SCI_SubregionNo, param_value, nsubr)
-        if (nsubr .lt. 1) then
-          write(*,*) 'Error, subregion count must be 1 or greater. Value: ', nsubr
-          call exit(1)
-        end if
-        run_tag(SCI_SubregionNo)%acquired = .true.
-
-        sum_stat = 0
-        ! create array of subregion polygons
-        allocate(subr_poly(nsubr), stat = alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        ! create arrays for submodel output flags
-        allocate(am0hfl(nsubr), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        allocate(am0sfl(nsubr), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        allocate(am0tfl(nsubr), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        allocate(am0cfl(nsubr), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        allocate(am0dfl(nsubr), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        ! create arrays for submodel debug flags
-        allocate(am0hdb(nsubr), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        allocate(am0sdb(nsubr), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        allocate(am0tdb(nsubr), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        allocate(am0cdb(nsubr), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        allocate(am0ddb(nsubr), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        allocate(soil_in(nsubr), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        allocate(tinfil(nsubr), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        allocate(subregion_complete(nsubr), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        if( sum_stat .gt. 0 ) then
-           write(*,*) 'ERROR: memory alloc., subregion arrays'
-        end if
-
-      else if (run_tag(SCI_Subregion)%in_tag) then
-        ! SCI_Subregion
-        if (run_tag(SCI_SubregionNo)%acquired) then
-          if (run_tag(SCI_index)%in_tag) then
-            call read_param(SCI_index, param_value, isr)
-            ! adjust from base 0 to base 1 arrays
-            isr = isr + 1
-            run_tag(SCI_index)%acquired = .true.
-          else if (run_tag(SCI_SubmodelOutput)%in_tag) then
+      else if (run_tag(SCI_Subregions)%in_tag) then
+        if (run_tag(SCI_Subregion)%in_tag) then
+          ! SCI_Subregion
+          if (run_tag(SCI_SubmodelOutput)%in_tag) then
             ! SCI_SubmodelOutput
             if (run_tag(SCI_hydro)%in_tag) then
-              call read_param(SCI_hydro, param_value, t_am0hfl)
+              call read_param(SCI_hydro, param_value, am0hfl(isr))
               run_tag(SCI_hydro)%acquired = .true.
             else if (run_tag(SCI_soil)%in_tag) then
-              call read_param(SCI_soil, param_value, t_am0sfl)
+              call read_param(SCI_soil, param_value, am0sfl(isr))
               run_tag(SCI_soil)%acquired = .true.
             else if (run_tag(SCI_man)%in_tag) then
-              call read_param(SCI_man, param_value, t_am0tfl)
+              call read_param(SCI_man, param_value, am0tfl(isr))
               run_tag(SCI_man)%acquired = .true.
             else if (run_tag(SCI_crop)%in_tag) then
-              call read_param(SCI_crop, param_value, t_am0cfl)
+              call read_param(SCI_crop, param_value, am0cfl(isr))
               run_tag(SCI_crop)%acquired = .true.
             else if (run_tag(SCI_decomp)%in_tag) then
-              call read_param(SCI_decomp, param_value, t_am0dfl)
+              call read_param(SCI_decomp, param_value, am0dfl(isr))
               run_tag(SCI_decomp)%acquired = .true.
-            end if
-            if (    run_tag(SCI_hydro)%acquired &
-              .and. run_tag(SCI_soil)%acquired &
-              .and. run_tag(SCI_man)%acquired &
-              .and. run_tag(SCI_crop)%acquired &
-              .and. run_tag(SCI_decomp)%acquired ) then
-              run_tag(SCI_hydro)%acquired = .false.
-              run_tag(SCI_soil)%acquired = .false.
-              run_tag(SCI_man)%acquired = .false.
-              run_tag(SCI_crop)%acquired = .false.
-              run_tag(SCI_decomp)%acquired = .false.
-              run_tag(SCI_SubmodelOutput)%acquired = .true.
             end if
           else if (run_tag(SCI_DebugOutput)%in_tag) then
             ! SCI_DebugOutput
             if (run_tag(SCI_hydro)%in_tag) then
-              call read_param(SCI_hydro, param_value, t_am0hdb)
+              call read_param(SCI_hydro, param_value, am0hdb(isr))
               run_tag(SCI_hydro)%acquired = .true.
             else if (run_tag(SCI_soil)%in_tag) then
-              call read_param(SCI_soil, param_value, t_am0sdb)
+              call read_param(SCI_soil, param_value, am0sdb(isr))
               run_tag(SCI_soil)%acquired = .true.
             else if (run_tag(SCI_man)%in_tag) then
-              call read_param(SCI_man, param_value, t_am0tdb)
+              call read_param(SCI_man, param_value, am0tdb(isr))
               run_tag(SCI_man)%acquired = .true.
             else if (run_tag(SCI_crop)%in_tag) then
-              call read_param(SCI_crop, param_value, t_am0cdb)
+              call read_param(SCI_crop, param_value, am0cdb(isr))
               run_tag(SCI_crop)%acquired = .true.
             else if (run_tag(SCI_decomp)%in_tag) then
-              call read_param(SCI_decomp, param_value, t_am0ddb)
+              call read_param(SCI_decomp, param_value, am0ddb(isr))
               run_tag(SCI_decomp)%acquired = .true.
             end if
-            if (    run_tag(SCI_hydro)%acquired &
-              .and. run_tag(SCI_soil)%acquired &
-              .and. run_tag(SCI_man)%acquired &
-              .and. run_tag(SCI_crop)%acquired &
-              .and. run_tag(SCI_decomp)%acquired ) then
-              run_tag(SCI_hydro)%acquired = .false.
-              run_tag(SCI_soil)%acquired = .false.
-              run_tag(SCI_man)%acquired = .false.
-              run_tag(SCI_crop)%acquired = .false.
-              run_tag(SCI_decomp)%acquired = .false.
-              run_tag(SCI_DebugOutput)%acquired = .true.
-            end if
-          else if (run_tag(SCI_coordinates)%in_tag) then
-            !SCI_coordinates
-            if (run_tag(SCI_Number)%in_tag) then
-              call read_param(SCI_Number, param_value, poly_np)
-              if (poly_np .gt. 0) then
-                ! create polygon point storage
-                t_polygon = create_polygon(poly_np)
-                ! initialize polygon point counter
-                ipol = 1
-              end if
-              run_tag(SCI_Number)%acquired = .true.
-            else if (run_tag(SCI_coordinate)%in_tag) then
-              if (run_tag(SCI_Number)%acquired) then
-                call read_param(SCI_coordinate, param_value, t_polygon%points(ipol)%x, t_polygon%points(ipol)%y)
-                ipol = ipol + 1
-                if (ipol .gt. poly_np) then
-                  run_tag(SCI_coordinates)%acquired = .true.
-                  run_tag(SCI_Number)%acquired = .false.
-                end if
-              else
-                write(*,*) 'Error: Number of coordinates must be specified before reading in SCI_coordinates'
+          else if (run_tag(SCI_Coords)%in_tag) then
+            !SCI_Coords
+            if (run_tag(SCI_coord)%in_tag) then
+              if (run_tag(SCI_x)%in_tag) then
+                call read_param(SCI_x, param_value, subr_poly(isr)%points(ipol)%x)
+                run_tag(SCI_x)%acquired = .true.
+              else if (run_tag(SCI_y)%in_tag) then
+                call read_param(SCI_y, param_value, subr_poly(isr)%points(ipol)%y)
+                run_tag(SCI_y)%acquired = .true.
               end if
             end if
           else if (run_tag(SCI_AverageSlope)%in_tag) then
@@ -762,383 +1324,113 @@ contains
             !        ie. not entered. It is now the only way to set a 
             !        non default slope when using the older "non-versioned"
             !        IFC files.   
-            call read_param(SCI_AverageSlope, param_value, t_soil%amrslp)
+            call read_param(SCI_AverageSlope, param_value, soil_in(isr)%amrslp)
             run_tag(SCI_AverageSlope)%acquired = .true.
 
           else if (run_tag(SCI_SoilRockFragments)%in_tag) then
-            call read_param(SCI_SoilRockFragments, param_value, t_soil%SoilRockFragments)
+            call read_param(SCI_SoilRockFragments, param_value, soil_in(isr)%SoilRockFragments)
             run_tag(SCI_SoilRockFragments)%acquired = .true.
 
           else if (run_tag(SCI_SoilFile)%in_tag) then
             ! read in initial field conditions file name
-            t_soil%sinfil = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
+            soil_in(isr)%sinfil = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
             run_tag(SCI_SoilFile)%acquired = .true.
 
             write(*,*) 'SOILFILE: ', param_value(1:len_trim(param_value))
 
           else if (run_tag(SCI_ManageFile)%in_tag) then
             ! read in management file name
-            t_tinfil = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
+            tinfil(isr) = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
             run_tag(SCI_ManageFile)%acquired = .true.
 
           else if (run_tag(SCI_WaterErosionLoss)%in_tag) then
-            call read_param(SCI_WaterErosionLoss, param_value, t_soil%WaterErosion)
+            call read_param(SCI_WaterErosionLoss, param_value, soil_in(isr)%WaterErosion)
             run_tag(SCI_WaterErosionLoss)%acquired = .true.
 
           end if
-          if (    run_tag(SCI_index)%acquired &
-            .and. run_tag(SCI_SubmodelOutput)%acquired &
-            .and. run_tag(SCI_DebugOutput)%acquired &
-            .and. run_tag(SCI_coordinates)%acquired &
-            .and. run_tag(SCI_AverageSlope)%acquired &
-            .and. run_tag(SCI_SoilRockFragments)%acquired &
-            .and. run_tag(SCI_SoilFile)%acquired &
-            .and. run_tag(SCI_ManageFile)%acquired &
-            .and. run_tag(SCI_WaterErosionLoss)%acquired) then
-            run_tag(SCI_index)%acquired = .false.
-            run_tag(SCI_SubmodelOutput)%acquired = .false.
-            run_tag(SCI_DebugOutput)%acquired = .false.
-            run_tag(SCI_coordinates)%acquired = .false.
-            run_tag(SCI_AverageSlope)%acquired = .false.
-            run_tag(SCI_SoilRockFragments)%acquired = .false.
-            run_tag(SCI_SoilFile)%acquired = .false.
-            run_tag(SCI_ManageFile)%acquired = .false.
-            run_tag(SCI_WaterErosionLoss)%acquired = .false.
-            am0hfl(isr) = t_am0hfl
-            am0sfl(isr) = t_am0sfl
-            am0tfl(isr) = t_am0tfl
-            am0cfl(isr) = t_am0cfl
-            am0dfl(isr) = t_am0dfl
-            am0hdb(isr) = t_am0hdb
-            am0sdb(isr) = t_am0sdb
-            am0tdb(isr) = t_am0tdb
-            am0cdb(isr) = t_am0cdb
-            am0ddb(isr) = t_am0ddb
-            subr_poly(isr) = t_polygon
-            ! polygon complete
-            call set_area_polygon(subr_poly(isr))
-            call destroy_polygon(t_polygon)
-            soil_in(isr) = t_soil
-            tinfil(isr) = t_tinfil
-            subregion_complete(isr) = .true.
-            count_complete = 0
-            do isr = 1, nsubr
-              if (subregion_complete(isr)) then
-                count_complete = count_complete + 1
-              end if
-            end do
-            if (count_complete .ge. nsubr) then
-              run_tag(SCI_Subregion)%acquired = .true.
-            end if
-          end if
-        else
-          write(*,*) 'Error: Number of subregions must be specified before reading in subregion data'
-        end if
-      else if (run_tag(SCI_BarrierNo)%in_tag) then
-        call read_param(SCI_BarrierNo, param_value, nbr)
-        run_tag(SCI_BarrierNo)%acquired = .true.
-        if (nbr .gt. 0) then
-          ! set counter ibr for reading in Barriers Regions
-          ibr = 1
-        end if
-        ! allocate structure for barriers (nbr .lt. 1 gives zero size array)
-        allocate(barrier(nbr), stat = alloc_stat)
-        if( alloc_stat .gt. 0 ) then
-          write(*,*) 'ERROR: memory alloc., barrier'
-        end if
-        allocate(barseas(nbr), stat = alloc_stat)
-        if( alloc_stat .gt. 0 ) then
-          write(*,*) 'ERROR: memory alloc., seasonal barrier'
         end if
 
-      else if (run_tag(SCI_Barrier)%in_tag) then
-        !  These barriers as entered are considered to be thin, having no real
-        !  area effect such as erodible material source or deposition area.
-        !  The polyline entered is the "effective location".
+      else if (run_tag(SCI_Barriers)%in_tag) then
+        if (run_tag(SCI_Barrier)%in_tag) then
+          !  These barriers as entered are considered to be thin, having no real
+          !  area effect such as erodible material source or deposition area.
+          !  The polyline entered is the "effective location".
 
-        !  Barriers wider than anything approaching the scale of a cell (1/10th
-        !  a cell width)should probably be entered as subregions and the erosion
-        !  submodel changed to consider their wind shadow effect on adjoining cells
+          !  Barriers wider than anything approaching the scale of a cell (1/10th
+          !  a cell width)should probably be entered as subregions and the erosion
+          !  submodel changed to consider their wind shadow effect on adjoining cells
 
-        !  Note: the barrier point number must be read first and the barrier storage
-        !  allocated, then the barrier level data populated. (hence the barrier type
-        !  string now comes last)
+          !  Note: the barrier point number must be read first and the barrier storage
+          !  allocated, then the barrier level data populated. (hence the barrier type
+          !  string now comes last)
 
-        !  Note: When seas_flg = 2 is specified, it is required that two points (no
-        !  more no less) in time be provided, the first date being when it can be
-        !  guaranteed that leaves are at a minimum, and the data values for porosity
-        !  correspond to that. The second date is when it can be quaranteed that
-        !  leaves are at a maximum and the data values for porosity correspond to that.
+          !  Note: When seas_flg = 2 is specified, it is required that two points (no
+          !  more no less) in time be provided, the first date being when it can be
+          !  guaranteed that leaves are at a minimum, and the data values for porosity
+          !  correspond to that. The second date is when it can be quaranteed that
+          !  leaves are at a maximum and the data values for porosity correspond to that.
 
-        ! read in barrier info
-        if (run_tag(SCI_BarrierNo)%acquired) then
+          ! read in barrier info
           if (run_tag(SCI_Description)%in_tag) then
-              barseas(ibr)%amzbt = trim(param_value)
-              barrier(ibr)%amzbt = barseas(ibr)%amzbt
+            barseas(ibr)%amzbt = trim(param_value)
+            barrier(ibr)%amzbt = barseas(ibr)%amzbt
             run_tag(SCI_Description)%acquired = .true.
-          else if (run_tag(SCI_BarrierSeasonFlag)%in_tag) then
-            call read_param(SCI_BarrierSeasonFlag, param_value, seas_flg)
-            run_tag(SCI_BarrierSeasonFlag)%acquired = .true.
-          else if (run_tag(SCI_BarCliNo)%in_tag) then
-            call read_param(SCI_BarCliNo, param_value, ntm_seas)
-            run_tag(SCI_BarCliNo)%acquired = .true.
-
-          else if (run_tag(SCI_coordNo)%in_tag) then
-            call read_param(SCI_coordNo, param_value, poly_np)
-            if (run_tag(SCI_BarrierSeasonFlag)%acquired &
-              .and. run_tag(SCI_BarCliNo)%acquired &
-              ) then
-              if (    (seas_flg .ne. 0) &
-                .and. (seas_flg .ne. 1) &
-                .and. (seas_flg .ne. 2) &
-                ) then
-                write(*,*) 'ERROR: Barrier season flag value must be 0, 1 or 2'
-                write(*,FMT='(i0)') 'Input value was: ', seas_flg
-                call exit(35)
+          else if (run_tag(SCI_PointBarClis)%in_tag) then
+            if (run_tag(SCI_BarCli)%in_tag) then
+              ! SCI_BarCli Climate transition parameters
+              if (run_tag(SCI_TimeMark)%in_tag) then
+                call read_param(SCI_TimeMark, param_value, barseas(ibr)%dst(iseas)%doy)
+                run_tag(SCI_TimeMark)%acquired = .true.
+              else if (run_tag(SCI_TimeDesc)%in_tag) then
+                barseas(ibr)%dst(iseas)%st_desc = param_value(1:80)
+                run_tag(SCI_TimeDesc)%acquired = .true.
+              else if (run_tag(SCI_BegTranFlg)%in_tag) then
+                call read_param(SCI_BegTranFlg, param_value, barseas(ibr)%clim(iseas)%beg_flg)
+                run_tag(SCI_BegTranFlg)%acquired = .true.
+              else if (run_tag(SCI_BegTranThresh)%in_tag) then
+                call read_param(SCI_BegTranThresh, param_value, barseas(ibr)%clim(iseas)%beg_thresh)
+                run_tag(SCI_BegTranThresh)%acquired = .true.
+              else if (run_tag(SCI_BegTranBase)%in_tag) then
+                call read_param(SCI_BegTranBase, param_value, barseas(ibr)%clim(iseas)%beg_base)
+                run_tag(SCI_BegTranBase)%acquired = .true.
+              else if (run_tag(SCI_EndTranFlg)%in_tag) then
+                call read_param(SCI_EndTranFlg, param_value, barseas(ibr)%clim(iseas)%end_flg)
+                run_tag(SCI_EndTranFlg)%acquired = .true.
+              else if (run_tag(SCI_EndTranThresh)%in_tag) then
+                call read_param(SCI_EndTranThresh, param_value, barseas(ibr)%clim(iseas)%end_thresh)
+                run_tag(SCI_EndTranThresh)%acquired = .true.
+              else if (run_tag(SCI_EndTranBase)%in_tag) then
+                call read_param(SCI_EndTranBase, param_value, barseas(ibr)%clim(iseas)%end_base)
+                run_tag(SCI_EndTranBase)%acquired = .true.
               end if
-            else
-              write(*,*) 'Tags for SCI_BarrierSeasonFlag and SCI_BarCliNo are required before reading SCI_coordNo tag.'
-              call exit(1)
-            end if
-            run_tag(SCI_coordNo)%acquired = .true.
-            ! create storage for point and barrier data
-            ! this also sets values for barr%np and barr%ntm
-            call create_barrier(barrier(ibr), poly_np)
-            call create_barrier(barseas(ibr), poly_np,ntm_seas,seas_flg)
-            ! create storage for season, points and climate parameter index tracking
-            sum_stat = 0
-            allocate(season_complete(ntm_seas), stat = alloc_stat)
-            sum_stat = sum_stat + alloc_stat
-            allocate(points_complete(poly_np), stat = alloc_stat)
-            sum_stat = sum_stat + alloc_stat
-            allocate(clipar_complete(poly_np, ntm_seas), stat = alloc_stat)
-            sum_stat = sum_stat + alloc_stat
-            if( sum_stat .gt. 0 ) then
-              ! deallocation failed
-              write(*,*) "ERROR: unable to allocate memory for _complete arrays"
-            end if
-            ! initialize _complete arrays to false
-            do iseas = 1, ntm_seas
-              season_complete(iseas) = .false.
-            end do
-            do ipol = 1, poly_np
-              points_complete(ipol) = .false.
-            end do
-            do iseas = 1, ntm_seas
-              do ipol = 1, poly_np
-                clipar_complete(ipol, iseas) = .false.
-              end do
-            end do
-
-          else if (run_tag(SCI_BarCli)%in_tag) then
-            ! SCI_BarCli Climate transition parameters
-            if (run_tag(SCI_index)%in_tag) then
-              call read_param(SCI_index, param_value, iseas)
-              ! adjust from base 0 to base 1 arrays
-              iseas = iseas + 1
-              run_tag(SCI_index)%acquired = .true.
-            else if (run_tag(SCI_TimeMark)%in_tag) then
-              call read_param(SCI_TimeMark, param_value, t_day_state%doy)
-              run_tag(SCI_TimeMark)%acquired = .true.
-            else if (run_tag(SCI_TimeDesc)%in_tag) then
-              t_day_state%st_desc = param_value(1:80)
-              run_tag(SCI_TimeDesc)%acquired = .true.
-            else if (run_tag(SCI_BegTranFlg)%in_tag) then
-              call read_param(SCI_BegTranFlg, param_value, t_climate%beg_flg)
-              run_tag(SCI_BegTranFlg)%acquired = .true.
-            else if (run_tag(SCI_BegTranThresh)%in_tag) then
-              call read_param(SCI_BegTranThresh, param_value, t_climate%beg_thresh)
-              run_tag(SCI_BegTranThresh)%acquired = .true.
-            else if (run_tag(SCI_BegTranBase)%in_tag) then
-              call read_param(SCI_BegTranBase, param_value, t_climate%beg_base)
-              run_tag(SCI_BegTranBase)%acquired = .true.
-            else if (run_tag(SCI_EndTranFlg)%in_tag) then
-              call read_param(SCI_EndTranFlg, param_value, t_climate%end_flg)
-              run_tag(SCI_EndTranFlg)%acquired = .true.
-            else if (run_tag(SCI_EndTranThresh)%in_tag) then
-              call read_param(SCI_EndTranThresh, param_value, t_climate%end_thresh)
-              run_tag(SCI_EndTranThresh)%acquired = .true.
-            else if (run_tag(SCI_EndTranBase)%in_tag) then
-              call read_param(SCI_EndTranBase, param_value, t_climate%end_base)
-              run_tag(SCI_EndTranBase)%acquired = .true.
-            end if
-            if( seas_flg .eq. 2 ) then
-              if (    run_tag(SCI_index)%acquired &
-                .and. run_tag(SCI_TimeMark)%acquired & 
-                .and. run_tag(SCI_TimeDesc)%acquired &
-                .and. run_tag(SCI_BegTranFlg)%acquired &
-                .and. run_tag(SCI_BegTranThresh)%acquired &
-                .and. run_tag(SCI_BegTranBase)%acquired &
-                .and. run_tag(SCI_EndTranFlg)%acquired &
-                .and. run_tag(SCI_EndTranThresh)%acquired &
-                .and. run_tag(SCI_EndTranBase)%acquired &
-                ) then
-                run_tag(SCI_index)%acquired = .false.
-                run_tag(SCI_TimeMark)%acquired = .false.
-                run_tag(SCI_TimeDesc)%acquired = .false.
-                run_tag(SCI_BegTranFlg)%acquired = .false.
-                run_tag(SCI_BegTranThresh)%acquired = .false.
-                run_tag(SCI_BegTranBase)%acquired = .false.
-                run_tag(SCI_EndTranFlg)%acquired = .false.
-                run_tag(SCI_EndTranThresh)%acquired = .false.
-                run_tag(SCI_EndTranBase)%acquired = .false.
-                barseas(ibr)%dst(iseas) = t_day_state
-                barseas(ibr)%clim(iseas) = t_climate
-                season_complete(iseas) = .true.
-                count_complete = 0
-                do iseas = 1, ntm_seas
-                  if (season_complete(iseas)) then
-                    count_complete = count_complete + 1
-                  end if
-                end do
-                if (count_complete .ge. ntm_seas) then
-                  run_tag(SCI_BarCli)%acquired = .true.
-                end if
-              end if  
-            else 
-              if (    run_tag(SCI_index)%acquired &
-                .and. run_tag(SCI_TimeMark)%acquired & 
-                .and. run_tag(SCI_TimeDesc)%acquired &
-                ) then
-                run_tag(SCI_index)%acquired = .false.
-                run_tag(SCI_TimeMark)%acquired = .false.
-                run_tag(SCI_TimeDesc)%acquired = .false.
-                season_complete(iseas) = .true.
-                count_complete = 0
-                do iseas = 1, ntm_seas
-                  if (season_complete(iseas)) then
-                    count_complete = count_complete + 1
-                  end if
-                end do
-                if (count_complete .ge. ntm_seas) then
-                  run_tag(SCI_BarCli)%acquired = .true.
-                end if
+            else if (run_tag(SCI_coord)%in_tag) then
+              !SCI_coord
+              if (run_tag(SCI_index)%in_tag) then
+                call read_param(SCI_index, param_value, ipol)
+                ! adjust from base 0 to base 1 arrays
+                ipol = ipol + 1
+                run_tag(SCI_index)%acquired = .true.
+              else if (run_tag(SCI_x)%in_tag) then
+                call read_param(SCI_x, param_value, barseas(ibr)%points(ipol)%x)
+                run_tag(SCI_x)%acquired = .true.
+              else if (run_tag(SCI_y)%in_tag) then
+                call read_param(SCI_y, param_value, barseas(ibr)%points(ipol)%y)
+                run_tag(SCI_y)%acquired = .true.
               end if
-            end if
-          else if (run_tag(SCI_coord)%in_tag) then
-            !SCI_coord
-            if (run_tag(SCI_index)%in_tag) then
-              call read_param(SCI_index, param_value, ipol)
-              ! adjust from base 0 to base 1 arrays
-              ipol = ipol + 1
-              run_tag(SCI_index)%acquired = .true.
-            else if (run_tag(SCI_x)%in_tag) then
-              call read_param(SCI_x, param_value, t_point%x)
-              run_tag(SCI_x)%acquired = .true.
-            else if (run_tag(SCI_y)%in_tag) then
-              call read_param(SCI_y, param_value, t_point%y)
-              run_tag(SCI_y)%acquired = .true.
-            end if
-            if(     run_tag(SCI_index)%acquired &
-              .and. run_tag(SCI_x)%acquired &
-              .and. run_tag(SCI_y)%acquired &
-              ) then
-              run_tag(SCI_index)%acquired = .false.
-              run_tag(SCI_x)%acquired = .false.
-              run_tag(SCI_y)%acquired = .false.
-              barseas(ibr)%points(ipol) = t_point
-              !  also place in fixed barrier structure
-              barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
-              points_complete(ipol) = .true.
-              count_complete = 0
-              do ipol = 1, poly_np
-                if (points_complete(ipol)) then
-                  count_complete = count_complete + 1
-                end if
-              end do
-              if (count_complete .ge. poly_np) then
-                run_tag(SCI_coord)%acquired = .true.
-              end if
-            end if
-          else if (run_tag(SCI_pointBarCli)%in_tag) then
-            ! SCI_pointBarCli
-             if (run_tag(SCI_coordI)%in_tag) then
-              call read_param(SCI_coordI, param_value, ipol) 
-              ! adjust from base 0 to base 1 arrays
-              ipol = ipol + 1
-              run_tag(SCI_coordI)%acquired = .true.
-            else if (run_tag(SCI_BarCliI)%in_tag) then
-              call read_param(SCI_BarCliI, param_value, iseas)
-              ! adjust from base 0 to base 1 arrays
-              iseas = iseas + 1
-              run_tag(SCI_BarCliI)%acquired = .true.
-            else if (run_tag(SCI_height)%in_tag) then
-              call read_param(SCI_height, param_value, t_params%amzbr)
-              run_tag(SCI_height)%acquired = .true.
-            else if (run_tag(SCI_width)%in_tag) then
-              call read_param(SCI_width, param_value, t_params%amxbrw)
-              run_tag(SCI_width)%acquired = .true.
-            else if (run_tag(SCI_porosity)%in_tag) then
-              call read_param(SCI_porosity, param_value, t_params%ampbr)
-              run_tag(SCI_porosity)%acquired = .true.
-            end if
-            if (    run_tag(SCI_coordI)%acquired &
-              .and. run_tag(SCI_BarCliI)%acquired &
-              .and. run_tag(SCI_height)%acquired &
-              .and. run_tag(SCI_width)%acquired &
-              .and. run_tag(SCI_porosity)%acquired &
-              ) then
-              if( t_params%amzbr .le. 0.0 ) then
-                write(*,*) 'ERROR: Barrier height must be > 0'
-                write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol, 'Season #: ', iseas
-                call exit(40)
-              end if
-              run_tag(SCI_coordI)%acquired = .false.
-              run_tag(SCI_BarCliI)%acquired = .false.
-              run_tag(SCI_height)%acquired = .false.
-              run_tag(SCI_width)%acquired = .false.
-              run_tag(SCI_porosity)%acquired = .false.
-              barseas(ibr)%param(ipol,iseas) = t_params
-              clipar_complete(ipol,iseas) = .true.
-              count_complete = 0
-              do ipol = 1, poly_np
-                do iseas = 1, ntm_seas
-                  if (clipar_complete(ipol,iseas)) then
-                    count_complete = count_complete + 1
-                  end if
-                end do
-              end do
-              if (count_complete .ge. poly_np*ntm_seas) then
-                run_tag(SCI_pointBarCli)%acquired = .true.
+            else if (run_tag(SCI_PointBarCli)%in_tag) then
+              ! SCI_PointBarCli
+               if (run_tag(SCI_height)%in_tag) then
+                call read_param(SCI_height, param_value, barseas(ibr)%param(ipol,iseas)%amzbr)
+                run_tag(SCI_height)%acquired = .true.
+              else if (run_tag(SCI_width)%in_tag) then
+                call read_param(SCI_width, param_value, barseas(ibr)%param(ipol,iseas)%amxbrw)
+                run_tag(SCI_width)%acquired = .true.
+              else if (run_tag(SCI_porosity)%in_tag) then
+                call read_param(SCI_porosity, param_value, barseas(ibr)%param(ipol,iseas)%ampbr)
+                run_tag(SCI_porosity)%acquired = .true.
               end if
             end if
           end if
-
-          if (    run_tag(SCI_Description)%acquired &
-            .and. run_tag(SCI_BarrierSeasonFlag)%acquired &
-            .and. run_tag(SCI_BarCliNo)%acquired &
-            .and. run_tag(SCI_BarCli)%acquired &
-            .and. run_tag(SCI_coordNo)%acquired &
-            .and. run_tag(SCI_coord)%acquired &
-            .and. run_tag(SCI_pointBarCli)%acquired &
-            ) then
-            run_tag(SCI_Description)%acquired = .false.
-            run_tag(SCI_BarrierSeasonFlag)%acquired = .false.
-            run_tag(SCI_BarCliNo)%acquired = .false.
-            run_tag(SCI_BarCli)%acquired = .false.
-            run_tag(SCI_coordNo)%acquired = .false.
-            run_tag(SCI_coord)%acquired = .false.
-            run_tag(SCI_pointBarCli)%acquired = .false.
-            ibr = ibr + 1
-            if (ibr .gt. nbr) then
-              run_tag(SCI_Barrier)%acquired = .true.
-            end if
-
-            sum_stat = 0
-            deallocate(season_complete, stat=dealloc_stat)
-            sum_stat = sum_stat + dealloc_stat
-            deallocate(points_complete, stat=dealloc_stat)
-            sum_stat = sum_stat + dealloc_stat
-            deallocate(clipar_complete, stat=dealloc_stat)
-            sum_stat = sum_stat + dealloc_stat
-            if( sum_stat .gt. 0 ) then
-              ! deallocation failed
-              write(*,*) "ERROR: unable to deallocate memory for _complete arrays"
-            end if
-
-          end if
-        else
-          write(*,*) 'Error: Number of barriers must be specified before reading in barrier data'
         end if
 
       end if

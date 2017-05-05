@@ -767,8 +767,7 @@ contains
 
         else if (idx .eq. SCI_Account) then
           ! check for acquisition of all required elements
-          if (    input_tag(SCI_coords)%acquired &
-            ) then 
+          if ( input_tag(SCI_coords)%acquired ) then 
             input_tag(SCI_coords)%acquired = .false.
             account_complete(iar) = .true.
           else

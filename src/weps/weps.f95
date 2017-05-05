@@ -280,7 +280,9 @@
 
       if (calibrate_crops > 3) max_calib_cycles = calibrate_crops
 
-!     open input files and read run files
+      ! open input files and read run files
+      ! The argument soil_in is only accessed when reading the leagacy run file
+      ! When rading the xml input, soil_in is accessed through the soil_def module.
       call input(soil_in)
 
       ! set total number of subregions from size of allocated subr_poly array
