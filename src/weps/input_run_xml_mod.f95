@@ -600,6 +600,7 @@ contains
           if ( run_tag(SCI_coords)%acquired ) then 
             run_tag(SCI_coords)%acquired = .false.
             account_complete(iar) = .true.
+            call set_area_polygon(acct_poly(iar))
           else
             do jdx = 1, size(run_tag)
               select case (jdx)
@@ -878,6 +879,7 @@ contains
             run_tag(SCI_ManageFile)%acquired = .false.
             run_tag(SCI_WaterErosionLoss)%acquired = .false.
             subregion_complete(isr) = .true.
+            call set_area_polygon(subr_poly(isr))
           else
             do jdx = 1, size(run_tag)
               select case (jdx)

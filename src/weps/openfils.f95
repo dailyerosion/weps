@@ -372,6 +372,7 @@
             end if
          end do
       end if
+
       if (maxval(am0sdb) .eq. 1) then
          allocate( luosdb(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
@@ -383,7 +384,7 @@
             end if
          end do
       end if
-write(0,*) 'am0tdb is: ', am0tdb
+
       if (maxval(am0tdb) .eq. 1) then
          allocate( luotdb(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
@@ -407,6 +408,7 @@ write(0,*) 'am0tdb is: ', am0tdb
             end if
          end do
       end if
+
       if (maxval(am0ddb) .eq. 1) then
          allocate( luoddb(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then

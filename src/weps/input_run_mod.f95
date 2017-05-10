@@ -67,6 +67,8 @@ contains
         end if
       end if
 
+      !call echo_inputs(soil)
+
 !     If this is a simulation that does water erosion read any extra WEPP
 !     input data.
       if (run_erosion.gt.1) call inpwepp
@@ -1266,6 +1268,126 @@ contains
  9002  format('Error in file: ',a,' reading: ',a)
 
    end subroutine inprun
+
+   subroutine echo_inputs(soil)
+      !     + + + Modules Used + + +
+      use soil_data_struct_defs, only: soil_def
+      use datetime_mod, only: lstday
+      use Polygons_Mod, only: create_polygon, set_area_polygon
+      use subregions_mod, only: acct_poly, subr_poly
+      use file_io_mod, only: fopenk
+      use erosion_data_struct_defs, only: ntstep, am0efl
+      use barriers_mod, only: create_barrier, barrier, barseas
+      use grid_mod, only: amasim, amxsim, sim_area
+      use hydro_data_struct_defs, only: am0hfl, am0hdb
+      use soil_data_struct_defs, only: am0sfl, am0sdb
+      use manage_data_struct_defs, only: am0tfl, am0tdb, tinfil
+      use crop_data_struct_defs, only: am0cfl, am0cdb
+      use decomp_data_struct_defs, only: am0dfl, am0ddb
+      use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag
+      use climate_input_mod, only: amalat, amalon, amzele
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      type(soil_def), dimension(:), intent(inout) :: soil 
+
+      include 'p1werm.inc'
+      include 'm1flag.inc'
+      include 'h1hydro.inc'
+      include 'h1db1.inc'
+
+!     + + + LOCAL VARIABLES + + +
+      integer :: nacctr   ! Number of accounting regions
+      integer :: nsubr    ! Number of subregions
+      integer :: nbr      ! number of barriers
+      integer :: poly_np  ! number of points in polygon or polyline
+      integer       isr, iar, ibr, ipol
+      real          cligen_version
+
+!     + + + Local Variable Definitions + + +
+!     isr - subregion index counter
+!     iar - accounting region index counter
+!     ios - input output status flag
+!     ibr - barrier index counter
+!     ipol - polygon points index counter
+
+!     line - character array to hold contents of input line
+
+!     sclsim - scaling factor used by interface, not within WEPS
+!     sclbar - scaling factor used by interface, not within WEPS
+
+!     cligen_version - version of the specified cligen file
+!     wepsrun_version - version of the weps.run file being read
+
+!     subr_poly - polygons defining each subregion extent
+!     poly_np - number of points in polygon read from file
+!     lui1 - unit number for input of weps.run file
+
+      write(*,*) 'INVALS', amalat
+      write(*,*) 'INVALS', amalon
+      write(*,*) 'INVALS', amzele
+      ! cligen_sname
+      !write(*,*) 'INVALS', awwisn
+      write(*,*) 'INVALS', id,im,iy
+      write(*,*) 'INVALS', ld,lm,ly
+      write(*,*) 'INVALS', ntstep
+      write(*,*) 'INVALS', trim(clifil)
+      write(*,*) 'INVALS', cligen_version
+      write(*,*) 'INVALS', cli_gen_fmt_flag
+      write(*,*) 'INVALS', trim(winfil)
+      write(*,*) 'INVALS', wind_gen_fmt_flag
+      write(*,*) 'INVALS', nsubr
+      isr = 1
+      write(*,*) 'INVALS', trim(soil(isr)%sinfil)
+      write(*,*) 'INVALS', trim(tinfil(isr))
+      write(*,*) 'INVALS', am0hfl(isr)
+      write(*,*) 'INVALS', am0sfl(isr)
+      write(*,*) 'INVALS', am0tfl(isr)
+      write(*,*) 'INVALS', am0cfl(isr)
+      write(*,*) 'INVALS', am0dfl(isr)
+      write(*,*) 'INVALS', am0efl
+      write(*,*) 'INVALS', am0hdb(isr)
+      write(*,*) 'INVALS', am0sdb(isr)
+      write(*,*) 'INVALS', am0tdb(isr)
+      write(*,*) 'INVALS', am0cdb(isr)
+      write(*,*) 'INVALS', am0ddb(isr)
+      write(*,*) 'INVALS', amasim
+      write(*,*) 'INVALS', amxsim(1)%x
+      write(*,*) 'INVALS', amxsim(1)%y
+      write(*,*) 'INVALS', amxsim(2)%x
+      write(*,*) 'INVALS', amxsim(2)%y
+      write(*,*) 'INVALS', sim_area
+      write(*,*) 'INVALS', nacctr
+      iar = 1
+      poly_np = 4
+      do ipol = 1, poly_np
+        write(*,*) 'INVALS', acct_poly(iar)%points(ipol)%x, acct_poly(iar)%points(ipol)%y
+      end do
+      write(*,*) 'INVALS', acct_poly(isr)%area
+      isr = 1
+      poly_np = 4
+      do ipol = 1, poly_np
+        write(*,*) 'INVALS', subr_poly(isr)%points(ipol)%x, subr_poly(isr)%points(ipol)%y
+      end do
+      write(*,*) 'INVALS', subr_poly(isr)%area
+      write(*,*) 'INVALS', soil(isr)%amrslp
+      write(*,*) 'INVALS', nbr
+      do ibr = 1, nbr
+        do ipol = 1, poly_np
+          write(*,*) 'INVALS', barseas(ibr)%points(ipol)%x
+          write(*,*) 'INVALS', barseas(ibr)%points(ipol)%y
+          write(*,*) 'INVALS', barrier(ibr)%points(ipol)%x
+          write(*,*) 'INVALS', barrier(ibr)%points(ipol)%y
+          write(*,*) 'INVALS', barseas(ibr)%param(ipol,1)%amzbr
+          write(*,*) 'INVALS', barseas(ibr)%param(ipol,1)%amxbrw
+          write(*,*) 'INVALS', barseas(ibr)%param(ipol,1)%ampbr
+        end do
+        write(*,*) 'INVALS', barseas(ibr)%amzbt
+        write(*,*) 'INVALS', barrier(ibr)%amzbt
+      end do
+      write(*,*) 'INVALS', soil(isr)%WaterErosion
+      write(*,*) 'INVALS', soil(isr)%SoilRockFragments
+
+   end subroutine echo_inputs
 
 end module input_run_mod
 
