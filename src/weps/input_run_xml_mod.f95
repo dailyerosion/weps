@@ -709,7 +709,7 @@ contains
             do jdx = 1, poly_np
               do kdx = 1, ntm_seas
                 if ( .not. clipar_complete(jdx, kdx)) then
-                  write(*,'(3a,i0,a)') 'Tag ', trim(run_tag(SCI_PointBarCli)%name), &
+                  write(*,'(3a,2(i0,a))') 'Tag ', trim(run_tag(SCI_PointBarCli)%name), &
                                        ' SCI_coordIndex="', jdx-1, '" SCI_BarCliIndex="',kdx-1, &
                                        '" is incomplete or missing from input file.'
                 end if
@@ -718,6 +718,9 @@ contains
           end if
           ! check for all complete
           if ( bar_seasons .and. bar_coords .and. bar_params ) then
+            bar_seasons = .false.
+            bar_coords = .false.
+            bar_params = .false.
             run_tag(SCI_PointBarClis)%acquired = .true.
           end if
           ! deallocate _complete arrays
@@ -824,7 +827,7 @@ contains
           else
             do jdx = 1, size(coord_complete)
               if ( .not. coord_complete(jdx)) then
-                write(*,'(3a,i0,a)') 'Tag ', trim(run_tag(SCI_coords)%name), &
+                write(*,'(3a,i0,a)') 'Tag ', trim(run_tag(SCI_coord)%name), &
                                      ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
               end if
             end do
@@ -841,7 +844,7 @@ contains
           if (    run_tag(SCI_x)%acquired &
             .and. run_tag(SCI_y)%acquired ) then 
             run_tag(SCI_x)%acquired = .false.
-            run_tag(SCI_x)%acquired = .false.
+            run_tag(SCI_y)%acquired = .false.
             coord_complete(ipol) = .true.
             if ( run_tag(SCI_Barrier)%in_tag ) then
               !  also place in fixed barrier structure
