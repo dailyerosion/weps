@@ -6,7 +6,6 @@
 module sweep_io_xml_defs
 
   implicit none
-  private
 
   integer, parameter :: MAX_NAME_LEN  = 40
 
@@ -98,9 +97,6 @@ module sweep_io_xml_defs
   integer, parameter, public :: SCI_YLength = 74
   integer, parameter, public :: SCI_YOrigin = 75
   integer, parameter, public :: sweepData = 76
-
-  public :: input_tag
-  public :: init_input_xml
 
 contains
 
