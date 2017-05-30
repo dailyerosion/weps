@@ -120,16 +120,16 @@ module input_run_xml_mod
   integer :: ibr      ! index for barrier reading
   integer :: ipol     ! index for polygon reading
   integer :: iseas    ! index for barrier season reading
-  logical :: accounts_present = .false.
+  logical :: accounts_present
   logical, dimension(:), allocatable :: account_complete
-  logical :: barriers_present = .false.
+  logical :: barriers_present
   logical, dimension(:), allocatable :: barrier_complete
   logical, dimension(:), allocatable :: subregion_complete
   logical, dimension(:), allocatable :: season_complete
   logical, dimension(:,:), allocatable :: clipar_complete
-  logical :: bar_seasons = .false.
-  logical :: bar_coords = .false.
-  logical :: bar_params = .false.
+  logical :: bar_seasons
+  logical :: bar_coords
+  logical :: bar_params
   logical, dimension(:), allocatable :: coord_complete
   integer :: count_complete
   logical :: runfile_complete
@@ -220,6 +220,12 @@ contains
 
     ! create integer variable names for tags and assign index number.
     ! makes chunk code more understandable.
+
+    accounts_present = .false.
+    barriers_present = .false.
+    bar_seasons = .false.
+    bar_coords = .false.
+    bar_params = .false.
 
   end subroutine init_run_xml
 
