@@ -68,14 +68,15 @@
 
 !     LOCAL VARIABLES
       integer idx
-      real temp
+      real temp1, temp2
       ! parameter to control depth of slice
       real scidepth
       parameter( scidepth = 101.6 ) ! mm 101.6 = 4 inches for SCI
       real weppdepth
       parameter( weppdepth = 150.0 ) ! mm 150.0 = 5.9 inches for WEPP
 
-      temp = 0.0
+      temp1 = 0.0
+      temp2 = 0.0
 
       ! accumulate layer values into root mass totals
       crop%deriv%mbgstem = 0.0
@@ -98,9 +99,9 @@
       end do
 
       ! calculate new stem area index and representative stem diameter
-      call ht_dia_sai( bcdpop, crop%mass%standstem, bc0ssa, bc0ssb, &
-     &                 crop%geometry%dstm, crop%database%xstm, 2.0, crop%geometry%zht, temp, &
-     &                 crop%geometry%xstmrep, crop%deriv%rsai )
+      call ht_dia_sai( bcdpop, crop%mass%standstem, temp1, &
+     &                 bc0ssa, bc0ssb, crop%geometry%dstm, &
+     &                 crop%geometry%zht, temp2, crop%geometry%xstmrep, crop%deriv%rsai )
 
       ! leaf area index for standing material
       ! m^2 leaf/kg * kg/m^2 ground = m^2 leaf/m^2 ground
