@@ -74,6 +74,7 @@
       use wepp_param_mod
       use climate_input_mod, only: cliginit, getcli, windinit, getwin
       use input_run_mod, only: old_run_file, input, run_rot_cycles, id, im, iy, ld, lm, ly, rootp
+      use lcm_mod, only: lcm_n
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -93,6 +94,7 @@
       integer, dimension(:), allocatable :: nperiods       ! number of reporting periods being accumulated
       integer, dimension(:), allocatable :: pd             ! index counter into reporting periods
       integer, dimension(:), allocatable :: n_rot_cycles   ! actual number of rotation cycles simulated
+      integer, dimension(:), allocatable :: t_mperod       ! temporary array for management years
 
       integer cd, cm, cy,                                               &
      &        end_init_jday, end_init_d, end_init_m, end_init_y,        &
@@ -185,41 +187,6 @@
 !     soil     -  Soil submodel
 !     asdini - aggregate size distribution initialization
 !     bpools   -  prints many biomass pool components (for debugging)
-
-!     + + + FUNCTIONS CALLED + + +
-      integer lcm_n
-
-!     + + + UNIT NUMBERS FOR INPUT/OUTPUT DEVICES + + +
-!     * = screen and keyboard
-!     1 = simulation run file
-!     2 = general report output file
-!     5 = Reserved
-!     6 = Reserved - screen
-!     7 = Reserved
-!     8 = sub-daily wind speed data file
-!     9 = SOIL/HYDROLOGY run file
-!    10 = management (tillage) run file
-!    11 = decomp run file (not now used)
-!    12 = 'water.out'   - hourly hydrology output file
-!    13 = 'temp.out'    - daily soil temperature output file
-!    14 = 'hydro.out'   - daily hydrology output file
-!    15 =    ?          - management output file
-!    16 = 'soil.out'    - soil output file
-!    17 = 'crop.out'    - crop output file
-!    18 = 'dabove.out'  - decomp above ground output file
-!    19 = 'dbelow.out'  - decomp below ground output file
-!    20 = 'erod.out'    - erosion output file
-!    21 = 'eegt'        - period loss or deposition from grid point file
-!    22 = 'eegtss       - period suspension loss from grid point file
-!    23 = 'eegt10'      - period PM-10 loss from grid point file
-!    24 = hourly wind distribution output file (subday.out)
-!    25 = debug hydro
-!    26 = debug soil
-!    27 = debug crop
-!    28 = debug decomp
-!    29 = debug management
-!    32 = 'plot.out'    - plotting output file
-!    40 = temporary file to hold accounting region erosion values
 
 !     + + + DATA INITIALIZATIONS + + +
 
@@ -336,6 +303,7 @@
       sum_stat = sum_stat + alloc_stat
       allocate(biotot(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
+
       ! allocate management data arrays for reports
       allocate(mandatbs(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
@@ -362,6 +330,8 @@
       allocate(h1bal(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       allocate(wp(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(t_mperod(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       if( sum_stat .gt. 0 ) then
          Write(*,*) 'ERROR: unable to allocate enough memory for weps main data arrays'
@@ -408,10 +378,11 @@
 
           ! Initialize the management file and rotation counters
           call mfinit(isr, tinfil(isr))
+          t_mperod(isr) = mperod(isr)
       end do
 
       ! find maxper, which is the least common multiple of the number of years in each rotation
-      maxper = lcm_n( nsubr, mperod )
+      maxper = lcm_n( t_mperod )
 
 !     check for consistency maxper, n_rot_cycles, number of years to run
       if( maxper*run_rot_cycles .ne. ly-iy+1 ) then
@@ -1051,6 +1022,8 @@
       deallocate(h1bal, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       deallocate(wp, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(t_mperod, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       if( sum_stat .gt. 0 ) then
          Write(*,*) 'ERROR: unable to deallocate crop and residue'

@@ -3,23 +3,30 @@
 !$Revision$
 !$HeadURL$
 
-integer function lcm_n( n, input )
+module lcm_mod
+
+  contains
+
+  integer function lcm_n( input )
 
     ! extended lcm below to n input numbers
     ! by recursively comparing the lcm for 2 numbers
     ! against the next number until the list is completed.
 
     ! arguments
-    integer :: n, input(n)
+    integer, dimension(:) :: input
 
     ! local variables
-    integer idx
+    integer :: n
+    integer :: idx
 
-    ! function declaration
-    integer lcm
+    n = size(input)
+
+    write(*,*) 'LCM_N:', n, input(1)
 
     if( n .eq. 1 ) then
         lcm_n = input(1)
+        write(*,*) 'LCM_N:', lcm_n
     else
         idx = 2
         lcm_n = lcm( input(idx-1), input(idx) )
@@ -31,15 +38,12 @@ integer function lcm_n( n, input )
     end if
 
     return
-end
+  end function lcm_n
 
-integer function lcm(a, b)
+  integer function lcm(a, b)
 
     ! arguments
     integer :: a, b
-
-    ! function declaration
-    integer gcd
 
     if( ( a .ne. 0) .and. (b .ne. 0) ) then
         lcm = (a * b / gcd(a, b))
@@ -49,9 +53,9 @@ integer function lcm(a, b)
     end if
 
     return
-end
+  end function lcm
 
-integer function gcd(a, b)
+  integer function gcd(a, b)
     
     ! find the greatest common denominator
     ! of two integers a and b using the
@@ -79,8 +83,9 @@ integer function gcd(a, b)
     gcd = loc_a
 
     return
-end
+  end function gcd
 
+end module lcm_mod
 
 ! while very nice, the functions above are cleaner.
 
