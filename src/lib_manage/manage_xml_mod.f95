@@ -32,50 +32,6 @@ module manage_xml_mod
   integer, parameter, public :: value = 12
   integer, parameter, public :: version = 13
 
-  type operation_date
-    integer :: day
-    integer :: month
-    integer :: year
-  end type operation_date
-
-  type process
-    character(len=3) :: procID
-    integer :: procType
-    type(process), pointer :: procNext
-    integer, dimension(:), allocatable :: i_params
-    real, dimension(:), allocatable :: r_params
-    character(len=80) :: s_param
-  end type process
-
-  type group
-    character(len=3) :: grpID
-    integer :: grpType
-    type(group), pointer :: grpNext
-    type(process), pointer :: procFirst
-    real, dimension(:), allocatable :: r_params
-    character(len=80) :: s_param
-  end type group
-
-  type operation
-    type(operation_date) :: operDate
-    character(len=3) :: operID
-    integer :: operType
-    type(operation), pointer :: operNext
-    type(group), pointer :: grpFirst
-    real, dimension(:), allocatable :: r_params
-    character(len=80) :: s_param
-  end type operation
-
-  type(operation), pointer :: operFirst, oper
-  type(group), pointer :: grp
-  type(process), pointer :: proc
-
-  interface elemCreate
-    module procedure operCreate
-    module procedure grpCreate
-    module procedure procCreate
-  end interface
-
   integer :: int_cnt
   integer :: real_cnt
 
@@ -116,78 +72,6 @@ contains
     man_tag(13)%name = "version"
 
   end subroutine init_man_xml
-
-  function operCreate(operPntr, operID, real_cnt) result(operNew)
-    type(operation), pointer :: operPntr
-    character(len=*), intent(in) :: operID
-    integer, intent(in) :: real_cnt
-    type(operation), pointer :: operNew
-
-    integer :: alloc_stat
-
-    allocate(operPntr, stat=alloc_stat)
-    if( alloc_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Operation pointer: P ', operID
-    end if
-    operPntr%operID = operID
-    read(operID, *) operPntr%operType
-    allocate(operPntr%r_params(real_cnt), stat=alloc_stat)
-    if( alloc_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Operation params: P ', operID
-    end if
-    operNew =>operPntr
-        
-  end function operCreate
-
-  function grpCreate(grpPntr, grpID, real_cnt) result(grpNew)
-    type(group), pointer :: grpPntr
-    character(len=*), intent(in) :: grpID
-    integer, intent(in) :: real_cnt
-    type(group), pointer :: grpNew
-
-    integer :: alloc_stat
-
-    allocate(grpPntr, stat=alloc_stat)
-    if( alloc_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Group pointer: G ', grpID
-    end if
-    grpPntr%grpID = grpID
-    read(grpID, *) grpPntr%grpType
-    allocate(grpPntr%r_params(real_cnt), stat=alloc_stat)
-    if( alloc_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Group params: G ', grpID
-    end if
-    grpNew =>grpPntr
-        
-  end function grpCreate
-
-  function procCreate(procPntr, procID, int_cnt, real_cnt) result(procNew)
-    type(process), pointer :: procPntr
-    character(len=*), intent(in) :: procID
-    integer, intent(in) :: int_cnt
-    integer, intent(in) :: real_cnt
-    type(process), pointer :: procNew
-
-    integer :: alloc_stat
-    integer :: sum_stat
-
-    allocate(procPntr, stat=alloc_stat)
-    if( alloc_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Process pointer: P ', procID
-    end if
-    procPntr%procID = procID
-    read(procID, *) procPntr%procType
-    sum_stat = 0
-    allocate(procPntr%i_params(int_cnt), stat=alloc_stat)
-    sum_stat = sum_stat + alloc_stat
-    allocate(procPntr%r_params(real_cnt), stat=alloc_stat)
-    sum_stat = sum_stat + alloc_stat
-    if( sum_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Process params: P ', procID
-    end if
-    procNew =>procPntr
-        
-  end function procCreate
 
 !  subroutine read_manage_xml()
 

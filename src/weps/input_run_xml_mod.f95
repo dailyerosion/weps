@@ -22,7 +22,7 @@ module input_run_xml_mod
   use hydro_data_struct_defs, only: am0hfl, am0hdb
   use soil_data_struct_defs, only: am0sfl, am0sdb
 
-  use manage_data_struct_defs, only: manFile
+  use manage_data_struct_defs, only: manFile, manFileAlloc
   use crop_data_struct_defs, only: am0cfl, am0cdb
   use decomp_data_struct_defs, only: am0dfl, am0ddb
   use input_soil_mod, only: soil_def, soil_in
@@ -288,8 +288,6 @@ contains
           sum_stat = sum_stat + alloc_stat
           allocate(soil_in(nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
-          allocate(manFile(nsubr), stat=alloc_stat)
-          sum_stat = sum_stat + alloc_stat
           allocate(subregion_complete(nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
           if( sum_stat .gt. 0 ) then
@@ -300,10 +298,7 @@ contains
             subregion_complete(idx) = .false.
           end do
 
-          do jdx=1, nsubr        ! Initialize the flag values
-            manFile(jdx)%asdhflag = 0
-            manFile(jdx)%wchflag = 0
-          end do
+          call manFileAlloc(nsubr)
 
         case (SCI_coords)
           call read_param(run_tag(SCI_number)%name, param_value, poly_np)

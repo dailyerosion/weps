@@ -90,7 +90,7 @@ contains
       use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
-      use manage_data_struct_defs, only: manFile
+      use manage_data_struct_defs, only: manFile, manFileAlloc
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
@@ -390,17 +390,7 @@ contains
                write(*,*) 'ERROR: memory alloc., soil structure array'
             end if
 
-            sum_stat = 0
-            allocate(manFile(nsubr), stat=alloc_stat)
-            sum_stat = sum_stat + alloc_stat
-            if( alloc_stat .gt. 0 ) then
-               write(*,*) 'ERROR: memory alloc., management arrays'
-            end if
-
-            do i=1, nsubr        ! Initialize the flag values
-               manFile(i)%asdhflag = 0
-               manFile(i)%wchflag = 0
-            end do
+            call manFileAlloc(nsubr)
 
             ! read in initial field conditions file name
             soil(isr)%sinfil = rootp(1:len_trim(rootp)) // line
@@ -966,17 +956,7 @@ contains
                write(*,*) 'ERROR: memory alloc., soil structure array'
             end if
 
-            sum_stat = 0
-            allocate(manFile(nsubr), stat=alloc_stat)
-            sum_stat = sum_stat + alloc_stat
-            if( alloc_stat .gt. 0 ) then
-               write(*,*) 'ERROR: memory alloc., management arrays'
-            end if
-
-            do i=1, nsubr        ! Initialize the flag values
-               manFile(i)%asdhflag = 0
-               manFile(i)%wchflag = 0
-            end do
+            call manFileAlloc(nsubr)
 
          case (25)
             read (line,*,err=80) am0hfl(isr),am0sfl(isr),manFile(isr)%am0tfl, am0cfl(isr),am0dfl(isr)
