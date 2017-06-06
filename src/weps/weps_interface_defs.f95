@@ -695,13 +695,14 @@
       end subroutine sort
 !--------------------------------
       subroutine submodels (isr, soil, crop, cropprev, residue, restot, croptot, &
-     &                      biotot, decompfac, mandate, h1et, h1bal, wp)
+     &                      biotot, decompfac, mandate, h1et, h1bal, wp, manFile)
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal, decomp_factors, bio_prevday
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et
       use report_hydrobal_mod, only: hydro_balance
       use wepp_param_mod, only: wepp_param
+      use manage_data_struct_defs, only: man_file_struct
       integer isr
       type(soil_def), intent(inout) :: soil     ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
@@ -713,6 +714,7 @@
       type(hydro_derived_et), intent(inout) :: h1et
       type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
+      type(man_file_struct), intent(inout) :: manFile
       end subroutine submodels
 !-------------------------------
       subroutine sumbio(soil, crop, residue, restot, croptot, biotot)
@@ -770,10 +772,11 @@
       integer sr
       end subroutine dooper
 !---------------------------
-      subroutine   doproc (sr, bmrotation, soil, crop, cropprev, residue, biotot, mandate, h1et)
+      subroutine   doproc (sr, bmrotation, soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
+      use manage_data_struct_defs, only: am0tfl, am0tdb, lastoper, asdhflag, wchflag, man_file_struct
       use hydro_data_struct_defs, only: hydro_derived_et
       integer sr, bmrotation
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
@@ -783,6 +786,7 @@
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
+      type(man_file_struct), intent(inout) :: manFile
       end subroutine doproc
 !--------------------------
     SUBROUTINE get_calib_crops(sr, crop)

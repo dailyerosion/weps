@@ -7,7 +7,7 @@
       use file_io_mod, only: luostir
       use sci_report_mod, only: scisum
       use stir_report_mod, only: stircum
-      use manage_data_struct_defs, only: mperod
+      use manage_data_struct_defs, only: manFile
 
 !     + + + ARGUMENT VARIABLES + + +
       integer isr
@@ -67,7 +67,7 @@
      &       ' | crop sequence number',                                 &
      &       ' | 1 if last harvest/termination of crop'
           ! write number of years in management rotation
-          write(luostir(isr),'(i4,(A))') mperod(isr),                     &
+          write(luostir(isr),'(i4,(A))') manFile(isr)%mperod,           &
      &              '  Number of years in WEPS management rotation file'
          stircum(isr)%header_not_printed = .FALSE.
       end if

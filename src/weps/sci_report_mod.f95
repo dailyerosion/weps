@@ -29,7 +29,7 @@ module sci_report_mod
       use weps_interface_defs
       use file_io_mod, only: luosci
       use erosion_data_struct_defs, only: cellsurfacestate
-      use manage_data_struct_defs, only: mperod
+      use manage_data_struct_defs, only: manFile
       use grid_mod, only: imax, jmax, ix, jy
       use sci_soil_texture_mod, only: get_sci_soil_multiplier
 
@@ -155,11 +155,11 @@ module sci_report_mod
           avgtexmult = avgtexmult + texmult * sarea_ratio(sdx)
 
           ! field operation STIR averaging
-          stir_avg(sdx) = scisum(sdx)%stir / mperod(sdx)
+          stir_avg(sdx) = scisum(sdx)%stir / manFile(sdx)%mperod
           avgallstir = avgallstir + stir_avg(sdx) * sarea_ratio(sdx)
 
           ! field operation energy averaging
-          energy_avg(sdx) = scisum(sdx)%energy / mperod(sdx)
+          energy_avg(sdx) = scisum(sdx)%energy / manFile(sdx)%mperod
           avgallenergy = avgallenergy + energy_avg(sdx) * sarea_ratio(sdx)
 
         end do
@@ -176,10 +176,10 @@ module sci_report_mod
           avgtexmult = texmult
 
           ! field operation STIR averaging
-          avgallstir = scisum(isr)%stir / mperod(isr)
+          avgallstir = scisum(isr)%stir / manFile(isr)%mperod
 
           ! field operation energy averaging
-          avgallenergy = scisum(isr)%energy / mperod(isr)
+          avgallenergy = scisum(isr)%energy / manFile(isr)%mperod
 
       end if
 

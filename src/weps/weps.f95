@@ -55,7 +55,7 @@
       use biomaterial
       use debug_mod
       use mandate_mod
-      use manage_data_struct_defs, only: lastoper, tinfil, mperod
+      use manage_data_struct_defs, only: lastoper, manFile
       use manage_mod, only: mfinit
       use erosion_mod, only: erosion, erodinit
       use erosion_data_struct_defs, only: create_subregionsoillayers, create_subregionsurfacewet, &
@@ -377,8 +377,8 @@
           ! each management file (one for each subregion).
 
           ! Initialize the management file and rotation counters
-          call mfinit(isr, tinfil(isr))
-          t_mperod(isr) = mperod(isr)
+          call mfinit(isr, manFile(isr))
+          t_mperod(isr) = manFile(isr)%mperod
       end do
 
       ! find maxper, which is the least common multiple of the number of years in each rotation
@@ -402,7 +402,7 @@
 
 !     This is all the initialization for the new output reporting code
       do isr = 1, nsubr
-          mandatbs(isr)%mperod = mperod(isr)
+          mandatbs(isr)%mperod = manFile(isr)%mperod
           call mandates(isr, mandatbs(isr)%mandate)  !Get man dates, op names, and crop names
       end do
       ! initialize full mandate series for all subregions for full maxper length.
@@ -528,7 +528,7 @@
          do isr=1,nsubr
           ! do multiple subregion      
           call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
-     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr))
+     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
 
@@ -542,7 +542,7 @@
          ! if last day of year, check for end of rotation
          if (get_simdate_doy() .eq. ndiy) then
             ! check if at end of subregion's rotation cycle
-            if (mod(amnryr(isr),mperod(isr)) == 0) then
+            if (mod(amnryr(isr),manFile(isr)%mperod) == 0) then
                amnryr(isr) = 1
                lastoper(isr)%yr = amnryr(isr)
             else
@@ -614,7 +614,7 @@
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
             call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
-     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr))
+     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
 
             call plotdata( isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
 
@@ -627,7 +627,7 @@
             ! if last day of year, check for end of rotation
             if (get_simdate_doy() .eq. ndiy) then
                ! check if at end of subregion's rotation cycle
-               if (mod(amnryr(isr),mperod(isr)) == 0) then
+               if (mod(amnryr(isr),manFile(isr)%mperod) == 0) then
                   amnryr(isr) = 1
                   lastoper(isr)%yr = amnryr(isr)
                else
@@ -744,7 +744,7 @@
                !end if
 
                call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
-                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr))
+                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
             end do
 
             ! set the barrier interpolation in time
@@ -803,7 +803,7 @@
                ! if last day of year, check for end of rotation
                if (get_simdate_doy() .eq. ndiy) then
                   ! check if at end of subregion's rotation cycle
-                  if (mod(amnryr(isr),mperod(isr)) == 0) then
+                  if (mod(amnryr(isr),manFile(isr)%mperod) == 0) then
                      ! end of management rotation cycle
                      amnryr(isr) = 1
                      lastoper(isr)%yr = amnryr(isr)

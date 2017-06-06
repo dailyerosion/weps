@@ -90,7 +90,7 @@ contains
       use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
-      use manage_data_struct_defs, only: am0tfl, am0tdb, tinfil, mperod
+      use manage_data_struct_defs, only: am0tfl, am0tdb, manFile
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
@@ -410,9 +410,7 @@ contains
             end if
 
             sum_stat = 0
-            allocate(tinfil(nsubr), stat=alloc_stat)
-            sum_stat = sum_stat + alloc_stat
-            allocate(mperod(nsubr), stat=alloc_stat)
+            allocate(manFile(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
             if( alloc_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., management arrays'
@@ -423,7 +421,7 @@ contains
 
          case (16)
             ! read in management file name
-            tinfil(isr) = rootp(1:len_trim(rootp)) // line
+            manFile(isr)%tinfil = rootp(1:len_trim(rootp)) // line
 
          case (17)
             ! deprecated line
@@ -1001,9 +999,7 @@ contains
             end if
 
             sum_stat = 0
-            allocate(tinfil(nsubr), stat=alloc_stat)
-            sum_stat = sum_stat + alloc_stat
-            allocate(mperod(nsubr), stat=alloc_stat)
+            allocate(manFile(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
             if( alloc_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., management arrays'
@@ -1054,7 +1050,7 @@ contains
 
          case (32)
             ! read in management file name
-            tinfil(isr) = rootp(1:len_trim(rootp)) // line
+            manFile(isr)%tinfil = rootp(1:len_trim(rootp)) // line
 
          case (33)
             read (line,*,err=80) soil(isr)%WaterErosion
@@ -1289,7 +1285,7 @@ contains
       use grid_mod, only: amasim, amxsim, sim_area
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
-      use manage_data_struct_defs, only: am0tfl, am0tdb, tinfil
+      use manage_data_struct_defs, only: am0tfl, am0tdb, manFile
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag
@@ -1346,7 +1342,7 @@ contains
       write(*,*) 'INVALS', nsubr
       isr = 1
       write(*,*) 'INVALS', trim(soil(isr)%sinfil)
-      write(*,*) 'INVALS', trim(tinfil(isr))
+      write(*,*) 'INVALS', trim(manFile(isr)%tinfil)
       write(*,*) 'INVALS', am0hfl(isr)
       write(*,*) 'INVALS', am0sfl(isr)
       write(*,*) 'INVALS', am0tfl(isr)

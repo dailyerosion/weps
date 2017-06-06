@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   doproc (sr, bmrotation, soil, crop, cropprev, residue, biotot, mandate, h1et)
+      subroutine   doproc (sr, bmrotation, soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
 
 !     + + + PURPOSE + + +
 !     Doproc is called when a processline is found in the management file
@@ -21,7 +21,7 @@
       use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
       use p1unconv_mod, only: mmtom
-      use manage_data_struct_defs, only: am0tfl, am0tdb, lastoper, asdhflag, wchflag, mperod
+      use manage_data_struct_defs, only: am0tfl, am0tdb, lastoper, asdhflag, wchflag, man_file_struct
       use crop_data_struct_defs, only: am0cfl
       use soilden_mod, only: setbdproc_wc
       use hydro_data_struct_defs, only: hydro_derived_et
@@ -53,6 +53,7 @@
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
+      type(man_file_struct), intent(inout) :: manFile
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr - the subregion being processed
@@ -984,10 +985,10 @@
              ! attach a crop name to non-harvest termination in stir report
              call stir_crop(sr, crop%bname, 2)
              if( rpt_season_flg(sr) ) then
-               call report_hydrobal( sr, bmrotation, mperod(sr) )
+               call report_hydrobal( sr, bmrotation, manFile%mperod )
                ! This may be harvest or non-harvest termination, allow early harvest warnings
                mature_warn_flg = 1
-               call crop_endseason( sr, bmrotation, mperod(sr), &
+               call crop_endseason( sr, bmrotation, manFile%mperod, &
      &         crop%bname, am0cfl(sr), &
      &         soil%nslay, crop%database%idc, crop%growth%dayam, &
      &         crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1071,8 +1072,8 @@
           call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, mperod(sr) )
-              call crop_endseason( sr, bmrotation, mperod(sr), &
+              call report_hydrobal( sr, bmrotation, manFile%mperod )
+              call crop_endseason( sr, bmrotation, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1137,8 +1138,8 @@
           call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, mperod(sr) )
-              call crop_endseason( sr, bmrotation, mperod(sr), &
+              call report_hydrobal( sr, bmrotation, manFile%mperod )
+              call crop_endseason( sr, bmrotation, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1238,8 +1239,8 @@
           call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, mperod(sr) )
-              call crop_endseason( sr, bmrotation, mperod(sr), &
+              call report_hydrobal( sr, bmrotation, manFile%mperod )
+              call crop_endseason( sr, bmrotation, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1301,8 +1302,8 @@
           call stir_crop(sr, crop%bname, 2)
             if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, mperod(sr) )
-              call crop_endseason( sr, bmrotation, mperod(sr), &
+              call report_hydrobal( sr, bmrotation, manFile%mperod )
+              call crop_endseason( sr, bmrotation, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1413,8 +1414,8 @@
           call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, mperod(sr) )
-              call crop_endseason( sr, bmrotation, mperod(sr), &
+              call report_hydrobal( sr, bmrotation, manFile%mperod )
+              call crop_endseason( sr, bmrotation, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1481,8 +1482,8 @@
           call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, mperod(sr) )
-              call crop_endseason( sr, bmrotation, mperod(sr), &
+              call report_hydrobal( sr, bmrotation, manFile%mperod )
+              call crop_endseason( sr, bmrotation, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1550,8 +1551,8 @@
           call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, mperod(sr) )
-              call crop_endseason( sr, bmrotation, mperod(sr), &
+              call report_hydrobal( sr, bmrotation, manFile%mperod )
+              call crop_endseason( sr, bmrotation, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1618,8 +1619,8 @@
           call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, mperod(sr) )
-              call crop_endseason( sr, bmrotation, mperod(sr), &
+              call report_hydrobal( sr, bmrotation, manFile%mperod )
+              call crop_endseason( sr, bmrotation, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1766,7 +1767,7 @@
           mature_warn_flg = 0
           ! attach a crop name to the non-harvest terminiation in stir report
           call stir_crop(sr, crop%bname, 2)
-          call crop_endseason( sr, bmrotation, mperod(sr), &
+          call crop_endseason( sr, bmrotation, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1941,7 +1942,7 @@
         call set_calib(sr, crop)
         if( rpt_season_flg(sr) ) then
           ! not reported by the kill process in this
-          call report_hydrobal( sr, bmrotation, mperod(sr) )
+          call report_hydrobal( sr, bmrotation, manFile%mperod )
         end if
 !-----END planting process (process code 51)
 
@@ -2002,8 +2003,8 @@
           call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, mperod(sr) )
-              call crop_endseason( sr, bmrotation, mperod(sr), &
+              call report_hydrobal( sr, bmrotation, manFile%mperod )
+              call crop_endseason( sr, bmrotation, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -2080,8 +2081,8 @@
           call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
             ! not reported by the kill process in this
-            call report_hydrobal( sr, bmrotation, mperod(sr) )
-            call crop_endseason( sr, bmrotation, mperod(sr), &
+            call report_hydrobal( sr, bmrotation, manFile%mperod )
+            call crop_endseason( sr, bmrotation, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &

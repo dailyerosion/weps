@@ -5,9 +5,16 @@
 
 module manage_data_struct_defs
 
-   character(len=512), dimension(:), allocatable :: tinfil
+   type man_file_struct
+      character(len=512) :: tinfil    ! management file name
+      integer :: mperod               ! length of management of rotation
+   end type man_file_struct
 
-   integer, dimension(:), allocatable :: mperod
+   type(man_file_struct), dimension(:), allocatable :: manFile
+
+   !character(len=512), dimension(:), allocatable :: tinfil
+
+   !integer, dimension(:), allocatable :: mperod
 
    integer, dimension(:), allocatable :: am0tfl    ! flag to print MANAGEment (TILLAGE) output
                                                      ! 0 = no output

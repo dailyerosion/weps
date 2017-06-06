@@ -7,7 +7,7 @@ module manage_mod
 
   contains
 
-    subroutine manage( sr, startyr, soil, crop, cropprev, residue, biotot, mandate, h1et)
+    subroutine manage( sr, startyr, soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
 
 !     + + + PURPOSE + + +
 !     This is the main routine of the MANAGEMENT submodel. The date passed
@@ -30,8 +30,9 @@ module manage_mod
       use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
       use stir_report_mod, only: stir_report
-      use manage_data_struct_defs, only: am0tfl, lastoper, mperod
+      use manage_data_struct_defs, only: am0tfl, lastoper
       use hydro_data_struct_defs, only: hydro_derived_et
+      use manage_data_struct_defs, only: man_file_struct
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -48,6 +49,7 @@ module manage_mod
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
+      type(man_file_struct), intent(inout) :: manFile
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !        sr - the subregion number
@@ -100,7 +102,7 @@ module manage_mod
       read (line (3:12),'(i2,1x,i2,1x,i4)', err=902) manday,manmon,manyr
 
       ! find simulation year to which management year corresponds
-      mansimyr = simyr - mod (simyr-startyr, mperod(sr)) + manyr - 1
+      mansimyr = simyr - mod (simyr-startyr, manFile%mperod) + manyr - 1
 
       if (difdat (simdd,simmm,simyr,manday,manmon,mansimyr).ne.0) then
         ! management date does not match simulation date
@@ -133,13 +135,13 @@ module manage_mod
       case ('P')
         if(lastoper(sr)%skip.eq.0) then
 
-           call doproc(sr, mcount(sr), soil, crop, cropprev, residue, biotot, mandate, h1et)
+           call doproc(sr, mcount(sr), soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
         endif
       case ('D')
         call stir_report(sr, .false., lastoper(sr)%stir, lastoper(sr)%energyarea)
         read (line (3:12),'(i2,1x,i2,1x,i4)', err=902) manday,manmon,manyr
         ! find simulation year to which management year corresponds
-        mansimyr = simyr - mod (simyr-startyr, mperod(sr)) + manyr - 1
+        mansimyr = simyr - mod (simyr-startyr, manFile%mperod) + manyr - 1
         if( difdat (simdd,simmm,simyr,manday,manmon,mansimyr).ne.0) then
            ! initialize end of season / hydrobal reporting flag to true to generate a report
            rpt_season_flg(sr) = .true.
@@ -171,7 +173,7 @@ module manage_mod
       call exit (1)
     end subroutine manage
 
-    subroutine mfinit (sr, fname)
+    subroutine mfinit (sr, manFile)
 !
 !     + + + PURPOSE + + +
 !     Mfinit should be called during the initialization stage of the the
@@ -190,7 +192,7 @@ module manage_mod
 
       use weps_interface_defs
       use file_io_mod, only: fopenk
-      use manage_data_struct_defs, only: lastoper, mperod
+      use manage_data_struct_defs, only: lastoper, man_file_struct
       use flib_sax
       use manage_xml_mod, only: init_man_xml
       use manage_xml_mod, only: manfile_complete
@@ -204,12 +206,8 @@ module manage_mod
       include 'manage/mproc.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer sr
-      character fname*(*)
-
-!     + + + ARGUMENT DEFINITIONS + + +
-!     sr - current subregion
-!     fname - management file name
+      integer sr                        ! current subregion
+      type(man_file_struct) :: manFile  ! management file data structure
 
 !     + + + LOCAL VARIABLES + + +
       integer           linidx, eofidx, endidx
@@ -274,13 +272,13 @@ module manage_mod
 
 !     read in management file
 
-      call fopenk(luimandate, trim(fname), 'old')
+      call fopenk(luimandate, trim(manFile%tinfil), 'old')
       read(luimandate, '(a)', iostat=read_stat) line
       if (read_stat /= 0) stop "Cannot read input file"
       if ( (line (1:8).ne.'Version: ') .and. (index(line, 'xml') .gt. 0) ) then
         close(luimandate)
         ! open input file
-        call open_xmlfile(trim(fname),fxml,read_stat)
+        call open_xmlfile(trim(manFile%tinfil),fxml,read_stat)
         if (read_stat /= 0) stop "Cannot open xml input file"
         ! read in xml based input file
         call init_man_xml()
@@ -320,14 +318,14 @@ module manage_mod
       linidx = linidx + 1
 ! ***      write (*,*) ' man fil: ',linidx, line
       if (linidx.le.mxtbln) goto 10
-      write (0,*) 'Management table too long - ', fname
+      write (0,*) 'Management table too long - ', trim(manFile%tinfil)
       call exit (1)
    20 mbeg(sr+1) = linidx
       close(luimandate)
 ! ***
 !     debugging code to dump table
 !
-! ***      write(*,*) 'start dump of management file ', fname
+! ***      write(*,*) 'start dump of management file ', trim(manFile%tinfil)
 ! ***      do 111 linidx = mbeg(sr), mbeg(sr+1)
 ! ***        write(*,*) linidx, mtbl(linidx)
 ! ***  111 continue
@@ -354,12 +352,12 @@ module manage_mod
 !        if (line(10:13).ne.'1.40') then
            write(0,*) 'Management file version: ', mversion(sr)
            write(0,*) 'Version >= 1.40 is required for this release.'
-           write(0,*) 'You need to convert ', fname
+           write(0,*) 'You need to convert ', trim(manFile%tinfil)
            write(0,*) ' to the correct format.'
            call exit (1)
         endif
       else
-        write(0,*) 'Version not found in management file ', fname
+        write(0,*) 'Version not found in management file ', trim(manFile%tinfil)
         call exit (1)
       endif
 !
@@ -368,10 +366,10 @@ module manage_mod
       if (line (1:6).eq.'*START') then
 
 !       Obtain the number of years for the subregion's management cycle
-        read (line (8:10), '(i3)', err=901) mperod(sr)
+        read (line (8:10), '(i3)', err=901) manFile%mperod
 
       else 
-        write(0,*) '*START not second non-comment line in ', fname
+        write(0,*) '*START not second non-comment line in ', trim(manFile%tinfil)
         call exit (1)
       endif
 !
@@ -413,8 +411,8 @@ module manage_mod
 
 ! Used for debugging purposes
 !       Output info about each subregion's management cycle
-!        print *, 'Management filename is: ', fname
-!        print *, 'Management cycle is ', mperod(sr),
+!        print *, 'Management filename is: ', trim(manFile%tinfil)
+!        print *, 'Management cycle is ', manFile%mperod,
 !     &         ' years for Subregion ', sr
 !        print *, 'The *START line is: ', start(sr)
 !     &         ' first operation line is: ', curnt(sr)
@@ -423,7 +421,7 @@ module manage_mod
       return
 !     debugging code to dump table
 !
-!      write(*,*) 'start dump of management file ', fname
+!      write(*,*) 'start dump of management file ', trim(manFile%tinfil)
 !      do 111 linidx = mbeg(sr), mbeg(sr+1)
 !        write(*,*) linidx, mtbl(linidx)
 !  111 continue
@@ -437,15 +435,15 @@ module manage_mod
 
   901 write(0,*) 'Error reading start param ', line(8:10)
       call exit (1)
-  902 write(0,*) 'Duplicate *END statements in ', fname
+  902 write(0,*) 'Duplicate *END statements in ', trim(manFile%tinfil)
       call exit (1)
-  903 write(0,*) 'Duplicate *EOF statements in ', fname
+  903 write(0,*) 'Duplicate *EOF statements in ', trim(manFile%tinfil)
       call exit (1)
-  904 write(0,*) '*END not penultimate line in ', fname
+  904 write(0,*) '*END not penultimate line in ', trim(manFile%tinfil)
       call exit (1)
-  905 write(0,*) '*EOF not last line in ', fname
+  905 write(0,*) '*EOF not last line in ', trim(manFile%tinfil)
       call exit (1)
-  906 write(0,*) 'No starting date specified in ', fname
+  906 write(0,*) 'No starting date specified in ', trim(manFile%tinfil)
       call exit (1)
 
     end subroutine mfinit

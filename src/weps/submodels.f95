@@ -4,7 +4,7 @@
 !$HeadURL$
 
       subroutine submodels (isr, soil, crop, cropprev, residue, restot, croptot, &
-     &                      biotot, decompfac, mandate, h1et, h1bal, wp)
+     &                      biotot, decompfac, mandate, h1et, h1bal, wp, manFile)
 
       use weps_main_mod, only: daysim
       use weps_interface_defs, ignore_me=>submodels
@@ -18,6 +18,7 @@
       use soil_mod, only: callsoil
       use crop_mod, only: callcrop
       use manage_mod, only: manage
+      use manage_data_struct_defs, only: man_file_struct
 
       include 'p1werm.inc'
       include 'm1flag.inc'      !am0cropupfl
@@ -35,12 +36,13 @@
       type(hydro_derived_et), intent(inout) :: h1et
       type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
+      type(man_file_struct), intent(inout) :: manFile
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     restot          - structure array containing summary residue pool amounts for all subregions
 
 !        write(*,*) "Start manage"      !MANAGEment (tillage) submodel
-        call manage(isr, iy, soil, crop, cropprev, residue, biotot, mandate, h1et)
+        call manage(isr, iy, soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
 
         if( am0cropupfl.gt.0 ) then
             ! update all derived globals for crop global variables

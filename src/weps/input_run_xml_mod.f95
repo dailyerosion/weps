@@ -22,7 +22,7 @@ module input_run_xml_mod
   use hydro_data_struct_defs, only: am0hfl, am0hdb
   use soil_data_struct_defs, only: am0sfl, am0sdb
 
-  use manage_data_struct_defs, only: am0tfl, am0tdb, tinfil, mperod
+  use manage_data_struct_defs, only: am0tfl, am0tdb, manFile
   use crop_data_struct_defs, only: am0cfl, am0cdb
   use decomp_data_struct_defs, only: am0dfl, am0ddb
   use input_soil_mod, only: soil_def, soil_in
@@ -293,9 +293,7 @@ contains
           sum_stat = sum_stat + alloc_stat
           allocate(soil_in(nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
-          allocate(tinfil(nsubr), stat=alloc_stat)
-          sum_stat = sum_stat + alloc_stat
-          allocate(mperod(nsubr), stat=alloc_stat)
+          allocate(manFile(nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
           allocate(subregion_complete(nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
@@ -1346,7 +1344,7 @@ contains
 
           else if (run_tag(SCI_ManageFile)%in_tag) then
             ! read in management file name
-            tinfil(isr) = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
+            manFile(isr)%tinfil = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
             run_tag(SCI_ManageFile)%acquired = .true.
 
           else if (run_tag(SCI_WaterErosionLoss)%in_tag) then
