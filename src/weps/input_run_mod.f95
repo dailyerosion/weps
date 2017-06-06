@@ -95,7 +95,6 @@ contains
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
       use climate_input_mod, only: amalat, amalon, amzele
-      use manage_data_struct_defs, only: asdhflag, wchflag
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
@@ -386,20 +385,6 @@ contains
                write(*,*) 'ERROR: memory alloc., debug output flags'
             end if
 
-            ! create and initialize array for submodel output flags
-            sum_stat = 0
-            allocate(asdhflag(nsubr), stat=alloc_stat)
-            sum_stat = sum_stat + alloc_stat
-            allocate(wchflag(nsubr), stat=alloc_stat)
-            sum_stat = sum_stat + alloc_stat
-            if( sum_stat .gt. 0 ) then
-               write(*,*) 'ERROR: memory alloc., asd and wc header print flags'
-            end if
-            do i=1, nsubr        ! Initialize the flag values
-               asdhflag(i) = 0
-               wchflag(i) = 0
-            end do
-
             allocate(soil(nsubr), stat=alloc_stat)
             if( alloc_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., soil structure array'
@@ -411,6 +396,11 @@ contains
             if( alloc_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., management arrays'
             end if
+
+            do i=1, nsubr        ! Initialize the flag values
+               manFile(i)%asdhflag = 0
+               manFile(i)%wchflag = 0
+            end do
 
             ! read in initial field conditions file name
             soil(isr)%sinfil = rootp(1:len_trim(rootp)) // line
@@ -971,20 +961,6 @@ contains
                write(*,*) 'ERROR: memory alloc., debug output flags'
             end if
 
-            ! create and initialize array for submodel output flags
-            sum_stat = 0
-            allocate(asdhflag(nsubr), stat=alloc_stat)
-            sum_stat = sum_stat + alloc_stat
-            allocate(wchflag(nsubr), stat=alloc_stat)
-            sum_stat = sum_stat + alloc_stat
-            if( sum_stat .gt. 0 ) then
-               write(*,*) 'ERROR: memory alloc., asd and wc header print flags'
-            end if
-            do i=1, nsubr        ! Initialize the flag values
-               asdhflag(i) = 0
-               wchflag(i) = 0
-            end do
-
             allocate(soil(nsubr), stat=alloc_stat)
             if( alloc_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., soil structure array'
@@ -996,6 +972,11 @@ contains
             if( alloc_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., management arrays'
             end if
+
+            do i=1, nsubr        ! Initialize the flag values
+               manFile(i)%asdhflag = 0
+               manFile(i)%wchflag = 0
+            end do
 
          case (25)
             read (line,*,err=80) am0hfl(isr),am0sfl(isr),manFile(isr)%am0tfl, am0cfl(isr),am0dfl(isr)

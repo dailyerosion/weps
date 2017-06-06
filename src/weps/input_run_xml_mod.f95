@@ -30,7 +30,6 @@ module input_run_xml_mod
   use weps_main_mod
   use barriers_mod, only: create_barrier, barrier, barseas
   use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate
-  use manage_data_struct_defs, only: asdhflag, wchflag
   use read_write_xml_mod, only: read_param
 
   integer, parameter :: MAX_NAME_LEN  = 40
@@ -301,18 +300,9 @@ contains
             subregion_complete(idx) = .false.
           end do
 
-          ! create and initialize array for submodel output flags
-          sum_stat = 0
-          allocate(asdhflag(nsubr), stat=alloc_stat)
-          sum_stat = sum_stat + alloc_stat
-          allocate(wchflag(nsubr), stat=alloc_stat)
-          sum_stat = sum_stat + alloc_stat
-          if( sum_stat .gt. 0 ) then
-            write(*,*) 'ERROR: memory alloc., asd and wc header print flags'
-          end if
           do jdx=1, nsubr        ! Initialize the flag values
-            asdhflag(jdx) = 0
-            wchflag(jdx) = 0
+            manFile(jdx)%asdhflag = 0
+            manFile(jdx)%wchflag = 0
           end do
 
         case (SCI_coords)

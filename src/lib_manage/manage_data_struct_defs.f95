@@ -15,6 +15,12 @@ module manage_data_struct_defs
       integer :: am0tdb    ! flag to print MANAGEment variables before and after the call to MANAGE
                            ! 0 = no output
                            ! 1 = output
+      integer :: asdhflag  ! flag to control printing ASD header info
+                           ! 0 = ASD header line not yet printed
+                           ! 1 = ASD header (first) line now printed
+      integer :: wchflag   ! flag to control printing WC header info
+                           ! 0 = WC header line not yet printed
+                           ! 1 = WC header (first) line now printed
    end type man_file_struct
 
    type(man_file_struct), dimension(:), allocatable :: manFile
@@ -30,10 +36,10 @@ module manage_data_struct_defs
    !integer, dimension(:), allocatable :: am0tdb    ! flag to print MANAGEment variables before and after the call to MANAGE
                                                      ! 0 = no output
                                                      ! 1 = output
-   integer, dimension(:), allocatable :: asdhflag    ! flag to control printing ASD header info
+   !integer, dimension(:), allocatable :: asdhflag    ! flag to control printing ASD header info
                                                      ! 0 = ASD header line not yet printed
                                                      ! 1 = ASD header (first) line now printed
-   integer, dimension(:), allocatable :: wchflag     ! flag to control printing WC header info
+   !integer, dimension(:), allocatable :: wchflag     ! flag to control printing WC header info
                                                      ! 0 = WC header line not yet printed
                                                      ! 1 = WC header (first) line now printed
    type last_operation

@@ -778,7 +778,7 @@
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
-      use manage_data_struct_defs, only: lastoper, asdhflag, wchflag, man_file_struct
+      use manage_data_struct_defs, only: lastoper, man_file_struct
       use hydro_data_struct_defs, only: hydro_derived_et
       integer sr, bmrotation
       type(soil_def), intent(inout) :: soil  ! soil for this subregion

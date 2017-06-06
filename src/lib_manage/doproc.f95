@@ -21,7 +21,7 @@
       use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
       use p1unconv_mod, only: mmtom
-      use manage_data_struct_defs, only: lastoper, asdhflag, wchflag, man_file_struct
+      use manage_data_struct_defs, only: lastoper, man_file_struct
       use crop_data_struct_defs, only: am0cfl
       use soilden_mod, only: setbdproc_wc
       use hydro_data_struct_defs, only: hydro_derived_et
@@ -2484,10 +2484,10 @@
        asdlayer = tillay(asddepth, soil%aszlyt, soil%nslay)
 
 !+++++++++++++++++++++++++++++++++++++++++++++++
-       if (BTEST(manFile%am0tfl,0) .and. asdhflag(sr) .eq. 0) then
+       if (BTEST(manFile%am0tfl,0) .and. manFile%asdhflag .eq. 0) then
          write(luoasd(sr),"(3(A5))",ADVANCE="NO") '# day', 'mon', 'year'
          write(luoasd(sr),"(6(A10))", ADVANCE="YES") 'layer(s)', 'depth(mm)', 'GMDx', 'GSDx', 'm_not', 'm_inf'
-         asdhflag(sr) = 1
+         manFile%asdhflag = 1
        end if
        if (BTEST(manFile%am0tfl,0)) then
          call get_simdate(cd, cm, cy)
@@ -2694,10 +2694,10 @@
        wclayer = tillay(wcdepth, soil%aszlyt, soil%nslay)
 
 !+++++++++++++++++++++++++++++++++++++++++++++++
-       if (BTEST(manFile%am0tfl,1) .and. wchflag(sr) .eq. 0) then
+       if (BTEST(manFile%am0tfl,1) .and. manFile%wchflag .eq. 0) then
          write(luowc(sr),"(3(A5))",ADVANCE="NO") '# day', 'mon', 'year'
          write(luowc(sr),"(3(A10))", ADVANCE="YES") 'layer(s)', 'depth(mm)', 'wc (Mg/Mg)'
-         wchflag(sr) = 1
+         manFile%wchflag = 1
        end if
        if (BTEST(manFile%am0tfl,1)) then
          call get_simdate(cd, cm, cy)

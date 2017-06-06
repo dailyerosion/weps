@@ -19,8 +19,8 @@ module soil_processes_mod
        bsdsblk,                                                        &
        bhzinf, bhzwid, trigger, sr)
 
-      use file_io_mod, only: luoasd                       ! Only for printing out ASD results
-      use manage_data_struct_defs, only: manFile, asdhflag ! Only for printing out ASD results
+      use file_io_mod, only: luoasd               ! Only for printing out ASD results
+      use manage_data_struct_defs, only: manFile  ! Only for printing out ASD results
       use datetime_mod, only: get_simdate, get_simdate_jday, get_simdate_doy
 
 !     + + + GLOBAL COMMON BLOCKS + + +
@@ -84,7 +84,7 @@ module soil_processes_mod
 
 !+++++++++++++++++++++++++++++++++++++++++++++++
          call get_simdate(cd, cm, cy)
-         if (BTEST(manFile(sr)%am0tfl,0) .and. (asdhflag(sr) .eq. 1) .and. (ldx .eq. 1)) then
+         if (BTEST(manFile(sr)%am0tfl,0) .and. (manFile(sr)%asdhflag .eq. 1) .and. (ldx .eq. 1)) then
            write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
            write (UNIT=luoasd(sr),FMT="(i10,5(f10.4),A)",ADVANCE="YES")   &
              1, bszlyt(1),                                               &
@@ -98,7 +98,7 @@ module soil_processes_mod
           bslagx(ldx), se0, se1)
 
 !+++++++++++++++++++++++++++++++++++++++++++++++
-         if (BTEST(manFile(sr)%am0tfl,0) .and. (asdhflag(sr) .eq. 1) .and. (ldx .eq. 1)) then
+         if (BTEST(manFile(sr)%am0tfl,0) .and. (manFile(sr)%asdhflag .eq. 1) .and. (ldx .eq. 1)) then
            write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
            write (UNIT=luoasd(sr),FMT="(i10,5(f10.4),A)",ADVANCE="YES")   &
              1, bszlyt(1),                                               &
