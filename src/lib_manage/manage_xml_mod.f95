@@ -32,17 +32,23 @@ module manage_xml_mod
   integer, parameter, public :: value = 12
   integer, parameter, public :: version = 13
 
-  integer :: int_cnt
-  integer :: real_cnt
+  integer :: int_cnt     ! count of integer values to be read into an operation, group or process, for allocation
+  integer :: real_cnt    ! count of real values to be read into an operation, group or process, for allocation
 
-  logical :: manfile_complete
+  integer :: isub ! current subregion number used in a routines in this module
+
+  logical :: manfile_complete ! indicator that a complete manfile was read
 
 contains
 
-  subroutine init_man_xml()
+  subroutine init_man_xml( isubr )
+    integer, intent(in) :: isubr
 
     integer :: idx
     integer :: alloc_stat
+
+    ! set subregion index used with manFile
+    isub = isubr
 
     max_tags = 13   ! count of unique tags needed from management files
     allocate( man_tag(max_tags), stat=alloc_stat)

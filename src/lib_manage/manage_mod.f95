@@ -280,7 +280,7 @@ module manage_mod
         call open_xmlfile(trim(manFile%tinfil),fxml,read_stat)
         if (read_stat /= 0) stop "Cannot open xml input file"
         ! read in xml based input file
-        call init_man_xml()
+        call init_man_xml( manFile%isub )
         call xml_parse(fxml, &
            begin_element_handler = begin_element_handler, &
            end_element_handler = end_element_handler, &

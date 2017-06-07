@@ -40,6 +40,7 @@ module manage_data_struct_defs
   end type operation
 
   type man_file_struct
+    integer :: isub      ! subregion index
     character(len=512) :: tinfil  ! management file name
     integer :: mperod    ! length of management of rotation
     integer :: am0tfl    ! flag to print MANAGEment (TILLAGE) output
@@ -113,6 +114,7 @@ contains
 
     ! initialize values
     do idx = 1, nsubr
+      manFile(idx)%isub = idx
       manFile(idx)%mperod = 0
       manFile(idx)%am0tfl = 0
       manFile(idx)%am0tdb = 0
