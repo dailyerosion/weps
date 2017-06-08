@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   dooper (sr)
+      subroutine   dooper (sr, manFile)
 
 !     + + + PURPOSE + + +
 !     Dooper reads in any coefficients associated with the
@@ -13,7 +13,7 @@
 !     tillage, operation, management
 
       use weps_interface_defs, ignore_me=>dooper
-      use manage_data_struct_defs, only: lastoper
+      use manage_data_struct_defs, only: lastoper, man_file_struct 
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -22,6 +22,7 @@
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr
+      type(man_file_struct), intent(in) :: manFile
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr - the subregion number
@@ -78,7 +79,7 @@
      &                  ospeed, odir, ostdspeed, ominspeed, omaxspeed
 
 !         Version 1.5 added ofuel
-          if (mversion(sr) .ge. 1.50) then
+          if (manFile%mversion .ge. 1.50) then
               ! get fuel line
               mcur(sr) = mcur(sr) + 1
               line = mtbl(mcur(sr))
@@ -97,7 +98,7 @@
           read(line(2:len_trim(line)), *, err=901) lastoper(sr)%energyarea, lastoper(sr)%stir
 
 !         Version 1.5 added ofuel
-          if (mversion(sr) .ge. 1.50) then
+          if (manFile%mversion .ge. 1.50) then
               ! get fuel line
               mcur(sr) = mcur(sr) + 1
               line = mtbl(mcur(sr))

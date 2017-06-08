@@ -128,7 +128,7 @@ module manage_mod
       select case (line(1:1))
       case ('O')
         lastoper(sr)%skip = 0
-        call dooper(sr)
+        call dooper(sr, manFile)
       case ('G')
         if(lastoper(sr)%skip.eq.0) call dogroup(sr, soil)
       case ('P')
@@ -195,7 +195,7 @@ module manage_mod
       use flib_sax
       use manage_xml_mod, only: init_man_xml
       use manage_xml_mod, only: manfile_complete
-      use manage_xml_mod, only: begin_element_handler, end_element_handler, pcdata_chunk_handler
+      use manage_xml_mod, only: begin_man_element_handler, end_man_element_handler, pcdata_man_chunk_handler
 
       include 'p1werm.inc'
       include 'm1flag.inc'
@@ -282,12 +282,12 @@ module manage_mod
         ! read in xml based input file
         call init_man_xml( manFile%isub )
         call xml_parse(fxml, &
-           begin_element_handler = begin_element_handler, &
-           end_element_handler = end_element_handler, &
-           pcdata_chunk_handler = pcdata_chunk_handler, &
+           begin_element_handler = begin_man_element_handler, &
+           end_element_handler = end_man_element_handler, &
+           pcdata_chunk_handler = pcdata_man_chunk_handler, &
            verbose = .false.)
         if (.not. manfile_complete) then
-          write(*,*) 'Simulation run file incomplete'
+          write(*,*) 'Management file incomplete: ', trim(manFile%tinfil)
           call exit(1)
         end if
         return
@@ -338,18 +338,18 @@ module manage_mod
       if (line (1:8).eq.'Version: ') then
 !       We have found the version # of the management file
 !       Read the version into the common block variable
-        read(line (10:13), *) mversion(sr)
+        read(line (10:13), *) manFile%mversion
 
 !       Report the version to stdout
-        write (6, *) 'Management file version: ', mversion(sr)
+        write (6, *) 'Management file version: ', manFile%mversion
 
 !       Test if the version is at least 1.4.  Version 1.5 adds the ability to test 
 !       mversion within the operations, groups and procs so that graceful upgrades 
 !       are possible.  This test version should not need to be updated as the format
 !       changes.  Upgrades can be handled within the dooper, dogroup and doproc subroutines.
-        if (mversion(sr) .lt. 1.40) then
+        if (manFile%mversion .lt. 1.40) then
 !        if (line(10:13).ne.'1.40') then
-           write(0,*) 'Management file version: ', mversion(sr)
+           write(0,*) 'Management file version: ', manFile%mversion
            write(0,*) 'Version >= 1.40 is required for this release.'
            write(0,*) 'You need to convert ', trim(manFile%tinfil)
            write(0,*) ' to the correct format.'

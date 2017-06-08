@@ -6,6 +6,7 @@
 module manage_xml_mod
 
   use flib_sax
+  use manage_data_struct_defs, only: manFile, operation_date
 
   integer, parameter :: MAX_NAME_LEN  = 40
 
@@ -31,12 +32,18 @@ module manage_xml_mod
   integer, parameter, public :: p_name = 11
   integer, parameter, public :: value = 12
   integer, parameter, public :: version = 13
+  integer, parameter, public :: wepsmanDB = 14
 
   integer :: int_cnt     ! count of integer values to be read into an operation, group or process, for allocation
   integer :: real_cnt    ! count of real values to be read into an operation, group or process, for allocation
 
   integer :: isub ! current subregion number used in a routines in this module
+  type(operation_date) :: t_operDate
+  character(len=80) :: t_operName
 
+  logical :: all_wepsmanvalues
+  logical :: all_operationDBs
+  logical :: all_actionvalues
   logical :: manfile_complete ! indicator that a complete manfile was read
 
 contains
@@ -50,7 +57,7 @@ contains
     ! set subregion index used with manFile
     isub = isubr
 
-    max_tags = 13   ! count of unique tags needed from management files
+    max_tags = 14   ! count of unique tags needed from management files
     allocate( man_tag(max_tags), stat=alloc_stat)
     if( alloc_stat .gt. 0 ) then
       write(*,*) 'ERROR: memory alloc., input_tag'
@@ -76,6 +83,11 @@ contains
     man_tag(11)%name = "name"
     man_tag(12)%name = "value"
     man_tag(13)%name = "version"
+    man_tag(14)%name = "wepsmanDB"
+
+    all_wepsmanvalues = .true.  ! .true. indicates that no values are required
+    all_operationDBs = .true.  ! .false. indicates that a value is required
+    all_actionvalues = .true.
 
   end subroutine init_man_xml
 
@@ -158,13 +170,105 @@ contains
 
 !  end subroutine read_manage_xml
 
-  subroutine begin_element_handler(name,attributes)
-    character(len=*), intent(in)   :: name
+  subroutine begin_man_element_handler(name,attributes)
+    character(len=*), intent(in) :: name
     type(dictionary_t), intent(in) :: attributes
+
+    integer :: idx
+
+    do idx = 1, size(man_tag)
+      if( man_tag(idx)%name .eq. name ) then
+        man_tag(idx)%in_tag = .true.
+        !write(*,*) 'In tag ', trim(name)
+        exit  ! found tag, no need to look further
+      end if
+    end do
+
+  end subroutine begin_man_element_handler
+
+  subroutine end_man_element_handler(name)
+    character(len=*), intent(in) :: name
+
+    integer :: idx
+
+    do idx = 1, size(man_tag)
+      if( man_tag(idx)%name .eq. name ) then
+        man_tag(idx)%in_tag = .false.
+        !write(*,*) 'Out tag ', trim(name)
+
+        if ( man_tag(idx)%acquired ) then
+          write(*,*) 'ACQUIRED: ', man_tag(idx)%name!, man_tag(idx)%acquired
+        end if
+
+        exit  ! found tag, no need to look further
+      end if
+    end do
+
+    if (idx .eq. wepsmanDB) then
+
+      if ( man_tag(rotationyears)%acquired &
+        .and. man_tag(version)%acquired &
+        .and. all_wepsmanvalues ) then
+        manfile_complete = .true.
+      else
+        manfile_complete = .false.
+      end if
+
+    else if (idx .eq. rotationyears) then
+
+    else if (idx .eq. wepsmanvalue) then
+      if( man_tag(date)%acquired &
+        .and. all_operationDBs ) then
+        man_tag(date)%acquired = .false.
+        ! stays .true. if all previous values have been true
+        all_wepsmanvalues = (all_wepsmanvalues .and. .true. )
+      else
+        all_wepsmanvalues = .false.
+      end if
+
+    else if (idx .eq. date) then
+
+    else if (idx .eq. operationDB) then
+      if( man_tag(operationname)%acquired &
+        .and. all_actionvalues ) then
+        ! stays .true. if all previous values have been true
+        all_operationDBs = (all_operationDBs .and. .true. )
+      else
+        all_operationDBs = .false.
+      end if
+
+    else if (idx .eq. operationname) then
+    else if (idx .eq. actionvalue) then
+    end if
+
+  end subroutine end_man_element_handler
+
+  subroutine pcdata_man_chunk_handler(chunk)
+    use read_write_xml_mod, only: read_param
+    character(len=*), intent(in) :: chunk
+
+    character(len=80) :: param_value
 
     character(len=3) :: operID
     character(len=3) :: grpID
     character(len=3) :: procID
+
+    param_value = trim(chunk)
+
+    !write(*,*) 'CHUNK: ', trim(chunk)
+
+    if (man_tag(wepsmanDB)%in_tag) then
+      if (man_tag(version)%in_tag) then
+        call read_param(man_tag(version)%name, param_value, manFile(isub)%mversion)
+        man_tag(version)%acquired = .true.
+      else if (man_tag(rotationyears)%in_tag) then
+        call read_param(man_tag(rotationyears)%name, param_value, manFile(isub)%mperod)
+        man_tag(rotationyears)%acquired = .true.
+      else if (man_tag(wepsmanvalue)%in_tag) then
+        if (man_tag(date)%in_tag) then
+          call read_param(man_tag(date)%name, param_value, t_operDate)
+          man_tag(date)%acquired = .true.
+        end if
 
         select case (operID)
         case ('01')
@@ -278,15 +382,11 @@ contains
           int_cnt = 0
           real_cnt = 0
         end select
-  end subroutine begin_element_handler
 
-  subroutine end_element_handler(name)
-    character(len=*), intent(in)     :: name
-  end subroutine end_element_handler
+      end if
+    end if
 
-  subroutine pcdata_chunk_handler(chunk)
-    character(len=*), intent(in) :: chunk
-  end subroutine pcdata_chunk_handler
+  end subroutine pcdata_man_chunk_handler
 
 end module manage_xml_mod
 

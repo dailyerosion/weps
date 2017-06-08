@@ -31,6 +31,7 @@ module manage_data_struct_defs
 
   type operation
     type(operation_date) :: operDate
+    character(len=80) :: operName
     character(len=3) :: operID
     integer :: operType
     type(operation), pointer :: operNext
@@ -42,6 +43,7 @@ module manage_data_struct_defs
   type man_file_struct
     integer :: isub      ! subregion index
     character(len=512) :: tinfil  ! management file name
+    real :: mversion     ! management version number
     integer :: mperod    ! length of management of rotation
     integer :: am0tfl    ! flag to print MANAGEment (TILLAGE) output
                          ! 0 = no output

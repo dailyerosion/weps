@@ -19,9 +19,10 @@
       integer        mbeg  (mnsub+1)
       integer        mcur  (mnsub)
       integer        mcount(mnsub)
-      real           mversion(mnsub)
+!      real           mversion(mnsub)
 !
-      common / man4 / mbeg, mcur, mtbl, mcount, mversion
+!      common / man4 / mbeg, mcur, mtbl, mcount, mversion
+      common / man4 / mbeg, mcur, mtbl, mcount
 !            
 ! *** the following variables are deleted asap
       integer          mstart(mnsub)
@@ -45,9 +46,9 @@
       common / man1 / mstart, istack, nstack
       common / man2 / manlin, mline, cstack
       common / man3 / mcurnt,  mlpos, mrecnum, mrcl, meor
-      common / man4 / harv_calib_not_selected
+      common / man5 / harv_calib_not_selected
 
-      save :: /man1/, /man2/, /man3/, /man4/
+      save :: /man1/, /man2/, /man3/, /man4/, /man5/
 
       equivalence (mline, aline)
 ! *** end delete here      

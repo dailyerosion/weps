@@ -770,8 +770,10 @@
       type(soil_def), intent(in) :: soil
       end subroutine dogroup
 !----------------------
-      subroutine   dooper (sr)
+      subroutine   dooper (sr, manFile)
+      use manage_data_struct_defs, only: man_file_struct 
       integer sr
+      type(man_file_struct) :: manFile
       end subroutine dooper
 !---------------------------
       subroutine   doproc (sr, bmrotation, soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
