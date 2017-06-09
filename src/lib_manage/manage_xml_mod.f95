@@ -6,7 +6,7 @@
 module manage_xml_mod
 
   use flib_sax
-  use manage_data_struct_defs, only: manFile, operation_date
+  use manage_data_struct_defs, only: manFile, operation_date, elemCreate
 
   integer, parameter :: MAX_NAME_LEN  = 40
 
@@ -40,10 +40,13 @@ module manage_xml_mod
   integer :: isub ! current subregion number used in a routines in this module
   type(operation_date) :: t_operDate
   character(len=80) :: t_operName
+  character(len=3) :: t_code
+  integer :: t_id
 
   logical :: all_wepsmanvalues
   logical :: all_operationDBs
   logical :: all_actionvalues
+  logical :: all_params
   logical :: manfile_complete ! indicator that a complete manfile was read
 
 contains
@@ -88,6 +91,7 @@ contains
     all_wepsmanvalues = .true.  ! .true. indicates that no values are required
     all_operationDBs = .true.  ! .false. indicates that a value is required
     all_actionvalues = .true.
+    all_params = .true.
 
   end subroutine init_man_xml
 
@@ -214,8 +218,6 @@ contains
         manfile_complete = .false.
       end if
 
-    else if (idx .eq. rotationyears) then
-
     else if (idx .eq. wepsmanvalue) then
       if( man_tag(date)%acquired &
         .and. all_operationDBs ) then
@@ -231,14 +233,45 @@ contains
     else if (idx .eq. operationDB) then
       if( man_tag(operationname)%acquired &
         .and. all_actionvalues ) then
+        man_tag(operationname)%acquired = .false.
         ! stays .true. if all previous values have been true
         all_operationDBs = (all_operationDBs .and. .true. )
       else
         all_operationDBs = .false.
       end if
 
-    else if (idx .eq. operationname) then
     else if (idx .eq. actionvalue) then
+      if( man_tag(identity)%acquired &
+        .and. all_params &
+        ) then
+        man_tag(identity)%acquired = .false.
+        ! stays .true. if all previous values have been true
+        all_actionvalues = (all_actionvalues .and. .true. )
+      else
+        all_actionvalues = .false.
+      end if
+
+    else if (idx .eq. identity) then
+      if( man_tag(code)%acquired &
+        .and. man_tag(id)%acquired &
+        ) then
+        man_tag(code)%acquired = .false.
+        man_tag(id)%acquired = .false.
+        man_tag(identity)%acquired = .true.
+      end if
+
+    else if (idx .eq. param) then
+      if( man_tag(p_name)%acquired &
+        .and. man_tag(value)%acquired &
+        ) then
+        man_tag(p_name)%acquired = .false.
+        man_tag(value)%acquired = .false.
+        ! stays .true. if all previous values have been true
+        all_params = (all_params .and. .true. )
+      else
+        all_params = .false.
+      end if
+
     end if
 
   end subroutine end_man_element_handler
@@ -268,18 +301,61 @@ contains
         if (man_tag(date)%in_tag) then
           call read_param(man_tag(date)%name, param_value, t_operDate)
           man_tag(date)%acquired = .true.
+        else if (man_tag(operationDB)%in_tag ) then
+          if (man_tag(operationname)%in_tag ) then
+            t_operName = trim(param_value)
+            man_tag(operationname)%acquired = .true.
+          else if (man_tag(actionvalue)%in_tag ) then
+            if (man_tag(identity)%in_tag ) then
+              if (man_tag(code)%in_tag ) then
+                t_code = trim(param_value)
+                if (   t_code .eq. 'O' &
+                  .or. t_code .eq. 'G' &
+                  .or. t_code .eq. 'P' &
+                  ) then
+                  man_tag(code)%acquired = .true.
+                  operID = ''
+                  grpID = ''
+                  procID = ''
+                else
+                  write(*,*) 'Unknown Identity code: "', trim(t_code), '" found in ', trim(manFile(isub)%tinfil)
+                end if
+              else if (man_tag(id)%in_tag ) then
+                call read_param(man_tag(id)%name, param_value, t_id)
+                man_tag(id)%acquired = .true.
+                select case (t_code)
+                case ('O')
+                  operID = trim(param_value)
+                  select case (operID)
+                  case ('01')
+                    real_cnt = 5
+                  case ('03')
+                    real_cnt = 7
+                  case ('04')
+                    real_cnt = 2
+                  case default
+                    real_cnt = 0
+                  end select
+                  if ( .not. associated(manFile(isub)%operFirst) ) then
+                    manFile(isub)%operFirst => elemCreate( manFile(isub)%operFirst, operID, real_cnt )
+                  else
+                  end if
+                case ('G')
+                  grpID = trim(param_value)
+                case ('P')
+                  procID = trim(param_value)
+                end select
+              end if
+            else if (man_tag(param)%in_tag ) then
+              if (man_tag(p_name)%in_tag ) then
+                
+              else if (man_tag(value)%in_tag ) then
+
+              end if
+            end if
+          end if
         end if
 
-        select case (operID)
-        case ('01')
-          real_cnt = 5
-        case ('03')
-          real_cnt = 7
-        case ('04')
-          real_cnt = 2
-        case default
-          real_cnt = 0
-        end select
 
         select case (grpID)
         case ('01')
