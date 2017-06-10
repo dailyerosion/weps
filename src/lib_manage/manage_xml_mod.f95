@@ -604,11 +604,6 @@ contains
       if( man_tag(idx)%name .eq. name ) then
         man_tag(idx)%in_tag = .false.
         !write(*,*) 'Out tag ', trim(name)
-
-        if ( man_tag(idx)%acquired ) then
-          write(*,*) 'ACQUIRED: ', man_tag(idx)%name!, man_tag(idx)%acquired
-        end if
-
         exit  ! found tag, no need to look further
       end if
     end do
@@ -650,6 +645,7 @@ contains
         .and. all_params &
         ) then
         man_tag(identity)%acquired = .false.
+        man_tag(actionvalue)%acquired = .true.
         ! stays .true. if all previous values have been true
         all_actionvalues = (all_actionvalues .and. .true. )
       else
@@ -671,12 +667,23 @@ contains
         ) then
         man_tag(p_name)%acquired = .false.
         man_tag(value)%acquired = .false.
-        ! stays .true. if all previous values have been true
-        all_params = (all_params .and. .true. )
-      else
-        all_params = .false.
+        man_tag(param)%acquired = .true.
+        if (    (i_cnt .eq. int_cnt) &
+          .and. (r_cnt .eq. real_cnt) &
+          .and. (s_cnt .eq. str_cnt) &
+          ) then
+          all_params = .true.
+        else
+          all_params = .false.
+        end if
       end if
 
+    end if
+
+    if ( idx .le. size(man_tag) ) then
+      if ( man_tag(idx)%acquired ) then
+        write(*,*) 'ACQUIRED: ', man_tag(idx)%name!, man_tag(idx)%acquired
+      end if
     end if
 
   end subroutine end_man_element_handler
@@ -879,6 +886,7 @@ contains
               if (man_tag(p_name)%in_tag ) then
                 do idx = 1, max_p_names
                   if ( param_nt(idx)%p_name .eq. param_value ) then
+                    man_tag(p_name)%acquired = .true.
                     select case (param_nt(idx)%p_type)
                     case ('int')
                       i_cnt = i_cnt + 1
@@ -891,18 +899,68 @@ contains
                           manFile(isub)%proc%i_params(i_cnt)%p_name = trim(param_value)
                         end if
                       else
-                        write(*,*) 'Too many parameter values for: '
+                        write(*,*) 'Too many integer parameter values for: ',trim(t_code)//trim(operID)//trim(grpID)//trim(procID)
                       end if
                     case ('float')
                       r_cnt = r_cnt + 1
+                      if ( r_cnt .le. real_cnt ) then
+                        if ( operID .ne. '' ) then
+                          manFile(isub)%oper%r_params(r_cnt)%p_name = trim(param_value)
+                        else if ( grpID .ne. '' ) then
+                          manFile(isub)%grp%r_params(r_cnt)%p_name = trim(param_value)
+                        else if ( procID .ne. '' ) then
+                          manFile(isub)%proc%r_params(r_cnt)%p_name = trim(param_value)
+                        end if
+                      else
+                        write(*,*) 'Too many float parameter values for: ',trim(t_code)//trim(operID)//trim(grpID)//trim(procID)
+                      end if
                     case ('string')
                       s_cnt = s_cnt + 1
+                      if ( s_cnt .le. str_cnt ) then
+                        if ( operID .ne. '' ) then
+                          manFile(isub)%oper%s_params(s_cnt)%p_name = trim(param_value)
+                        else if ( grpID .ne. '' ) then
+                          manFile(isub)%grp%s_params(s_cnt)%p_name = trim(param_value)
+                        else if ( procID .ne. '' ) then
+                          manFile(isub)%proc%s_params(s_cnt)%p_name = trim(param_value)
+                        end if
+                      else
+                        write(*,*) 'Too many string parameter values for: ',trim(t_code)//trim(operID)//trim(grpID)//trim(procID)
+                      end if
                     end select
                     exit  ! found name in list, look no further
                   end if
                 end do
               else if (man_tag(value)%in_tag ) then
-                     !call read_param(man_tag(p_name)%name, param_value, manFile(isub)%oper%i_params(i_cnt)%p_value )
+                if ( idx .le. max_p_names ) then
+                  select case (param_nt(idx)%p_type)
+                  case ('int')
+                    if ( operID .ne. '' ) then
+                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%oper%i_params(i_cnt)%p_value )
+                    else if ( grpID .ne. '' ) then
+                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%grp%i_params(i_cnt)%p_value )
+                    else if ( procID .ne. '' ) then
+                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%proc%i_params(i_cnt)%p_value )
+                    end if
+                  case ('float')
+                    if ( operID .ne. '' ) then
+                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%oper%r_params(r_cnt)%p_value )
+                    else if ( grpID .ne. '' ) then
+                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%grp%r_params(r_cnt)%p_value )
+                    else if ( procID .ne. '' ) then
+                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%proc%r_params(r_cnt)%p_value )
+                    end if
+                  case ('string')
+                    if ( operID .ne. '' ) then
+                      manFile(isub)%oper%s_params(s_cnt)%p_value = trim(param_value)
+                    else if ( grpID .ne. '' ) then
+                      manFile(isub)%grp%s_params(s_cnt)%p_value = trim(param_value)
+                    else if ( procID .ne. '' ) then
+                      manFile(isub)%proc%s_params(s_cnt)%p_value = trim(param_value)
+                    end if
+                  end select
+                  man_tag(value)%acquired = .true.
+                end if
               end if
             end if
           end if
