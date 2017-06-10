@@ -12,18 +12,18 @@ module manage_data_struct_defs
   end type operation_date
 
   type integer_param
-    character(len=40) :: tag_name
-    integer :: tag_value
+    character(len=40) :: p_name
+    integer :: p_value
   end type integer_param
 
   type real_param
-    character(len=40) :: tag_name
-    real :: tag_value
+    character(len=40) :: p_name
+    real :: p_value
   end type real_param
 
   type string_param
-    character(len=40) :: tag_name
-    character(len=80) :: tag_value
+    character(len=40) :: p_name
+    character(len=80) :: p_value
   end type string_param
 
   type process
