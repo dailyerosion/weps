@@ -30,13 +30,10 @@ module stir_report_mod
       logical header_not_printed  ! flag to keep from printing multiple headers to stir report file
       integer oper_cnt       ! stir count of operations, used to trigger accumulation
       integer proc_cnt       ! stir count of processes, used in averaging
-      logical done_flg       ! flag to indicate that stir had completed second pass through management file
-      logical man_eof        ! flag to indicate that man file has reached end once
       real    stir_op_sum    ! stir_op_sum - accumulated stir values, divide by proc count to get average
       real    stir_op_energy ! operation energy value from operation input
       integer phopcnt        ! actual number of (p)lanting and (h)arvest (op)erations tabulated
       integer phopidx        ! operation index, location in the array
-      integer phoplastidx    ! operation index of previous call to stir_crop
       type(stir_operation_vars), dimension(:), allocatable :: phop ! individual values for each planting or harvest operation
    end type stir_accumulators
 

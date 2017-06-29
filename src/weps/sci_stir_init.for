@@ -39,15 +39,12 @@
       ! initialize stir accumulator values
       stircum(isr)%oper_cnt = 0
       stircum(isr)%proc_cnt = 0
-      stircum(isr)%done_flg = .false.
-      stircum(isr)%man_eof = .false.
       stircum(isr)%stir_op_sum = 0.0
       stircum(isr)%stir_op_energy = 0.0
 
       ! initialize counters and arrays for planting and harvest operation tracking
       stircum(isr)%phopcnt = 0
       stircum(isr)%phopidx = 0
-      stircum(isr)%phoplastidx = -1
       do idx = 1, size(stircum(isr)%phop)
           stircum(isr)%phop(idx)%stir_opname = ''
           stircum(isr)%phop(idx)%stir_cropname = ''

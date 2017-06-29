@@ -117,7 +117,6 @@
 !       read crop name
 !        cropname = line(2:71)   !at present, line ends with < symbol at 72
         call getManVal(manFile%grp, 'gcropname', cropname)
-        ! call stir_crop(sr, cropname, 0)
 !        read(line(2:len_trim(line)),*, err=901) cropname
 ! ***        if (getr(iunit, sr, cropname,cropname,cropname,1,'c').gt.0) then
 ! ***          print*,'ERROR in doproc ',prcode

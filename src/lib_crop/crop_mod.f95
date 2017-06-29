@@ -395,11 +395,6 @@ module crop_mod
         ! to eliminate newline at beginning of file
         cprevseasonrotation(isr) = 1
 
-        if( init_loop ) then  !initilizing cycle
-          ! attach a crop name and id as harvest/termination operation in stir report
-          call stir_crop(isr, bc0nam, 2)
-        end if
-
       else  !done when initializing and calibrating cycle(s) are completed
 
         if( bmrotation .gt. cprevseasonrotation(isr) ) then

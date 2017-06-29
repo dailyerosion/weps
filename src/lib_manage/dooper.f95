@@ -134,9 +134,6 @@
           lastoper(sr)%fuel = ''
       end select
 
-      ! set up stir accounting.  Must be after op case so that fuel is correct.
-      ! call stir_oper(sr)
-
       ! initialize row spacing and ridge flag to zero. They are needed
       ! by P51, (set in P3 or P5) but may be set and not cleared by a previous operation.
       imprs = 0.0

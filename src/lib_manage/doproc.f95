@@ -830,8 +830,6 @@
         call getManVal(manFile%proc, 'massburyvt3', mfvt(3))
         call getManVal(manFile%proc, 'massburyvt4', mfvt(4))
         call getManVal(manFile%proc, 'massburyvt5', mfvt(5))
-        ! accumulation of STIR values
-        ! call stir_cum(sr, ospeed, tdepth, burydistflg, fracarea)
 
 !     Default all bury processes to "all" biomass for now.
       bioflg = 0
@@ -1005,8 +1003,6 @@
      &           atmbgstemz(1,sr),                                      &
      &           atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr), &
      &           atgrainf(sr) )
-             ! attach a crop name to non-harvest termination in stir report
-             ! call stir_crop(sr, crop%bname, 2)
              if( rpt_season_flg(sr) ) then
                call report_hydrobal( sr, bmrotation, manFile%mperod )
                ! This may be harvest or non-harvest termination, allow early harvest warnings
@@ -1096,8 +1092,6 @@
           end if
           call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,1,&
      &           mandate, crop)
-          ! attach a crop name to the harvest operation in stir report
-          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1167,8 +1161,6 @@
           end if
           call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,1,&
      &           mandate, crop)
-          ! attach a crop name to the harvest operation in stir report
-          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1285,8 +1277,6 @@
           end if
           call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,1,&
       &          mandate, crop)
-          ! attach a crop name to the harvest operation in stir report
-          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1353,8 +1343,6 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
      &           1, mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-          ! attach a crop name to the harvest operation in stir report
-          ! call stir_crop(sr, crop%bname, 2)
             if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1474,8 +1462,6 @@
           call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
      &                         harv_unit_flg, harv_report_flg,          &
      &                         mandate, crop )
-          ! attach a crop name to the harvest operation in stir report
-          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1551,8 +1537,6 @@
           call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
      &                         harv_unit_flg, harv_report_flg,          &
      &                         mandate, crop )
-          ! attach a crop name to the harvest operation in stir report
-          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1629,8 +1613,6 @@
           call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
      &                         harv_unit_flg, harv_report_flg,          &
      &                         mandate, crop )
-          ! attach a crop name to the harvest operation in stir report
-          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1706,8 +1688,6 @@
           call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
      &                         harv_unit_flg, harv_report_flg, &
      &                         mandate, crop )
-          ! attach a crop name to the harvest operation in stir report
-          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1878,8 +1858,6 @@
      &      soil%nslay, residue )
           ! non-harvest termination, suppress early harvest warnings
           mature_warn_flg = 0
-          ! attach a crop name to the non-harvest terminiation in stir report
-          ! call stir_crop(sr, crop%bname, 2)
           call crop_endseason( sr, bmrotation, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
@@ -2116,7 +2094,6 @@
           crop%growth%am0cgf = .true.
 !         give crop the proper name
           crop%bname = cropname
-          ! call stir_crop(sr, cropname, 1)
         endif
 !       post-process stuff
         if (manFile%am0tdb .eq. 1) then
@@ -2190,8 +2167,6 @@
           end if
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
      &           1, mandate, crop)
-          ! attach a crop name to the harvest operation in stir report
-          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -2280,8 +2255,6 @@
           call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
      &                         harv_unit_flg, harv_report_flg,          &
      &                         mandate, crop )
-          ! attach a crop name to the harvest operation in stir report
-          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
             ! not reported by the kill process in this
             call report_hydrobal( sr, bmrotation, manFile%mperod )
