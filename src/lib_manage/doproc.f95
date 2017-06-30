@@ -1527,10 +1527,10 @@
         end if
         ! kill and transfer only if existing crop and new crop
         if( crop%growth%am0cgf.and.(crop%geometry%dstm.gt.0.0) ) then
-!         In a growth model growing only a single crop, any existing crop must
-!         be killed and transferred to residue or all the residue will be lost
-!         when the new crop is initialized
-!         (remove when multiple species capable)
+          ! In a growth model growing only a single crop, any existing crop must
+          ! be killed and transferred to residue or all the residue will be lost
+          ! when the new crop is initialized
+          ! (remove when multiple species capable)
           call kill_crop( crop%growth%am0cgf, soil%nslay, &
                  crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
                  crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
@@ -1572,9 +1572,9 @@
               cropprev%cancov, cropprev%dayspring, mature_warn_flg )
           ! set to guarantee corresponding report hydrolbal at end of planting
           rpt_season_flg(sr) = .true.
-      endif
-      ! crop pool state has been changed, force dependent variable update  
-      am0cropupfl = 1
+        endif
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = 1
 
         ! read population, spacing and yield flags
         call getManVal(manFile%proc, 'rowflag', crop%geometry%rsfg)
@@ -2280,7 +2280,7 @@
           call get_simdate(cd, cm, cy)
           ! write(luoasd(sr),"(3(i5))",ADVANCE='NO') lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr
           write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
-          write(luoasd(sr),"(i10,5(f10.4),A)",ADVANCE='YES') asdlayer, asddepth,  &
+          write(luoasd(sr),"(i10,5(f10.4),A)",ADVANCE='YES') asdlayer, asddepth, &
             gmdx, gsdx, mnot, minf,' New initialization values'
 
           asd_tdepth = 0.0
@@ -2297,12 +2297,12 @@
           write(0,*) 'No. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, asddepth
           write(UNIT=0,FMT="(A3,5(A10))") 'lay', 'depth', 'GMDx', 'GSDx', 'm_not', 'm_inf'
           do i=1, asdlayer
-            write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+            write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES") &
                i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
           end do
           write(0,*) "layers below asdlayer"
           do i=asdlayer+1, soil%nslay
-            write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+            write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES") &
                i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
           end do
 
@@ -2341,12 +2341,12 @@
         write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, asddepth
         write(UNIT=0,FMT="(A3,5(A10))") 'lay', 'depth', 'GMDx', 'GSDx', 'm_not', 'm_inf'
         do i=1, asdlayer
-          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES") &
               i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
         end do
         write(0,*) "layers below asdlayer"
         do i=asdlayer+1, soil%nslay
-          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES") &
               i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
         end do
 
@@ -2397,12 +2397,12 @@
 
           write(0,*) 'after m2asd: ','no. of modified soil layers/total are: ', asdlayer, soil%nslay
           do i=1, asdlayer
-            write (UNIT=0,FMT="(i10,5(f10.4))",ADVANCE="YES")                                       &
+            write (UNIT=0,FMT="(i10,5(f10.4))",ADVANCE="YES") &
               i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
           end do
           write(0,*) "layers below asdlayer"
           do i=asdlayer+1, soil%nslay
-            write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+            write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES") &
               i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
           end do
         end if
@@ -2416,7 +2416,7 @@
         if (BTEST(manFile%am0tfl,0)) then
           write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
           write(luoasd(sr),"(i10,5(f10.4),A)",ADVANCE="YES") 1, soil%aszlyt(1), &
-             soil%aslagm(1), soil%as0ags(1), soil%aslagn(1), soil%aslagx(1),   &
+             soil%aslagm(1), soil%as0ags(1), soil%aslagn(1), soil%aslagx(1), &
              ' New values - After initialized soil layer asd conditions'
           ! write(luoasd(sr),"(i10,4(i5))",ADVANCE="YES") get_simdate_jday(), cd, cm, cy, get_simdate_doy()
         end if
@@ -2469,12 +2469,12 @@
           write(0,*) 'No. of soil layers to modify/total and depth are: ', wclayer, soil%nslay, wcdepth
           write(UNIT=0,FMT="(A3,1(A10))") 'lay', 'depth'
           do i=1, asdlayer
-            write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
+            write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES") &
                 i, soil%aszlyt(i), soil%ahrwc(i)
           end do
           write(0,*) "layers below wclayer"
           do i=wclayer+1, soil%nslay
-            write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
+            write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES") &
                 i, soil%aszlyt(i), soil%ahrwc(i)
           end do
         end if
@@ -2486,12 +2486,12 @@
         write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, wcdepth
         write(UNIT=0,FMT="(A3,2(A10))") 'lay', 'depth', 'wc'
         do i=1, wclayer
-          write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
+          write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES") &
               i, soil%aszlyt(i), soil%ahrwc(i)
         end do
         write(0,*) "layers below asdlayer"
         do i=wclayer+1, soil%nslay
-          write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
+          write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES") &
               i, soil%aszlyt(i), soil%ahrwc(i)
         end do
 
@@ -2504,7 +2504,7 @@
         if (BTEST(manFile%am0tfl,1)) then
           write(luowc(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
           write(luowc(sr),"(i10,2(f10.4),A)",ADVANCE="YES") 1, soil%aszlyt(1), &
-             soil%ahrwc(1),   &
+             soil%ahrwc(1), &
             ' New values - After initialized soil layer water content conditions'
           ! write(luowc(sr),"(i10,4(i5))",ADVANCE="YES") get_simdate_jday(), cd, cm, cy, get_simdate_doy()
         end if
