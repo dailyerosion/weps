@@ -29,122 +29,46 @@
 !     + + + LOCAL VARIABLES + + +
       integer :: sr  ! the subregion being processed
 
-!     + + + SUBROUTINES CALLED + + +
-
-!     + + + FUNCTION DECLARATONS + + +
-!      integer tillay
-
 !     + + + DATA INITIALIZATIONS + + +
       sr = manFile%isub
 
 !     + + + END SPECIFICATIONS + + +
 
-!      line = mtbl(mcur(sr))
-!      read(line, 1001, err=901) grdumy, lastoper(sr)%grcode,            &
-!     &                                  lastoper(sr)%grname
-! 1001 format(a1,1x,i2,1x,a)
       lastoper(sr)%grcode = manFile%grp%grpType
       lastoper(sr)%grname = manFile%grp%grpName
-!***  print*, 'SR',sr,' Processing process:', lastoper(sr)%grcode,' ',lastoper(sr)%grname
 
       select case (lastoper(sr)%grcode)
 
-      case (1)
-!-----START tillage process (process code 01)
-!     get process parameters
-!     get additional line of data
-!        mcur(sr) = mcur(sr) + 1
-!        line = mtbl(mcur(sr))
-!     read tillage depth, intensity and area
-!        read(line(2:len_trim(line)), *, err=901)                        &
-!     &   tdepth, ti, fracarea, tstddepth, tmindepth, tmaxdepth
+      case (1)  ! tillage group
+        ! read tillage depth, intensity and area
         call getManVal(manFile%grp, 'gtdepth', tdepth)
         call getManVal(manFile%grp, 'gtilint', ti)
         call getManVal(manFile%grp, 'gtilArea', fracarea)
         call getManVal(manFile%grp, 'gtstddepth', tstddepth)
         call getManVal(manFile%grp, 'gtmindepth', tmindepth)
         call getManVal(manFile%grp, 'gtmaxdepth', tmaxdepth)
-! ***        if (getr(iunit,sr,fracarea,fracarea,fracarea,1,'r').gt.0) then
-! ***          print*,'ERROR in doproc ',prcode
-! ***          stop
-! ***        endif
-!     pre-process stuff
+
         tlayer = tillay(tdepth, soil%aszlyt, soil%nslay)
-!     do process (usually just processes or other operations)
-!     post-process stuff
-!-----END tillage process (process code 01)
 
-      case (2)
-!-----START biomass manipulation process (process code 02)
-!     get process parameters
-!        rtn = getr(iunit, sr, bioflg,bioflg,bioflg,1,'i')
-!     expected last parameter for process, thus mlpos==0
-!     get additional line of data
-!        mcur(sr) = mcur(sr) + 1
-!        line = mtbl(mcur(sr))
-!     read biomass area affected
-!        read(line(2:len_trim(line)), *, err=901) fracarea
+      case (2)  ! biomass manipulation group
+        ! read biomass area affected
         call getManVal(manFile%grp, 'gbioarea', fracarea)
-! ***        if (getr(iunit,sr,fracarea,fracarea,fracarea,1,'r').gt.0) then
-! ***          print*,'ERROR in doproc ',prcode
-! ***          stop
-! ***        endif
-!     pre-process stuff
-!     do process (should include a tillage operation)
-!     post-process stuff
-!-----END biomass manipulation process (process code 02)
 
-      case (3)
-!-----START grow process (process code 03)
-!     get process parameters
-!     expected last parameter for process, thus mlpos==0
-!     get additional line of data
-!        mcur(sr) = mcur(sr) + 1
-!        line = mtbl(mcur(sr))
-!       read crop name
-!        cropname = line(2:71)   !at present, line ends with < symbol at 72
+      case (3) ! grow group
+        ! read crop name
         call getManVal(manFile%grp, 'gcropname', cropname)
-!        read(line(2:len_trim(line)),*, err=901) cropname
-! ***        if (getr(iunit, sr, cropname,cropname,cropname,1,'c').gt.0) then
-! ***          print*,'ERROR in doproc ',prcode
-! ***          stop
-! ***        endif
-!     pre-process stuff
-!     do process (should include a tillage operation)
-!     post-process stuff
-!-----END grow process (process code 03)
 
-      case (4)
-!-----START ammend process (process code 04)
-! *** 04   continue
-!     get process parameters
-!       expected last parameter for process, thus mlpos==0
-!     get additional line of data
-!        mcur(sr) = mcur(sr) + 1
-!        line = mtbl(mcur(sr))
-!       read amendment name
-!        amdname = line(2:71)   !at present, line ends with < symbol at 72
+      case (4) ! ammend group
+        ! read amendment name
         call getManVal(manFile%grp, 'gamdname', amdname)
-!        read(line(2:len_trim(line)),*, err=901) amdname
-! ***        if (getr(iunit, sr, amdname,amdname,amdname,1,'c').gt.0) then
-! ***          print*,'ERROR in doproc ',prcode
-! ***          stop
-! ***        endif
-!     pre-process stuff
-!     do process (could include a tillage operation)
-!     post-process stuff
-!-----END ammend process (process code 04)
-!      case default
-!        goto 902
+
+      case default
+        write(0, *) 'Invalid Group: ', lastoper(sr)%grcode,             &
+     &                                 manFile%grp%grpName
+        call exit (1)
+
       end select
+
       return
 
-! Error stops
-      
-!  901 write(0, 9901) line
-! 9901 format('Error in procedure line ', a)
-!      call exit (1)
-!  902 write(0, 9902) line
-! 9902 format('Bad procedure type ', a)
-!      call exit (1)
       end
