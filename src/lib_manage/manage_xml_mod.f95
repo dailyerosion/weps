@@ -117,7 +117,7 @@ contains
     man_tag(13)%name = "version"
     man_tag(14)%name = "wepsmanDB"
 
-    max_ogp = 41   ! count of total number of operations, groups, and processes
+    max_ogp = 42   ! count of total number of operations, groups, and processes
     sum_stat = 0
     allocate( param_nt(max_ogp), stat=alloc_stat)
     sum_stat = sum_stat + alloc_stat
@@ -686,20 +686,20 @@ contains
     param_nt(37)%r_name(1)="irrdepth"
     param_nt(38)%ogp="P"
     param_nt(38)%id="72"
-    allocate( param_nt(38)%i_name(1), stat=alloc_stat )
+    allocate( param_nt(38)%i_name(2), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(38)%r_name(7), stat=alloc_stat )
+    allocate( param_nt(38)%r_name(6), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(38)%s_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(38)%i_name(1)="irrmonflag"
+    param_nt(38)%i_name(2)="irrminint"
     param_nt(38)%r_name(1)="irrmaxapp"
     param_nt(38)%r_name(2)="irrrate"
     param_nt(38)%r_name(3)="irrduration"
     param_nt(38)%r_name(4)="irrapploc"
     param_nt(38)%r_name(5)="irrminapp"
     param_nt(38)%r_name(6)="irrmad"
-    param_nt(38)%r_name(7)="irrminint"
     param_nt(39)%ogp="P"
     param_nt(39)%id="73"
     allocate( param_nt(39)%i_name(0), stat=alloc_stat )
@@ -733,6 +733,16 @@ contains
     param_nt(41)%r_name(3)="gsdx"
     param_nt(41)%r_name(4)="mnot"
     param_nt(41)%r_name(5)="minf"
+    param_nt(42)%ogp="P"
+    param_nt(42)%id="92"
+    allocate( param_nt(42)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(42)%r_name(2), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(42)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(42)%r_name(1)="wcdepth"
+    param_nt(42)%r_name(2)="wc"
     if( alloc_stat .gt. 0 ) then
       write(*,*) 'ERROR: memory alloc., parameter names reference'
     end if
@@ -2560,6 +2570,23 @@ contains
                                                 procPtr%r_param(idxV6)%p_value, &
                                                 procPtr%r_param(idxV7)%p_value, &
                                                 procPtr%r_param(idxV8)%p_value
+    else if ( (typeV1 .eq. 'int') &
+      .and. (typeV2 .eq. 'real') &
+      .and. (typeV3 .eq. 'real') &
+      .and. (typeV4 .eq. 'real') &
+      .and. (typeV5 .eq. 'real') &
+      .and. (typeV6 .eq. 'real') &
+      .and. (typeV7 .eq. 'real') &
+      .and. (typeV8 .eq. 'int') &
+      ) then
+      read(inStr(2:len_trim(inStr)), *, err=2108) procPtr%i_param(idxV1)%p_value, &
+                                                procPtr%r_param(idxV2)%p_value, &
+                                                procPtr%r_param(idxV3)%p_value, &
+                                                procPtr%r_param(idxV4)%p_value, &
+                                                procPtr%r_param(idxV5)%p_value, &
+                                                procPtr%r_param(idxV6)%p_value, &
+                                                procPtr%r_param(idxV7)%p_value, &
+                                                procPtr%i_param(idxV8)%p_value
     else if ( (typeV1 .eq. 'int') &
       .and. (typeV2 .eq. 'real') &
       .and. (typeV3 .eq. 'real') &

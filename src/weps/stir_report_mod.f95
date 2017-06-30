@@ -130,7 +130,6 @@ module stir_report_mod
       real ostir, oenergyarea
       real stir_op_avg
       integer idx, jdx, kdx
-      logical :: stir_op
       real :: ospeed, tdepth, fracarea
       integer :: burydistflg
       character*80     cropname
@@ -161,31 +160,6 @@ module stir_report_mod
       idx = 0
       do while( associated(manFile%oper) )
         if ( manFile%oper%operType .ne. 0 ) then
-          stir_op = .false.
-          ! do groups
-          manFile%grp => manFile%oper%grpFirst
-          do while ( associated(manFile%grp) )
-            select case( manFile%grp%grpType )
-            case (3)
-              stir_op = .true.
-            end select
-            ! do processes
-            manFile%proc => manFile%grp%procFirst
-            do while ( associated(manFile%proc) )
-              select case( manFile%proc%procType )
-              case (31, 32, 33, 37, 38, 42, 43, 47, 48, 61, 62)
-                stir_op = .true.
-              case (51)
-                stir_op = .true.
-              end select
-              ! next process
-              manFile%proc => manFile%proc%procNext
-            end do
-            ! next group
-            manFile%grp => manFile%grp%grpNext
-          end do
-        end if
-        if ( stir_op ) then
           idx = idx + 1
         end if
         manFile%oper => manFile%oper%operNext
@@ -324,7 +298,11 @@ module stir_report_mod
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 1
                   stircum(isr)%phop(stircum(isr)%phopidx)%stir_cropname = cropname
                   crop_present = .true.
-                  stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num + 1
+                  if( stircum(isr)%phopidx .gt. 1 ) then
+                    stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num + 1
+                  else
+                    stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = 1
+                  end if
                 else
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                   stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num
