@@ -355,12 +355,6 @@
 
       call openfils(residue)
 
-9898  continue    !Start of initialization section (calibration)
-
-      ! Assign input soil values to changeable soil arrays.
-      do  isr = 1, nsubr   
-         soil(isr) = soil_in(isr)
-      end do
       ! allocate soil layer arrays for soil(0)
       soil(0)%nslay = 1 ! only need one for report usage
       ! allocate layer arrays
@@ -417,8 +411,6 @@
           pd(isr) = 1
       end do
 
-      call asdini()
-
       ! Grid is created at least once.
       if (am0eif .eqv. .true.) then
          ! check to see if grid dimensions specified via cmdline args
@@ -450,6 +442,23 @@
          call bpools( isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr) )
       end do
 
+      call cliginit     ! read "yearly average info" from cligen header
+      call windinit     ! allocate memory for reading subdaily wind velocities from windgen format input file
+
+      call asdini()     ! calculates sieve cut paramters, does not set values
+
+      ! Everything required for stir_report is available
+      do isr=1,nsubr
+        call stir_report( manFile(isr) )
+      end do
+
+9898  continue    !Start of initialization section (calibration)
+
+      ! Assign input soil values to changeable soil arrays.
+      do  isr = 1, nsubr   
+         soil(isr) = soil_in(isr)
+      end do
+
 !     Initializations unique to particular submodels
       do isr=1,nsubr
          do ipl = 1, mnbpls
@@ -475,13 +484,6 @@
          if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
             call init_wepp(isr, 0, soil(isr))        ! specific wepp initializations
          end if
-      end do
-      call cliginit     ! read "yearly average info" from cligen header
-      call windinit     ! allocate memory for reading subdaily wind velocities from windgen format input file
-
-      ! Everything required for stir_report is available
-      do isr=1,nsubr
-        call stir_report( manFile(isr) )
       end do
 
 !     calculate first and last Julian dates for simulation
@@ -626,6 +628,8 @@
          end do   ! "calibration" phase
          do isr=1,nsubr   ! do multiple subregion     
              amnryr(isr) = keep(isr)
+             ! at end of managment file, reset mcount
+             manFile(isr)%mcount = 0
          end do
          calib_loop = .false.
 

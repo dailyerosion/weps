@@ -103,9 +103,9 @@
          end if
          do idx = 1, nsubr
             ! calibration harvest output file
-            call fopenk (luoharvest_calib(idx), trim(rootp) // trim(subr_text(idx)) // 'luoharvest_calib.out', 'unknown')
+            call fopenk (luoharvest_calib(idx), trim(rootp) // trim(subr_text(idx)) // 'harvest_calib.out', 'unknown')
             ! calibration harvest output file for GUI
-            call fopenk (luoharvest_calib_parm(idx), trim(rootp) // trim(subr_text(idx)) // 'luoharvest_calib_parm.out', 'unknown')
+            call fopenk (luoharvest_calib_parm(idx), trim(rootp) // trim(subr_text(idx)) // 'harvest_calib_parm.out', 'unknown')
          end do
       endif
 
