@@ -36,7 +36,7 @@ module sci_report_mod
 !     + + + ARGUMENT DECLARATIONS + + +
       integer :: isr                                                        ! subregion index
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
-      type(soil_def), dimension(:), intent(in) :: soil 
+      type(soil_def), dimension(0:), intent(in) :: soil 
 
 !     + + + INCLUDE + + +
       include 'p1werm.inc'
