@@ -19,7 +19,6 @@ module crop_mod
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'manage/tcrop.inc'
 
 !     + + + LOCAL VARIABLE DECLARATIONS + + +
       integer idx
@@ -108,30 +107,6 @@ module crop_mod
           crop%database%dkrate(idx) = 0.0
       end do
       crop%database%ddsthrsh = 0.0
-
-      ! temporary crop 
-      atmstandstem(isr) = 0.0
-      atmstandleaf(isr) = 0.0
-      atmstandstore(isr) = 0.0
-      atmflatstem(isr) = 0.0
-      atmflatleaf(isr) = 0.0
-      atmflatstore(isr) = 0.0
-      atmflatrootstore(isr) = 0.0
-      atmflatrootfiber(isr) = 0.0
-
-      do idx = 1, mnsz
-          atmbgstemz(idx,isr) = 0.0
-          atmbgleafz(idx,isr) = 0.0
-          atmbgstorez(idx,isr) = 0.0
-          atmbgrootstorez(idx,isr) = 0.0
-          atmbgrootfiberz(idx,isr) = 0.0
-      end do
-
-      atzht(isr) = 0.0
-      atdstm(isr) = 0.0
-      atxstmrep(isr) = 0.0
-      atzrtd(isr) = 0.0
-      atgrainf(isr) = 0.0
 
       ! values that need initialization for cdbug calls (before initial crop entry)
       crop%database%tdtm = 0

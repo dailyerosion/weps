@@ -5,12 +5,16 @@
 
 module manage_mod
 
+    use crop_data_struct_defs, only: crop_residue, create_crop_residue, destroy_crop_residue
+
+    type(crop_residue) :: cropres  ! structure for temporary crop
+
     character(len=80), private :: cropname
     character(len=80), private :: amdname
     real, private :: fracarea  ! fraction of the surface affected by the process
     real, private :: imprs     ! implement ridge spacing (can be used to set row spacing)
-    real, private :: ospeed
-    real, private :: odir
+    real, private :: ospeed    ! operation speed (m/s)
+    real, private :: odir      ! operation direction (degrees from NORTH)
     real, private :: ostdspeed
     real, private :: ominspeed
     real, private :: omaxspeed
@@ -52,7 +56,6 @@ module manage_mod
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'manage/asd.inc'
-      include 'manage/tcrop.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr                        ! current subregion
@@ -73,33 +76,6 @@ module manage_mod
       am0cropupfl = 0
       am0defoliatefl = 0
 
-      ! initialize the manage/tcrop.inc variables
-
-      atmstandstem(sr) = 0.0
-      atmstandleaf(sr) = 0.0
-      atmstandstore(sr) = 0.0
-
-      atmflatstem(sr) = 0.0
-      atmflatleaf(sr) = 0.0
-      atmflatstore(sr) = 0.0
-
-      atmflatrootstore(sr) = 0.0
-      atmflatrootfiber(sr) = 0.0
-
-      atzht(sr) = 0.0
-      atdstm(sr) = 0.0
-      atxstmrep(sr) = 0.0
-      atzrtd(sr) = 0.0
-      atgrainf(sr) = 0.0
-
-      do idx = 1,mnsz
-         atmbgstemz(idx,sr) = 0.0
-         atmbgleafz(idx,sr) = 0.0
-         atmbgstorez(idx,sr) = 0.0
-
-         atmbgrootstorez(idx,sr) = 0.0
-         atmbgrootfiberz(idx,sr) = 0.0
-      end do
       manFile%rpt_season_flg = .true.
 
 !     + + + END SPECIFICATIONS + + +
@@ -140,6 +116,270 @@ module manage_mod
       return
 
     end subroutine mfinit
+
+    subroutine tdbug(sr, output, soil, crop, residue)
+
+!     + + + PURPOSE + + +
+!    This program prints out many of the global variables before
+!    and after the call to various MANAGEMENT practices
+
+!     + + + KEY WORDS + + +
+!     wind, erosion, tillage, soil, crop, decomposition
+!     management
+
+      use weps_interface_defs
+      use file_io_mod, only: luotdb
+      use soil_data_struct_defs, only: soil_def
+      use biomaterial, only: biomatter
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer sr, output
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
+      type(biomatter), intent(in) :: crop
+      type(biomatter), dimension(:), intent(in) :: residue
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     sr      - subregion number
+!     output  - process number for debugging output
+
+!     + + + GLOBAL COMMON BLOCKS + + +
+      include 'p1werm.inc'
+      include 'h1hydro.inc'
+      include 'h1db1.inc'
+
+!     + + + LOCAL VARIABLES + + +
+      integer idx
+      real total
+
+!     + + + LOCAL DEFINITIONS + + +
+
+!     idx     - loop indexing variable
+!     total   - summation variable
+
+!     + + + SUBROUTINES CALLED + + +
+
+!     + + + FUNCTIONS CALLED + + +
+
+!     + + + UNIT NUMBERS FOR INPUT/OUTPUT DEVICES + + +
+!     * = screen and keyboard
+!    29 = debug MANAGement
+
+!     + + + DATA INITIALIZATIONS + + +
+
+!     + + + INPUT FORMATS + + +
+
+!     + + + OUTPUT FORMATS + + +
+
+!     + + + END SPECIFICATIONS + + +
+
+      select case (output)
+      case (1) ! crust breakdown process (process code 01)
+
+      case (2) ! random roughness process (process code 02)
+ 2067     format('aslrr') 
+ 2062     format (f7.2)
+          write(luotdb(sr),2067)
+          write(luotdb(sr),2062) soil%aslrr
+
+      case (3) ! oriented roughness ridge only process (process code 03)
+ 2070     format(3x,'aszrgh asxrgw asxrgs asargo asxdks asxdkh')
+ 2071     format (4x,6(2x,f7.3))
+          write(luotdb(sr),2070)
+          write(luotdb(sr),2071) soil%aszrgh, soil%asxrgw, soil%asxrgs, &
+            soil%asargo, soil%asxdks, soil%asxdkh
+
+      case (4) ! oriented roughness process dike only (process code 04)
+          write(luotdb(sr),2070)
+          write(luotdb(sr),2071) soil%aszrgh, soil%asxrgw, soil%asxrgs, &
+            soil%asargo, soil%asxdks, soil%asxdkh
+
+      case (5) ! oriented roughness process (process code 05)
+ 2072     format(3x,'asfcr  asflos')
+ 2073     format (1x,2f7.3)
+          write(luotdb(sr),2072)
+          write(luotdb(sr),2073) soil%asfcr, soil%asflos
+          write(luotdb(sr),2070)
+          write(luotdb(sr),2071) soil%aszrgh, soil%asxrgw, soil%asxrgs, &
+            soil%asargo, soil%asxdks, soil%asxdkh
+
+      case (11) ! crushing process (process code 11)
+ 2040     format(3x,'aslagn aslagx aslagm as0ags') 
+ 2050     format (1x,4f7.2)
+          write(luotdb(sr),2040) 
+          do idx = 1,soil%nslay
+            write(luotdb(sr),2050) soil%aslagn(idx),  soil%aslagx(idx), &
+     &         soil%aslagm(idx),  soil%as0ags(idx) 
+          end do
+
+      case (12) ! loosening process (process code 12)
+ 2041     format(3x,'asdblk  asdsblk   aszlyt') 
+ 2051     format (1x,f7.2,2x,f7.2,2x,f7.2)
+          write(luotdb(sr),2041) 
+          do idx = 1,soil%nslay
+            write(luotdb(sr),2051)                                          &
+     &      soil%asdblk(idx), soil%asdsblk(idx), soil%aszlyt(idx)
+          end do 
+
+      case (13) ! mixing process (process code 13)
+ 2060     format (1x,i4,1x,f7.2,1x,f7.2,f6.2,5f7.2)
+ 2061     format (f7.3,4f7.2,f6.2,3f7.2)
+ 2063     format (4x,i1,6(1x,f8.4))
+ 2065     format (3x,'layer asdblk aszlyt sfsan asfsil asfcla ',        &
+     &       'as0ph  ascmg ascna asfcce asfcec asfesp')
+ 2066     format(3x,'asfom asfnoh asfpoh asfpsp asfsmb asdagd aseags ', &
+     &       'ahrwc aheaep ahrwcw ahrwcf ahrwca ahrwcs')
+ 2068     format(3x,'layer residue(1)%deriv%mrtz(s)  residue(2)%deriv%mrtz(s)  residue(3)%deriv%mrtz(s) ',           &
+     &               ' residue(1)%deriv%mbgz(s)  residue(2)%deriv%mbgz(s)  residue(3)%deriv%mbgz(s)') 
+          write(luotdb(sr),2065)
+          do idx = 1,soil%nslay
+            write(luotdb(sr),2060) idx, soil%asdblk(idx), soil%aszlyt(idx), &
+     &        soil%asfsan(idx), soil%asfsil(idx), soil%asfcla(idx), &
+     &        soil%as0ph(idx), soil%asfcce(idx), soil%asfcec(idx)
+          end do 
+          write(luotdb(sr),2066)
+          do idx = 1,soil%nslay
+            write(luotdb(sr),2061) soil%asfom(idx), &
+     &        soil%asdagd(idx), soil%aseags(idx), soil%ahrwc(idx), &
+     &        soil%aheaep(idx), soil%ahrwcw(idx), soil%ahrwcf(idx), &
+     &        soil%ahrwca(idx), soil%ahrwcs(idx)
+          end do 
+          write(luotdb(sr),2068)
+          do idx = 1,soil%nslay
+            write(luotdb(sr),2063)                                          &
+     &        idx, residue(1)%deriv%mrtz(idx), residue(2)%deriv%mrtz(idx), residue(3)%deriv%mrtz(idx),&
+     &        residue(1)%deriv%mbgz(idx), residue(2)%deriv%mbgz(idx), residue(3)%deriv%mbgz(idx)
+          end do 
+
+      case (14) ! inversion process (process code 14)
+          do idx = 1,soil%nslay
+            write(luotdb(sr),2060) idx, soil%asdblk(idx), soil%aszlyt(idx), &
+     &        soil%asfsan(idx), soil%asfsil(idx), soil%asfcla(idx), &
+     &        soil%as0ph(idx), soil%asfcce(idx), soil%asfcec(idx)
+          end do 
+          write(luotdb(sr),2066)
+          do idx = 1,soil%nslay
+            write(luotdb(sr),2061) soil%asfom(idx), &
+     &        soil%asdagd(idx), soil%aseags(idx), soil%ahrwc(idx), &
+     &        soil%aheaep(idx), soil%ahrwcw(idx), soil%ahrwcf(idx), &
+     &        soil%ahrwca(idx), soil%ahrwcs(idx)
+          end do 
+
+      case (21) ! below layer compaction (process code 21)
+
+      case (24) ! flatten process variable toughness (process code 24)
+
+      case (25) ! mass bury process variable toughness (process code 25)
+ 2500     format ('pool stem leaf store rootstore rootfiber (all flat)')
+ 2501     format ( i2, 5(1x, f7.4) )
+          ! sum pools to get total flat mass
+          total = cropres%flatstem + cropres%flatleaf + cropres%flatstore  &
+     &          + cropres%flatrootstore + cropres%flatrootfiber
+          do idx = 1, mnbpls
+            total = total + residue(idx)%mass%flatstem + residue(idx)%mass%flatleaf   &
+     &            + residue(idx)%mass%flatstore + residue(idx)%mass%flatrootstore     &
+     &            + residue(idx)%mass%flatrootfiber
+          end do 
+          write(luotdb(sr),*) total, ' total flat mass'
+          write(luotdb(sr),2500)
+          write(luotdb(sr),2501) 0, cropres%flatstem, cropres%flatleaf,       &
+     &      cropres%flatstore, cropres%flatrootstore, cropres%flatrootfiber
+          do idx = 1, mnbpls
+            write(luotdb(sr),2501) idx, residue(idx)%mass%flatstem,                &
+     &        residue(idx)%mass%flatleaf, residue(idx)%mass%flatstore,                &
+     &        residue(idx)%mass%flatrootstore, residue(idx)%mass%flatrootfiber
+          end do 
+
+      case (26) ! re-surface process variable toughness (process code 26)
+          ! sum pools to get total flat mass
+          total = cropres%flatstem + cropres%flatleaf + cropres%flatstore  &
+     &          + cropres%flatrootstore + cropres%flatrootfiber
+          do idx = 1, mnbpls
+            total = total + residue(idx)%mass%flatstem + residue(idx)%mass%flatleaf   &
+     &            + residue(idx)%mass%flatstore + residue(idx)%mass%flatrootstore     &
+     &            + residue(idx)%mass%flatrootfiber
+          end do 
+          write(luotdb(sr),*) total, ' total flat mass'
+          write(luotdb(sr),2500)
+          write(luotdb(sr),2501) 0, cropres%flatstem, cropres%flatleaf,       &
+     &      cropres%flatstore, cropres%flatrootstore, cropres%flatrootfiber
+          do idx = 1, mnbpls
+            write(luotdb(sr),2501) idx, residue(idx)%mass%flatstem,                &
+     &        residue(idx)%mass%flatleaf, residue(idx)%mass%flatstore,                &
+     &        residue(idx)%mass%flatrootstore, residue(idx)%mass%flatrootfiber
+          end do 
+
+      case (31) ! killing process (process code 31)
+
+      case (32) ! cutting to height process (process code 32)
+
+      case (33) ! cutting by fraction process (process code 33)
+
+      case (34) ! modify standing fall rate process variable toughness (process code 34)
+ 2074     format(3x,'residue(1)%deriv%mf residue(2)%deriv%mf residue(3)%deriv%mf residue(1)%deriv%mst',                 &
+     &      ' residue(2)%deriv%mst residue(3)%deriv%mst')
+ 2075     format (6(2x,f7.3))
+          write(luotdb(sr),2068)
+          do idx = 1,soil%nslay
+            write(luotdb(sr),2063) idx, residue(1)%deriv%mrtz(idx), residue(2)%deriv%mrtz(idx), &
+     &        residue(3)%deriv%mrtz(idx), residue(1)%deriv%mbgz(idx), residue(2)%deriv%mbgz(idx),     &
+     &        residue(3)%deriv%mbgz(idx)
+          end do 
+          write(luotdb(sr),2074)
+          write(luotdb(sr),2075) residue(1)%deriv%mf, residue(2)%deriv%mf, residue(3)%deriv%mf,        &
+     &      residue(1)%deriv%mst, residue(2)%deriv%mst, residue(3)%deriv%mst
+
+      case (37) ! thinning to population process (process code 37)
+
+      case (38) ! thinning by fraction process (process code 38)
+
+      case (40) ! crop to biomass transfer process (process code 40)
+
+      case (50) ! residue initialization process (process code 50)
+
+      case (51) ! planting process (process code 51)
+
+      case (61) ! biomass remove process (process code 61)
+ 2164     format (3x,3f7.3)
+ 2169     format(4x,'acmyld  aczht  aczrtd')
+ 2269     format(4x,'residue()%deriv%fscv  residue()%deriv%ffcv ')
+          write(luotdb(sr),2169)
+          write(luotdb(sr),2164) crop%mass%standstore, crop%geometry%zht, crop%geometry%zrtd
+          write(luotdb(sr),2269)
+          do idx = 1, mnbpls
+            write(luotdb(sr),2073) residue(idx)%deriv%fscv, residue(idx)%deriv%ffcv
+          end do 
+
+      case (62) ! biomass remove pool process (process code 62)
+ 6200     format ( a2, 9(1x, f7.4) )
+ 6201     format ( i2, 9(1x, f7.4) )
+          write(luotdb(sr),*) 'pool stand(height stem leaf store)',         &
+     &                'flat(stem leaf store rootstore rootfiber)' 
+          write(luotdb(sr),6200) 'T', cropres%zht, cropres%standstem, &
+     &        cropres%standleaf, cropres%standstore, &
+     &        cropres%flatstem, cropres%flatleaf, &
+     &      cropres%flatstore, cropres%flatrootstore, cropres%flatrootfiber
+          do idx = 1, mnbpls
+            write(luotdb(sr),6201) idx, residue(idx)%geometry%zht, residue(idx)%mass%standstem,&
+     &        residue(idx)%mass%standleaf, residue(idx)%mass%standstore,              &
+     &        residue(idx)%mass%flatstem, residue(idx)%mass%flatleaf,                 &
+     &        residue(idx)%mass%flatstore, residue(idx)%mass%flatrootstore,           &
+     &        residue(idx)%mass%flatrootfiber
+          end do 
+
+      case (65) ! add residue process (process code 65)
+
+      case (71) ! irrigate process (process code 71) (OBSOLETE)
+
+      case (72) ! irrigation monitoring process (process code 72)
+
+      case (73) ! single event irrigation process (process code 73)
+
+      case default
+      end select
+
+      return
+
+    end subroutine tdbug
 
     subroutine dooper (manFile)
 
@@ -344,7 +584,6 @@ module manage_mod
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'manage/asd.inc'
-      include 'manage/tcrop.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
@@ -606,11 +845,11 @@ module manage_mod
       end if
 
       if( poolmass( soil%nslay, &
-                 atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-                 atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-                 atmflatrootstore(sr), atmflatrootfiber(sr), &
-                 atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
-                 atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr) ) &
+                 cropres%standstem, cropres%standleaf, cropres%standstore, &
+                 cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+                 cropres%flatrootstore, cropres%flatrootfiber, &
+                 cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
+                 cropres%bgrootstorez, cropres%bgrootfiberz ) &
           .gt. 0.0 ) then
           temp_present = 1
       else
@@ -974,7 +1213,7 @@ module manage_mod
         ! do process
         call flatvt(afvt, fracarea, crop%database%rbc, &
              crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
-             atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
+             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
              crop%geometry%dstm, residue, bioflg)
 
         ! post-process stuff
@@ -1013,10 +1252,10 @@ module manage_mod
         if( tlayer .gt. 0 ) then
           call mburyvt(mfvt,fracarea,crop%database%rbc, burydistflg, &
                    tlayer,soil%aszlyt,soil%aszlyd, &
-             atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-             atmflatrootstore(sr), atmflatrootfiber(sr), &
-             atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
-             atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr), &
+             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+             cropres%flatrootstore, cropres%flatrootfiber, &
+             cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
+             cropres%bgrootstorez, cropres%bgrootfiberz, &
              residue, bioflg)
         end if 
 
@@ -1101,12 +1340,12 @@ module manage_mod
                  crop%mass%stemz, &
                  crop%geometry%zht, crop%geometry%dstm, crop%geometry%xstmrep, crop%geometry%zrtd, &
                  crop%geometry%grainf, &
-                 atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-                 atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-                 atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr), &
-                 atmbgstemz(1,sr), &
-                 atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr), &
-                 atgrainf(sr) )
+                 cropres%standstem, cropres%standleaf, cropres%standstore, &
+                 cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+                 cropres%bgrootstorez, cropres%bgrootfiberz, &
+                 cropres%bgstemz, &
+                 cropres%zht, cropres%dstm, cropres%xstmrep, cropres%zrtd, &
+                 cropres%grainf )
              if( manFile%rpt_season_flg ) then
                call report_hydrobal( sr, manFile%mcount, manFile%mperod )
                ! This may be harvest or non-harvest termination, allow early harvest warnings
@@ -1166,9 +1405,9 @@ module manage_mod
              crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
              crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
              crop%geometry%zht, crop%geometry%grainf, crop%geometry%hyfg, &
-             atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-             atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-             atzht(sr), atgrainf(sr), residue, &
+             cropres%standstem, cropres%standleaf, cropres%standstore, &
+             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+             cropres%zht, cropres%grainf, residue, &
              mass_rem, mass_left)
 
         ! post-process stuff
@@ -1230,9 +1469,9 @@ module manage_mod
              crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
              crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
              crop%geometry%zht, crop%geometry%grainf, crop%geometry%hyfg, &
-             atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-             atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-             atzht(sr), atgrainf(sr), residue, &
+             cropres%standstem, cropres%standleaf, cropres%standstore, &
+             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+             cropres%zht, cropres%grainf, residue, &
              mass_rem, mass_left)
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
@@ -1325,9 +1564,9 @@ module manage_mod
              crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
              crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
              crop%geometry%dstm, crop%geometry%grainf, crop%geometry%hyfg, &
-             atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-             atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-             atdstm(sr), atgrainf(sr), residue, &
+             cropres%standstem, cropres%standleaf, cropres%standstore, &
+             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+             cropres%dstm, cropres%grainf, residue, &
              mass_rem, mass_left)
 
         ! post-process stuff
@@ -1389,9 +1628,9 @@ module manage_mod
              crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
              crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
              crop%geometry%dstm, crop%geometry%grainf, crop%geometry%hyfg, &
-             atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-             atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-             atdstm(sr), atgrainf(sr), residue, &
+             cropres%standstem, cropres%standleaf, cropres%standstore, &
+             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+             cropres%dstm, cropres%grainf, residue, &
              mass_rem, mass_left)
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
@@ -1446,12 +1685,12 @@ module manage_mod
 
         if ( temp_present .gt. 0.0 ) then
           call trans( &
-            atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-            atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-            atmflatrootstore(sr), atmflatrootfiber(sr), &
-            atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
-            atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr), &
-            atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr), &
+            cropres%standstem, cropres%standleaf, cropres%standstore, &
+            cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+            cropres%flatrootstore, cropres%flatrootfiber, &
+            cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
+            cropres%bgrootstorez, cropres%bgrootfiberz, &
+            cropres%zht, cropres%dstm,cropres%xstmrep,cropres%grainf, &
             crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck, &
             crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg, &
             crop%database%resevapa, crop%database%resevapb, &
@@ -1493,9 +1732,9 @@ module manage_mod
              crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
              crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
              crop%geometry%zht, crop%geometry%grainf, crop%geometry%hyfg, &
-             atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-             atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-             atzht(sr), atgrainf(sr), residue, &
+             cropres%standstem, cropres%standleaf, cropres%standstore, &
+             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+             cropres%zht, cropres%grainf, residue, &
              mass_rem, mass_left)
 
         ! post-process stuff
@@ -1562,9 +1801,9 @@ module manage_mod
              crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
              crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
              crop%geometry%zht, crop%geometry%grainf, crop%geometry%hyfg, &
-             atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-             atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-             atzht(sr), atgrainf(sr), residue, &
+             cropres%standstem, cropres%standleaf, cropres%standstore, &
+             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+             cropres%zht, cropres%grainf, residue, &
              mass_rem, mass_left)
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
@@ -1630,9 +1869,9 @@ module manage_mod
              crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
              crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
              crop%geometry%dstm, crop%geometry%grainf, crop%geometry%hyfg, &
-             atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-             atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-             atdstm(sr), atgrainf(sr), residue, &
+             cropres%standstem, cropres%standleaf, cropres%standstore, &
+             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+             cropres%dstm, cropres%grainf, residue, &
              mass_rem, mass_left)
 
         ! post-process stuff
@@ -1699,9 +1938,9 @@ module manage_mod
              crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
              crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
              crop%geometry%dstm, crop%geometry%grainf, crop%geometry%hyfg, &
-             atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-             atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-             atdstm(sr), atgrainf(sr), residue, &
+             cropres%standstem, cropres%standleaf, cropres%standstore, &
+             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+             cropres%dstm, cropres%grainf, residue, &
              mass_rem, mass_left)
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
@@ -1847,19 +2086,19 @@ module manage_mod
                  crop%mass%stemz, &
                  crop%geometry%zht, crop%geometry%dstm, crop%geometry%xstmrep, crop%geometry%zrtd, &
                  crop%geometry%grainf, &
-                 atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-                 atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-                 atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr), &
-                 atmbgstemz(1,sr), &
-                 atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr), &
-                 atgrainf(sr) )
+                 cropres%standstem, cropres%standleaf, cropres%standstore, &
+                 cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+                 cropres%bgrootstorez, cropres%bgrootfiberz, &
+                 cropres%bgstemz, &
+                 cropres%zht, cropres%dstm, cropres%xstmrep, cropres%zrtd, &
+                 cropres%grainf )
           call trans( &
-            atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-            atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-            atmflatrootstore(sr), atmflatrootfiber(sr), &
-            atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
-            atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr), &
-            atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr), &
+            cropres%standstem, cropres%standleaf, cropres%standstore, &
+            cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+            cropres%flatrootstore, cropres%flatrootfiber, &
+            cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
+            cropres%bgrootstorez, cropres%bgrootfiberz, &
+            cropres%zht, cropres%dstm,cropres%xstmrep,cropres%grainf, &
             crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck, &
             crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg, &
             crop%database%resevapa, crop%database%resevapb, &
@@ -2078,12 +2317,12 @@ module manage_mod
           crop%mass%rootstorez, crop%mass%rootfiberz, &
           crop%mass%stemz, &
           crop%geometry%zht, crop%geometry%dstm, crop%geometry%grainf, crop%geometry%hyfg, &
-          atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-          atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-          atmflatrootstore(sr), atmflatrootfiber(sr), &
-          atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
-          atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr), &
-          atzht(sr), atdstm(sr), atgrainf(sr), residue, &
+          cropres%standstem, cropres%standleaf, cropres%standstore, &
+          cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+          cropres%flatrootstore, cropres%flatrootfiber, &
+          cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
+          cropres%bgrootstorez, cropres%bgrootfiberz, &
+          cropres%zht, cropres%dstm, cropres%grainf, residue, &
           soil%nslay, mass_rem, mass_left)
 
         ! post-process stuff
@@ -2155,12 +2394,12 @@ module manage_mod
           crop%mass%rootstorez, crop%mass%rootfiberz, &
           crop%mass%stemz, &
           crop%geometry%zht, crop%geometry%dstm, crop%geometry%grainf, crop%geometry%hyfg, &
-          atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-          atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-          atmflatrootstore(sr), atmflatrootfiber(sr), &
-          atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
-          atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr), &
-          atzht(sr), atdstm(sr), atgrainf(sr), residue, &
+          cropres%standstem, cropres%standleaf, cropres%standstore, &
+          cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+          cropres%flatrootstore, cropres%flatrootfiber, &
+          cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
+          cropres%bgrootstorez, cropres%bgrootfiberz, &
+          cropres%zht, cropres%dstm, cropres%grainf, residue, &
           soil%nslay, mass_rem, mass_left)
 
         ! post-process stuff
@@ -2222,10 +2461,10 @@ module manage_mod
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        call getManVal(manFile%proc, 'numst', atdstm(sr))
-        call getManVal(manFile%proc, 'rstandht', atzht(sr))
-        call getManVal(manFile%proc, 'rstandmass', atmstandstem(sr))
-        call getManVal(manFile%proc, 'rflatmass', atmflatstem(sr))
+        call getManVal(manFile%proc, 'numst', cropres%dstm)
+        call getManVal(manFile%proc, 'rstandht', cropres%zht)
+        call getManVal(manFile%proc, 'rstandmass', cropres%standstem)
+        call getManVal(manFile%proc, 'rflatmass', cropres%flatstem)
         call getManVal(manFile%proc, 'rbc', trbc)
         ! read buried residue amounts
         call getManVal(manFile%proc, 'rburiedmass', dmassres)
@@ -2235,9 +2474,9 @@ module manage_mod
 
         ! place buried residue in pools by layer
         call resinit(dmassrot, zmassrot, soil%nslay, &
-                     atmbgrootfiberz(1,sr), soil%aszlyt)
+                     cropres%bgrootfiberz, soil%aszlyt)
         call resinit(dmassres,zmassres,soil%nslay, &
-                     atmbgstemz(1,sr), soil%aszlyt)
+                     cropres%bgstemz, soil%aszlyt)
         ! read decomposition parameters
         call getManVal(manFile%proc, 'standdk', tdkrate(1))
         call getManVal(manFile%proc, 'surfdk', tdkrate(2))
@@ -2253,26 +2492,26 @@ module manage_mod
 
         !Set to 0
         !above ground
-        atmstandleaf(sr) = 0.0
-        atmstandstore(sr) = 0.0
-        atmflatleaf(sr) = 0.0
-        atmflatstore(sr) = 0.0
-        atmflatrootstore(sr) = 0.0
-        atmflatrootfiber(sr) = 0.0
+        cropres%standleaf = 0.0
+        cropres%standstore = 0.0
+        cropres%flatleaf = 0.0
+        cropres%flatstore = 0.0
+        cropres%flatrootstore = 0.0
+        cropres%flatrootfiber = 0.0
         !below ground by layer
         dmassres = 0.0
         zmassres = 0.0
         dmassrot = 0.0
         zmassrot = 0.0
         call resinit(dmassres, zmassres, soil%nslay, &
-                     atmbgleafz(1,sr), soil%aszlyt)
+                     cropres%bgleafz, soil%aszlyt)
         call resinit(dmassres, zmassres, soil%nslay, &
-                     atmbgstorez(1,sr), soil%aszlyt)
+                     cropres%bgstorez, soil%aszlyt)
         call resinit(dmassrot, zmassrot, soil%nslay, &
-                     atmbgrootstorez(1,sr), soil%aszlyt)
+                     cropres%bgrootstorez, soil%aszlyt)
 
-        atgrainf(sr) = 1.0
-        atxstmrep(sr) = txstm
+        cropres%grainf = 1.0
+        cropres%xstmrep = txstm
         thyfg = 0
 
         !I don't think it matters what values we put here.
@@ -2282,20 +2521,20 @@ module manage_mod
 
         ! check for amount of added biomass
         if( poolmass( soil%nslay, &
-                 atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-                 atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-                 atmflatrootstore(sr), atmflatrootfiber(sr), &
-                 atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
-                 atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr) ) &
+                 cropres%standstem, cropres%standleaf, cropres%standstore, &
+                 cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+                 cropres%flatrootstore, cropres%flatrootfiber, &
+                 cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
+                 cropres%bgrootstorez, cropres%bgrootfiberz ) &
           .gt. 0.0 ) then
           ! biomass was added, so do transfer
           call trans( &
-            atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-            atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-            atmflatrootstore(sr), atmflatrootfiber(sr), &
-            atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
-            atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr), &
-            atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr), &
+            cropres%standstem, cropres%standleaf, cropres%standstore, &
+            cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+            cropres%flatrootstore, cropres%flatrootfiber, &
+            cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
+            cropres%bgrootstorez, cropres%bgrootfiberz, &
+            cropres%zht, cropres%dstm,cropres%xstmrep,cropres%grainf, &
             cropname, txstm, trbc, t0sla, t0ck, &
             tdkrate(1), tcovfact, tddsthrsh, thyfg, &
             tresevapa, tresevapb, &
@@ -2330,10 +2569,10 @@ module manage_mod
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        call getManVal(manFile%proc, 'M_numst', atdstm(sr))
-        call getManVal(manFile%proc, 'M_rstandht', atzht(sr))
-        call getManVal(manFile%proc, 'M_rstandmass', atmstandstem(sr))
-        call getManVal(manFile%proc, 'M_rflatmass', atmflatstem(sr))
+        call getManVal(manFile%proc, 'M_numst', cropres%dstm)
+        call getManVal(manFile%proc, 'M_rstandht', cropres%zht)
+        call getManVal(manFile%proc, 'M_rstandmass', cropres%standstem)
+        call getManVal(manFile%proc, 'M_rflatmass', cropres%flatstem)
         call getManVal(manFile%proc, 'rbc', trbc)
         ! read buried residue amounts
         call getManVal(manFile%proc, 'M_rburiedmass', dmassres)
@@ -2347,16 +2586,16 @@ module manage_mod
 
        ! Now we add the "flat and buried" manure to the generic residue
        ! flat and buried quantities
-        atmflatstem(sr) = atmflatstem(sr) +                             &      
+        cropres%flatstem = cropres%flatstem +                             &      
                 (1.0 - manure_buried_fraction) * manure_total_mass
         dmassres = dmassres + &
                 (manure_buried_fraction) * manure_total_mass
 
         ! place buried residue in pools by layer
         call resinit(dmassrot, zmassrot, soil%nslay, &
-                     atmbgrootfiberz(1,sr), soil%aszlyt)
+                     cropres%bgrootfiberz, soil%aszlyt)
         call resinit(dmassres,zmassres,soil%nslay, &
-                     atmbgstemz(1,sr), soil%aszlyt)
+                     cropres%bgstemz, soil%aszlyt)
 
         ! read decomposition parameters
         call getManVal(manFile%proc, 'standdk', tdkrate(1))
@@ -2373,26 +2612,26 @@ module manage_mod
 
         !Set to 0
         !above ground
-        atmstandleaf(sr) = 0.0
-        atmstandstore(sr) = 0.0
-        atmflatleaf(sr) = 0.0
-        atmflatstore(sr) = 0.0
-        atmflatrootstore(sr) = 0.0
-        atmflatrootfiber(sr) = 0.0
+        cropres%standleaf = 0.0
+        cropres%standstore = 0.0
+        cropres%flatleaf = 0.0
+        cropres%flatstore = 0.0
+        cropres%flatrootstore = 0.0
+        cropres%flatrootfiber = 0.0
         !below ground by layer
         dmassres = 0.0
         zmassres = 0.0
         dmassrot = 0.0
         zmassrot = 0.0
         call resinit(dmassres, zmassres, soil%nslay, &
-                     atmbgleafz(1,sr), soil%aszlyt)
+                     cropres%bgleafz, soil%aszlyt)
         call resinit(dmassres, zmassres, soil%nslay, &
-                     atmbgstorez(1,sr), soil%aszlyt)
+                     cropres%bgstorez, soil%aszlyt)
         call resinit(dmassrot, zmassrot, soil%nslay, &
-                     atmbgrootstorez(1,sr), soil%aszlyt)
+                     cropres%bgrootstorez, soil%aszlyt)
 
-        atgrainf(sr) = 1.0
-        atxstmrep(sr) = txstm
+        cropres%grainf = 1.0
+        cropres%xstmrep = txstm
         thyfg = 0
 
         !I don't think it matters what values we put here.
@@ -2401,20 +2640,20 @@ module manage_mod
         t0ck = 0.0
 
         if( poolmass( soil%nslay, &
-                 atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-                 atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-                 atmflatrootstore(sr), atmflatrootfiber(sr), &
-                 atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
-                 atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr) ) &
+                 cropres%standstem, cropres%standleaf, cropres%standstore, &
+                 cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+                 cropres%flatrootstore, cropres%flatrootfiber, &
+                 cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
+                 cropres%bgrootstorez, cropres%bgrootfiberz ) &
           .gt. 0.0 ) then
           ! biomass was added, so do transfer
           call trans( &
-            atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-            atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr), &
-            atmflatrootstore(sr), atmflatrootfiber(sr), &
-            atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
-            atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr), &
-            atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr), &
+            cropres%standstem, cropres%standleaf, cropres%standstore, &
+            cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+            cropres%flatrootstore, cropres%flatrootfiber, &
+            cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
+            cropres%bgrootstorez, cropres%bgrootfiberz, &
+            cropres%zht, cropres%dstm,cropres%xstmrep,cropres%grainf, &
             cropname, txstm, trbc, t0sla, t0ck, &
             tdkrate(1), tcovfact, tddsthrsh, thyfg, &
             tresevapa, tresevapb, &
@@ -2924,6 +3163,7 @@ module manage_mod
       ! perform all operations that occur on this date
       do while ( associated(manFile%oper) )
         lastoper(sr)%skip = 0
+        cropres = create_crop_residue(soil%nslay)
         call dooper(manFile)
         ! do groups
         manFile%grp => manFile%oper%grpFirst
@@ -2941,6 +3181,9 @@ module manage_mod
             manFile%grp => manFile%grp%grpNext
           end if
         end do
+        ! operation complete
+        ! deallocate temporary crop residue structure
+        call destroy_crop_residue(cropres)
         ! next operation
         manFile%oper => manFile%oper%operNext
         if( associated(manFile%oper) ) then

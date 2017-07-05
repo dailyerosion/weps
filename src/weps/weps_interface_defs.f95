@@ -824,15 +824,6 @@
       character line*80                
       end function  skpnam
 !--------------------------
-      subroutine tdbug(sr, output, soil, crop, residue)
-      use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter
-      integer sr, slay, output
-      type(soil_def), intent(in) :: soil
-      type(biomatter), intent(in) :: crop
-      type(biomatter), dimension(:), intent(in) :: residue
-      end subroutine tdbug
-!--------------------------
       integer function tillay (tdepth, lthick, nlay)
       real    tdepth
       integer nlay
