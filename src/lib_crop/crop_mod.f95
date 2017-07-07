@@ -277,6 +277,7 @@ module crop_mod
 !     + + + KEYWORDS + + +
 !     crop model status
 
+      use weps_main_mod, only: init_loop, calib_loop
       use datetime_mod, only: get_simdate, julday
       use file_io_mod, only: luoseason
       use manage_data_struct_defs, only: lastoper

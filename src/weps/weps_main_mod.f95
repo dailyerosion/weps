@@ -37,7 +37,9 @@ module weps_main_mod
                        ! divide evenly into the "maxper" value.
     integer :: ncycles ! a count of the number of maxper cycles that have been completed in the simulation run.
 
-    logical :: in_report_loop  ! .true. indicates the simulation has entered the report loop
+    logical :: init_loop  ! .true. indicates the simulation is in the initialization loop
+    logical :: calib_loop  ! .true. indicates the simulation is in the calibration loop
+    logical :: report_loop  ! .true. indicates the simulation is in the report loop
 
   contains
 
@@ -61,20 +63,13 @@ module weps_main_mod
       maxper = 1
 
       ! set initialization flags
-      in_report_loop = .false.
       am0eif = .true.            ! m1flag.inc
       am0ifl = .true.            ! m1flag.inc
 
-      ! set grid flag until first gridding is done
-      am0gdf = .false.           ! m1flag.inc
-
-      ! set output flag to initialize output arrays
-      am0oif = .true.            ! m1flag.inc
-
       ! set initialization, calibration, and report loop flags
-      init_loop = .false.        ! m1flag.inc
-      calib_loop = .false.       ! m1flag.inc
-      report_loop = .false.      ! m1flag.inc
+      init_loop = .false.
+      calib_loop = .false.
+      report_loop = .false.
 
       return
     end subroutine wepsinit

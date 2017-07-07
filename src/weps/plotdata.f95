@@ -5,7 +5,7 @@
 
       subroutine plotdata(sr, soil, crop, restot, croptot, biotot, noerod, manFile, cellstate)
 
-      use weps_main_mod, only: daysim
+      use weps_main_mod, only: daysim, report_loop
       use datetime_mod, only: get_simdate, get_simdate_doy
       use file_io_mod, only: luoplt
       use soil_data_struct_defs, only: soil_def

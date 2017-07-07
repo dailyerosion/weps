@@ -16,6 +16,7 @@ module report_harvest_mod
      &                           harv_unit_flg, harv_report_flg,        &
      &                           mandate, crop )
 
+      use weps_main_mod, only: init_loop, calib_loop
       use mandate_mod, only: opercrop_date
       use file_io_mod, only: luoharvest_si, luoharvest_en
       use p1unconv_mod, only: KG_per_M2_to_LBS_per_ACRE
@@ -151,6 +152,7 @@ module report_harvest_mod
 
     subroutine report_calib_harvest(sr,bmrotation,mass_rem, mass_left, crop)
 
+      use weps_main_mod, only: init_loop, report_loop
       use file_io_mod, only: luoharvest_calib, luoharvest_calib_parm
       use biomaterial, only: biomatter
       use manage_data_struct_defs, only: lastoper

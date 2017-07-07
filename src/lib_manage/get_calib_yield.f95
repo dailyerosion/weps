@@ -5,6 +5,7 @@
 
 SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
 
+    use weps_main_mod, only: init_loop, report_loop
     use weps_interface_defs, ignore_me=>get_calib_yield
     USE generic_list , ONLY : Link_Ptr_Type, Link_Type, List_Type
     USE generic_list , ONLY : LI_Init_List, LI_Add_To_Head

@@ -36,6 +36,7 @@
 !     + + + KEY WORDS + + +
 !     hydrology
 
+      use weps_main_mod, only: init_loop, calib_loop
       use weps_interface_defs, only: hinit, heat, store
       use weps_interface_defs, only: darcy, transp
       use weps_interface_defs, only: dawn, daylen, radnet, availwc

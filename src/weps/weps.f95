@@ -33,7 +33,8 @@
 !     external common_handler
 !     + + + GLOBAL COMMON BLOCKS + + +
 
-      use weps_main_mod, only: daysim, ijday, ljday, maxper, ncycles, wepsinit, in_report_loop
+      use weps_main_mod, only: daysim, ijday, ljday, maxper, ncycles, wepsinit
+      use weps_main_mod, only: init_loop, calib_loop, report_loop
       use weps_interface_defs
       use wepp_interface_defs
       use timer_mod, only: timer, TIMWEPS, TIMSTART, TIMSTOP, TIMPRINT
@@ -434,7 +435,6 @@
 
          call erodinit( noerod, cellstate )
       endif
-      am0gdf = .true.
 
       do isr = 1, nsubr
          ! this prints header to plot.out file
@@ -672,7 +672,6 @@
          end if
 
          ncycles = 1   ! set here for use in confidence interval calculation (no other use?)
-         in_report_loop = .true.  ! Done with all initialization and calibration phases
          ci_year = 0  ! nothing has yet been printed into ci.out
 
          ! settings for creation of erosion submodel detailed outputs

@@ -16,19 +16,19 @@
 !      logical          am0cgf
 !      logical          am0dif
 !      logical          am0sif
-      logical          am0oif
+!      logical          am0oif
 !      integer          am0hfl
 !      integer          am0sfl
 !      integer          am0tfl
 !      integer          am0cfl
 !      integer          am0dfl
 !      integer          am0efl
-      logical          am0gdf
+!      logical          am0gdf
 !      logical          am0til
 
-      logical          init_loop
-      logical          calib_loop
-      logical          report_loop
+!      logical          init_loop
+!      logical          calib_loop
+!      logical          report_loop
 
 !      integer          am0defoliatefl
 !      integer          am0kilfl
@@ -48,12 +48,10 @@
 !     &                  am0ifl, am0eif, am0cgf, am0cif, am0dif, am0hfl, &
      &                  am0ifl,                                         &
 !     &                  am0gdf, am0til, am0defoliatefl, am0kilfl,       &
-     &                  am0gdf,                                         &
 !     &                  am0cropupfl, am0sfl, am0tfl, am0cfl, am0dfl,    &
 !     &                  am0cropupfl,                                    &
 !     &                  am0efl, am0oif, am0sif,                         &
-     &                  am0oif,                                         &
-     &                  init_loop, calib_loop, report_loop, calib_done, &
+!     &                  init_loop, calib_loop, report_loop, calib_done, &
      &                  max_calib_cycles, calib_cycle,                  &
 !     &                  wind_gen_fmt_flag, cli_gen_fmt_flag,            &
      &                  wind_max_flag
