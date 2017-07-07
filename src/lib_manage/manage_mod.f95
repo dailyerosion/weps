@@ -26,6 +26,13 @@ module manage_mod
     integer, private :: tlayer
     integer, private :: rdgflag
 
+    integer :: am0cropupfl  ! flag to determine that the crop state has been changed
+                                     ! external to crop and that the crop update process must
+                                     ! run to synchronize dependent variable values with state values
+    logical :: am0til  ! flag to determine if surfce has been updated by management
+                       ! .true. - tillage has occurred
+                       ! .false. - not
+
   contains
 
     subroutine mfinit (manFile)
@@ -53,9 +60,6 @@ module manage_mod
       use manage_xml_mod, only: manfile_complete
       use manage_xml_mod, only: begin_man_element_handler, end_man_element_handler, pcdata_man_chunk_handler
 
-      include 'p1werm.inc'
-      include 'm1flag.inc'
-
 !     + + + ARGUMENT DECLARATIONS + + +
       type(man_file_struct) :: manFile  ! management file data structure
 
@@ -68,10 +72,8 @@ module manage_mod
 
 !     + + + DATA INITIALIZATIONS + + +
 
-      ! initialize values for crop effect flags
-      am0kilfl = 0
+      ! initialize value for crop effect flags
       am0cropupfl = 0
-      am0defoliatefl = 0
 
       manFile%rpt_season_flg = .true.
 
@@ -391,9 +393,6 @@ module manage_mod
       use manage_data_struct_defs, only: lastoper, man_file_struct 
       use manage_data_struct_mod, only: getManVal
 
-!     + + + PARAMETERS AND COMMON BLOCKS + + +
-      include 'p1werm.inc'
-
 !     + + + ARGUMENT DECLARATIONS + + +
       type(man_file_struct), intent(in) :: manFile
 
@@ -490,10 +489,6 @@ module manage_mod
       use soil_data_struct_defs, only: soil_def
       use manage_data_struct_mod, only: getManVal
 
-!     + + + PARAMETERS AND COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'm1flag.inc'
-
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(man_file_struct), intent(in) :: manFile
@@ -578,7 +573,6 @@ module manage_mod
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'command.inc'
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
 
@@ -602,14 +596,6 @@ module manage_mod
 !     ahrwcf    - 1/3 bar soil water content
 !     ahrwcs    - saturation soil water content
 !     ahrwcw    - 15 bar soil water content
-!     am0defoliatefl  - flag set by defoliate process
-!                 0 - no defoliation
-!                 1 - defoliation triggered
-!     am0kilfl  - flag set by kill process
-!                 0 - no kill being done
-!                 1 - annual killed,perennial crop NOT killed
-!                 2 - annual or perennial crop is killed
-!                 3 - defoliation triggered
 !     as0ags    - aggr. size geom. mean std. dev.
 !     as0ph     - soil Ph
 !     asargo    - ridge orientation (clockwise from true North) (degrees)
@@ -697,6 +683,12 @@ module manage_mod
                           ! 2**n - nth residue pool
       real, dimension (:,:), allocatable :: massf ! (msieve+1,mnsz)
       integer :: alloc_stat  ! return status of memory allocation, deallocation
+      integer :: am0kilfl  ! flag to determine if an operation is killing a perennial
+                           ! or annual crop. Also used to indicate leaf removal (defoliation) as of 8/23/00.
+                           ! 0 - does not kill anything
+                           ! 1 - kills annual crop, but not perennial
+                           ! 2 - kills annual and perennial crop
+                           ! 3 - leaves killed and dropped to ground (defoliation)
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 
@@ -1370,10 +1362,6 @@ module manage_mod
           end if
           ! crop pool state has been changed, force dependent variable update  
           am0cropupfl = 1
-        else
-            ! if no crop growing kill is not necessary and no biomass is
-            ! present to transfer. Reset kill flag to zero, no report
-            am0kilfl = 0
         end if
 
         ! post-process stuff
@@ -1693,11 +1681,6 @@ module manage_mod
             crop%database%resevapa, crop%database%resevapb, &
             soil%nslay, residue )
         end if
-
-        ! turn off kill flag, since temporary pool being emptied
-        ! kill and transfer by necessity must be paired to properly handle
-        ! temporary pool
-        am0kilfl = 0
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then

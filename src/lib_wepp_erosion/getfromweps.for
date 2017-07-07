@@ -22,6 +22,7 @@
       use p1unconv_mod, only: mmtom
       use climate_input_mod, only: cli_today
       use soil_data_struct_defs, only: soil_def
+      use manage_mod, only: am0til
 
       implicit none
 

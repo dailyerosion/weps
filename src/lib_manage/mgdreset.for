@@ -12,6 +12,8 @@
 !     sure that any submodel that needs to use them will have access to
 !     them for exactly one day.
 
+      use manage_mod, only: am0til
+
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
 
       include 'p1werm.inc'

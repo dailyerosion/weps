@@ -17,11 +17,10 @@
       use wepp_param_mod, only: wepp_param
       use soil_mod, only: callsoil
       use crop_mod, only: callcrop
-      use manage_mod, only: manage
+      use manage_mod, only: manage, am0cropupfl
       use manage_data_struct_defs, only: man_file_struct
 
       include 'p1werm.inc'
-      include 'm1flag.inc'      !am0cropupfl
       include 'h1hydro.inc'     !ahztranspdepth, ahzfurcut, ahztransprtmin, ahztransprtmax
 
 !     + + + ARGUMENT DECLARATIONS + + +
