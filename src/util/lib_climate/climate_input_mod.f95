@@ -65,6 +65,10 @@ module climate_input_mod
                                   ! = 1 --> original max/min wind_gen file format
                                   ! = 2 --> new hourly wind_gen file format
 
+    integer :: wind_max_flag      ! flag indicating whether input wind speeds should be capped
+                                  ! wind_max_flag = 1 --> cap wind speeds to specified max value
+
+
     integer :: cwrnflg            ! binary indicator for cligen warnings
                                   ! 0000, 0 - file contains exact dates needed for simulation
                                   ! 0001, 1 - not all years contained in file, rewind and run in day of year mode
@@ -517,7 +521,6 @@ contains
         use erosion_data_struct_defs, only: ntstep
         use datetime_mod, only: julday, dayear
 
-        include 'm1flag.inc'  ! wind_max_flag
         include 'command.inc' ! wind_max_value
 
         type(windgen_state) :: wind_oneday  ! structure for windgen data line values

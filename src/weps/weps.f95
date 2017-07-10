@@ -33,8 +33,10 @@
 !     external common_handler
 !     + + + GLOBAL COMMON BLOCKS + + +
 
-      use weps_main_mod, only: daysim, ijday, ljday, maxper, ncycles, wepsinit
-      use weps_main_mod, only: init_loop, calib_loop, report_loop
+      use weps_main_mod, only: daysim, ijday, ljday, maxper, ncycles, wepsinit, &
+                               init_loop, calib_loop, report_loop, &
+                               max_calib_cycles, calib_cycle, calib_done, &
+                               am0ifl
       use weps_interface_defs
       use wepp_interface_defs
       use timer_mod, only: timer, TIMWEPS, TIMSTART, TIMSTOP, TIMPRINT
@@ -82,7 +84,6 @@
       include 'build.inc'
       include 'p1werm.inc'
       include 'm1subr.inc'
-      include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'command.inc'   !declarations for commandline args
       include 'precision.inc' !declaration for portable math range checking

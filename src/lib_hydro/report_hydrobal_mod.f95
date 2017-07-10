@@ -39,10 +39,6 @@ module report_hydrobal_mod
 !     isr     - subregion number
 !     bmrotation - rotation count updated in manage.for
 
-!     + + + PARAMETERS AND COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'm1flag.inc'
-
 !     + + + LOCAL VARIABLES + + +
       integer presdy, presmon, presyr
       integer initdy, initmon, inityr

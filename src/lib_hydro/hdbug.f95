@@ -17,6 +17,7 @@
 !     wind, erosion, hydrology, tillage, soil, crop, decomposition
 !     management
 
+      use weps_main_mod, only: am0ifl
       use datetime_mod, only: get_simdate
       use file_io_mod, only: luohdb
       use soil_data_struct_defs, only: soil_def
@@ -38,7 +39,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'

@@ -24,7 +24,6 @@ module soil_mod
 
       ! Includes
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'
       include 'h1db1.inc'
@@ -339,11 +338,6 @@ module soil_mod
 !     + + + KEY WORDS + + +
 !     wind erosion, soil processes, surface process, layer process
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-
-      include 'p1werm.inc'
-      include 'm1flag.inc'
-
 !     + + + ARGUMENT DECLARATIONS + + +
       integer daysim
       real bhtsmx(*), bhrwc(*), bsfom(*), bszlyt(*)
@@ -411,7 +405,7 @@ module soil_mod
 ! bszrro , bszrho are right-after-tillage
 
 !     + + + LOCAL VARIABLES + + +
-      real sf84m(mnsz), sf84sd(mnsz), scecr
+      real sf84m(bslay), sf84sd(bslay), scecr
       real tsfom, tsfcce, tsfsacl
       integer ldx
 
@@ -619,7 +613,7 @@ module soil_mod
 !     + + + KEY WORDS + + +
 !     wind, erosion, hydrology, tillage, soil, crop, decomposition
 
-      use weps_main_mod, only: daysim
+      use weps_main_mod, only: daysim, am0ifl
       use datetime_mod, only: get_simdate
       use file_io_mod, only: luosdb
       use soil_data_struct_defs, only: soil_def
@@ -630,7 +624,6 @@ module soil_mod
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'

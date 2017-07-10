@@ -28,7 +28,6 @@
 !     + + + INCLUDE + + +
       include 'p1werm.inc'
       include 'command.inc'
-      include 'm1flag.inc'
 
 !     + + + PURPOSE + + +
 !     each time it is called, it calculates the Soil Tillage Intensity Rating

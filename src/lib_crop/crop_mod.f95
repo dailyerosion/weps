@@ -141,7 +141,6 @@ module crop_mod
 
 ! Includes
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'
 
@@ -337,10 +336,6 @@ module crop_mod
 !     mature_warn_flg - flag to indicate use of crop maturity warning
 !                0  - no crop maturity warning given for any crop
 !                1  - Warnings generated for any crop unless supressed by crop type
-
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'm1flag.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer lay, dd, mm, yy
@@ -579,7 +574,6 @@ module crop_mod
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'

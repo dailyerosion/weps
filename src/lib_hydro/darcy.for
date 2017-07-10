@@ -21,6 +21,7 @@
 !     + + + KEYWORDS + + +
 !     soil water redistribution, evaporation, runoff, deep percolation
 
+      use weps_main_mod, only: am0ifl
       use weps_interface_defs, only: dvolw, jac, volwatadsorb
       use weps_interface_defs, only: volwat_matpot_bc, atmpreselev
       use weps_interface_defs, only: depstore, fricfact, store, calctht0
@@ -114,7 +115,6 @@
 
 !     + + + COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1flag.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/lsoda.inc'

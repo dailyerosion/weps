@@ -43,10 +43,6 @@ module report_harvest_mod
 !                0 - do not report harvest
 !                1 - report harvest
 
-!     + + + PARAMETERS AND COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'm1flag.inc'
-
 !     + + + LOCAL DECLARATIONS + + +
       real tot_mass, harvest_index
       logical match
@@ -152,7 +148,7 @@ module report_harvest_mod
 
     subroutine report_calib_harvest(sr,bmrotation,mass_rem, mass_left, crop)
 
-      use weps_main_mod, only: init_loop, report_loop
+      use weps_main_mod, only: init_loop, report_loop, calib_cycle
       use file_io_mod, only: luoharvest_calib, luoharvest_calib_parm
       use biomaterial, only: biomatter
       use manage_data_struct_defs, only: lastoper
@@ -171,11 +167,6 @@ module report_harvest_mod
 !     NOTE:  This routine will print out the planting date
 !            of a crop first, followed by the harvest date
 !            crop name and then yield and calibration info.
-
-
-!     + + + PARAMETERS AND COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'm1flag.inc'
 
 !     + + + LOCAL DECLARATIONS + + +
       real tot_mass, harvest_index

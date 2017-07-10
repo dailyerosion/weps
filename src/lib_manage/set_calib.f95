@@ -25,12 +25,7 @@ SUBROUTINE set_calib(sr, crop)
 !   + + + ARGUMENT DEFINITIONS + + +
 !   sr    - subregion number
 
-!   + + + PARAMETERS AND COMMON BLOCKS + + +
-    include 'p1werm.inc'
-    include 'm1flag.inc'
-
 !   + + + LOCAL DECLARATIONS + + +
-
     INTEGER :: c_no = 0
 
     IF (.not. got_all_calib_crops) RETURN   ! Don't do anything if all crops not identified

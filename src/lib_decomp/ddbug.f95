@@ -20,6 +20,7 @@
 !     wind, erosion, hydrology, tillage, soil, crop, ddbug.forosition
 !     management
 
+      use weps_main_mod, only: am0ifl
       use weps_interface_defs, ignore_me=>ddbug
       use datetime_mod, only: get_simdate
       use file_io_mod, only: luoddb
@@ -28,7 +29,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'

@@ -31,7 +31,6 @@ module input_soil_mod
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
 
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL VARIABLES + + +

@@ -12,7 +12,7 @@
 
       subroutine bpools( isr, residue, restot, biotot, decompfac )
 
-      use weps_main_mod, only: daysim
+      use weps_main_mod, only: daysim, am0ifl
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use biomaterial, only: biomatter, biototal, decomp_factors
       use file_io_mod, only: luocrp1, luobio1
@@ -26,16 +26,16 @@
       type(biototal), intent(in) :: biotot
       type(decomp_factors), intent(in) :: decompfac
 
-      include 'p1werm.inc'
-      include 'm1flag.inc'
-
 ! statements below added by Simon
 
 !     + + + LOCAL VARIABLES + + +
       integer doy, cy, idx
       real total   !, saitotal !added by Simon
+      integer :: npools
 
 !     + + + END OF SPECIFICATIONS + + +
+
+      npools = size(residue)
 
       if( .not. am0ifl ) then
         cy = get_simdate_year()
@@ -131,7 +131,7 @@
           ! qty residue stems per area, residue height, 0.0, rep stem dia
           ! (no root depth for residue pools)
 
-        do idx=1,mnbpls
+        do idx=1,npools
 
           ! write file header if still initializing
          if (am0ifl .eqv. .true.) then

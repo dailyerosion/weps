@@ -24,7 +24,6 @@
       use crop_mod, only: cpout
 
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'command.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +

@@ -37,9 +37,18 @@ module weps_main_mod
                        ! divide evenly into the "maxper" value.
     integer :: ncycles ! a count of the number of maxper cycles that have been completed in the simulation run.
 
-    logical :: init_loop  ! .true. indicates the simulation is in the initialization loop
-    logical :: calib_loop  ! .true. indicates the simulation is in the calibration loop
+    logical :: init_loop    ! .true. indicates the simulation is in the initialization loop
+    logical :: calib_loop   ! .true. indicates the simulation is in the calibration loop
     logical :: report_loop  ! .true. indicates the simulation is in the report loop
+
+    integer :: max_calib_cycles ! Maximum number of calibration cycles to run either specified
+                                ! as a commandline parameter value or a default value set in "weps.for".
+    integer :: calib_cycle  ! identify the calibration "cycle" we are in
+                            ! currently set and updated in "main/weps.for"
+    logical :: calib_done   ! flag to identify when we are "done" with calibration
+                            ! .true. then we are done with calibration
+    logical :: am0ifl  ! flag to run initialization of submodels
+                       ! .true. means initialization will be run
 
   contains
 
@@ -50,7 +59,6 @@ module weps_main_mod
       use erosion_data_struct_defs, only: am0eif
 
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'm1subr.inc'
 
       integer idx
@@ -63,8 +71,8 @@ module weps_main_mod
       maxper = 1
 
       ! set initialization flags
-      am0eif = .true.            ! m1flag.inc
-      am0ifl = .true.            ! m1flag.inc
+      am0eif = .true.
+      am0ifl = .true.
 
       ! set initialization, calibration, and report loop flags
       init_loop = .false.

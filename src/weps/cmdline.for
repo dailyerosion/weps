@@ -22,9 +22,9 @@
       use datetime_mod, only: julday
       use file_io_mod, only: fopenk, luolog
       use f2kcli, only: COMMAND_ARGUMENT_COUNT, GET_COMMAND_ARGUMENT
+      use climate_input_mod, only: wind_max_flag
 
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL VARIABLES + + +

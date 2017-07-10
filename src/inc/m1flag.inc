@@ -10,7 +10,7 @@
 
 !     + + + VARIABLE DECLARATIONS + + +
 
-      logical          am0ifl
+!      logical          am0ifl
 !      logical          am0cif
 !      logical          am0eif
 !      logical          am0cgf
@@ -36,25 +36,25 @@
 !      integer          wind_gen_fmt_flag
 !      integer          cli_gen_fmt_flag
 
-      integer          wind_max_flag
+!      integer          wind_max_flag
 
-      integer          max_calib_cycles
-      integer          calib_cycle
+!      integer          max_calib_cycles
+!      integer          calib_cycle
 
-      logical          calib_done
+!      logical          calib_done
 
 
-      common / m1flag /                                                 &
+!      common / m1flag /                                                 &
 !     &                  am0ifl, am0eif, am0cgf, am0cif, am0dif, am0hfl, &
-     &                  am0ifl,                                         &
+!     &                  am0ifl
 !     &                  am0gdf, am0til, am0defoliatefl, am0kilfl,       &
 !     &                  am0cropupfl, am0sfl, am0tfl, am0cfl, am0dfl,    &
 !     &                  am0cropupfl,                                    &
 !     &                  am0efl, am0oif, am0sif,                         &
 !     &                  init_loop, calib_loop, report_loop, calib_done, &
-     &                  max_calib_cycles, calib_cycle,                  &
+!     &                  max_calib_cycles, calib_cycle
 !     &                  wind_gen_fmt_flag, cli_gen_fmt_flag,            &
-     &                  wind_max_flag
+!     &                  wind_max_flag
 
       save :: /m1flag/
 

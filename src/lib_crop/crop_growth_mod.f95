@@ -1903,7 +1903,6 @@ module crop_growth_mod
 !     bcdayap - number of days of growth completed since crop planted
 
 !     + + + COMMON BLOCKS + + +
-!      include 'm1flag.inc'
       include 'command.inc'
 
 !     + + + LOCAL VARIABLES + + +

@@ -100,7 +100,6 @@ contains
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
 
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
 
@@ -1248,7 +1247,6 @@ contains
       type(soil_def), dimension(:), intent(inout) :: soil 
 
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
 

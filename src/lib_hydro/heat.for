@@ -28,14 +28,13 @@
 
 !     + + + COMMON BLOCKS + + +
 
+      use weps_main_mod, only: am0ifl
       use weps_interface_defs, only: heatcond, heatcap, snowcond
       use weps_interface_defs, only: drainsnow
       use file_io_mod, only: luotempsoil
       use datetime_mod, only: get_simdate
       use p1unconv_mod, only: mmtom, pi, SEC_PER_DAY
       use hydro_data_struct_defs, only: am0hfl
-
-      include 'm1flag.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/snowprop.inc'

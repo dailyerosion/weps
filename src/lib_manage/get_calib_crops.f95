@@ -28,7 +28,6 @@ SUBROUTINE get_calib_crops(sr, crop)
 
 !   + + + PARAMETERS AND COMMON BLOCKS + + +
     include 'p1werm.inc'
-    include 'm1flag.inc'
     include 'command.inc'
 
 !   + + + LOCAL DECLARATIONS + + +
