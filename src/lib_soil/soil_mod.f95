@@ -81,11 +81,6 @@ module soil_mod
       use process_mod, only: coef_abrasion
       use soil_data_struct_defs, only: soil_def
 
-      include 'p1werm.inc'
-
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'soil/cumulat.inc'
-
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
       integer daysim
@@ -112,17 +107,10 @@ module soil_mod
 !   bhzinf    - daily water infiltration depth (mm of water)
 !   bhzwid    - water infiltration depth (mm of soil)
 
-!     + + + LOCAL VARIABLES + + +
-! Retain the values of these variables for the next day
-      include 'soil/prevday.inc'
-! the 0 at the end of bhtmx0, bhrwc0, bszrr0, bszrh0 refer to
-! prior day values of:
-! max temperature, soil water content, random roughnes & ridge height
-
       real rain, snow, sprink
       real cumpa
       real cf2cov
-      real szlyd(mnsz), laycenter(mnsz)
+      real szlyd(bslay), laycenter(bslay)
       real bsmls0
       real dcump
       integer yr, idoy
@@ -166,9 +154,9 @@ module soil_mod
                   bhtsmx, soil%ahrwc, soil%asfom, soil%aszlyt, &
                   bslay, soil%asfsan, soil%asfsil, soil%asfcla, &
                   soil%aszrgh, soil%aslrr, soil%asfcce, soil%asfcec, &
-                  cump(isr), dcump, &
-                  bhtmx0(1,isr), bhrwc0(1,isr), szlyd, &
-                  bszrr0(isr), bszrh0(isr), &
+                  soil%cump, dcump, &
+                  soil%bhtmx0, soil%bhrwc0, szlyd, &
+                  soil%bszrr0, soil%bszrh0, &
                   soil%aseagm, soil%aseagmn, soil%aseagmx, &
                   soil%aslmin, soil%aslmax, &
                   rain, snow, sprink, &
@@ -198,10 +186,10 @@ module soil_mod
 !  skip layer update on first simulation day
       if (daysim .ge. 2) then
         call updlay( daysim, szlyd, &
-     &  bhrwc0(1,isr), soil%ahrwc, soil%ahrwcdmx, &
+     &  soil%bhrwc0, soil%ahrwc, soil%ahrwcdmx, &
      &  soil%aseagmx, soil%aseagmn, soil%aseags, &
      &  soil%ahrwcw, soil%ahrwcs, &
-     &  bhtsmn, bhtmx0(1,isr), bhtsmx, &
+     &  bhtsmn, soil%bhtmx0, bhtsmx, &
      &  soil%aslmin, soil%aslmax, &
      &  soil%aslagm, &
      &  soil%as0ags, soil%aslagn, soil%aslagx, soil%asdblk, &
@@ -222,12 +210,12 @@ module soil_mod
 
 !     Assign today's values to 'yesterday storage'
       do ldx = 1,bslay
-          bhtmx0(ldx,isr) = bhtsmx(ldx)
-          bhrwc0(ldx,isr) = soil%ahrwc(ldx)
+          soil%bhtmx0(ldx) = bhtsmx(ldx)
+          soil%bhrwc0(ldx) = soil%ahrwc(ldx)
       end do
 
-      bszrr0 = soil%aslrr
-      bszrh0 = soil%aszrgh
+      soil%bszrr0 = soil%aslrr
+      soil%bszrh0 = soil%aszrgh
 
 !     + + + OUTPUT FORMATS + + +
  2100 format('#daysim idoy yr cump dcump bszrgh bsxrgs bszrr bszcr bsfcr&
@@ -263,7 +251,7 @@ module soil_mod
              write(luosoillay(isr),*)
          end if
 
-         write(luosoilsurf(isr), 2200) daysim,idoy,yr, cump(isr), dcump, &
+         write(luosoilsurf(isr), 2200) daysim,idoy,yr, soil%cump, dcump, &
               soil%aszrgh, soil%asxrgs, soil%aslrr, soil%aszcr, &
               soil%asfcr, soil%asecr, soil%asmlos, soil%asflos, &
               soil%acanag, soil%acancr

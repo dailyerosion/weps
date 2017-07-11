@@ -225,7 +225,7 @@
 !
 ! s1psd
 !
-! ***      do 40 idx=1,mnsz
+! ***      do 40 idx=1,soil%nslay
 ! ***      if (aslsgm(idx, sr).lt.0.0.or.aslsgm(idx, sr).gt.10.0)
 ! ***     *  write(*,*) 'day ',day,' aslsgm ', aslsgm(idx, sr)
 !
@@ -379,7 +379,7 @@
 !
       if (dmpflg) write(*,*) 'h1temp'
 !      
-      do 110 idx=1,mnsz
+      do 110 idx=1,soil%nslay
       if (ahtsav(idx, sr).lt.-20.0.or.ahtsav(idx, sr).gt.50.0)          &
      &  write(*,*) 'day ',day,' ahtsav(',idx,') ', ahtsav(idx, sr)
 !

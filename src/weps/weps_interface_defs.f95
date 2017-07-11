@@ -5,18 +5,6 @@
 
 !   Add this definition file in every source file to insure that the compiler can
 !   verify subroutine and function signatures.
-!  
-!   Can't seem to use constants in interface block? This effects two dimensional arrays where the
-!   first dimension must be specified 
-!        26 = msieve variables mf()
-!      
-!    
-!       integer mnsz_loc
-!       integer mncz_loc
-!       parameter (mnsz_loc = 100)
-!       parameter (mncz_loc = 5)
-!       parameter (mnbpls = 3)
-!       parameter (mndk = 5)
        
        MODULE weps_interface_defs
 

@@ -21,9 +21,7 @@
      &               soilcb,soilair,satcond,                            &
      &               residue, massf)
 
-
 !     + + + PURPOSE + + +
-!     
 !     This subroutine reads in the array(s) containing the components 
 !     that need to be mixed.  It then calls the subroutine mixproc
 !     and the actual mixing process is performed.
@@ -92,12 +90,6 @@
 !     massf       - mass fractions for sieve cuts
 
 !     nlay        - number of soil layers used
-
-!     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
-!     mnsz        - max number of soil layers
-!     mnbpls      - max number of decomposition pools
-
-!     + + + PARAMETERS + + +
 
 !     + + + LOCAL VARIABLES + + +
       real tillmix,dum(nlay), dum1(nlay), dum2(nlay), mass, cmass

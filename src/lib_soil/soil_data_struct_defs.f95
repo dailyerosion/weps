@@ -74,6 +74,11 @@ module soil_data_struct_defs
      real :: asecr      ! Soil crust stability ln(J/kg)
      real :: watertable_depth  ! depth to watertable (mm)
      real :: WaterErosion ! water erosion soil loss
+     real :: cump       ! cumulative precipitation since previous tillage event
+     real :: bszrh0     ! prior day ridge height, mm
+     real :: bszrr0     ! prior day random roughness, mm
+     real, dimension(:), allocatable :: bhtmx0    ! layer maximum temperature of yesterday. in C
+     real, dimension(:), allocatable :: bhrwc0    ! soil water content for yesterday. mass basis kg/kg.
      real, dimension(:), allocatable :: aszlyt    ! Soil layer thickness (mm)
      real, dimension(:), allocatable :: asdblk    ! Soil layer bulk density (Mg/m^3)
      real, dimension(:), allocatable :: asdagd    ! agg density (Mg/m^3)
@@ -178,6 +183,10 @@ contains
      sum_stat = sum_stat + alloc_stat
 
      ! state
+     allocate(soil%bhtmx0(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%bhrwc0(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
      allocate(soil%aszlyt(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
      allocate(soil%asdblk(nsoillay), stat=alloc_stat)
@@ -294,6 +303,10 @@ contains
      sum_stat = sum_stat + dealloc_stat
 
      ! state
+     deallocate(soil%bhtmx0, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%bhrwc0, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
      deallocate(soil%aszlyt, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
      deallocate(soil%asdblk, stat=dealloc_stat)

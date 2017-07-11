@@ -57,31 +57,27 @@
       use weps_interface_defs, ignore_me=>remove
       use biomaterial, only: biomatter
 
-!     + + + COMMON BLOCKS + + +
-      include 'p1werm.inc'
-
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sel_position, sel_pool, bflg
       real stemf, leaff, storef, rootstoref, rootfiberf
       real bcmstandstem, bcmstandleaf, bcmstandstore
       real bcmflatstem, bcmflatleaf, bcmflatstore
-      real bcmrootstorez(mnsz), bcmrootfiberz(mnsz)
+      real bcmrootstorez(*), bcmrootfiberz(*)
       real bczht, bcdstm, bcgrainf
       integer bchyfg
 
       real btmstandstem, btmstandleaf, btmstandstore
       real btmflatstem, btmflatleaf, btmflatstore
       real btmflatrootstore, btmflatrootfiber
-      real btmbgstemz(mnsz), btmbgleafz(mnsz), btmbgstorez(mnsz)
-      real btmbgrootstorez(mnsz), btmbgrootfiberz(mnsz)
-      real bcmbgstemz(mnsz)
+      real btmbgstemz(*), btmbgleafz(*), btmbgstorez(*)
+      real btmbgrootstorez(*), btmbgrootfiberz(*)
+      real bcmbgstemz(*)
 
       real btzht, btdstm, btgrainf
       type(biomatter), dimension(:), intent(inout) :: residue
 
       integer nslay
       real   tot_mass_rem, sel_mass_left
-
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sel_position - position to which percentages will be applied
@@ -176,19 +172,14 @@
 !     sel_mass_left - mass of material left in pools from which mass is removed
 !                     by this harvest operation (kg/m^2)
 
-!     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
-!     mnbpls        - max number of decomposition pools (currently=3)
-!     mnsz          - max number of soil layers
-
-!     + + + PARAMETERS + + +
-
 !     + + + LOCAL VARIABLES + + +
       real pool_temp1, pool_temp2
-      real pool_temp1z(mnsz), pool_temp2z(mnsz), pool_temp3z(mnsz)
+      real pool_temp1z(nslay), pool_temp2z(nslay), pool_temp3z(nslay)
       integer idx, idy, tflg
 
       real start_store, start_leaf, start_stem
-      real start_rootstore(mnsz), start_rootfiber(mnsz)
+      real start_rootstore(nslay), start_rootfiber(nslay)
+      integer :: npools
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     pool_temp1 - used to substitute for non existent pools in crop,
@@ -200,10 +191,12 @@
 
 !     + + + END SPECIFICATIONS + + +
 
+      npools = size(residue)
+
       !set tflg bits correctly for "all" pools if bflg=0
       if (bflg .eq. 0) then
          tflg = 1                   ! crop pool
-         do idy = 1, mnbpls
+         do idy = 1, npools
             tflg = tflg + 2**idy    ! decomp pools
          end do
       else
@@ -328,7 +321,7 @@
       end if
       ! residue pools
       if( BTEST(sel_pool,2) ) then
-        do idy = 1, mnbpls
+        do idy = 1, npools
          if (BTEST(tflg,idy)) then
           ! standing and rooted biomass
           ! set starting values
@@ -405,15 +398,14 @@
      &      nslay, pool_hyfg, pool_grainf, pool_dstm,                   &
      &      tot_mass_rem, sel_mass_left )
       
-!     + + + COMMON BLOCKS + + +
-      include 'p1werm.inc'
-
+!     + + + ARGUMENT DECLARATIONS + + +
       real stemf, leaff, storef, rootstoref, rootfiberf
       real pool_store, pool_leaf, pool_stem
-      real pool_rootstore(mnsz), pool_rootfiber(mnsz)
+      real pool_rootstore(*), pool_rootfiber(*)
       integer nslay, pool_hyfg
       real pool_grainf, pool_dstm, tot_mass_rem, sel_mass_left
 
+!     + + + LOCAL VARIABLES + + +
       integer idx, pool_flag
       real rem_frac
 
@@ -479,14 +471,15 @@
      &           pool_rootstore, pool_rootfiber,                        &
      &           pool_hyfg, pool_grainf, tot_mass_rem, sel_mass_left )
 
-      
+!     + + + ARGUMENT DECLARATIONS + + +
       real stemf, leaff, storef, rootstoref, rootfiberf
       real pool_store, pool_leaf, pool_stem
       real pool_rootstore, pool_rootfiber
       integer pool_hyfg
       real pool_grainf, tot_mass_rem, sel_mass_left
 
-      integer idx, pool_flag
+!     + + + LOCAL VARIABLES + + +
+      integer pool_flag
       real rem_frac
 
       pool_flag = 0
@@ -535,15 +528,14 @@
      &      pool_rootstore, pool_rootfiber,                             &
      &      nslay, pool_hyfg, pool_grainf, tot_mass_rem, sel_mass_left )
 
-!     + + + COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      
+!     + + + ARGUMENT DECLARATIONS + + +
       real stemf, leaff, storef, rootstoref, rootfiberf
-      real pool_store(mnsz), pool_leaf(mnsz), pool_stem(mnsz)
-      real pool_rootstore(mnsz), pool_rootfiber(mnsz)
+      real pool_store(*), pool_leaf(*), pool_stem(*)
+      real pool_rootstore(*), pool_rootfiber(*)
       integer nslay, pool_hyfg
       real pool_grainf, tot_mass_rem, sel_mass_left
 
+!     + + + LOCAL VARIABLES + + +
       integer idx, pool_flag
       real rem_frac
 
@@ -604,10 +596,12 @@
 ! -----------------------------------------------------------------
       subroutine rem_pool(pool_mass, pool_frac, pool_flag, tot_mass_rem)
 
+!     + + + ARGUMENT DECLARATIONS + + +
       real pool_mass, pool_frac
       integer pool_flag
       real tot_mass_rem
 
+!     + + + LOCAL VARIABLES + + +
       real mass_rem
 
       mass_rem = pool_mass * pool_frac
@@ -636,14 +630,11 @@
 !     the now unsupoorted stems into flat biomass. The same check is
 !     then done for stems supoorting leaves and storage biomass.
 
-!     + + + COMMON BLOCKS + + +
-      include 'p1werm.inc'
-
 !     + + + ARGUMENT DECLARATIONS + + +
       real start_standstem, start_standleaf, start_standstore
-      real start_rootstore(mnsz), start_rootfiber(mnsz)
+      real start_rootstore(*), start_rootfiber(*)
       real pool_standstem, pool_standleaf, pool_standstore
-      real pool_rootstore(mnsz), pool_rootfiber(mnsz)
+      real pool_rootstore(*), pool_rootfiber(*)
       real pool_flatstem, pool_flatleaf, pool_flatstore
       real pool_dstm
       integer nslay

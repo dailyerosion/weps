@@ -34,8 +34,8 @@
       integer burydistflg
 
       integer nlay
-      real    lthick(mnsz)
-      real    ldepth(mnsz)
+      real    lthick(*)
+      real    ldepth(*)
 
       real   btmflatstem
       real   btmflatleaf
@@ -44,12 +44,12 @@
       real   btmflatrootstore
       real   btmflatrootfiber
 
-      real   btmbgstemz(mnsz)
-      real   btmbgleafz(mnsz)
-      real   btmbgstorez(mnsz)
+      real   btmbgstemz(*)
+      real   btmbgleafz(*)
+      real   btmbgstorez(*)
 
-      real   btmbgrootstorez(mnsz)
-      real   btmbgrootfiberz(mnsz)
+      real   btmbgrootstorez(*)
+      real   btmbgrootfiberz(*)
 
       type(biomatter), dimension(:), intent(inout) :: residue
       integer bflg
@@ -93,11 +93,8 @@
 !       A bit test is done on the binary number to see what to modify
 !
 !     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
-!
 !     mnrbc         - max number of residue burial classes
-!     mnbpls        - max number of biomass pools
-!     mnsz          - max number of soil layers
-!
+
 !     + + + FUNCTIONS + + +
 !      real burydist
 
@@ -106,7 +103,8 @@
       integer  lay,idy,tflg
       real     tbury
       real     fracbury(nlay)
-!
+      integer :: npools  ! number of residue age pools
+
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !
 !     bury      - mass of biomass that is buried
@@ -116,11 +114,13 @@
 !     tflg      - temporary biomass flag
 !
 !     + + + END SPECIFICATIONS + + +
-!
+
+      npools = size(residue)
+
       !set tflg bits correctly for "all" pools if bflg=0
       if (bflg .eq. 0) then
          tflg = 1                   ! crop pool
-         do idy = 1, mnbpls
+         do idy = 1, npools
             tflg = tflg + 2**idy    ! decomp pools
          end do
       else
@@ -175,7 +175,7 @@
           endif
       endif
 
-      do idy = 1, mnbpls
+      do idy = 1, npools
 !         check for proper indexes in bdrbc
           if( (residue(idy)%database%rbc.ge.1).and.(residue(idy)%database%rbc.le.mnrbc) ) then
               if (BTEST(tflg,idy)) then

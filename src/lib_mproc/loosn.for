@@ -14,11 +14,9 @@
 !     + + + KEYWORDS + + +
 !     loosen/compact, tillage 
 
-      include 'p1werm.inc'
-
 !     + + + ARGUMENT DECLARATIONS + + +
       integer nlay
-      real    u,tillf,density(mnsz),laythk(mnsz),sbd(mnsz)
+      real    u,tillf,density(*),laythk(*),sbd(*)
 
 !     + + + ARGUMENT DEFINITIONS + + +
 
@@ -29,17 +27,11 @@
 !     sbd      - settled soil bulk density
 !     laythk   - layer thickness
 
-!     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
-!     mnsz        - max number of soil layers
-
-!     + + + PARAMETERS + + +
-
 !     + + + LOCAL VARIABLES + + +
       integer  i 
-      real dum(mnsz)       
+      real dum(nlay)       
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
-
 !     dum = dummy variable used in calculating the mass in a subregion
 !     i = loop variable on layers 
 

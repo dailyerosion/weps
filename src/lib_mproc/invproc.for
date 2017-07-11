@@ -3,32 +3,25 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-!
-!
-!
+
       subroutine invproc(nlay,thick,xcomp) 
 
 !     + + + PURPOSE + + +
-!     
-!	  Invert the component passed to xcomp 
-!	  
+!     Invert the component passed to xcomp 
+  
 !     + + + KEYWORDS + + +
 !     inversion, tillage 
-!
-!     + + + ARGUMENT DECLARATIONS + + +
 
+!     + + + ARGUMENT DECLARATIONS + + +
       real xcomp(*), thick(*)
       integer nlay
-!
-!     + + + ARGUMENT DEFINITIONS + + +
 
+!     + + + ARGUMENT DEFINITIONS + + +
 !     nlay		- number of soil layers used
 !     thick		- thickness of each layer in a subregion
-!	  xcomp		- component that needs inverting
-!
+!     xcomp		- component that needs inverting
 
 !     + + + LOCAL VARIABLES + + +
-
       integer   idx, odx
       real      ithick(nlay), ixcomp(nlay)
       real      othick(nlay)
@@ -41,7 +34,7 @@
 !     ixcomp   - inverted property of layers
 !     othick   - temp thickness
 !     dthick   - delta thickness
-!
+
 ! create inverted layer thickness and property arrays
 ! and zero out output array
 !

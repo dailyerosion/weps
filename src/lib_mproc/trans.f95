@@ -28,13 +28,10 @@
 
       use biomaterial, only: biomatter
 
-!     + + +   ARGUMENT DECLARATIONS + + +
-      type(biomatter), dimension(:), intent(inout) :: residue
-
       include 'p1werm.inc'
 
-!     + + + ARGUMENT DECLARATIONS + + +
-!
+!     + + +   ARGUMENT DECLARATIONS + + +
+      type(biomatter), dimension(:), intent(inout) :: residue
       real             bcmstandstem !added state
       real             bcmstandleaf !added state
       real             bcmstandstore !added state
@@ -46,12 +43,12 @@
       real             bcmflatrootstore !added state
       real             bcmflatrootfiber !added state
 
-      real             bcmbgstemz(nslay) !added state
-      real             bcmbgleafz(nslay) !added state
-      real             bcmbgstorez(nslay) !added state
+      real             bcmbgstemz(*) !added state
+      real             bcmbgleafz(*) !added state
+      real             bcmbgstorez(*) !added state
 
-      real             bcmbgrootstorez(nslay) !added state
-      real             bcmbgrootfiberz(nslay) !added state
+      real             bcmbgrootstorez(*) !added state
+      real             bcmbgrootfiberz(*) !added state
 
       real             bczht  !changed from tczht state
       real             bcdstm !changed from tcdstm state
@@ -76,33 +73,26 @@
       integer    nslay
 
 !     + + + ARGUMENT DEFINITIONS + + +
-!
 !     nslay       - number of soil layers
-!
+
 !     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
-!
-!     mnbpls        - max number of decomposition pools (currently=3)
-!     mnsz          - max number of soil layers
 !     mndk          - max number of decay coefficients
-!
-!     + + + PARAMETERS + + +
-!
+
 !     + + + LOCAL VARIABLES + + +
-!
       integer lay, ip, idk
-!
+      integer :: npools  ! number of residue age pools
+
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
-!
 !     lay        - soil layer index
 !     ip         - decomp pool index
 !     idk        - dkrate components index
-!     idx        - crop mass by height index
 
 !     + + + END SPECIFICATIONS + + +
 
+       npools = size(residue)
 
-! transfer standing residue height and diameter, and grain fraction
-      do ip = mnbpls,2,-1
+      ! transfer standing residue height and diameter, and grain fraction
+      do ip = npools,2,-1
          residue(ip)%geometry%zht = residue(ip-1)%geometry%zht
          residue(ip)%database%xstm = residue(ip-1)%database%xstm
          residue(ip)%geometry%xstmrep = residue(ip-1)%geometry%xstmrep
@@ -122,9 +112,9 @@
       ! bcxstmrep = 0.0
       ! bchyfg = 0.0
 
-! transfer stem numbers
-      residue(mnbpls)%geometry%dstm = residue(mnbpls)%geometry%dstm + residue(mnbpls-1)%geometry%dstm
-      do ip = mnbpls-1,2,-1
+      ! transfer stem numbers
+      residue(npools)%geometry%dstm = residue(npools)%geometry%dstm + residue(npools-1)%geometry%dstm
+      do ip = npools-1,2,-1
          residue(ip)%geometry%dstm = residue(ip-1)%geometry%dstm
       end do
       residue(1)%geometry%dstm = bcdstm
@@ -132,29 +122,29 @@
 
       ! add next to last pool biomass to last pool biomass
       ! surface pools
-      residue(mnbpls)%mass%standstem = residue(mnbpls)%mass%standstem + residue(mnbpls-1)%mass%standstem
-      residue(mnbpls)%mass%standleaf = residue(mnbpls)%mass%standleaf                       &
-     &                     + residue(mnbpls-1)%mass%standleaf
-      residue(mnbpls)%mass%standstore = residue(mnbpls)%mass%standstore                     &
-     &                      + residue(mnbpls-1)%mass%standstore
-      residue(mnbpls)%mass%flatstem = residue(mnbpls)%mass%flatstem + residue(mnbpls-1)%mass%flatstem
-      residue(mnbpls)%mass%flatleaf = residue(mnbpls)%mass%flatleaf + residue(mnbpls-1)%mass%flatleaf
-      residue(mnbpls)%mass%flatstore = residue(mnbpls)%mass%flatstore+residue(mnbpls-1)%mass%flatstore
-      residue(mnbpls)%mass%flatrootstore = residue(mnbpls)%mass%flatrootstore               &
-     &                         + residue(mnbpls-1)%mass%flatrootstore
-      residue(mnbpls)%mass%flatrootfiber = residue(mnbpls)%mass%flatrootfiber               &
-     &                         + residue(mnbpls-1)%mass%flatrootfiber
+      residue(npools)%mass%standstem = residue(npools)%mass%standstem + residue(npools-1)%mass%standstem
+      residue(npools)%mass%standleaf = residue(npools)%mass%standleaf                       &
+     &                     + residue(npools-1)%mass%standleaf
+      residue(npools)%mass%standstore = residue(npools)%mass%standstore                     &
+     &                      + residue(npools-1)%mass%standstore
+      residue(npools)%mass%flatstem = residue(npools)%mass%flatstem + residue(npools-1)%mass%flatstem
+      residue(npools)%mass%flatleaf = residue(npools)%mass%flatleaf + residue(npools-1)%mass%flatleaf
+      residue(npools)%mass%flatstore = residue(npools)%mass%flatstore+residue(npools-1)%mass%flatstore
+      residue(npools)%mass%flatrootstore = residue(npools)%mass%flatrootstore               &
+     &                         + residue(npools-1)%mass%flatrootstore
+      residue(npools)%mass%flatrootfiber = residue(npools)%mass%flatrootfiber               &
+     &                         + residue(npools-1)%mass%flatrootfiber
       ! below ground by layer
       do lay = 1, nslay
-          residue(mnbpls)%mass%stemz(lay) = residue(mnbpls)%mass%stemz(lay) + residue(mnbpls-1)%mass%stemz(lay)
-          residue(mnbpls)%mass%leafz(lay) = residue(mnbpls)%mass%leafz(lay) + residue(mnbpls-1)%mass%leafz(lay)
-          residue(mnbpls)%mass%storez(lay) = residue(mnbpls)%mass%storez(lay) + residue(mnbpls-1)%mass%storez(lay)
-          residue(mnbpls)%mass%rootstorez(lay) = residue(mnbpls)%mass%rootstorez(lay) + residue(mnbpls-1)%mass%rootstorez(lay)
-          residue(mnbpls)%mass%rootfiberz(lay) = residue(mnbpls)%mass%rootfiberz(lay) + residue(mnbpls-1)%mass%rootfiberz(lay)
+          residue(npools)%mass%stemz(lay) = residue(npools)%mass%stemz(lay) + residue(npools-1)%mass%stemz(lay)
+          residue(npools)%mass%leafz(lay) = residue(npools)%mass%leafz(lay) + residue(npools-1)%mass%leafz(lay)
+          residue(npools)%mass%storez(lay) = residue(npools)%mass%storez(lay) + residue(npools-1)%mass%storez(lay)
+          residue(npools)%mass%rootstorez(lay) = residue(npools)%mass%rootstorez(lay) + residue(npools-1)%mass%rootstorez(lay)
+          residue(npools)%mass%rootfiberz(lay) = residue(npools)%mass%rootfiberz(lay) + residue(npools-1)%mass%rootfiberz(lay)
       end do
 
       ! transfer biomass down one level in pools
-      do ip = mnbpls-1,2,-1
+      do ip = npools-1,2,-1
           ! surface pools
           residue(ip)%mass%standstem = residue(ip-1)%mass%standstem
           residue(ip)%mass%standleaf = residue(ip-1)%mass%standleaf
@@ -213,7 +203,7 @@
       end do
 
 ! transfer CUMM DDAYS for s standing, f flat, and g below ground pools
-      do ip = mnbpls,2,-1
+      do ip = npools,2,-1
          residue(ip)%decomp%resday = residue(ip-1)%decomp%resday
          residue(ip)%decomp%resyear = residue(ip-1)%decomp%resyear
          residue(ip)%decomp%cumdds = residue(ip-1)%decomp%cumdds
@@ -234,7 +224,7 @@
 ! transfer decay rates for standing, flat, below ground, roots,
 ! stem_no pools, and harvestable yield flag
       do idk = 1,mndk
-          do ip = mnbpls,2,-1
+          do ip = npools,2,-1
               residue(ip)%database%dkrate(idk) = residue(ip-1)%database%dkrate(idk)
           end do
           residue(1)%database%dkrate(idk) = bcdkrate(idk)
@@ -242,7 +232,7 @@
           ! bcdkrate(idk) = 0.0
       end do
 
-      do ip = mnbpls,2,-1
+      do ip = npools,2,-1
           residue(ip)%bname = residue(ip-1)%bname
           residue(ip)%database%rbc = residue(ip-1)%database%rbc
           residue(ip)%database%sla = residue(ip-1)%database%sla
