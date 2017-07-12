@@ -62,6 +62,7 @@ module crop_growth_mod
       use crop_climate_mod, only: huc1, freezeharden, chillunit_cum, warmday_cum
       use climate_input_mod, only: amalat
       use special_func_mod, only: scrv1
+      use solar_mod, only: civilrise, daylen
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -232,7 +233,6 @@ module crop_growth_mod
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'p1solar.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer :: jd     ! simulation day of year
@@ -735,6 +735,7 @@ module crop_growth_mod
       use crop_climate_mod, only: huc1
       use special_func_mod, only: scrv1
       use cubic_spline_mod
+      use solar_mod, only: civilrise, daylen
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -811,11 +812,6 @@ module crop_growth_mod
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'p1solar.inc'
-
-!     + + + FUNCTION DECLARATIONS + + +
-!      real daylen
-!      real huc1
 
 !     + + + LOCAL VARIABLES + +
       integer i,n, pdate,hdate,j, m, sdmn, sdmx, dxx

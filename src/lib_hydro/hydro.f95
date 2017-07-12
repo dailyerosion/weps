@@ -39,7 +39,7 @@
       use weps_main_mod, only: init_loop, calib_loop, am0ifl
       use weps_interface_defs, only: hinit, heat, store
       use weps_interface_defs, only: darcy, transp
-      use weps_interface_defs, only: dawn, daylen, radnet, availwc
+      use weps_interface_defs, only: radnet, availwc
       use weps_interface_defs, only: plant_wat_t, movewind, volwatadsorb
       use datetime_mod, only: get_simdate, get_simdate_doy
       use file_io_mod, only: luohydro, luohlayers, luosurfwat, luoweather
@@ -55,6 +55,7 @@
       use wepp_param_mod, only: wepp_param
       use climate_input_mod, only: cli_tyav, cli_next, cli_today, cli_prev, amalat, amalon
       use air_water_mod, only: et, rel_humid
+      use solar_mod, only: dawn, daylen, beamrise
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -192,7 +193,6 @@
 
 !     + + + COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'p1solar.inc'
       include 'h1db1.inc'
       include 'command.inc'
 

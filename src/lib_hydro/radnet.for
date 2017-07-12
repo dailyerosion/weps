@@ -15,6 +15,8 @@
 !     + + + key words + + +
 !     radiation, hydrology, weps
 
+      use solar_mod, only: radext
+
 !     + + + argument declarations + + +
       real bcrlai, bweirr, snwc, sndp, bwtdmx, bwtdmn
       real bmalat, bsfalw, bsfald
@@ -68,10 +70,7 @@
 !     coeff  - coefficient in the equation to estimate soil cover index
 !     sbc    - stefan-boltzmann constant, mj/m^2/day
 
-!     + + + data initialization + + +
-
 !     + + + FUNCTION DECLARATIONS + + +
-      real radext
       real albedo
 
 !     + + + end specifications + + +

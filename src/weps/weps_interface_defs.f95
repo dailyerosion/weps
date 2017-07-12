@@ -1681,18 +1681,5 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       integer jday    
       end function wkjday   
 !------------------------------------
-      real function  dawn(dlat,dlong,idoy,riseangle)
-      integer, intent(in) :: idoy
-      real, intent(in) :: dlat
-      real, intent(in) :: dlong
-      real, intent(in) :: riseangle      
-      end function dawn
-!------------------------------------
-      real function   daylen(dlat,idoy,riseangle)
-      integer, intent(in) :: idoy
-      real, intent(in) :: dlat
-      real, intent(in) :: riseangle      
-      end function daylen
-!------------------------------------      
        end interface
        end module
