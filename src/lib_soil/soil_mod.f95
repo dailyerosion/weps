@@ -578,21 +578,6 @@ module soil_mod
       cump = cump + dcump
       end subroutine sinit
 
-    subroutine soilinit(soil)
-! ***************************************************************** wjr
-! Contains init code from main
-!
-!       Edit History
-!       04-Mar-99       wjr     created
-      use soil_data_struct_defs, only: soil_def
-
-      type(soil_def), intent(inout) :: soil  ! soil for this subregion
-
-      ! recalculate  depth to bottom of soil layer
-      call depthini( soil%nslay, soil%aszlyt, soil%aszlyd )
-
-    end subroutine soilinit
-
     subroutine  sdbug(isr, soil, croptot, biotot, h1et)
 
 !     + + + PURPOSE + + +

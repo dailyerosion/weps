@@ -27,7 +27,7 @@
 !                                removed all hydro includes
 !       10-Mar-99       wjr     did lots of stuff -- put init code into separate
 !                                files, put total loops into sep file, open into ...
-!                                created soilinit, cliginit, ...
+!                                created cliginit, ...
 
 !     external continue_hdl
 !     external common_handler
@@ -52,7 +52,6 @@
       use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir
       use input_soil_mod, only: input_ifc, soil_in
       use soil_data_struct_defs, only: soil_def, allocate_soil, deallocate_soil
-      use soil_mod, only: soilinit
       use crop_mod, only: cropinit, cprevseasonrotation
       use report_harvest_mod, only: cprevrotation, cprevcalibrotation
       use biomaterial
@@ -473,8 +472,6 @@
          call updres(soil(isr), residue(1:size(residue,1), isr), restot(isr))
          ! Initialize the water holding capacity variable
          call hydrinit(isr, soil(isr), h1et(isr), h1bal(isr), wp(isr))
-         ! initialize soil depth to bottom of layers (mm) from layer thickness (mm)
-         call soilinit(soil(isr))
          ! initialize croptot variables
          call cropupdate( soil(isr)%aszrgh, soil(isr)%aszlyd, crop(isr)%geometry%rg, crop(isr)%geometry%xrow, soil(isr)%nslay, &
                           crop(isr)%database%ssa, crop(isr)%database%hue, crop(isr)%geometry%dpop, &
