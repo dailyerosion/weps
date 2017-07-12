@@ -489,9 +489,7 @@
 !     effect (enters into the ET calculation)
 
       use p1unconv_mod, only: SEC_PER_DAY, mmtom
-
-!     + + + COMMON BLOCKS + + +
-      include 'precision.inc'
+      use precision_mod, only: max_real
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/snowprop.inc'

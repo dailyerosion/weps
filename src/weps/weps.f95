@@ -65,6 +65,7 @@
                                           subregionsurfacestate, threshold, cellsurfacestate, &
                                           erod_interval, awudmx, am0eif, am0efl, subrsurf
       use wind_mod, only: anemometer_init
+      use precision_mod, only: precision_init
       use grid_mod, only: sbgrid, sbigrd, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
       use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
       use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier
@@ -85,7 +86,6 @@
       include 'p1werm.inc'
       include 'h1hydro.inc'
       include 'command.inc'   !declarations for commandline args
-      include 'precision.inc' !declaration for portable math range checking
 
 !     + + + LOCAL VARIABLES + + +
       character(len=21) :: rundatetime
@@ -220,12 +220,8 @@
       ! initialize anemometer defaults
       call anemometer_init
 
-!     initialize math precision global variables
-!     the factor here is due to the implementation of the EXP function
-!     apparently, the limit is not the real number limit, but something else
-!     this works in Lahey, but I cannot attest to it's portability
-      max_real = huge(1.0) * 0.999150
-      max_arg_exp = log(max_real)
+      ! initialize math precision global variables
+      call precision_init
 
       SURF_UPD_FLG = 1  ! enable surface updating by erosion submodel
 

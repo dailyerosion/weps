@@ -1099,6 +1099,7 @@ module crop_growth_mod
       use crop_data_struct_defs, only: am0cfl
       use climate_input_mod, only: cli_today
       use crop_climate_mod, only: temp_stress
+      use precision_mod, only: max_real, max_arg_exp
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -1213,7 +1214,6 @@ module crop_growth_mod
 
 !     + + + COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'precision.inc'
       include 'command.inc'
 
 !     + + + LOCAL VARIABLES + + +

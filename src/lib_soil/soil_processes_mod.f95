@@ -141,7 +141,6 @@ module soil_processes_mod
       real se00
 
 !     + + + GLOBAL INCLUDES + + +
-      include 'precision.inc' !declaration for portable math range checking
       include 'command.inc'   ! command line argument for new puddling option
 
 !     + + + LOCAL DEFINITIONS + + +
