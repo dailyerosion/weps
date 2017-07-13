@@ -11,20 +11,27 @@ rm -rfv [fpp.dir];
 	result 	+=	"      character *(64) build_release";
 	result 	+=	"      character *(64) build_compiler";
 	result 	+=	"      character *(64) build_compiler_options";
-	result 	+=	"      character *(64) build_svn_revision";
-	result 	+=	"      character *(64) build_cnt_mods";
+	result 	+=	"      character *(64) build_user";
+	result 	+=	"      character *(256) build_svn_repo_url";
+	result 	+=	"      character *(16) build_svn_repo_revision";
+	result 	+=	"      character *(16) build_svn_updt_revision";
+	result 	+=	"      character *(16) build_cnt_mods";
 
 	result 	+=	"      data build_date/ '"[collect_lines date]"'/";
 	result 	+=	"      data build_version/ '"1.0"'/";
 	result 	+=	"      data build_release/ \""[defined-or-default release development]"\"/";
 	result 	+=	"      data build_compiler/ \""[unsplit " " [fc_name]]"\"/";
 	result 	+=	"      data build_compiler_options/ \""[mode]"\"/";
-	if [find_command svn] then {             
-		result 	+=	"      data build_svn_revision/ '"[collect svn info | grep "Revision:" | sed "s/Revision://"]"' /";
+	result 	+=	"      data build_user/ '"[collect whoami]"'/";
+        if [find_command svn] then {
+		svn_url = [collect svn info | grep "^URL:" | sed "s/URL://"];
+		result 	+=	"      data build_svn_repo_url/ '"[svn_url]"' /";
+		result 	+=	"      data build_svn_repo_revision/ '"[collect svn info [svn_url] | grep "Revision:" | sed "s/Revision://"]"' /";
+		result 	+=	"      data build_svn_updt_revision/ '"[collect svn info | grep "Revision:" | sed "s/Revision://"]"' /";
 		result 	+=	"      data build_cnt_mods/ '"[collect svn status -q | wc -l]"' /";
 	} else {
-		result 	+=	"      data build_svn_revision/ -1 /";
-		result 	+=	"      data build_cnt_mods/ -1 /";
+		result 	+=	"      data build_svn_revision/ '-1' /";
+		result 	+=	"      data build_cnt_mods/ '-1' /";
 	}
 
 	function write [target] [result];
