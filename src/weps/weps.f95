@@ -207,7 +207,7 @@
       write(6,*) 'Reposity URL: ', trim(build_svn_repo_url)
       write(6,*) 'SVN repository Revision: ', trim(build_svn_repo_revision)
       write(6,*) 'SVN update Revision: ', trim(build_svn_updt_revision)
-      write(6,*) 'Local Modfied Files: ', trim(build_cnt_mods)
+      write(6,*) 'Local and SVN Modfied Files: ', trim(build_cnt_mods)
       write(6,*)
 
       ! Determine date of Run
