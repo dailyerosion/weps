@@ -18,12 +18,10 @@
 
       subroutine mandates(mandate, manFile)
 
+      use weps_main_mod, only: report_debug
       use mandate_mod, only: opercrop_date, create_mandate    ! Load shared mandate() array
       use manage_data_struct_defs, only: man_file_struct
       use manage_data_struct_mod, only: get_value_index
-
-      include 'p1werm.inc'
-      include 'command.inc'
 
       type (opercrop_date), dimension(:), allocatable :: mandate
       type(man_file_struct), intent(inout) :: manFile

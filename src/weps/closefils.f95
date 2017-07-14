@@ -5,6 +5,7 @@
 
       subroutine closefils(residue)
 
+      use weps_main_mod, only: calc_confidence, calibrate_crops, run_erosion, soil_cond, wepp_hydro
       use file_io_mod
       use biomaterial, only: biomatter
       use erosion_data_struct_defs, only: am0efl
@@ -17,7 +18,6 @@
       use input_run_mod, only: old_run_file
 
       include 'p1werm.inc'
-      include 'command.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(biomatter), dimension(:,:), intent(in) :: residue

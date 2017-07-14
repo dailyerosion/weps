@@ -12,6 +12,7 @@ SUBROUTINE get_calib_crops(sr, crop)
     USE generic_list , ONLY : LI_Get_Next, LI_Associated
     USE generic_list , ONLY : LI_Get_Len
 
+    use weps_main_mod, only: calibrate_crops
     USE calib_crop_m
     use biomaterial, only: biomatter
     use manage_data_struct_defs, only: lastoper
@@ -25,10 +26,6 @@ SUBROUTINE get_calib_crops(sr, crop)
 
 !   + + + ARGUMENT DEFINITIONS + + +
 !   sr    - subregion number
-
-!   + + + PARAMETERS AND COMMON BLOCKS + + +
-    include 'p1werm.inc'
-    include 'command.inc'
 
 !   + + + LOCAL DECLARATIONS + + +
 

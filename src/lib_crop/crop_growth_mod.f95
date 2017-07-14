@@ -1093,6 +1093,7 @@ module crop_growth_mod
 !     biomass
 
       use weps_interface_defs
+      use weps_main_mod, only: frac_frst_mass_lost, growth_stress, water_stress_max, winter_ann_root, cook_yield
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luocrop
       use p1unconv_mod, only: hatom2, mmtom, pi
@@ -1212,10 +1213,6 @@ module crop_growth_mod
 !     bc0shoot - mass from root storage required for each shoot (mg/shoot)
 !     bcdmaxshoot - maximum number of shoots possible from each plant
 
-!     + + + COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'command.inc'
-
 !     + + + LOCAL VARIABLES + + +
       real frst, par, apar, arg_exp
       real pddm, ddm, ddm_rem
@@ -1320,9 +1317,6 @@ module crop_growth_mod
 !         - fullness of storage root reservoir
 !     tempdstm - number of stem possible from root stores
 !     temptotshoot - amount of storage required from each stem
-
-! From command.inc
-!     frac_frst_mass_lost - fraction of leaf mass that is frozen that disappears
 
 !     + + + LOCAL PARAMETERS + + +
       integer shoot_flg
@@ -1818,6 +1812,7 @@ module crop_growth_mod
 !     shoot growth
 
       use weps_interface_defs
+      use weps_main_mod, only: cook_yield
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luoshoot
       use p1unconv_mod, only: mgtokg, mmtom
@@ -1897,9 +1892,6 @@ module crop_growth_mod
 !     bcgrf  - fraction of reproductive biomass that is yield
 !     daysim   - day of the simulation
 !     bcdayap - number of days of growth completed since crop planted
-
-!     + + + COMMON BLOCKS + + +
-      include 'command.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer yr, doy

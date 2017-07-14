@@ -24,9 +24,6 @@ contains
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
 
-      include 'p1werm.inc'
-      include 'command.inc'
-
 !     + + + LOCAL VARIABLES + + +
       logical :: fexist     ! flag used to indicate result of file existence
       type(xml_t) :: fxml   ! xml file handle structure

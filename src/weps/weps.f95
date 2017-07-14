@@ -33,10 +33,12 @@
 !     external common_handler
 !     + + + GLOBAL COMMON BLOCKS + + +
 
-      use weps_main_mod, only: daysim, ijday, ljday, maxper, ncycles, wepsinit, &
+      use weps_main_mod, only: wepsinit, cmdline, &
+                               daysim, ijday, ljday, maxper, ncycles, &
                                init_loop, calib_loop, report_loop, &
-                               max_calib_cycles, calib_cycle, calib_done, &
-                               am0ifl
+                               calibrate_crops, calibrate_rotcycles, max_calib_cycles, calib_cycle, calib_done, &
+                               am0ifl, init_cycle, calc_confidence, report_debug, run_erosion, &
+                               saeinp_all, saeinp_daysim, saeinp_jday
       use weps_interface_defs
       use wepp_interface_defs
       use timer_mod, only: timer, TIMWEPS, TIMSTART, TIMSTOP, TIMPRINT
@@ -84,7 +86,6 @@
       include 'build.inc'
       include 'p1werm.inc'
       include 'h1hydro.inc'
-      include 'command.inc'   !declarations for commandline args
 
 !     + + + LOCAL VARIABLES + + +
       character(len=21) :: rundatetime
@@ -206,7 +207,7 @@
       write(6,*) 'Reposity URL: ', trim(build_svn_repo_url)
       write(6,*) 'SVN repository Revision: ', trim(build_svn_repo_revision)
       write(6,*) 'SVN update Revision: ', trim(build_svn_updt_revision)
-      write(6,*) 'Count Modfied Files: ', trim(build_cnt_mods)
+      write(6,*) 'Local Modfied Files: ', trim(build_cnt_mods)
       write(6,*)
 
       ! Determine date of Run

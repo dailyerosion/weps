@@ -33,7 +33,7 @@
       use weps_interface_defs, only: psd, extra, waterk, calctht0
       use weps_interface_defs, only: volwatadsorb, volwat_matpot_bc
       use weps_interface_defs, only: param_prop_bc, param_blkden_adj
-
+      use weps_main_mod, only: wc_type
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn
@@ -73,7 +73,6 @@
 
 !     + + + COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/htheta.inc'

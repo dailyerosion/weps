@@ -4,6 +4,7 @@
 !$HeadURL$
       subroutine stir_cum(isr, speed, depth, tilltype, fracarea)
 
+      use weps_main_mod, only: soil_cond
       use stir_report_mod, only: stircum
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -24,10 +25,6 @@
 !              4    o Lifting, Fracturing Burial Distribution
 !              5    o Compression
 !     fracarea - fraction of area affected (fraction)
-
-!     + + + INCLUDE + + +
-      include 'p1werm.inc'
-      include 'command.inc'
 
 !     + + + PURPOSE + + +
 !     each time it is called, it calculates the Soil Tillage Intensity Rating

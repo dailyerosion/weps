@@ -564,9 +564,6 @@
       type(decomp_factors), intent(in) :: decompfac
       end subroutine bpools
 !------------------------------
-      subroutine   cmdline()
-      end subroutine cmdline
-!------------------------------
     subroutine confidence_interval(ci, nrot_yrs, n1cycles, ci_year, yrly_report, yr_report)
     USE pd_var_type_def
     real,    intent (in) :: ci ! confidence interval value (decimal)

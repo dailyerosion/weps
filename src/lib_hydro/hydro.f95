@@ -36,7 +36,7 @@
 !     + + + KEY WORDS + + +
 !     hydrology
 
-      use weps_main_mod, only: init_loop, calib_loop, am0ifl
+      use weps_main_mod, only: init_loop, calib_loop, am0ifl, transpiration_depth, wepp_hydro
       use weps_interface_defs, only: hinit, heat, store
       use weps_interface_defs, only: darcy, transp
       use weps_interface_defs, only: radnet, availwc
@@ -194,7 +194,6 @@
 !     + + + COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'h1db1.inc'
-      include 'command.inc'
 
       include 'wepp_erosion.inc'
 !     + + + LOCAL COMMON BLOCKS + + +

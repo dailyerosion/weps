@@ -6,6 +6,7 @@
 !
 SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, rep_update, rep_dates)
 
+    use weps_main_mod, only: report_debug
     USE pd_dates_vars
     USE pd_update_vars
     USE pd_report_vars
@@ -28,8 +29,6 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
 
     INTEGER :: status = 0
     INTEGER :: i,p,hm,m,y,z        ! local loop variables
-
-    include 'command.inc'          !declarations for commandline args
 
     status = alloc_pd_vars(nperiods, nrot_yrs, ncycles, rep_report, rep_update, rep_dates) !Allocate space for all pd variables
     IF (status >= 1) THEN

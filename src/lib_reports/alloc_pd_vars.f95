@@ -9,6 +9,7 @@ MODULE alloc_pd_vars_func
 contains
   FUNCTION alloc_pd_vars (nperiods, nrot_yrs, ncycles, rep_report, rep_update, rep_dates)
 
+    use weps_main_mod, only: report_debug
     USE pd_var_type_def
     USE pd_dates_vars
     USE pd_update_vars
@@ -17,8 +18,6 @@ contains
     USE pd_var_tables
 
     IMPLICIT NONE
-
-    INCLUDE 'command.inc'
 
     INTEGER :: alloc_pd_vars            ! Allocate status return
     INTEGER, INTENT (IN) :: nperiods    ! Number of total periods

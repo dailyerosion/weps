@@ -15,6 +15,7 @@
       use weps_interface_defs, only: unsatcond_bc, internode_wt_bc
       use weps_interface_defs, only: diffusive, airtempsin
       use weps_interface_defs, only: matricpot_from_rh
+      use weps_main_mod, only: layer_weighting
       use air_water_mod, only: satvappres, vaporden
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -44,7 +45,6 @@
 
 !*** INCLUDED COMMON BLOCKS ***
       include 'p1werm.inc'
-      include 'command.inc'
       include 'hydro/dvolwparam.inc'
       include 'hydro/vapprop.inc'
 

@@ -5,6 +5,7 @@
 
       subroutine sci_cum( isr, restot, cellstate )
 
+      use weps_main_mod, only: soil_cond
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: cellsurfacestate
       use grid_mod, only: imax, jmax
@@ -18,10 +19,6 @@
 !     + + + ARGUMENT DEFINITIONS + + +
 !     isr - subregion index
 !     restot - structure containing residue totals
-
-!     + + + INCLUDE + + +
-      include 'p1werm.inc'
-      include 'command.inc'
 
 !     + + + PURPOSE + + +
 !     each time it is called, it adds a value to the total biomass increments

@@ -13,6 +13,7 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
     USE generic_list , ONLY : LI_Get_Next, LI_Associated
     USE generic_list , ONLY : LI_Get_Len
 
+    use weps_main_mod, only: calibrate_rotcycles
     USE calib_crop_m
     use biomaterial, only: biomatter
     use manage_data_struct_defs, only: lastoper
@@ -32,10 +33,6 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
 !   rotation_no  - rotation count updated in manage.for
 !   mass_removed - mass removed by the harvest process
 !   mass_left    - mass left behind by the harvest process
-
-!   + + + PARAMETERS AND COMMON BLOCKS + + +
-    include 'p1werm.inc'
-    include 'command.inc'
 
 !   + + + LOCAL DECLARATIONS + + +
 

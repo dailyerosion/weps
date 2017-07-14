@@ -20,6 +20,7 @@ module input_soil_mod
 !     based upon "inpsub.for" routine
           
 !     + + + MODULES + + +
+      use weps_main_mod, only: wc_type
       use soil_data_struct_defs, only: soil_def
       use sci_soil_texture_mod, only : update_sci_soil_multiplier
       use stir_soil_texture_mod, only : update_stir_soil_multiplier
@@ -29,9 +30,6 @@ module input_soil_mod
 !     + + + ARGUMENTS + + +
       integer, intent(in) :: isr
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
-
-      include 'p1werm.inc'
-      include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL VARIABLES + + +
       integer       lay
@@ -667,6 +665,7 @@ module input_soil_mod
 !     Edit History
 !     06-Feb-99   wjr   created
 
+      use weps_main_mod, only: ifc_format, report_debug, wc_type
       use file_io_mod, only: fopenk
       use split_layers_mod, only: spllay
       use soil_data_struct_defs, only: soil_def, allocate_soil
@@ -674,7 +673,6 @@ module input_soil_mod
       include 'p1werm.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
-      include 'command.inc'          !declarations for commandline args
 
 !     + + + Arguments + + +
       integer, intent(in) :: isr

@@ -23,11 +23,7 @@ module soil_processes_mod
       use manage_data_struct_defs, only: manFile  ! Only for printing out ASD results
       use datetime_mod, only: get_simdate, get_simdate_jday, get_simdate_doy
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-
 !     + + + ARGUMENT DECLARATIONS + + +
-
       integer daysim
       real szlyd(*)
       real  bhrwc0(*), bhrwc(*), bhrwcdmx(*)
@@ -41,9 +37,7 @@ module soil_processes_mod
       real bszlyt(*), bsdagd(*)
       real bsdsblk(*)
       real bhzwid
-
       integer bslay, trigger(bslay), sr
-
 
 !     + + + LOCAL VARIABLES + + + 
       real k4f, k4fs, k4fd, k4td, k4w,k4d
@@ -139,9 +133,6 @@ module soil_processes_mod
       parameter (minse = 0.01)
       parameter (maxse = 1.0)
       real se00
-
-!     + + + GLOBAL INCLUDES + + +
-      include 'command.inc'   ! command line argument for new puddling option
 
 !     + + + LOCAL DEFINITIONS + + +
 !     se        - relative aggregate stability with partial update

@@ -25,6 +25,7 @@ module sci_report_mod
 !     Calculate and write to file the SCI values for each subregion or
 !     for subregion 0, calculate an area averaged value of SCI.
 
+      use weps_main_mod, only: soil_cond
       use soil_data_struct_defs, only: soil_def
       use weps_interface_defs
       use file_io_mod, only: luosci
@@ -37,10 +38,6 @@ module sci_report_mod
       integer :: isr                                                        ! subregion index
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
       type(soil_def), dimension(0:), intent(in) :: soil 
-
-!     + + + INCLUDE + + +
-      include 'p1werm.inc'
-      include 'command.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer idx, jdy

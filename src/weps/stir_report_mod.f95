@@ -116,10 +116,6 @@ module stir_report_mod
 !     ostir - STIR value assigned as operation level parameter
 !     oenergyarea - 
 
-!     + + + INCLUDE + + +
-      include 'p1werm.inc'
-      include 'command.inc'
-
 !     + + + PURPOSE + + +
 !     each time it is called, it calculates the Soil Tillage Intensity Rating
 !     for the current operation and adds it to the total.

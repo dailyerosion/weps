@@ -555,6 +555,7 @@ module manage_mod
 !     tillage, process, management
 
       use weps_interface_defs
+      use weps_main_mod, only: cook_yield, resurf_roots, wc_type
       use file_io_mod, only: luomanage, luotdb, luoasd, luowc
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal, bio_prevday
@@ -573,7 +574,6 @@ module manage_mod
       use asd_mod, only: msieve, nsieve, sdia, mdia, asd2m, m2asd
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
-      include 'command.inc'
       include 'p1werm.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'

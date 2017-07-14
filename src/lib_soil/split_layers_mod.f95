@@ -291,6 +291,7 @@ module split_layers_mod
       ! 07-Feb-01   wjr   created
       ! 10-Oct-04   lew   modified to work with "versioned" IFC files only
 
+      use weps_main_mod, only: layer_infla, layer_scale
       use soil_data_struct_defs, only: soil_def, allocate_soil, deallocate_soil
       use soil_mod, only: depthini
 
@@ -300,7 +301,6 @@ module split_layers_mod
       include 'p1werm.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
-      include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL VARIABLES + + +
       type(soil_def) :: soil_split
@@ -391,6 +391,7 @@ module split_layers_mod
       ! Edit History
       ! 07-Feb-01   wjr   created
 
+      use weps_main_mod, only: ifc_format, layer_infla, layer_scale
       use soil_data_struct_defs, only: soil_def, allocate_soil, deallocate_soil
       use soil_mod, only: depthini
 
@@ -400,7 +401,6 @@ module split_layers_mod
       include 'p1werm.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
-      include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL VARIABLES + + +
       type(soil_def) :: soil_split
