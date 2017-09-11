@@ -1401,7 +1401,12 @@ contains
 
       case ('P')
         read(line, '(a1,1x,a2,1x,a)', err=1003) t_code, t_id, t_name
-        ! create group
+        if ( .not. associated(manFile(isub)%grp) ) then
+          ! Operation has process without group preceeding, create null group to support structure.
+          manFile(isub)%oper%grpFirst => elemCreate( manFile(isub)%oper%grpFirst, '00' )
+          manFile(isub)%grp => manFile(isub)%oper%grpFirst
+        end if
+        ! create process
         if ( .not. associated(manFile(isub)%grp%procFirst) ) then
           manFile(isub)%grp%procFirst => elemCreate( manFile(isub)%grp%procFirst, t_id )
           manFile(isub)%proc => manFile(isub)%grp%procFirst
