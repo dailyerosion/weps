@@ -1335,7 +1335,7 @@ contains
             read(luimanfile, '(a)', end=20) line
           end do
           linidx = linidx + 1
-          ! read tillage speed and direction
+          ! read energy and stir
           call readValues(manFile(isub)%oper, line, 'oenergyarea', 'ostir')
           ! Version 1.5 added ofuel
           if (manFile(isub)%mversion .ge. 1.50) then

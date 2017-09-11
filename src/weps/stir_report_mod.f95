@@ -190,16 +190,27 @@ module stir_report_mod
           stircum(isr)%phop(stircum(isr)%phopidx)%phopmon = manFile%oper%operDate%month
           stircum(isr)%phop(stircum(isr)%phopidx)%phopyr = manFile%oper%operDate%year
           stircum(isr)%phop(stircum(isr)%phopidx)%stir_opname = manFile%oper%operName
-          call getManVal(manFile%oper, 'ofuel', stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname)
           stircum(isr)%phop(stircum(isr)%phopidx)%phop_skip = lastoperskip
           if ( stircum(isr)%phopidx .eq. 1 ) then
             stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopcnt)%crop_num
           else
             stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num
           end if
+          stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname = ''
+          oenergyarea = -1
+          ostir = -1
           select case ( manFile%oper%operType )
-          case (1,3)
+          case (1)
             call getManVal(manFile%oper, 'ospeed', ospeed)
+          case (3)
+            call getManVal(manFile%oper, 'ospeed', ospeed)
+            call getManVal(manFile%oper, 'ofuel', stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname)
+            call getManVal(manFile%oper, 'oenergyarea', oenergyarea)
+            call getManVal(manFile%oper, 'ostir', ostir)
+          case (4)
+            call getManVal(manFile%oper, 'ofuel', stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname)
+            call getManVal(manFile%oper, 'oenergyarea', oenergyarea)
+            call getManVal(manFile%oper, 'ostir', ostir)
           end select
           ! do groups
           manFile%grp => manFile%oper%grpFirst
@@ -318,9 +329,6 @@ module stir_report_mod
         else
           stir_op_avg = 0.0
         end if
-
-        call getManVal(manFile%oper, 'oenergyarea', oenergyarea)
-        call getManVal(manFile%oper, 'ostir', ostir)
 
         if( ostir .ge. 0.0 ) then
           scisum(isr)%stir = scisum(isr)%stir + ostir

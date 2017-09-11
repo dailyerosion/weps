@@ -508,6 +508,8 @@ module manage_mod
 
       select case (lastoper(sr)%grcode)
 
+      case (0)  ! null group does nothing
+
       case (1)  ! tillage group
         ! read tillage depth, intensity and area
         call getManVal(manFile%grp, 'gtdepth', tdepth)
@@ -1338,19 +1340,8 @@ module manage_mod
                call report_hydrobal( sr, manFile%mcount, manFile%mperod )
                ! This may be harvest or non-harvest termination, allow early harvest warnings
                mature_warn_flg = 1
-               call crop_endseason( sr, manFile%mcount, manFile%mperod, &
-               crop%bname, am0cfl(sr), &
-               soil%nslay, crop%database%idc, crop%growth%dayam, &
-               crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
-               crop%database%thum, crop%geometry%xstmrep, &
-               cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
-               cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
-               cropprev%bgstemz, &
-               cropprev%rootstorez, cropprev%rootfiberz, &
-               cropprev%ht, cropprev%stm, cropprev%rtd, &
-               cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
-               cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
-               cropprev%cancov, cropprev%dayspring, mature_warn_flg )
+               call crop_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                                    soil%nslay, mature_warn_flg, crop, cropprev )
                ! set to stop additional report in this operation
                manFile%rpt_season_flg = .false.
              end if
@@ -1416,19 +1407,8 @@ module manage_mod
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
-              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
-              crop%bname, am0cfl(sr), &
-              soil%nslay, crop%database%idc, crop%growth%dayam, &
-              crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
-              crop%database%thum, crop%geometry%xstmrep, &
-              cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
-              cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
-              cropprev%bgstemz, &
-              cropprev%rootstorez, cropprev%rootfiberz, &
-              cropprev%ht, cropprev%stm, cropprev%rtd, &
-              cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
-              cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
-              cropprev%cancov, cropprev%dayspring, mature_warn_flg )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                                   soil%nslay, mature_warn_flg, crop, cropprev )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -1479,19 +1459,8 @@ module manage_mod
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
-              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
-              crop%bname, am0cfl(sr), &
-              soil%nslay, crop%database%idc, crop%growth%dayam, &
-              crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
-              crop%database%thum, crop%geometry%xstmrep, &
-              cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
-              cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
-              cropprev%bgstemz, &
-              cropprev%rootstorez, cropprev%rootfiberz, &
-              cropprev%ht, cropprev%stm, cropprev%rtd, &
-              cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
-              cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
-              cropprev%cancov, cropprev%dayspring, mature_warn_flg )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                                   soil%nslay, mature_warn_flg, crop, cropprev )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -1575,19 +1544,8 @@ module manage_mod
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
-              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
-              crop%bname, am0cfl(sr), &
-              soil%nslay, crop%database%idc, crop%growth%dayam, &
-              crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
-              crop%database%thum, crop%geometry%xstmrep, &
-              cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
-              cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
-              cropprev%bgstemz, &
-              cropprev%rootstorez, cropprev%rootfiberz, &
-              cropprev%ht, cropprev%stm, cropprev%rtd, &
-              cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
-              cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
-              cropprev%cancov, cropprev%dayspring, mature_warn_flg )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                                   soil%nslay, mature_warn_flg, crop, cropprev )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -1635,19 +1593,8 @@ module manage_mod
             if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
-              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
-              crop%bname, am0cfl(sr), &
-              soil%nslay, crop%database%idc, crop%growth%dayam, &
-              crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
-              crop%database%thum, crop%geometry%xstmrep, &
-              cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
-              cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
-              cropprev%bgstemz, &
-              cropprev%rootstorez, cropprev%rootfiberz, &
-              cropprev%ht, cropprev%stm, cropprev%rtd, &
-              cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
-              cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
-              cropprev%cancov, cropprev%dayspring, mature_warn_flg )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                                   soil%nslay, mature_warn_flg, crop, cropprev )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
             end if
@@ -1739,19 +1686,8 @@ module manage_mod
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
-              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
-              crop%bname, am0cfl(sr), &
-              soil%nslay, crop%database%idc, crop%growth%dayam, &
-              crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
-              crop%database%thum, crop%geometry%xstmrep, &
-              cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
-              cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
-              cropprev%bgstemz, &
-              cropprev%rootstorez, cropprev%rootfiberz, &
-              cropprev%ht, cropprev%stm, cropprev%rtd, &
-              cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
-              cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
-              cropprev%cancov, cropprev%dayspring, mature_warn_flg )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                                   soil%nslay, mature_warn_flg, crop, cropprev )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -1807,19 +1743,8 @@ module manage_mod
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
-              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
-              crop%bname, am0cfl(sr), &
-              soil%nslay, crop%database%idc, crop%growth%dayam, &
-              crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
-              crop%database%thum, crop%geometry%xstmrep, &
-              cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
-              cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
-              cropprev%bgstemz, &
-              cropprev%rootstorez, cropprev%rootfiberz, &
-              cropprev%ht, cropprev%stm, cropprev%rtd, &
-              cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
-              cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
-              cropprev%cancov, cropprev%dayspring, mature_warn_flg )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                                   soil%nslay, mature_warn_flg, crop, cropprev )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -1876,19 +1801,8 @@ module manage_mod
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
-              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
-              crop%bname, am0cfl(sr), &
-              soil%nslay, crop%database%idc, crop%growth%dayam, &
-              crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
-              crop%database%thum, crop%geometry%xstmrep, &
-              cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
-              cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
-              cropprev%bgstemz, &
-              cropprev%rootstorez, cropprev%rootfiberz, &
-              cropprev%ht, cropprev%stm, cropprev%rtd, &
-              cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
-              cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
-              cropprev%cancov, cropprev%dayspring, mature_warn_flg )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                                   soil%nslay, mature_warn_flg, crop, cropprev )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -1944,19 +1858,8 @@ module manage_mod
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
-              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
-              crop%bname, am0cfl(sr), &
-              soil%nslay, crop%database%idc, crop%growth%dayam, &
-              crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
-              crop%database%thum, crop%geometry%xstmrep, &
-              cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
-              cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
-              cropprev%bgstemz, &
-              cropprev%rootstorez, cropprev%rootfiberz, &
-              cropprev%ht, cropprev%stm, cropprev%rtd, &
-              cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
-              cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
-              cropprev%cancov, cropprev%dayspring, mature_warn_flg )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                                   soil%nslay, mature_warn_flg, crop, cropprev )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -2084,19 +1987,8 @@ module manage_mod
             soil%nslay, residue )
           ! non-harvest termination, suppress early harvest warnings
           mature_warn_flg = 0
-          call crop_endseason( sr, manFile%mcount, manFile%mperod, &
-              crop%bname, am0cfl(sr), &
-              soil%nslay, crop%database%idc, crop%growth%dayam, &
-              crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
-              crop%database%thum, crop%geometry%xstmrep, &
-              cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
-              cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
-              cropprev%bgstemz, &
-              cropprev%rootstorez, cropprev%rootfiberz, &
-              cropprev%ht, cropprev%stm, cropprev%rtd, &
-              cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
-              cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
-              cropprev%cancov, cropprev%dayspring, mature_warn_flg )
+          call crop_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                               soil%nslay, mature_warn_flg, crop, cropprev )
           ! set to guarantee corresponding report hydrolbal at end of planting
           manFile%rpt_season_flg = .true.
         endif
@@ -2326,19 +2218,8 @@ module manage_mod
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
-              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
-              crop%bname, am0cfl(sr), &
-              soil%nslay, crop%database%idc, crop%growth%dayam, &
-              crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
-              crop%database%thum, crop%geometry%xstmrep, &
-              cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
-              cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
-              cropprev%bgstemz, &
-              cropprev%rootstorez, cropprev%rootfiberz, &
-              cropprev%ht, cropprev%stm, cropprev%rtd, &
-              cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
-              cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
-              cropprev%cancov, cropprev%dayspring, mature_warn_flg )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                                   soil%nslay, mature_warn_flg, crop, cropprev )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -2406,19 +2287,8 @@ module manage_mod
           if( manFile%rpt_season_flg ) then
             ! not reported by the kill process in this
             call report_hydrobal( sr, manFile%mcount, manFile%mperod )
-            call crop_endseason( sr, manFile%mcount, manFile%mperod, &
-              crop%bname, am0cfl(sr), &
-              soil%nslay, crop%database%idc, crop%growth%dayam, &
-              crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
-              crop%database%thum, crop%geometry%xstmrep, &
-              cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
-              cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
-              cropprev%bgstemz, &
-              cropprev%rootstorez, cropprev%rootfiberz, &
-              cropprev%ht, cropprev%stm, cropprev%rtd, &
-              cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
-              cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
-              cropprev%cancov, cropprev%dayspring, mature_warn_flg )
+            call crop_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                                 soil%nslay, mature_warn_flg, crop, cropprev )
               ! set to stop additional report in this operation
             manFile%rpt_season_flg = .false.
           end if

@@ -25,7 +25,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: sr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
-      class(plant_pointer), pointer, intent(in) :: plant
+      type(plant_pointer), pointer :: plant
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot

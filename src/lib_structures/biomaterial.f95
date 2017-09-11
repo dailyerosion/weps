@@ -294,7 +294,7 @@ module biomaterial
   end type residue_pointer
 
   type plant_pointer
-    type(plant_pointer), pointer :: oldPlant
+     type(plant_pointer), pointer :: oldPlant
      character*(80) :: bname       ! the name of the biomaterial
      type(bio_output_units) :: luo
      type(biostate_mass) :: mass
@@ -306,9 +306,9 @@ module biomaterial
      type(biodatabase) :: database
   end type plant_pointer
 
-  type plants_pointer
-     class(plant_pointer), pointer :: plant
-  end type plants_pointer
+  type plants_struct
+     type(plant_pointer), pointer :: plant
+  end type plants_struct
 
   type biototal
      real :: dstmtot      ! total number of stems  per unit area (#/m^2)

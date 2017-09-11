@@ -111,7 +111,7 @@
       integer :: nsubr                     ! total number of subregions (read in inprun, derived from allocated subr_poly)
 
       type(soil_def), dimension(:), allocatable :: soil             ! structure with soil state and parameters as updated during simulation
-      type(plants_pointer), dimension(:), allocatable :: plants     ! array of pointers to structure for all biomaterial
+      type(plants_struct), dimension(:), allocatable :: plants      ! array of pointers to structure for all biomaterial
                                                                     ! structure also references older biomaterial
       type(biomatter), dimension(:), allocatable :: crop            ! structure with crop state and parameters
       type(biototal), dimension(:), allocatable :: croptot          ! structure with totalized values of crop state
