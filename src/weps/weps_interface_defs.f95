@@ -628,7 +628,7 @@
       use manage_data_struct_defs, only: man_file_struct
       integer, intent(in) :: sr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
-      type(plant_pointer), pointer, intent(in) :: plant
+      type(plant_pointer), pointer :: plant
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
