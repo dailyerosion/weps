@@ -28,7 +28,7 @@ rm -rfv [fpp.dir];
 		result 	+=	"      data build_svn_repo_url/ '"[svn_url]"' /";
 		result 	+=	"      data build_svn_repo_revision/ '"[collect svn info [svn_url] | grep "Revision:" | sed "s/Revision://"]"' /";
 		result 	+=	"      data build_svn_updt_revision/ '"[collect svn info | grep "Revision:" | sed "s/Revision://"]"' /";
-		result 	+=	"      data build_cnt_mods/ '"[collect svn status -qu | awk -f awk.script | wc -l]"' /";
+		result 	+=	"      data build_cnt_mods/ '"[collect svn status -qu | grep -v \"~\" | wc -l]"' /";
 	} else {
 		result 	+=	"      data build_svn_repo_url/ '' /";
 		result 	+=	"      data build_svn_repo_revision/ '-1' /";
