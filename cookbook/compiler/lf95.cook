@@ -7,7 +7,7 @@
  **********************************/
 
 fc				= lf95;
-fc_version 		= [collect [fc] --version | head -1];
+fc_version 		= [collect_lines [fc] --version | head -1];
 
 fc_compile_flag	= "-c ";
 fc_out_flag		= "-o ";			/* requires space for arg following option */
