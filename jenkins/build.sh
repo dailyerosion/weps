@@ -29,3 +29,4 @@ case $compiler in
 		source jenkins/dobuild.sh;
 		;;
 esac
+exit 0

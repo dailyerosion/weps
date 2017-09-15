@@ -7,7 +7,7 @@
 #   RFD-UserName
 Excercise 5
 #   RFD-FarmId RFD-TractId RFD-FieldId RFD-runtypedisp RFD-RotationYears RFD-CycleCount
- |  |  | cycle | 1 | 6
+ |  |  | cycle | 1 | 2
 #   RFD-Site
 FIPS:US-WA-021
 #
@@ -27,7 +27,7 @@ choice|windgen|+46.267;-119.117|727845|US|WA|PASCO/TRI-CITIES
 #   RFD-StartDate(day month year)
 01 01 0001
 #   RFD-EndDate(day month year)
-31 12 0840
+31 12 0280
 #   RFD-TimeSteps(per day)
 24
 # --RUN FILE FILENAMES (INPUT)
@@ -239,9 +239,11 @@ Shrubs 1row leafon
 #   RFD-BarrierS coordinates (meters) | height (meters) | width (meters) | porosity
 # first coordinate pair and data
 0 0 
-# first point, first time mark, height (meters), width (meters), porosity
+# first point, first time mark
+# height (meters), width (meters), porosity
 1.0 1.0 0.7 
-# first point, second time mark height (meters), width (meters), porosity
+# first point, second time mark
+# height (meters), width (meters), porosity
 2.0 2.0 0.5
 # second coordinate pair and data
 0 366
