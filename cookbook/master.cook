@@ -191,7 +191,8 @@ c_incl 		= [find_command c_incl];/* dependency finder included with cook */
   	      FILE EXTENSIONS
  **********************************/
 f 			= [defined-or-default f .for ];			/* fortran fixed form */
-ff	 		= [defined-or-default ff .f95 ];				/* fortran free form */
+ff	 		= [defined-or-default ff .f90 ];		/* fortran free form */
+fff	 		= [defined-or-default fff .f95 ];		/* fortran free form */
 dep 		= [defined-or-default dep .dep ];			/* dependency */
 mod 		= [defined-or-default mod .mod ];			/* module */
 tmp 		= [defined-or-default tmp .tmp ]	;			/* temp file */
@@ -221,13 +222,14 @@ manifest_libs = [stripdot [collect find [src.dir] -name \\\\.* -prune -o -type d
 
 
 f_src 	= [filter %0%[f] [manifest_files]];		/* every fixed form fortran file */
-f90_src = [filter %0%[ff] [manifest_files]];	/* every free form Fortran file */
-inc_src = [filter %0%[inc] [manifest_files]];	/* every include file */
-all_src = [f_src] [f90_src] [inc_src];			/* combine explicit source files */
+f90_src = [filter %0%[ff] [manifest_files]];		/* every free form Fortran file */
+f95_src = [filter %0%[fff] [manifest_files]];		/* every free form Fortran file */
+inc_src = [filter %0%[inc] [manifest_files]];		/* every include file */
+all_src = [f_src] [f90_src] [f95_src] [inc_src];	/* combine explicit source files */
 
 
 all_dep = [addsuffix [dep] [fromto [src.dir]%0% [dep.dir]%0% [all_src] [manifest_libs]]];	/* mapped to dep.dir and dep extension added */
-all_obj = [fromto [src.dir]%0%[f] [obj.dir]%0%[obj] [f_src]] [fromto [src.dir]%0%[ff] [obj.dir]%0%[obj] [f90_src]];	/* every potential object file */
+all_obj = [fromto [src.dir]%0%[f] [obj.dir]%0%[obj] [f_src]] [fromto [src.dir]%0%[ff] [obj.dir]%0%[obj] [f90_src]] [fromto [src.dir]%0%[fff] [obj.dir]%0%[obj] [f95_src]];	/* every potential object file */
 
 
 /**********************************
@@ -394,6 +396,14 @@ set nocascade
 	function update-dep [need] [target] [true] [true] [true] [true];
 }
 
+/* free form dependency */
+[dep.dir]%0%[fff][dep] : [src.dir]%0%[fff]
+set nocascade
+{
+									/*	 incl	use		mod	   prog */
+	function update-dep [need] [target] [true] [true] [true] [true];
+}
+
 /* library dependency */
 [dep.dir]%0[lib_]%[dep]: [src.dir]%0[lib_]%
 set nocascade
@@ -434,6 +444,23 @@ set nocascade
 
 /* free form compile */
 [obj.dir]%0%[obj]: [src.dir]%0%[ff] [get-dependency [target]]{
+	if [not [exists [mod.dir]]] then{
+		mkdir -p [mod.dir];
+	}
+
+	/* prepare a local list of includes */
+	local incs = [stringset [src.dir]%0 [fpp.dir]%0 [inc.dir]];
+
+	if [fc_inc_join] then {
+		/* combine the incs into a single list with the separator */
+		incs = [unsplit [fc_inc_sep] [incs]];
+	}
+
+	[fc] [fc_flags] [fc_free] [addprefix [fc_inc_flag] [incs]] [addprefix [fc_mod_inc_flag] [mod.dir]] [addprefix [fc_mod_out_flag] [mod.dir]] [fc_compile_flag][head [need]] [fc_out_flag][target];	
+}
+
+/* free form compile */
+[obj.dir]%0%[obj]: [src.dir]%0%[fff] [get-dependency [target]]{
 	if [not [exists [mod.dir]]] then{
 		mkdir -p [mod.dir];
 	}

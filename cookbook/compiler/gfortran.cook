@@ -41,21 +41,24 @@ function print "gfortran_arch:" [gfortran_arch];
 	    	  COMPILER
  **********************************/
 
-fc				= gfortran;
+fc			= gfortran;
 fc_version 		= [collect_lines [fc] --version | head -1];
 
 /* Setup the correct default architecture configuration based upon the system the compiler is running on. */
 if [ matches [gfortran_arch] 32 ] then {
-	fc_flags = "-m32";
+	fc_flags	= "-m32";
 }
 else if [ matches [gfortran_arch] 64 ] then {
-	fc_flags = "-m64";
+	fc_flags	= "-m64";
 }
 else {
-	fc_flags = ;
+	fc_flags	= "";
 }
 
-fc_compile_flag	= "-c ";
+/* add preprocessing for all builds */
+fc_flags		+= "-cpp";
+
+fc_compile_flag		= "-c ";
 fc_out_flag		= "-o ";
 
 fc_fixed		= "-ffixed-form";

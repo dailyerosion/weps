@@ -94,19 +94,23 @@ else{
 	    	  COMPILER
  **********************************/
 
-fc				= ifort;
+fc			= ifort;
 
-fc_compile_flag			= "-c -Tf";
-fc_out_flag			= "-o ";
+fc_compile_flag		= "-c -Tf";
+fc_out_flag		= "-o ";
 
-fc_flags			="-nologo";
-fc_flags = "";
+fc_flags		= "-nologo"; /* this is overwritten by following statement ??*/
+fc_flags		= "";
+
+/* add preprocessing for all builds */
+fc_flags		+= "-fpp";
+
 
 if [is_windows] then {
-	fc_version 		= [collect_lines [fc] -what |& head -1];
+	fc_version 	= [collect_lines [fc] -what |& head -1];
 }
 else {
-	fc_version 		= [collect_lines [fc] --version | head -1];
+	fc_version 	= [collect_lines [fc] --version | head -1];
 }
 
 if [is_windows] then { /* setup for specifying linker to use within ifort */
@@ -131,12 +135,12 @@ fc_free			= "-free";
 
 /* default mode flags */
 if [is_windows] then {
-	fc_default	="-Od";
-	fc_mod_out_flag	= "-module:";
+	fc_default		="-Od";
+	fc_mod_out_flag		= "-module:";
 }
 else { /* Linux */
-	fc_default	="-O0";
-	fc_mod_out_flag	= "-module ";
+	fc_default		="-O0";
+	fc_mod_out_flag		= "-module ";
 }
 
 /* debug flags */
