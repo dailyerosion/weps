@@ -8,6 +8,7 @@
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal
       use wind_mod, only: biodrag
+      use update_mod, only: resevapredu
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       type(soil_def), intent(in) :: soil  ! soil for this subregion
@@ -18,15 +19,10 @@
 
 !     Update geometric properties of all biomass pools
 
-      include 'p1werm.inc'
-
 ! local variables
 
       integer idx,jdx
       real atotal
-
-!     + + + FUNCTIONS CALLED + + +
-      real    resevapredu
 
 ! *****************************************************************
 !     Compute total number of stems

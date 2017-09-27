@@ -838,8 +838,8 @@ module manage_mod
                  cropres%standstem, cropres%standleaf, cropres%standstore, &
                  cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
                  cropres%flatrootstore, cropres%flatrootfiber, &
-                 cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
-                 cropres%bgrootstorez, cropres%bgrootfiberz ) &
+                 cropres%stemz, cropres%leafz, cropres%storez, &
+                 cropres%rootstorez, cropres%rootfiberz ) &
           .gt. 0.0 ) then
           temp_present = 1
       else
@@ -1244,8 +1244,8 @@ module manage_mod
                    tlayer,soil%aszlyt,soil%aszlyd, &
              cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
              cropres%flatrootstore, cropres%flatrootfiber, &
-             cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
-             cropres%bgrootstorez, cropres%bgrootfiberz, &
+             cropres%stemz, cropres%leafz, cropres%storez, &
+             cropres%rootstorez, cropres%rootfiberz, &
              residue, bioflg)
         end if 
 
@@ -1332,8 +1332,8 @@ module manage_mod
                  crop%geometry%grainf, &
                  cropres%standstem, cropres%standleaf, cropres%standstore, &
                  cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
-                 cropres%bgrootstorez, cropres%bgrootfiberz, &
-                 cropres%bgstemz, &
+                 cropres%rootstorez, cropres%rootfiberz, &
+                 cropres%stemz, &
                  cropres%zht, cropres%dstm, cropres%xstmrep, cropres%zrtd, &
                  cropres%grainf )
              if( manFile%rpt_season_flg ) then
@@ -1619,8 +1619,8 @@ module manage_mod
             cropres%standstem, cropres%standleaf, cropres%standstore, &
             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
             cropres%flatrootstore, cropres%flatrootfiber, &
-            cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
-            cropres%bgrootstorez, cropres%bgrootfiberz, &
+            cropres%stemz, cropres%leafz, cropres%storez, &
+            cropres%rootstorez, cropres%rootfiberz, &
             cropres%zht, cropres%dstm,cropres%xstmrep,cropres%grainf, &
             crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck, &
             crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg, &
@@ -1970,16 +1970,16 @@ module manage_mod
                  crop%geometry%grainf, &
                  cropres%standstem, cropres%standleaf, cropres%standstore, &
                  cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
-                 cropres%bgrootstorez, cropres%bgrootfiberz, &
-                 cropres%bgstemz, &
+                 cropres%rootstorez, cropres%rootfiberz, &
+                 cropres%stemz, &
                  cropres%zht, cropres%dstm, cropres%xstmrep, cropres%zrtd, &
                  cropres%grainf )
           call trans( &
             cropres%standstem, cropres%standleaf, cropres%standstore, &
             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
             cropres%flatrootstore, cropres%flatrootfiber, &
-            cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
-            cropres%bgrootstorez, cropres%bgrootfiberz, &
+            cropres%stemz, cropres%leafz, cropres%storez, &
+            cropres%rootstorez, cropres%rootfiberz, &
             cropres%zht, cropres%dstm,cropres%xstmrep,cropres%grainf, &
             crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck, &
             crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg, &
@@ -2191,8 +2191,8 @@ module manage_mod
           cropres%standstem, cropres%standleaf, cropres%standstore, &
           cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
           cropres%flatrootstore, cropres%flatrootfiber, &
-          cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
-          cropres%bgrootstorez, cropres%bgrootfiberz, &
+          cropres%stemz, cropres%leafz, cropres%storez, &
+          cropres%rootstorez, cropres%rootfiberz, &
           cropres%zht, cropres%dstm, cropres%grainf, residue, &
           soil%nslay, mass_rem, mass_left)
 
@@ -2257,8 +2257,8 @@ module manage_mod
           cropres%standstem, cropres%standleaf, cropres%standstore, &
           cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
           cropres%flatrootstore, cropres%flatrootfiber, &
-          cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
-          cropres%bgrootstorez, cropres%bgrootfiberz, &
+          cropres%stemz, cropres%leafz, cropres%storez, &
+          cropres%rootstorez, cropres%rootfiberz, &
           cropres%zht, cropres%dstm, cropres%grainf, residue, &
           soil%nslay, mass_rem, mass_left)
 
@@ -2323,9 +2323,9 @@ module manage_mod
 
         ! place buried residue in pools by layer
         call resinit(dmassrot, zmassrot, soil%nslay, &
-                     cropres%bgrootfiberz, soil%aszlyt)
+                     cropres%rootfiberz, soil%aszlyt)
         call resinit(dmassres,zmassres,soil%nslay, &
-                     cropres%bgstemz, soil%aszlyt)
+                     cropres%stemz, soil%aszlyt)
         ! read decomposition parameters
         call getManVal(manFile%proc, 'standdk', tdkrate(1))
         call getManVal(manFile%proc, 'surfdk', tdkrate(2))
@@ -2353,11 +2353,11 @@ module manage_mod
         dmassrot = 0.0
         zmassrot = 0.0
         call resinit(dmassres, zmassres, soil%nslay, &
-                     cropres%bgleafz, soil%aszlyt)
+                     cropres%leafz, soil%aszlyt)
         call resinit(dmassres, zmassres, soil%nslay, &
-                     cropres%bgstorez, soil%aszlyt)
+                     cropres%storez, soil%aszlyt)
         call resinit(dmassrot, zmassrot, soil%nslay, &
-                     cropres%bgrootstorez, soil%aszlyt)
+                     cropres%rootstorez, soil%aszlyt)
 
         cropres%grainf = 1.0
         cropres%xstmrep = txstm
@@ -2373,16 +2373,16 @@ module manage_mod
                  cropres%standstem, cropres%standleaf, cropres%standstore, &
                  cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
                  cropres%flatrootstore, cropres%flatrootfiber, &
-                 cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
-                 cropres%bgrootstorez, cropres%bgrootfiberz ) &
+                 cropres%stemz, cropres%leafz, cropres%storez, &
+                 cropres%rootstorez, cropres%rootfiberz ) &
           .gt. 0.0 ) then
           ! biomass was added, so do transfer
           call trans( &
             cropres%standstem, cropres%standleaf, cropres%standstore, &
             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
             cropres%flatrootstore, cropres%flatrootfiber, &
-            cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
-            cropres%bgrootstorez, cropres%bgrootfiberz, &
+            cropres%stemz, cropres%leafz, cropres%storez, &
+            cropres%rootstorez, cropres%rootfiberz, &
             cropres%zht, cropres%dstm,cropres%xstmrep,cropres%grainf, &
             cropname, txstm, trbc, t0sla, t0ck, &
             tdkrate(1), tcovfact, tddsthrsh, thyfg, &
@@ -2442,9 +2442,9 @@ module manage_mod
 
         ! place buried residue in pools by layer
         call resinit(dmassrot, zmassrot, soil%nslay, &
-                     cropres%bgrootfiberz, soil%aszlyt)
+                     cropres%rootfiberz, soil%aszlyt)
         call resinit(dmassres,zmassres,soil%nslay, &
-                     cropres%bgstemz, soil%aszlyt)
+                     cropres%stemz, soil%aszlyt)
 
         ! read decomposition parameters
         call getManVal(manFile%proc, 'standdk', tdkrate(1))
@@ -2473,11 +2473,11 @@ module manage_mod
         dmassrot = 0.0
         zmassrot = 0.0
         call resinit(dmassres, zmassres, soil%nslay, &
-                     cropres%bgleafz, soil%aszlyt)
+                     cropres%leafz, soil%aszlyt)
         call resinit(dmassres, zmassres, soil%nslay, &
-                     cropres%bgstorez, soil%aszlyt)
+                     cropres%storez, soil%aszlyt)
         call resinit(dmassrot, zmassrot, soil%nslay, &
-                     cropres%bgrootstorez, soil%aszlyt)
+                     cropres%rootstorez, soil%aszlyt)
 
         cropres%grainf = 1.0
         cropres%xstmrep = txstm
@@ -2492,16 +2492,16 @@ module manage_mod
                  cropres%standstem, cropres%standleaf, cropres%standstore, &
                  cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
                  cropres%flatrootstore, cropres%flatrootfiber, &
-                 cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
-                 cropres%bgrootstorez, cropres%bgrootfiberz ) &
+                 cropres%stemz, cropres%leafz, cropres%storez, &
+                 cropres%rootstorez, cropres%rootfiberz ) &
           .gt. 0.0 ) then
           ! biomass was added, so do transfer
           call trans( &
             cropres%standstem, cropres%standleaf, cropres%standstore, &
             cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
             cropres%flatrootstore, cropres%flatrootfiber, &
-            cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
-            cropres%bgrootstorez, cropres%bgrootfiberz, &
+            cropres%stemz, cropres%leafz, cropres%storez, &
+            cropres%rootstorez, cropres%rootfiberz, &
             cropres%zht, cropres%dstm,cropres%xstmrep,cropres%grainf, &
             cropname, txstm, trbc, t0sla, t0ck, &
             tdkrate(1), tcovfact, tddsthrsh, thyfg, &

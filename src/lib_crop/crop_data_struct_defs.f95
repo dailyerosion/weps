@@ -37,12 +37,12 @@ module crop_data_struct_defs
     real :: flatrootstore   ! crop flat root storage mass (kg/m^2) (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
     real :: flatrootfiber   ! crop flat root fibrous mass (kg/m^2)
 
-    real, dimension(:), allocatable :: bgstemz    ! crop buried stem mass by layer (kg/m^2)
-    real, dimension(:), allocatable :: bgleafz    ! crop buried leaf mass by layer (kg/m^2)
-    real, dimension(:), allocatable :: bgstorez   ! crop buried storage mass by layer (kg/m^2)
+    real, dimension(:), allocatable :: stemz    ! crop buried stem mass by layer (kg/m^2)
+    real, dimension(:), allocatable :: leafz    ! crop buried leaf mass by layer (kg/m^2)
+    real, dimension(:), allocatable :: storez   ! crop buried storage mass by layer (kg/m^2)
 
-    real, dimension(:), allocatable :: bgrootstorez   ! crop root storage mass by layer (kg/m^2) (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
-    real, dimension(:), allocatable :: bgrootfiberz   ! crop root fibrous mass by layer (kg/m^2)
+    real, dimension(:), allocatable :: rootstorez   ! crop root storage mass by layer (kg/m^2) (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
+    real, dimension(:), allocatable :: rootfiberz   ! crop root fibrous mass by layer (kg/m^2)
 
     real :: zht    ! Crop height (m)
     real :: dstm   ! Number of crop stems per unit area (#/m^2)
@@ -65,15 +65,15 @@ contains
 
      sum_stat = 0
      ! allocate below and above ground arrays
-     allocate(cropres%bgstemz(nsoillay), stat=alloc_stat)
+     allocate(cropres%stemz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(cropres%bgleafz(nsoillay), stat=alloc_stat)
+     allocate(cropres%leafz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(cropres%bgstorez(nsoillay), stat=alloc_stat)
+     allocate(cropres%storez(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(cropres%bgrootstorez(nsoillay), stat=alloc_stat)
+     allocate(cropres%rootstorez(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(cropres%bgrootfiberz(nsoillay), stat=alloc_stat)
+     allocate(cropres%rootfiberz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
      if( sum_stat .gt. 0 ) then
@@ -90,11 +90,11 @@ contains
      cropres%flatrootstore = 0.0
      cropres%flatrootfiber = 0.0
      do ldx = 1, nsoillay
-        cropres%bgstemz(ldx) = 0.0
-        cropres%bgleafz(ldx) = 0.0
-        cropres%bgstorez(ldx) = 0.0
-        cropres%bgrootstorez(ldx) = 0.0
-        cropres%bgrootfiberz(ldx) = 0.0
+        cropres%stemz(ldx) = 0.0
+        cropres%leafz(ldx) = 0.0
+        cropres%storez(ldx) = 0.0
+        cropres%rootstorez(ldx) = 0.0
+        cropres%rootfiberz(ldx) = 0.0
      end do
      cropres%zht = 0.0
      cropres%dstm = 0.0
@@ -113,15 +113,15 @@ contains
 
      sum_stat = 0
      ! allocate below and above ground arrays
-     deallocate(cropres%bgstemz, stat=dealloc_stat)
+     deallocate(cropres%stemz, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(cropres%bgleafz, stat=dealloc_stat)
+     deallocate(cropres%leafz, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(cropres%bgstorez, stat=dealloc_stat)
+     deallocate(cropres%storez, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(cropres%bgrootstorez, stat=dealloc_stat)
+     deallocate(cropres%rootstorez, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-     deallocate(cropres%bgrootfiberz, stat=dealloc_stat)
+     deallocate(cropres%rootfiberz, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
 
      if( sum_stat .gt. 0 ) then

@@ -57,6 +57,7 @@
       use crop_mod, only: cropinit, cprevseasonrotation
       use report_harvest_mod, only: cprevrotation, cprevcalibrotation
       use biomaterial
+      use update_mod, only: plantupdate
       use debug_mod
       use mandate_mod
       use manage_data_struct_defs, only: lastoper, manFile
@@ -488,8 +489,11 @@
          ! Initialize the water holding capacity variable
          call hydrinit(isr, soil(isr), h1et(isr), h1bal(isr), wp(isr))
          ! initialize croptot variables
+         call plantupdate( soil(isr), &
+                           ahzfurcut(isr), ahztransprtmin(isr), ahztransprtmax(isr), &
+                           plants(isr)%plant, croptot(isr), restot(isr), biotot(isr) )
          call cropupdate( soil(isr)%aszrgh, soil(isr)%aszlyd, soil(isr)%nslay, &
-                          ahztranspdepth(isr), ahzfurcut(isr), ahztransprtmin(isr), ahztransprtmax(isr), &
+                          ahzfurcut(isr), ahztransprtmin(isr), ahztransprtmax(isr), &
                           crop(isr), croptot(isr) )
          call sumbio(soil(isr), crop(isr), residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))
 

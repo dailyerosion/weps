@@ -48,7 +48,7 @@
             call cropupdate( &
      &      soil%aszrgh, soil%aszlyd, &
      &      soil%nslay, &
-     &      ahztranspdepth(isr), ahzfurcut(isr), &
+     &      ahzfurcut(isr), &
      &      ahztransprtmin(isr), ahztransprtmax(isr), crop, croptot  )
 
             ! dependent variables have been updated

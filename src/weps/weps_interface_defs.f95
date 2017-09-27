@@ -458,15 +458,6 @@
       real bhzirr, bhratirr, bhdurirr              
       end subroutine ratedura
 !----------------------------------
-      real function resevapredu(                                           &
-     &           prev_redu_ratio, biomass, coeff_a, coeff_b)
-
-      real prev_redu_ratio
-      real biomass
-      real coeff_a
-      real coeff_b      
-      end function resevapredu
-!-----------------------------------
       real function   scsq (rain,cniip,cniig,canp,slp,theta1,thetf1)
 
       real rain
@@ -703,14 +694,14 @@
       subroutine cropupdate(                                            &
      &      bszrgh, bszlyd,                                             &
      &      bnslay,                                                     &
-     &      bhztranspdepth, bhzfurcut,                                  &
+     &      bhzfurcut,                                                  &
      &      bhztransprtmin, bhztransprtmax, crop, croptot )
       use biomaterial, only: biomatter, biototal
       use p1unconv_mod, only: pi
       use wind_mod, only: biodrag
       real bszrgh, bszlyd(*)
       integer bnslay
-      real bhztranspdepth, bhzfurcut
+      real bhzfurcut
       real bhztransprtmin, bhztransprtmax
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biototal), intent(inout) :: croptot  ! structure containing derived variables

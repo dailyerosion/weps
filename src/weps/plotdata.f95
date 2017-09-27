@@ -9,7 +9,7 @@
       use datetime_mod, only: get_simdate, get_simdate_doy
       use file_io_mod, only: luoplt
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal, plant_pointer
+      use biomaterial, only: biototal, plant_pointer
       use erosion_data_struct_defs, only: threshold
       use erosion_data_struct_defs, only: cellsurfacestate
       use erosion_data_struct_defs, only: awadir, awudmx

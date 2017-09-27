@@ -76,6 +76,7 @@ module crop_mod
       crop%deriv%ffcv = 0.0
       crop%deriv%fscv = 0.0
       crop%deriv%ftcv = 0.0
+      crop%deriv%ztranspdepth = 0.0
 
       crop%database%xstm = 0.0
       crop%database%rbc = 1
@@ -206,7 +207,7 @@ module crop_mod
      &   crop%growth%thu_shoot_end, crop%geometry%xstmrep, &
      &   cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
      &   cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
-     &   cropprev%mshoot, cropprev%bgstemz, &
+     &   cropprev%mshoot, cropprev%stemz, &
      &   cropprev%rootstorez, cropprev%rootfiberz, &
      &   cropprev%ht, cropprev%zshoot, cropprev%stm, cropprev%rtd, &
      &   cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
@@ -214,7 +215,7 @@ module crop_mod
      &   cropprev%dayspring, daysim, crop%growth%dayspring, crop%database%zloc_regrow, &
      &   cropres%standstem, cropres%standleaf, cropres%standstore, &
      &   cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
-     &   cropres%bgstemz, &
+     &   cropres%stemz, &
      &   cropres%zht, cropres%dstm, cropres%xstmrep, cropres%grainf )
 
          if (am0cdb(sr).eq.1) call cdbug(sr, soil, crop, restot, h1et)
@@ -228,8 +229,8 @@ module crop_mod
      &      cropres%standstem, cropres%standleaf, cropres%standstore, &
      &      cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
      &      cropres%flatrootstore, cropres%flatrootfiber, &
-     &      cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
-     &      cropres%bgrootstorez, cropres%bgrootfiberz, &
+     &      cropres%stemz, cropres%leafz, cropres%storez, &
+     &      cropres%rootstorez, cropres%rootfiberz, &
      &      cropres%zht, cropres%dstm, cropres%xstmrep, cropres%grainf, &
      &      crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck, &
      &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg, &
@@ -244,7 +245,7 @@ module crop_mod
       call cropupdate(                                                  &
             soil%aszrgh, soil%aszlyd, &
      &      soil%nslay, &
-     &      ahztranspdepth(sr), ahzfurcut(sr),                          &
+     &      ahzfurcut(sr), &
      &      ahztransprtmin(sr), ahztransprtmax(sr), crop, croptot  )
 
       ! set prevday derived variable for later reference in end_season
@@ -339,7 +340,7 @@ module crop_mod
         root_store_sum = 0.0
         root_fiber_sum = 0.0
         do lay = 1, bnslay
-            bg_stem_sum = bg_stem_sum + cropprev%bgstemz(lay)
+            bg_stem_sum = bg_stem_sum + cropprev%stemz(lay)
             root_store_sum = root_store_sum + cropprev%rootstorez(lay)
             root_fiber_sum = root_fiber_sum + cropprev%rootfiberz(lay)
         end do

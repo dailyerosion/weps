@@ -36,7 +36,7 @@
       real             ahzsmt(mnsub)
       real             ahzwid(mnsub)
       real             ahzeasurf(mnsub)
-      real             ahztranspdepth(mnsub)
+!      real             ahztranspdepth(mnsub)
       real             ahzfurcut(mnsub)
       real             ahztransprtmin(mnsub)
       real             ahztransprtmax(mnsub)
@@ -51,7 +51,8 @@
      &                  ahndayirr, ahmintirr, ahzoutflow,               &
      &                  ahzinf,                                         &
 !     &                  ahzper, ahzrun, ahzinf,                         &
-     &                  ahzsmt, ahzwid, ahzeasurf, ahztranspdepth,      &
+!     &                  ahzsmt, ahzwid, ahzeasurf, ahztranspdepth,      &
+     &                  ahzsmt, ahzwid, ahzeasurf,                       &
      &                  ahzfurcut, ahztransprtmin, ahztransprtmax
 
       save :: /h1hydro/

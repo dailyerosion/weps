@@ -21,9 +21,6 @@
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(inout) :: restot
 
-!     INCLUDE
-      include 'p1werm.inc'
-
 !     + + + VARIABLE DEFINITIONS + + +
 
 ! for each of the residue age pools and each subregion

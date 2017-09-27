@@ -69,7 +69,7 @@
      &            soil%asfald, soil%asfalw, soil%aszlyt, &
      &            awudav, ahzwid(isr),                  &
      &            ahzeasurf(isr),                                       &
-     &            ahztranspdepth(isr), restot, h1et, h1bal, wp )
+     &            crop%deriv%ztranspdepth, restot, h1et, h1bal, wp )
 
 ! removed from call: ah0cng(isr), ah0cnp(isr), 
 !                 initswc(isr), initsnow(isr), initday(isr)

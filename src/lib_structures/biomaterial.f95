@@ -107,6 +107,10 @@ module biomaterial
      real :: mf           ! Flat mass (flatstem + flatleaf + flatstore) (kg/m^2)
      real :: mrt          ! Buried root mass (rootfiber + rootstore)(kg/m^2)
      real :: mbg          ! Buried mass (kg/m^2) Excludes root mass below the surface.
+     real :: dmrtto4      ! Buried residue root mass (rootfiber + rootstore)(kg/m^2) (in SCI depth)
+     real :: dmbgto4      ! Buried residue mass (kg/m^2) Excludes root mass below the surface. (in SCI depth)
+     real :: dmrtto15     ! Buried residue root mass (rootfiber + rootstore)(kg/m^2) (in WEPP depth)
+     real :: dmbgto15     ! Total residue mass (standing + flat + roots + buried) (kg/m^2) (in WEPP depth)
      real, dimension(:), pointer :: mrtz           ! Buried root mass by soil layer (kg/m^2)
      real, dimension(:), pointer :: mbgz           ! Buried mass by soil layer (kg/m^2)
 
@@ -121,6 +125,9 @@ module biomaterial
      real :: fscv         ! biomass cover - standing (m^2/m^2)
      real :: ftcv         ! biomass cover - total (m^2/m^2) (ffcv + fscv)
      real :: fcancov      ! fraction of soil surface covered by canopy (m^2/m^2)
+     real :: ztranspdepth ! depth in soil from which transpiration is extracted (m)
+                          ! when crop is furrow planted, this is deeper than root depth
+                          ! and is used in place of it when calling transp subroutine
   end type bioderived
 
   type biodatabase ! from c1db1, c1gen .inc
@@ -239,7 +246,7 @@ module biomaterial
      real :: mshoot       ! mass of shoot growing from root storage biomass (kg/m^2)
      real :: mtotshoot    ! total mass of shoot growing from root storage biomass (kg/m^2)
                           ! in the period from beginning to completion of emegence heat units
-     real, dimension(:), allocatable :: bgstemz      ! crop stem mass below soil surface by layer (kg/m^2)
+     real, dimension(:), allocatable :: stemz      ! crop stem mass below soil surface by layer (kg/m^2)
      real, dimension(:), allocatable :: rootstorez   ! crop root storage mass by soil layer (kg/m^2)
                                                      ! (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
      real, dimension(:), allocatable :: rootfiberz   ! crop root fibrous mass by soil layer (kg/m^2)
@@ -277,13 +284,13 @@ module biomaterial
                            ! (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
      real :: flatrootfiber ! crop flat root fibrous mass (kg/m^2)
 
-     real, dimension(:), allocatable :: bgstemz    ! crop buried stem mass by layer (kg/m^2)
-     real, dimension(:), allocatable :: bgleafz    ! crop buried leaf mass by layer (kg/m^2)
-     real, dimension(:), allocatable :: bgstorez   ! crop buried storage mass by layer (kg/m^2)
+     real, dimension(:), allocatable :: stemz    ! crop buried stem mass by layer (kg/m^2)
+     real, dimension(:), allocatable :: leafz    ! crop buried leaf mass by layer (kg/m^2)
+     real, dimension(:), allocatable :: storez   ! crop buried storage mass by layer (kg/m^2)
 
-     real, dimension(:), allocatable :: bgrootstorez ! crop root storage mass by layer (kg/m^2)
+     real, dimension(:), allocatable :: rootstorez ! crop root storage mass by layer (kg/m^2)
                                                      ! (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
-     real, dimension(:), allocatable :: bgrootfiberz ! crop root fibrous mass by layer (kg/m^2)
+     real, dimension(:), allocatable :: rootfiberz ! crop root fibrous mass by layer (kg/m^2)
 
      real :: zht    ! Crop height (m)
      real :: dstm   ! Number of crop stems per unit area (#/m^2)
@@ -291,6 +298,8 @@ module biomaterial
      real :: xstmrep   ! a representative diameter so that acdstm*acxstmrep*aczht=acrsai
      real :: zrtd      ! Crop root depth (m)
      real :: grainf    ! internally computed grain fraction of reproductive mass
+     type(bioderived) :: deriv
+
   end type residue_pointer
 
   type plant_pointer
@@ -301,7 +310,7 @@ module biomaterial
      type(biostate_geometry) :: geometry
      type(biostate_growth) :: growth
      type(bio_prevday) :: prev
-     type(residue_pointer), pointer :: decomp
+     type(residue_pointer), pointer :: residue
      type(bioderived) :: deriv
      type(biodatabase) :: database
   end type plant_pointer
@@ -532,7 +541,7 @@ contains
 
      sum_stat = 0
      ! allocate below and above ground arrays
-     allocate(prevday%bgstemz(nsoillay), stat=alloc_stat)
+     allocate(prevday%stemz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
      allocate(prevday%rootstorez(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
@@ -554,7 +563,7 @@ contains
 
      sum_stat = 0
      ! allocate below and above ground arrays
-     deallocate(prevday%bgstemz, stat=dealloc_stat)
+     deallocate(prevday%stemz, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
      deallocate(prevday%rootstorez, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
@@ -641,7 +650,7 @@ contains
      allocate(plantPntr%mass%rootfiberz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
-     allocate(plantPntr%prev%bgstemz(nsoillay), stat=alloc_stat)
+     allocate(plantPntr%prev%stemz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
      allocate(plantPntr%prev%rootstorez(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
@@ -663,8 +672,8 @@ contains
         stop 1
      end if
 
-     ! new plant, no decomp yet
-     nullify(plantPntr%decomp)
+     ! new plant, no residue yet
+     nullify(plantPntr%residue)
 
      plantNew => plantPntr
         
@@ -697,7 +706,7 @@ contains
      allocate(plantNew%mass%rootfiberz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
-     allocate(plantNew%prev%bgstemz(nsoillay), stat=alloc_stat)
+     allocate(plantNew%prev%stemz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
      allocate(plantNew%prev%rootstorez(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
@@ -719,8 +728,8 @@ contains
         stop 1
      end if
 
-     ! new plant, no decomp yet
-     nullify(plantNew%decomp)
+     ! new plant, no residue yet
+     nullify(plantNew%residue)
 
      ! point to previous plant
      plantNew%oldPlant => plantPntr
@@ -754,7 +763,7 @@ contains
      deallocate(plantPntr%mass%rootfiberz, stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
-     deallocate(plantPntr%prev%bgstemz, stat=alloc_stat)
+     deallocate(plantPntr%prev%stemz, stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
      deallocate(plantPntr%prev%rootstorez, stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
@@ -776,9 +785,9 @@ contains
         stop 1
      end if
 
-     ! remove all decomp mass for this plant
-     do while( associated(plantPntr%decomp) )
-        residuePntr => plantPntr%decomp
+     ! remove all residue mass for this plant
+     do while( associated(plantPntr%residue) )
+        residuePntr => plantPntr%residue
         do while( associated(residuePntr) )
            if( associated(residuePntr%oldResidue) ) then
               ! older residue exists, point to it
@@ -819,15 +828,15 @@ contains
       sum_stat = 0
      allocate(residuePntr%cumddg(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residuePntr%bgstemz(nsoillay), stat=alloc_stat)
+     allocate(residuePntr%stemz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residuePntr%bgleafz(nsoillay), stat=alloc_stat)
+     allocate(residuePntr%leafz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residuePntr%bgstorez(nsoillay), stat=alloc_stat)
+     allocate(residuePntr%storez(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residuePntr%bgrootstorez(nsoillay), stat=alloc_stat)
+     allocate(residuePntr%rootstorez(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residuePntr%bgrootfiberz(nsoillay), stat=alloc_stat)
+     allocate(residuePntr%rootfiberz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
      if( sum_stat .gt. 0 ) then
@@ -856,15 +865,15 @@ contains
      sum_stat = 0
      allocate(residueNew%cumddg(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residueNew%bgstemz(nsoillay), stat=alloc_stat)
+     allocate(residueNew%stemz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residueNew%bgleafz(nsoillay), stat=alloc_stat)
+     allocate(residueNew%leafz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residueNew%bgstorez(nsoillay), stat=alloc_stat)
+     allocate(residueNew%storez(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residueNew%bgrootstorez(nsoillay), stat=alloc_stat)
+     allocate(residueNew%rootstorez(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residueNew%bgrootfiberz(nsoillay), stat=alloc_stat)
+     allocate(residueNew%rootfiberz(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
      if( sum_stat .gt. 0 ) then
@@ -892,15 +901,15 @@ contains
      sum_stat = 0
      deallocate(residuePntr%cumddg, stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     deallocate(residuePntr%bgstemz, stat=alloc_stat)
+     deallocate(residuePntr%stemz, stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     deallocate(residuePntr%bgleafz, stat=alloc_stat)
+     deallocate(residuePntr%leafz, stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     deallocate(residuePntr%bgstorez, stat=alloc_stat)
+     deallocate(residuePntr%storez, stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     deallocate(residuePntr%bgrootstorez, stat=alloc_stat)
+     deallocate(residuePntr%rootstorez, stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     deallocate(residuePntr%bgrootfiberz, stat=alloc_stat)
+     deallocate(residuePntr%rootfiberz, stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
      if( sum_stat .gt. 0 ) then

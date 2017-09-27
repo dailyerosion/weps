@@ -117,7 +117,6 @@
       wp%rkecum = 0.0
       ! End WEPP addition      
 
-      ahztranspdepth(isr) = 0.0
       ahzfurcut(isr) = 0.0
       ahztransprtmin(isr) = 0.0
       ahztransprtmax(isr) = 0.0

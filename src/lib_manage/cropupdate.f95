@@ -6,7 +6,7 @@
       subroutine cropupdate(                                            &
      &      bszrgh, bszlyd,                                             &
      &      bnslay,                                                     &
-     &      bhztranspdepth, bhzfurcut,                                  &
+     &      bhzfurcut,                                                  &
      &      bhztransprtmin, bhztransprtmax, crop, croptot )
 
 !     + + + PURPOSE + + +
@@ -20,14 +20,7 @@
       use wind_mod, only: biodrag
       use crop_growth_mod, only: ht_dia_sai
 
-!     INCLUDE
-      include 'p1werm.inc'
-
-!     + + + FUNCTION DECLARATIONS + + +
-!      real transpdepth
-
 !     + + + ARGUMENT DECLARATIONS + + +
-
       ! state variables
       real :: bszrgh    ! ridge height
       real :: bszlyd(*) ! Depth to bottom of each soil layer(mm)
@@ -35,15 +28,13 @@
       integer :: bnslay ! number of soil layers
 
       ! derived variables
-      real bhztranspdepth, bhzfurcut
+      real bhzfurcut
       real bhztransprtmin, bhztransprtmax
+
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biototal), intent(inout) :: croptot  ! structure containing derived variables
 
 !     + + + VARIABLE DEFINITIONS + + +
-!     bhztranspdepth - depth in soil from which transpiration is extracted (m)
-!                     when crop is furrow planted, this is deeper than root depth
-!                     and is used in place of it when calling transp subroutine
 !     bhzfurcut - estimated furrow bottom depth below flat soil surface (mm)
 !     bhztransprtmin - root depth where transpiration depth reduction begins (m)
 !     bhztransprtmax - root depth where transpiration depth equals root depth (m)
@@ -112,7 +103,7 @@
       if (crop%deriv%ftcv > 1.0) crop%deriv%ftcv = 1.0
 
       ! transpiration depth as a function of furrow cut depth and root depth
-      bhztranspdepth = transpdepth(crop%geometry%zrtd, bhzfurcut, bhztransprtmin, bhztransprtmax)
+      crop%deriv%ztranspdepth = transpdepth(crop%geometry%zrtd, bhzfurcut, bhztransprtmin, bhztransprtmax)
 
       ! assign values to croptot variables
       ! Buried (to a 4 inch depth) root mass across pools (kg/m^2)
