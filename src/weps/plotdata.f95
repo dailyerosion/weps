@@ -66,26 +66,26 @@
 
  2040 format (1x,'#daysim','|','doy','|','day','|','mon','|',' yr ')
  2041 format ('|',' tot_loss ','|','  suspen  ','|','  pm10   ')
- 2042 format ('|',' max_wind ','|',' dir_wind ','|','  precip ')
- 2043 format ('|',' Surf_H2O ','|',' ridg_ht ')
- 2044 format ('|',' ridg_wid ','|',' ridg_sp  ','|',' ridg_or ')
- 2045 format ('|',' dike_ht  ','|',' dike_wid ','|',' dike_sp ')
+ 2042 format ('|',' max_wind ','|',' dir_wind ','|','  precip  ')
+ 2043 format ('|',' Surf_H2O ','|',' ridg_ht  ')
+ 2044 format ('|',' ridg_wid ','|',' ridg_sp  ','|',' ridg_or  ')
+ 2045 format ('|',' dike_ht  ','|',' dike_wid ','|',' dike_sp  ')
  2046 format ('|',' r_rough  ')
- 2047 format ('|','  gmd_p   ','|','  gsd_p   ','|','  mnot   ')
+ 2047 format ('|','  gmd_p   ','|','  gsd_p   ','|','  mnot    ')
  2048 format ('|','   minf   ')
- 2050 format (' ag_stab  ','|',' cr_fract ',                             &
-     &     '|','loose_mass','|','loose_frac','|',' bulk_den',            &
-     &     '|','   fl_cov%','|','  st_cov% ','|',' crop_lai ',           &
-     &     '|',' crop_sai ','|','crop_st_mass','|','can_cov ')
+ 2050 format ('|',' ag_stab  ','|',' cr_fract ',                        &
+     &        '|','loose_mass','|','loose_frac','|',' bulk_den ',       &
+     &        '|','   fl_cov%','|','  st_cov% ','|',' crop_lai ',       &
+     &        '|',' crop_sai ','|','crop_st_mass','|','can_cov ')
 
 !     header of plot file (daily crop values derived from mass, column headers)
  2051 format ('|',' crop_ht ','|','crp_rep_stm_dia',                    &
      &        '|','crop_drag','|','crp_soil_cov')
 !     header of plot file (daily decomp values derived from mass, column headers)
- 2052 format ('|','res_av_ht','|',' res_sai ','|',' res_lai ',          &
+ 2052 format ('|','res_av_ht','|','res_sai','|','res_lai',              &
      &        '|',' res_drag ','|','res_can_cov','|','res_soil_cov')
 !     header of plot file (friction velocity and threshold values)
- 2053 format ('|','eros','|','snow',                                    &
+ 2053 format ('|','  eros   ','|','   snow   ',                              &
      &        '|','wus_anemom','|','wus_random','|','wus_ridge',        &
      &        '|','wus_biodrag','|',' ne_wus ','|','t_ne_bare',         &
      &        '|',' t_flat_cov','|','t_surf_wet','|','t_ag_den ',       &
@@ -95,12 +95,12 @@
      &        '|','rwus_ridge','|','rwus_biodrag')
 !     header of plot file (velocity threshold ratios)
  2055 format ('|','r_ne_bare','|',' r_flat_cov',                        &
-     &        '|','r_surf_wet','|','r_ag_den ')
+     &        '|','r_surf_wet','|',' r_ag_den ')
 !     header of plot file (velocity threshold ratios)
- 2056 format ('|','ne_sf84','|',' ne_rock',                             &
-     &        '|','ne_wzzo','|','ne_sfcv ')
- 2057 format ('|','  sf1  ','|','   sf10  ',                            &
-     &        '|','  sf84  ','|','  sf200 ')
+ 2056 format ('|','ne_sf84 ','|',' ne_rock',                            &
+     &        '|','ne_wzzo ','|',' ne_sfcv  ')
+ 2057 format ('|','   sf1  ','|','   sf10   ',                          &
+     &        '|','  sf84  ','|','  sf200   ')
 !     operation name(s) at end of line
  2058 format ('|',' operation    ','|',' new_crop ')
 
@@ -251,7 +251,7 @@
 
  2081   format ( 4(f10.4,' ') )
  2082   format ( 6(f10.4,' ') )
- 2085   format ( 2(i1,' '),10(f10.4,' ') )
+ 2085   format ( 2('  ',i1,'  '),10(f10.4,' ') )
  2086   format ( 4(f10.4,' ') )
  2090   format ( a35,' ' )
  2091   format ( a35,' ' )
