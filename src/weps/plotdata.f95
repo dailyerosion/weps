@@ -14,6 +14,7 @@
       use erosion_data_struct_defs, only: cellsurfacestate
       use erosion_data_struct_defs, only: awadir, awudmx
       use erosion_data_struct_defs, only: am0efl
+      use erosion_data_struct_defs, only: subrsurf
       use grid_mod, only: imax, jmax
       use hydro_data_struct_defs, only: am0hfl
       use soil_data_struct_defs, only: am0sfl
@@ -53,14 +54,28 @@
 
 !     + + + OUTPUT FORMATS + + +
 !     format for header of plot file
- 2050 format (1x,'#daysim','|','doy','|','day','|','mon','|',' yr ',    &
-     &     '|',' tot_loss ',                                            &
-     &     '|','  suspen  ','|','  pm10 ','|',' max_wind ',             &
-     &     '|',' dir_wind ','|','  precip  ','|',' Surf_H2O',           &
-     &     '|','  ridge_ht ','|',' ridge_or ','|','  r_rough ',         &
-     &     '|','   gmd    ','|',' ag_stab  ','|',' cr_fract ',          &
-     &     '|','loose_mass','|','loose_frac','|',' bulk_den',           &
-     &     '|','   fl_cov%','|','  st_cov% ','|',' crop_lai ',          &
+!2050 format (1x,'#daysim','|','doy','|','day','|','mon','|',' yr ',    &
+!    &     '|',' tot_loss ',                                            &
+!    &     '|','  suspen  ','|','  pm10 ','|',' max_wind ',             &
+!    &     '|',' dir_wind ','|','  precip  ','|',' Surf_H2O',           &
+!    &     '|','  ridge_ht ','|',' ridge_or ','|','  r_rough ',         &
+!    &     '|','   gmd    ','|',' ag_stab  ','|',' cr_fract ',          &
+!    &     '|','loose_mass','|','loose_frac','|',' bulk_den',           &
+!    &     '|','   fl_cov%','|','  st_cov% ','|',' crop_lai ',          &
+!    &     '|',' crop_sai ','|','crop_st_mass','|','can_cov ')
+
+ 2040 format (1x,'#daysim','|','doy','|','day','|','mon','|',' yr ')
+ 2041 format ('|',' tot_loss ','|','  suspen  ','|','  pm10   ')
+ 2042 format ('|',' max_wind ','|',' dir_wind ','|','  precip ')
+ 2043 format ('|',' Surf_H2O ','|',' ridg_ht ')
+ 2044 format ('|',' ridg_wid ','|',' ridg_sp  ','|',' ridg_or ')
+ 2045 format ('|',' dike_ht  ','|',' dike_wid ','|',' dike_sp ')
+ 2046 format ('|',' r_rough  ')
+ 2047 format ('|','  gmd_p   ','|','  gsd_p   ','|','  mnot   ')
+ 2048 format ('|','   minf   ')
+ 2050 format (' ag_stab  ','|',' cr_fract ',                             &
+     &     '|','loose_mass','|','loose_frac','|',' bulk_den',            &
+     &     '|','   fl_cov%','|','  st_cov% ','|',' crop_lai ',           &
      &     '|',' crop_sai ','|','crop_st_mass','|','can_cov ')
 
 !     header of plot file (daily crop values derived from mass, column headers)
@@ -84,8 +99,10 @@
 !     header of plot file (velocity threshold ratios)
  2056 format ('|','ne_sf84','|',' ne_rock',                             &
      &        '|','ne_wzzo','|','ne_sfcv ')
+ 2057 format ('|','  sf1  ','|','   sf10  ',                            &
+     &        '|','  sf84  ','|','  sf200 ')
 !     operation name(s) at end of line
- 2057 format ('|',' operation    ','|',' new_crop ')
+ 2058 format ('|',' operation    ','|',' new_crop ')
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -95,6 +112,15 @@
 
         ! write file header if still initializing
         if (am0ifl .eqv. .true.) then
+           write (luoplt(sr), 2040, ADVANCE="NO")
+           write (luoplt(sr), 2041, ADVANCE="NO")
+           write (luoplt(sr), 2042, ADVANCE="NO")
+           write (luoplt(sr), 2043, ADVANCE="NO")
+           write (luoplt(sr), 2044, ADVANCE="NO")
+           write (luoplt(sr), 2045, ADVANCE="NO")
+           write (luoplt(sr), 2046, ADVANCE="NO")
+           write (luoplt(sr), 2047, ADVANCE="NO")
+           write (luoplt(sr), 2048, ADVANCE="NO")
            write (luoplt(sr), 2050, ADVANCE="NO")
            write (luoplt(sr), 2051, ADVANCE="NO")
            write (luoplt(sr), 2052, ADVANCE="NO")
@@ -102,7 +128,8 @@
            write (luoplt(sr), 2054, ADVANCE="NO")
            write (luoplt(sr), 2055, ADVANCE="NO")
            write (luoplt(sr), 2056, ADVANCE="NO")
-           write (luoplt(sr), 2057, ADVANCE="YES")
+           write (luoplt(sr), 2057, ADVANCE="NO")
+           write (luoplt(sr), 2058, ADVANCE="YES")
            return
         endif
 
@@ -160,12 +187,19 @@
      &                    daysim, doy,                                  &
      &                    day, month, year,                             &
      &                    total, suspen, pmten,                         &
-     &                    awudmx, awadir, cli_today%zdpt, ahrwc0(12, sr), &
-     &                    soil%aszrgh, soil%asargo, soil%aslrr, &
-     &                    soil%aslagm(1), soil%aseags(1), soil%asfcr, &
-     &                    soil%asmlos, soil%asflos, soil%asdblk(1), &
+     &                    awudmx, awadir, cli_today%zdpt, ahrwc0(12, sr),&
+     &                    soil%aszrgh, soil%asxrgw,                     &
+     &                    soil%asxrgs, soil%asargo,                     &
+     &                    soil%asxdkh, soil%asxrgw, soil%asxdks,        &
+     &                    soil%aslrr,                                   &
+     &                    soil%aslagm(1), soil%as0ags(1),               &
+     &                    soil%aslagn(1), soil%aslagx(1),               &
+     &                    soil%aseags(1), soil%asfcr,                   &
+     &                    soil%asmlos, soil%asflos, soil%asdblk(1),     &
      &                    biotot%ffcvtot, biotot%fscvtot,               &
      &                    croptot%rlaitot, croptot%rsaitot,             &
+     &                    subrsurf(1)%sfd1, subrsurf(1)%sfd10,          &
+     &                    subrsurf(1)%sfd84, subrsurf(1)%sfd200,        &
      &                    croptot%msttot, croptot%ftcancov
 
         write (luoplt(sr), 2081, ADVANCE="NO")                              &
@@ -213,14 +247,7 @@
         write (luoplt(sr), 2091, ADVANCE="YES") crname
 
  2080   format (' ',i6,' ',i3,' ',i2,' ',i2,' ',i4,' ',                 &
-     &            3(f10.3,' '),                                         &
-     &            4(f10.3,' '),                                         &
-     &            3(f10.3,' '),                                         &
-     &            3(f10.3,' '),                                         &
-     &            3(f10.3,' '),                                         &
-     &            2(f10.3,' '),                                         &
-     &            2(f10.3,' '),                                         &
-     &            2(f10.3,' ') )
+     &            42(f10.3,' '))
 
  2081   format ( 4(f10.4,' ') )
  2082   format ( 6(f10.4,' ') )

@@ -40,8 +40,6 @@ module soil_data_struct_defs
      real, dimension(:), allocatable :: asdwblk   ! Soil layer bulk density at 1/3 bar (Mg/m^3)
      real, dimension(:), allocatable :: asdsblk   ! Soil layer settled bulk density (Mg/m^3)
      real, dimension(:), allocatable :: asdprocblk ! Soil layer proctor bulk density (Mg/m^3)
-     real, dimension(:), allocatable :: aslagn    ! minimum agg size (mm)
-     real, dimension(:), allocatable :: aslagx    ! maximum agg size (mm)
      real, dimension(:), allocatable :: aseagm    ! soil layer mean aggregate stabillity (J/m^2)
      real, dimension(:), allocatable :: aseagmn   ! soil layer minimum aggregate stability
      real, dimension(:), allocatable :: aseagmx   ! soil layer maximum aggregate stability
@@ -85,6 +83,8 @@ module soil_data_struct_defs
      real, dimension(:), allocatable :: aseags    ! agg stability ln(J/kg)
      real, dimension(:), allocatable :: aslagm    ! GMD (mm)
      real, dimension(:), allocatable :: as0ags    ! GSD (mm/mm)
+     real, dimension(:), allocatable :: aslagn    ! mnot - minimum aggregate size (mm)
+     real, dimension(:), allocatable :: aslagx    ! minf - maximum aggregate size (mm)
 
      ! derived - calculate values from state and intrinsics that are used by other process modules
      real :: acanag     ! coefficient of abrasion for aggregates (1/m)
@@ -153,10 +153,6 @@ contains
      sum_stat = sum_stat + alloc_stat
      allocate(soil%asdprocblk(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(soil%aslagn(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(soil%aslagx(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
      allocate(soil%aseagm(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
      allocate(soil%aseagmn(nsoillay), stat=alloc_stat)
@@ -198,6 +194,10 @@ contains
      allocate(soil%aslagm(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
      allocate(soil%as0ags(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%aslagn(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%aslagx(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
      ! derived
@@ -272,10 +272,6 @@ contains
      deallocate(soil%asdsblk, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
      deallocate(soil%asdprocblk, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%aslagn, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%aslagx, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
      deallocate(soil%aseagm, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
