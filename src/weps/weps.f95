@@ -459,7 +459,7 @@
          lastoper(isr)%day = -1
          ! this prints header to plot.out file
          call plotdata( isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
-                             manFile(isr), cellstate )
+                             manFile(isr), subrsurf(isr), cellstate )
          ! this prints header to decomp.out file
          call bpools( isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr) )
       end do
@@ -551,7 +551,7 @@
           if (am0ifl) am0ifl = .false.
           ! print to plot data file
           call plotdata(isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
-                             manFile(isr), cellstate)
+                             manFile(isr), subrsurf(isr), cellstate)
 
           ! write decomposition biomass pool amounts to files
           call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
@@ -626,7 +626,7 @@
                  biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
              ! print to plot data file
              call plotdata(isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
-                                manFile(isr), cellstate)
+                                manFile(isr), subrsurf(isr), cellstate)
 
              ! write decomposition biomass pool amounts to files
              call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
@@ -762,12 +762,15 @@
             call set_barrier_season(get_simdate_doy())
 
             if (run_erosion > 0) then   ! Are we simulating erosion in this RUN
+
+              ! transfer data values from submodel structures into erosion input structure
+              ! some of these values are shown in plot.out, so do every day
+               do isr=1,nsubr   ! do multiple subregion
+                  call erodsubr_update( isr, soil(isr), crop(isr), restot(isr), croptot(isr), &
+                                        biotot(isr), h1et(isr), subrsurf(isr) )
+               end do
+
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
-                  ! transfer data values from submodel structures into erosion input structure
-                  do isr=1,nsubr   ! do multiple subregion
-                     call erodsubr_update( isr, soil(isr), crop(isr), restot(isr), croptot(isr), &
-                                           biotot(isr), h1et(isr), subrsurf(isr) )
-                  end do
 
                   ! check for creation of stand alone erosion input files on this day
                   if( (saeinp_daysim .eq. daysim) .or. (saeinp_jday .eq. am0jd) .or. (saeinp_all .gt. 0) ) then
@@ -805,7 +808,7 @@
 
                call sci_cum( isr, restot(isr), cellstate )   ! Keep running total for soil conditioning index (SCI)
                call plotdata( isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
-                                   manFIle(isr),cellstate)  ! print to plot data file
+                                   manFile(isr), subrsurf(isr), cellstate)  ! print to plot data file
                ! write decomposition biomass pool amounts to files
                call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
 

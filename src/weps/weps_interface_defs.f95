@@ -611,12 +611,13 @@
       type(biomatter), dimension(:,:), intent(in) :: residue
       end subroutine closefils
 !--------------------------------
-      subroutine plotdata(sr, soil, plant, restot, croptot, biotot, noerod, manFile, cellstate)
+      subroutine plotdata(sr, soil, plant, restot, croptot, biotot, noerod, manFile, subrsurf, cellstate)
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal, plant_pointer
       use erosion_data_struct_defs, only: threshold
       use erosion_data_struct_defs, only: cellsurfacestate
       use manage_data_struct_defs, only: man_file_struct
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer, intent(in) :: sr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant
@@ -625,6 +626,7 @@
       type(biototal), intent(in) :: biotot
       type(threshold), intent(in) :: noerod
       type(man_file_struct), intent(in) :: manFile
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
       end subroutine plotdata
 !--------------------------------

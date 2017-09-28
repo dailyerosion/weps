@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine plotdata(sr, soil, plant, restot, croptot, biotot, noerod, manFile, cellstate)
+      subroutine plotdata(sr, soil, plant, restot, croptot, biotot, noerod, manFile, subrsurf, cellstate)
 
       use weps_main_mod, only: daysim, report_loop, am0ifl
       use datetime_mod, only: get_simdate, get_simdate_doy
@@ -14,7 +14,7 @@
       use erosion_data_struct_defs, only: cellsurfacestate
       use erosion_data_struct_defs, only: awadir, awudmx
       use erosion_data_struct_defs, only: am0efl
-      use erosion_data_struct_defs, only: subrsurf
+      use erosion_data_struct_defs, only: subregionsurfacestate
       use grid_mod, only: imax, jmax
       use hydro_data_struct_defs, only: am0hfl
       use soil_data_struct_defs, only: am0sfl
@@ -32,6 +32,7 @@
       type(biototal), intent(in) :: biotot
       type(threshold), intent(in) :: noerod
       type(man_file_struct), intent(in) :: manFile
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
  
 !       Edit History
@@ -99,10 +100,12 @@
 !     header of plot file (velocity threshold ratios)
  2056 format ('|','ne_sf84 ','|',' ne_rock',                            &
      &        '|','ne_wzzo ','|',' ne_sfcv  ')
- 2057 format ('|','   sf1  ','|','   sf10   ',                          &
+ 2057 format ('|','   sf1ic','|','   sf10ic ',                          &
+     &        '|','  sf84ic','|','  sf200ic ')
+ 2058 format ('|','   sf1  ','|','   sf10   ',                          &
      &        '|','  sf84  ','|','  sf200   ')
 !     operation name(s) at end of line
- 2058 format ('|',' operation    ','|',' new_crop ')
+ 2059 format ('|',' operation    ','|',' new_crop ')
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -129,7 +132,8 @@
            write (luoplt(sr), 2055, ADVANCE="NO")
            write (luoplt(sr), 2056, ADVANCE="NO")
            write (luoplt(sr), 2057, ADVANCE="NO")
-           write (luoplt(sr), 2058, ADVANCE="YES")
+           write (luoplt(sr), 2058, ADVANCE="NO")
+           write (luoplt(sr), 2059, ADVANCE="YES")
            return
         endif
 
@@ -198,8 +202,6 @@
      &                    soil%asmlos, soil%asflos, soil%asdblk(1),     &
      &                    biotot%ffcvtot, biotot%fscvtot,               &
      &                    croptot%rlaitot, croptot%rsaitot,             &
-     &                    subrsurf(1)%sfd1, subrsurf(1)%sfd10,          &
-     &                    subrsurf(1)%sfd84, subrsurf(1)%sfd200,        &
      &                    croptot%msttot, croptot%ftcancov
 
         write (luoplt(sr), 2081, ADVANCE="NO")                              &
@@ -242,9 +244,17 @@
         write (luoplt(sr), 2086, ADVANCE="NO") noerod%sfd84, noerod%asvroc, &
      &    noerod%wzzo, noerod%sfcv
 
+        write (luoplt(sr), 2086, ADVANCE="NO") subrsurf%sf1ic, subrsurf%sf10ic, &
+     &                    subrsurf%sf84ic, subrsurf%sf200ic
+
+        write (luoplt(sr), 2086, ADVANCE="NO") subrsurf%sfd1, subrsurf%sfd10, &
+     &                    subrsurf%sfd84, subrsurf%sfd200
 
         write (luoplt(sr), 2090, ADVANCE="NO") operat
         write (luoplt(sr), 2091, ADVANCE="YES") crname
+
+        write(*,*) 'PLOTDATA: ', sr, subrsurf%sf1ic, subrsurf%sf10ic, subrsurf%sf84ic, subrsurf%sf200ic
+
 
  2080   format (' ',i6,' ',i3,' ',i2,' ',i2,' ',i4,' ',                 &
      &            42(f10.3,' '))

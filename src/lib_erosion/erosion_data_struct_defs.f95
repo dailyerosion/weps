@@ -107,8 +107,10 @@ module erosion_data_struct_defs
      real :: sfd10      ! soil fraction less than 0.1 mm diameter
      real :: sfd84      ! soil fraction less than 0.84 mm diameter
      real :: sfd200     ! soil fraction less than 2.0 mm diameter
+     real :: sf1ic      ! initial condition (modified) of soil fraction less than 0.1 mm diameter
      real :: sf10ic     ! initial condition (modified) of soil fraction less than 0.1 mm diameter
      real :: sf84ic     ! initial condition (modified) of soil fraction less than 0.84 mm diameter
+     real :: sf200ic    ! initial condition (modified) of soil fraction less than 0.84 mm diameter
 
   end type subregionsurfacestate
 

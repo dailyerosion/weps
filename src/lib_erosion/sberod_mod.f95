@@ -225,18 +225,26 @@ module sberod_mod
          ! calculate fraction less than diameter from asd
          call sbsfdi( subrsurf(icsr)%bsl(1)%aslagm, subrsurf(icsr)%bsl(1)%as0ags, &
               subrsurf(icsr)%bsl(1)%aslagn, subrsurf(icsr)%bsl(1)%aslagx, 0.01, subrsurf(icsr)%sfd1 )
+         ! store initial sf1
+         subrsurf(icsr)%sf1ic = subrsurf(icsr)%sfd1
+
          call sbsfdi( subrsurf(icsr)%bsl(1)%aslagm, subrsurf(icsr)%bsl(1)%as0ags, &
               subrsurf(icsr)%bsl(1)%aslagn, subrsurf(icsr)%bsl(1)%aslagx, 0.1, subrsurf(icsr)%sfd10 )
+         ! store initial sf10
+         subrsurf(icsr)%sf10ic = subrsurf(icsr)%sfd10
+
          call sbsfdi( subrsurf(icsr)%bsl(1)%aslagm, subrsurf(icsr)%bsl(1)%as0ags, &
               subrsurf(icsr)%bsl(1)%aslagn, subrsurf(icsr)%bsl(1)%aslagx, 0.84, subrsurf(icsr)%sfd84 )
          ! store initial sf84
          subrsurf(icsr)%sf84ic = subrsurf(icsr)%sfd84
          subrsurf(icsr)%sf84ic = min(0.9999, max(subrsurf(icsr)%sf84ic,0.0001))            !set limits
-         ! store initial sf10
-         subrsurf(icsr)%sf10ic = subrsurf(icsr)%sfd10
 
          call sbsfdi( subrsurf(icsr)%bsl(1)%aslagm, subrsurf(icsr)%bsl(1)%as0ags, &
               subrsurf(icsr)%bsl(1)%aslagn, subrsurf(icsr)%bsl(1)%aslagx, 2.0, subrsurf(icsr)%sfd200 )
+         ! store initial sf200
+         subrsurf(icsr)%sf200ic = subrsurf(icsr)%sfd200
+         subrsurf(icsr)%sf200ic = min(0.9999, max(subrsurf(icsr)%sf200ic,0.0001))            !set limits
+
       end do
 
       do j = 1, jmax-1
