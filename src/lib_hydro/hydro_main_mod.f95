@@ -7,7 +7,7 @@ module hydro_main_mod
 
   contains
 
-      subroutine hydro ( isr, layrsn, bmrslp, brcd, bbzht, &
+    subroutine hydro ( isr, layrsn, bmrslp, brcd, bbzht, &
                          bbrlai, bczht, bcdayap, &
                          bbfcancov, bbrlailive, &
                          bdmres, bbevapredu, &
@@ -303,21 +303,21 @@ module hydro_main_mod
 
       ! + + + END SPECIFICATIONS + + +
       ! write headers and inital values to hydro.out
-      if(  (am0ifl .eqv. .true.)   &
- &   .and.((am0hfl(isr) .eq. 1) .or. (am0hfl(isr) .eq. 3) &
- &   .or.  (am0hfl(isr) .eq. 5) .or. (am0hfl(isr) .eq. 7))) then
+      if(    (am0ifl .eqv. .true.)   &
+        .and.((am0hfl(isr) .eq. 1) .or. (am0hfl(isr) .eq. 3) &
+        .or.  (am0hfl(isr) .eq. 5) .or. (am0hfl(isr) .eq. 7)) ) then
 
-      ! Echo print of input soil data
+         ! Echo print of input soil data
 
-      !     write(luohydro(isr),2020)
-      !     do 130 l=1,layrsn
-      !        write(luohydro(isr),2030) l,bszlyd(l),theta(l),thetas(l),thetaf(l),
-      ! &                   thetaw(l),bh0cb(l),bheaep(l),bhrsk(l),bsdblk(l)
-      !  130    continue
-      !     write(luohydro(isr),2040)
-      !     write(luohydro(isr),2050) theta(0)
-      !     write(luohydro(isr),2060) swci
-      !     write(luohydro(isr),2070)
+         !     write(luohydro(isr),2020)
+         !     do l=1,layrsn
+         !        write(luohydro(isr),2030) l,bszlyd(l),theta(l),thetas(l),thetaf(l), &
+         !                    thetaw(l),bh0cb(l),bheaep(l),bhrsk(l),bsdblk(l)
+         !     end do
+         !     write(luohydro(isr),2040)
+         !     write(luohydro(isr),2050) theta(0)
+         !     write(luohydro(isr),2060) swci
+         !     write(luohydro(isr),2070)
          write(luohydro(isr), "(3a)") &
            '# daysim doy yr  ahzetp  ahzep ahzptp  ahzea ahzpta bhzper ', &
            'bhzirr bwzdpt  dprec bhzrun bhzinf   lswc   swc  bhzsnd bhzsno  check surfdry bwtdav ', &
@@ -331,10 +331,10 @@ module hydro_main_mod
 
          ! print out hydro values by layer (profile view)
          ! day zero values
-      !     call printlayval( isr, 0, layrsn, &
-      ! &        bszlyt, bszlyd, bsdblk, &
-      ! &        theta, thetas, thetaf, thetaw, thetar, &
-      ! &        bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav )
+         ! call printlayval( isr, 0, layrsn, &
+         !         bszlyt, bszlyd, bsdblk, &
+         !         theta, thetas, thetaf, thetaw, thetar, &
+         !         bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav )
       end if
 
       if( (am0ifl .eqv. .true.) .and.((am0hfl(isr) .eq. 2).or.(am0hfl(isr) .eq. 6) &
@@ -529,9 +529,9 @@ module hydro_main_mod
          ! surface evaporation in darcy
          h1et%zea = 0.0
 
-      !    If plant residue is present, then reduce the potential soil
-      !    evaporation on the basis of the amount of plant residues on
-      !    the soil surface.
+         ! If plant residue is present, then reduce the potential soil
+         ! evaporation on the basis of the amount of plant residues on
+         ! the soil surface.
          ! standing residue
          ! estimated from McMaster et al. 2000. Optimizing wheat harvest cutting
          ! height for harvest efficiency and soil and water conservation. Agronomy J. 92:1104-1108
@@ -786,7 +786,7 @@ module hydro_main_mod
       end if
 
       return
-      end 
+    end subroutine hydro
 
 end module hydro_main_mod
 
