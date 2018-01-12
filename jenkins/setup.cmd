@@ -8,12 +8,12 @@ set mode=%3
 
 if "%arch%"=="x86" (
 	echo Calling ia32
-	call "C:\Program Files (x86)\Intel\Composer XE\bin\compilervars.bat" ia32
-	rem call "C:\Program Files (x86)\IntelSWTools\compilers_and_libraries_2017.4.210\windows\bin\compilervars.bat" ia32
+	rem call "C:\Program Files (x86)\Intel\Composer XE\bin\compilervars.bat" ia32
+	call "C:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\bin\compilervars.bat" ia32
 ) else if "%arch%"=="x86_64" (
 	echo Calling intel64
-	call "C:\Program Files (x86)\Intel\Composer XE\bin\compilervars.bat" intel64
-	rem call "C:\Program Files (x86)\IntelSWTools\compilers_and_libraries_2017.4.210\windows\bin\compilervars.bat" intel64
+	rem call "C:\Program Files (x86)\Intel\Composer XE\bin\compilervars.bat" intel64
+	call "C:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\bin\compilervars.bat" intel64
 ) else (
 	echo Bad value, ARCH=%arch%
 )
