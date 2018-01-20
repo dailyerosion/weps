@@ -91,6 +91,8 @@ module process_mod
       real :: ct       ! total trap coefficient
       real :: cm       ! soil mixing parameter for suspension
       real :: mntime   ! smallest time step where one of the surface updates reaches a limit
+      real :: pa1      ! intermediate expression 1+p
+      real :: ps1      ! intermediate expression 1-p
 
 !     +++ END SPECIFICATIONS +++
 
@@ -199,14 +201,18 @@ module process_mod
       ! collect variables
       s = sqrt(4.*a*c + b**2.)
       p = (-2.*c*qi_tcap + b)/s
+
+      pa1 = 1. + p
+      ps1 = 1. - p
       ! change p-values that are out of range, math range restriction: (-1 < p < 1) edit 7-18-01 LH
-      if (p .le. -1.) then
+      if (pa1 .le. 0.0) then
          t1 = -20
-      elseif (p .ge. 1.) then
+      elseif (ps1 .le. 0.0) then
          t1 = 20
       else
-         t1 = (s/2.0)*(-lx) + 0.5*alog((1. + p)/(1. - p))
+         t1 = (s/2.0)*(-lx) + 0.5*(log(pa1)-log(ps1))
       endif
+
       ! calculate atanh
       qo = (s/(2.*c))*(-tanh(t1) + b/s)
 
