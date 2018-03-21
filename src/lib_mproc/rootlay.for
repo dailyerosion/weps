@@ -19,22 +19,22 @@
 
       if ((rtdepth*1000.0) .lt. lthick(1)) then
         rootlay = 1
-        goto 1000
-	  endif
+        return
+      endif
       d = lthick(1)
-      do 100 i=2, nlay
+      do i=2, nlay
         d = d + lthick(i)
         if ((rtdepth*1000.0) .lt. d) then
-          if ((d-(rtdepth*1000.)).lt.((rtdepth*1000.)-                  &
-     &        (d-lthick(i)))) then 
+          if ( (d-(rtdepth*1000.)) .lt.                                   &
+     &         ( (rtdepth*1000.) - (d-lthick(i)) ) ) then 
             rootlay = i
-            goto 1000
+            return
           else
             rootlay = i-1
-            goto 1000
+            return
           endif
         endif
-        rootlay = nlay
-  100 continue
- 1000 return
+      end do
+      rootlay = nlay
+      return
       end

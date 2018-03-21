@@ -66,82 +66,86 @@ module crop_mod
            crop_growing = thisPlant%growth%am0cgf
          end if
 
-         cropres = create_crop_residue(soil%nslay)
+         if( crop_growing ) then
 
-         if (am0cdb(sr).eq.1) call cdbug(sr, soil, thisPlant, restot, h1et)
+            cropres = create_crop_residue(soil%nslay)
 
-         call cropgrow(sr, soil%nslay, soil%aszlyd, &
-           thisPlant%database%ck, thisPlant%database%grf, thisPlant%database%ehu0, thisPlant%database%zmxc, &
-           thisPlant%bname, thisPlant%database%idc, thisPlant%geometry%xrow, &
-           thisPlant%database%tdtm, thisPlant%database%zmrt, thisPlant%database%tmin, thisPlant%database%topt, &
-           thisPlant%database%fd1(1), thisPlant%database%fd2(1), thisPlant%database%fd1(2), thisPlant%database%fd2(2), &
-           thisPlant%database%bceff, &
-           thisPlant%database%alf, thisPlant%database%blf, thisPlant%database%clf, &
-           thisPlant%database%dlf, thisPlant%database%arp, thisPlant%database%brp, thisPlant%database%crp, &
-           thisPlant%database%drp, thisPlant%database%aht, thisPlant%database%bht, &
-           thisPlant%database%sla, thisPlant%database%hue, thisPlant%database%tverndel, &
-           ahtsmx(1,sr), ahtsmn(1,sr), &
-           thisPlant%growth%fwsf, &
-           thisPlant%growth%am0cif, &
-           thisPlant%database%thudf, thisPlant%database%baf, &
-           thisPlant%geometry%hyfg, thisPlant%database%thum, thisPlant%geometry%dpop, thisPlant%database%dmaxshoot, &
-           thisPlant%database%storeinit, thisPlant%database%fshoot, &
-           thisPlant%database%growdepth, thisPlant%database%fleafstem, thisPlant%database%shoot, &
-           thisPlant%database%diammax, thisPlant%database%ssa, thisPlant%database%ssb, &
-           thisPlant%database%fleaf2stor, thisPlant%database%fstem2stor, thisPlant%database%fstor2stor, &
-           thisPlant%database%yld_coef, thisPlant%database%resid_int, thisPlant%database%xstm, &
-           thisPlant%mass%standstem, thisPlant%mass%standleaf, thisPlant%mass%standstore, &
-           thisPlant%mass%flatstem, thisPlant%mass%flatleaf, thisPlant%mass%flatstore, &
-           thisPlant%growth%mshoot, thisPlant%growth%mtotshoot, thisPlant%mass%stemz, &
-           thisPlant%mass%rootstorez, thisPlant%mass%rootfiberz, &
-           thisPlant%geometry%zht, thisPlant%geometry%zshoot, thisPlant%geometry%dstm, thisPlant%geometry%zrtd, &
-           thisPlant%growth%dayap, thisPlant%growth%dayam, &
-           thisPlant%growth%thucum, thisPlant%growth%trthucum, &
-           thisPlant%geometry%grainf, thisPlant%growth%zgrowpt, thisPlant%growth%fliveleaf, &
-           thisPlant%growth%leafareatrend, thisPlant%growth%stemmasstrend, thisPlant%growth%twarmdays, &
-           thisPlant%growth%tchillucum, thisPlant%growth%thardnx, thisPlant%growth%thu_shoot_beg, &
-           thisPlant%growth%thu_shoot_end, thisPlant%geometry%xstmrep, &
-           thisPlant%prev%standstem, thisPlant%prev%standleaf, thisPlant%prev%standstore, &
-           thisPlant%prev%flatstem, thisPlant%prev%flatleaf, thisPlant%prev%flatstore, &
-           thisPlant%prev%mshoot, thisPlant%prev%stemz, &
-           thisPlant%prev%rootstorez, thisPlant%prev%rootfiberz, &
-           thisPlant%prev%ht, thisPlant%prev%zshoot, thisPlant%prev%stm, thisPlant%prev%rtd, &
-           thisPlant%prev%dayap, thisPlant%prev%hucum, thisPlant%prev%rthucum, &
-           thisPlant%prev%grainf, thisPlant%prev%chillucum, thisPlant%prev%liveleaf, &
-           thisPlant%prev%dayspring, daysim, thisPlant%growth%dayspring, thisPlant%database%zloc_regrow, &
-           cropres%standstem, cropres%standleaf, cropres%standstore, &
-           cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
-           cropres%stemz, &
-           cropres%zht, cropres%dstm, cropres%xstmrep, cropres%grainf )
+            if (am0cdb(sr).eq.1) call cdbug(sr, soil, thisPlant, restot, h1et)
 
-         ! check for abandoned stems in crop regrowth
-         if( ( cropres%standstem + cropres%standleaf + cropres%standstore &
-            + cropres%flatstem + cropres%flatleaf + cropres%flatstore ) &
-           .gt. 0.0 ) then
-           ! create new residue pool and transfer cropres into it
-           thisPlant%residue => residueAdd( thisPlant%residue, thisPlant%residueIndex, soil%nslay ) 
+            call cropgrow(sr, soil%nslay, soil%aszlyd, &
+              thisPlant%database%ck, thisPlant%database%grf, thisPlant%database%ehu0, thisPlant%database%zmxc, &
+              thisPlant%bname, thisPlant%database%idc, thisPlant%geometry%xrow, &
+              thisPlant%database%tdtm, thisPlant%database%zmrt, thisPlant%database%tmin, thisPlant%database%topt, &
+              thisPlant%database%fd1(1), thisPlant%database%fd2(1), thisPlant%database%fd1(2), thisPlant%database%fd2(2), &
+              thisPlant%database%bceff, &
+              thisPlant%database%alf, thisPlant%database%blf, thisPlant%database%clf, &
+              thisPlant%database%dlf, thisPlant%database%arp, thisPlant%database%brp, thisPlant%database%crp, &
+              thisPlant%database%drp, thisPlant%database%aht, thisPlant%database%bht, &
+              thisPlant%database%sla, thisPlant%database%hue, thisPlant%database%tverndel, &
+              ahtsmx(1,sr), ahtsmn(1,sr), &
+              thisPlant%growth%fwsf, &
+              thisPlant%growth%am0cif, &
+              thisPlant%database%thudf, thisPlant%database%baf, &
+              thisPlant%geometry%hyfg, thisPlant%database%thum, thisPlant%geometry%dpop, thisPlant%database%dmaxshoot, &
+              thisPlant%database%storeinit, thisPlant%database%fshoot, &
+              thisPlant%database%growdepth, thisPlant%database%fleafstem, thisPlant%database%shoot, &
+              thisPlant%database%diammax, thisPlant%database%ssa, thisPlant%database%ssb, &
+              thisPlant%database%fleaf2stor, thisPlant%database%fstem2stor, thisPlant%database%fstor2stor, &
+              thisPlant%database%yld_coef, thisPlant%database%resid_int, thisPlant%database%xstm, &
+              thisPlant%mass%standstem, thisPlant%mass%standleaf, thisPlant%mass%standstore, &
+              thisPlant%mass%flatstem, thisPlant%mass%flatleaf, thisPlant%mass%flatstore, &
+              thisPlant%growth%mshoot, thisPlant%growth%mtotshoot, thisPlant%mass%stemz, &
+              thisPlant%mass%rootstorez, thisPlant%mass%rootfiberz, &
+              thisPlant%geometry%zht, thisPlant%geometry%zshoot, thisPlant%geometry%dstm, thisPlant%geometry%zrtd, &
+              thisPlant%growth%dayap, thisPlant%growth%dayam, &
+              thisPlant%growth%thucum, thisPlant%growth%trthucum, &
+              thisPlant%geometry%grainf, thisPlant%growth%zgrowpt, thisPlant%growth%fliveleaf, &
+              thisPlant%growth%leafareatrend, thisPlant%growth%stemmasstrend, thisPlant%growth%twarmdays, &
+              thisPlant%growth%tchillucum, thisPlant%growth%thardnx, thisPlant%growth%thu_shoot_beg, &
+              thisPlant%growth%thu_shoot_end, thisPlant%geometry%xstmrep, &
+              thisPlant%prev%standstem, thisPlant%prev%standleaf, thisPlant%prev%standstore, &
+              thisPlant%prev%flatstem, thisPlant%prev%flatleaf, thisPlant%prev%flatstore, &
+              thisPlant%prev%mshoot, thisPlant%prev%stemz, &
+              thisPlant%prev%rootstorez, thisPlant%prev%rootfiberz, &
+              thisPlant%prev%ht, thisPlant%prev%zshoot, thisPlant%prev%stm, thisPlant%prev%rtd, &
+              thisPlant%prev%dayap, thisPlant%prev%hucum, thisPlant%prev%rthucum, &
+              thisPlant%prev%grainf, thisPlant%prev%chillucum, thisPlant%prev%liveleaf, &
+              thisPlant%prev%dayspring, daysim, thisPlant%growth%dayspring, thisPlant%database%zloc_regrow, &
+              cropres%standstem, cropres%standleaf, cropres%standstore, &
+              cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+              cropres%stemz, &
+              cropres%zht, cropres%dstm, cropres%xstmrep, cropres%grainf )
 
-           thisPlant%residue%standstem = cropres%standstem
-           thisPlant%residue%standleaf = cropres%standleaf
-           thisPlant%residue%standstore = cropres%standstore
-           thisPlant%residue%flatstem = cropres%flatstem
-           thisPlant%residue%flatleaf = cropres%flatleaf
-           thisPlant%residue%flatstore = cropres%flatstore
-           do lay = 1, soil%nslay
-             thisPlant%residue%stemz(lay) = cropres%stemz(lay)
-           end do
+            ! check for abandoned stems in crop regrowth
+            if( ( cropres%standstem + cropres%standleaf + cropres%standstore &
+               + cropres%flatstem + cropres%flatleaf + cropres%flatstore ) &
+                 .gt. 0.0 ) then
+              ! create new residue pool and transfer cropres into it
+              thisPlant%residue => residueAdd( thisPlant%residue, thisPlant%residueIndex, soil%nslay ) 
+
+              thisPlant%residue%standstem = cropres%standstem
+              thisPlant%residue%standleaf = cropres%standleaf
+              thisPlant%residue%standstore = cropres%standstore
+              thisPlant%residue%flatstem = cropres%flatstem
+              thisPlant%residue%flatleaf = cropres%flatleaf
+              thisPlant%residue%flatstore = cropres%flatstore
+              do lay = 1, soil%nslay
+                thisPlant%residue%stemz(lay) = cropres%stemz(lay)
+              end do
+
+            end if
+
+            call destroy_crop_residue(cropres)
+
+            if (am0cdb(sr).eq.1) call cdbug(sr, soil, thisPlant, restot, h1et)
+
+            ! update all derived globals for thisPlant global variables
+            call plantupdate( soil, thisPlant, croptot, restot, biotot )
+
+            ! set prevday derived variable for later reference in end_season
+            thisPlant%prev%cancov = thisPlant%deriv%fcancov
 
          end if
-
-         call destroy_crop_residue(cropres)
-
-         if (am0cdb(sr).eq.1) call cdbug(sr, soil, thisPlant, restot, h1et)
-
-         ! update all derived globals for thisPlant global variables
-         call plantupdate( soil, thisPlant, croptot, restot, biotot )
-
-         ! set prevday derived variable for later reference in end_season
-         thisPlant%prev%cancov = thisPlant%deriv%fcancov
 
          ! point to next older thisPlant
          thisPlant => thisPlant%olderPlant

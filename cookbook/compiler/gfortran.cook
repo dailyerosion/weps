@@ -68,7 +68,8 @@ fc_free			= "-ffree-form";
 fc_default		=;
 
 /* debug flags */
-fc_debug		= "-Og -g -Wall -Wextra -fimplicit-none -fcheck=all -fbacktrace -fno-automatic -ffpe-trap=zero,overflow";
+fc_debug		= "-O0 -g -Wall -Wextra -fimplicit-none -fcheck=all -fbacktrace -fno-automatic -ffpe-trap=invalid,zero,overflow";
+fc_debug		+= "-fno-unsafe-math-optimizations -frounding-math -fsignaling-nans -Wno-missing-include-dirs";
 /*fc_debug		= "-Og -g -Wall -Wextra -fimplicit-none -fcheck=all -fbacktrace -fno-automatic -ffpe-trap=zero,overflow -fdefault-real-8";*/
 
 /* optimization flags */

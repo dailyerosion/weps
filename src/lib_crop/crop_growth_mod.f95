@@ -1664,7 +1664,7 @@ module crop_growth_mod
      &                 bczht, dht, temp_stmrep, temp_sai )
 
       ! increment plant height
-      bczht = bczht + dht
+      bczht = min(bczmxc, bczht + dht)
 
       ! root mass distributed by layer below after root depth set
 
@@ -1678,8 +1678,8 @@ module crop_growth_mod
 !     This is now based on a no delay heat unit accumulation to allow
 !     rapid root depth development by winter annuals.
       if( winter_ann_root .eq. 0 ) then
-          prdy = min(bczmrt, bczmrt * hufy + 0.1)
-          prd = min(bczmrt, bczmrt * huf + 0.1)
+          prdy = min(bczmrt, bczmrt * hufy)
+          prd = min(bczmrt, bczmrt * huf)
       else
           prdy = bczmrt *(.01 + 1.0/(1.0 + exp((huirty-bc0aht)/bc0bht)))
           prd = bczmrt * (.01 + 1.0/(1.0 + exp((huirt-bc0aht)/bc0bht)))

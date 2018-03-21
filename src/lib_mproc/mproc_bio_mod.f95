@@ -61,7 +61,8 @@ module mproc_bio_mod
 
       ! set tflg bits correctly for "all" pools if bflg=0
       if (bflg .eq. 0) then
-        do idy = 0, (8 * sizeof(tflg) - 1)
+        tflg = 0
+        do idy = 0, (bit_size(tflg) - 1)
            tflg = ibset(tflg, idy)
         end do
       else
@@ -221,7 +222,8 @@ module mproc_bio_mod
 
       ! set tflg bits correctly for "all" pools if bflg=0
       if (bflg .eq. 0) then
-        do idy = 0, (8 * sizeof(tflg) - 1)
+        tflg = 0
+        do idy = 0, (bit_size(tflg) - 1)
            tflg = ibset(tflg, idy)
         end do
       else
@@ -382,7 +384,8 @@ module mproc_bio_mod
 
       ! set tflg bits correctly for "all" pools if bflg=0
       if (bflg .eq. 0) then
-        do idy = 0, (8 * sizeof(tflg) - 1)
+        tflg = 0
+        do idy = 0, (bit_size(tflg) - 1)
            tflg = ibset(tflg, idy)
         end do
       else

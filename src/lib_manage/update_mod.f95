@@ -370,7 +370,8 @@ module update_mod
         ! Living plant material section
         iplt = iplt + 1
 
-        ! write(*,'(a,3(1x,i0),f24.20,l2)') 'RSAI: ', daysim, iplt, 0, thisPlant%deriv%rsai, thisPlant%growth%am0cgf
+        !write(*,'(a,3(1x,i0),2f24.20,l2)') 'RSAI: ', daysim, iplt, 0, thisPlant%deriv%rlai, thisPlant%deriv%rsai, &
+        !                                                              thisPlant%growth%am0cgf
 
         if( thisPlant%growth%am0cgf ) then
 
@@ -411,7 +412,7 @@ module update_mod
 
           croptot%rsaitot = croptot%rsaitot + thisPlant%deriv%rsai      ! total of stem area index across pools (m^2/m^2)
           croptot%rlaitot = croptot%rlaitot + thisPlant%deriv%rlai      ! total of leaf area index across pools (m^2/m^2)
-          croptot%rlailive = croptot%rlailive + thisPlant%deriv%rlai * plant%growth%fliveleaf  ! living leaf area index total (m^2/m^2)
+          croptot%rlailive = croptot%rlailive + thisPlant%deriv%rlai * thisPlant%growth%fliveleaf  ! living leaf area index total (m^2/m^2)
           do idx = 1, ncanlay
               croptot%rsaz(idx) = croptot%rsaz(idx) + thisPlant%deriv%rsai / ncanlay           ! stem area index by height (1/m)
               croptot%rlaz(idx) = croptot%rlaz(idx) + thisPlant%deriv%rlai / ncanlay           ! leaf area index by height (1/m)
@@ -445,7 +446,7 @@ module update_mod
           ires = ires + 1
           iallres = iallres + 1
 
-          ! write(*,'(a,3(1x,i0),f24.20)') 'RSAI: ', daysim, iplt, ires, thisResidue%deriv%rsai
+          !write(*,'(a,3(1x,i0),2f24.20)') 'RSAI: ', daysim, iplt, ires, thisResidue%deriv%rlai, thisResidue%deriv%rsai
 
           ! this is a residue, add to restot
           restot%dstmtot = restot%dstmtot + thisResidue%dstm   ! total number of stems  per unit area (#/m^2)

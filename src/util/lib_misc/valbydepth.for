@@ -109,10 +109,6 @@
             ! divide by total depth to get average
             valbydepth = valbydepth / (depthbot - depthtop)
           end if
-      else if( ai_flag .eq. 1 ) then
-          valbydepth = 0.0
-          write(*,*) "valbydepth: ai_flag method 1 not yet implemented"
-          stop
       else if( ai_flag .eq. 2 ) then
           ! sum of all values in full layers and proportional from partial layers
           if( indextop .eq. indexbot ) then
@@ -144,6 +140,11 @@
      &                 * (depthbot - bszlyd(indexbot-1))                &
      &                 / (bszlyd(indexbot) - bszlyd(indexbot-1))
           end if
+      else ! if( ai_flag .eq. 1 ) then
+          valbydepth = 0.0
+          write(*,*) "valbydepth: ai_flag method not yet implemented"
+          write(*,*) "ai_flag = ", ai_flag
+          stop
       end if
 
       return
