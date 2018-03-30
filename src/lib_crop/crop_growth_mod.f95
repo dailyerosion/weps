@@ -1572,7 +1572,6 @@ module crop_growth_mod
           end if
       end if
 
-
       ! use ratios to divert biomass to root storage
       drswt = dlfwt * adjleaf2stor + dstwt * adjstem2stor               &
      &      + drpwt * bcfstor2stor
@@ -1634,7 +1633,12 @@ module crop_growth_mod
       pdht = pcht - pchty
 
       ! calculate stress adjusted height
-      dht = pdht * strs
+      if( pddm .gt. 0.0 ) then
+        ! potential biomass increase so adjust
+        dht = pdht * strs
+      else
+        dht = 0.0
+      end if
 
       ! add mass increment to accumulated biomass (kg/m^2)
       ! all leaf mass added to living leaf in standing pool
@@ -1684,7 +1688,13 @@ module crop_growth_mod
           prdy = bczmrt *(.01 + 1.0/(1.0 + exp((huirty-bc0aht)/bc0bht)))
           prd = bczmrt * (.01 + 1.0/(1.0 + exp((huirt-bc0aht)/bc0bht)))
       end if
-      pdrd = max(0.0, prd - prdy)
+      if( pddm .gt. 0.0 ) then
+        ! potential biomass increase so adjust
+        pdrd = max(0.0, prd - prdy)
+      else
+        pdrd = 0.0
+      end if
+
       bczrtd = min(bczmrt, bczrtd + pdrd)
       bczrtd = min(bszlyd(bnslay)*mmtom, bczrtd)
 
@@ -2545,10 +2555,10 @@ module crop_growth_mod
           bcrsai = 0.0
       end if
 
-      if( dmstandstem .le. 0.0 ) then
-        ! stem mass is not increasing, therefore height is not increasing.
-        dht = 0.0
-      end if
+     ! if( dmstandstem .le. 0.0 ) then
+     !   ! stem mass is not increasing, therefore height is not increasing.
+     !   dht = 0.0
+     ! end if
 
       ! (m^2 stem / m^2 ground) / ((stems/m^2 ground) * m) = m/stem
       ! this value not reset unless it is meaningful

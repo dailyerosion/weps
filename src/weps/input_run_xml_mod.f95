@@ -1152,8 +1152,8 @@ contains
           end if
         end if
 
-        write(luolog,*) 'cligen version: ', cligen_version
-        write(6,*) 'cligen version: ', cligen_version
+        write(luolog,"(a17,f8.5)") 'cligen version: ', cligen_version
+        write(6,"(a17,f8.5)") 'cligen version: ', cligen_version
 
         if (cligen_version >= 5.110) then
           cli_gen_fmt_flag = 3

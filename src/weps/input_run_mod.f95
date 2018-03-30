@@ -266,7 +266,7 @@ contains
             ! read 1st line of CLIGEN file
 
             read(luicli,fmt="(a)",err=190) line
-            write(6,"(2a)") '1st cligen output line is: ', trim(line)
+            write(6,"(a30,a)") 'First cligen output line is: ', trim(line)
 
             ! I think this is pretty messy.  It was working with the Lahey compiler
             ! with a "73x,f" format but the Sun F95 compiler didn't like that, so
@@ -280,8 +280,8 @@ contains
                read(line,fmt="(f8.5)",err=190) cligen_version
             end if
 
-            write(luolog,"(a,f8.5)") 'cligen version: ', cligen_version
-            write(6,"(a,f8.5)") 'cligen version: ', cligen_version
+            write(luolog,"(a17,f8.5)") 'cligen version: ', cligen_version
+            write(6,"(a17,f8.5)") 'cligen version: ', cligen_version
 
             ! I assume this is where I read the old cligen's version info
             ! read(luicli,fmt="(73x,f)",err=190) cligen_version

@@ -106,6 +106,11 @@ module update_mod
           thisPlant%deriv%mrt = thisPlant%deriv%mbgstem + thisPlant%deriv%mbgrootstore + thisPlant%deriv%mbgrootfiber
           thisPlant%deriv%m = thisPlant%deriv%mst + thisPlant%deriv%mf + thisPlant%deriv%mrt
 
+          ! check for standing mass. If zero adjust standing height to zero.
+          if( thisPlant%deriv%mst .le. 0.0 ) then
+            thisPlant%geometry%zht = 0.0
+          end if
+
           do idx = 1, soil%nslay
             thisPlant%deriv%mrtz(idx) = thisPlant%mass%rootstorez(idx) + thisPlant%mass%rootfiberz(idx)
             thisPlant%deriv%mbgz(idx) = thisPlant%mass%stemz(idx) + thisPlant%mass%leafz(idx) + thisPlant%mass%storez(idx)
@@ -198,6 +203,11 @@ module update_mod
           ! sum root and below ground from layer values to the WEPP adjustment depth (15 cm)
           thisResidue%deriv%dmrtto15 = valbydepth(soil%nslay, soil%aszlyd, thisResidue%deriv%mrtz, 2, 0.0, weppdepth)
           thisResidue%deriv%dmbgto15 = valbydepth(soil%nslay, soil%aszlyd, thisResidue%deriv%mbgz, 2, 0.0, weppdepth)
+
+          ! check for standing mass. If zero adjust standing height to zero.
+          if( thisResidue%deriv%mst .le. 0.0 ) then
+            thisResidue%zht = 0.0
+          end if
 
           ! calculate residue stem area index (plants/m^2 ground) * m * m/plant = m^2 stem / m^2 ground
           thisResidue%deriv%rsai = thisResidue%dstm * thisResidue%zht * thisResidue%xstmrep

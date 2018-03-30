@@ -65,7 +65,7 @@
       use manage_data_struct_defs, only: lastoper, manFile
       use manage_mod, only: mfinit
       use erosion_mod, only: erosion, erodinit
-      use erosion_data_struct_defs, only: create_subregionsoillayers, create_subregionsurfacewet, &
+      use erosion_data_struct_defs, only: create_subregion_alloc, destroy_subregion_alloc, &
                                           subregionsurfacestate, threshold, cellsurfacestate, &
                                           erod_interval, awudmx, am0eif, am0efl, subrsurf
       use wind_mod, only: anemometer_init
@@ -201,16 +201,16 @@
 !     the build date and release/version information.
 
       write(6,"(a)")
-      write(6,"(2a)") 'WEPS ', trim(build_version)
-      write(6,"(2a)") 'Release: ', trim(build_release)
-      write(6,"(2a)") 'Built on: ', trim(build_date)
-      write(6,"(2a)") 'Compiled with: ', trim(build_compiler)
-      write(6,"(2a)") 'Compiled flags: ', trim(build_compiler_options)
-      write(6,"(2a)") 'Built by user: ', trim(build_user)
-      write(6,"(2a)") 'Reposity URL: ', trim(build_svn_repo_url)
-      write(6,"(2a)") 'SVN repository Revision: ', trim(build_svn_repo_revision)
-      write(6,"(2a)") 'SVN update Revision: ', trim(build_svn_updt_revision)
-      write(6,"(2a)") 'Local and SVN Modfied Files: ', trim(build_cnt_mods)
+      write(6,"(a6,a)") 'WEPS ', trim(build_version)
+      write(6,"(a10,a)") 'Release: ', trim(build_release)
+      write(6,"(a11,a)") 'Built on: ', trim(build_date)
+      write(6,"(a16,a)") 'Compiled with: ', trim(build_compiler)
+      write(6,"(a17,a)") 'Compiled flags: ', trim(build_compiler_options)
+      write(6,"(a16,a)") 'Built by user: ', trim(build_user)
+      write(6,"(a17,a)") 'Repository URL: ', trim(build_svn_repo_url)
+      write(6,"(a26,a)") 'SVN repository Revision: ', trim(build_svn_repo_revision)
+      write(6,"(a22,a)") 'SVN update Revision: ', trim(build_svn_updt_revision)
+      write(6,"(a30,a)") 'Local and SVN Modfied Files: ', trim(build_cnt_mods)
       write(6,"(a)")
 
       ! Determine date of Run
@@ -218,7 +218,7 @@
 
       ! Print date of Run
       rundatetime = get_systime_string() ! with Lahey f95, had to assign to variable first
-      write(6,"('Date of WEPS run: ',a21)") rundatetime
+      write(6,"(a19,a21)") 'Date of WEPS run: ', rundatetime
       write(6,"(a)")
 
       call timer(0,TIMSTART)
@@ -348,9 +348,8 @@
          restot(isr) = create_biototal(soil_in(isr)%nslay)
          biotot(isr) = create_biototal(soil_in(isr)%nslay)
          decompfac(isr) = create_decomp_factors(soil_in(isr)%nslay)
-         ! allocate layer and per/day in subregion surface state passed to erosion
-         call create_subregionsoillayers(soil_in(isr)%nslay, subrsurf(isr))
-         call create_subregionsurfacewet(24, subrsurf(isr))
+         ! zero brcdinput, allocate layer and per/day in subregion surface state passed to erosion
+         call create_subregion_alloc(soil_in(isr)%nslay, 24, subrsurf(isr))
          wp(isr) = create_wepp_param(soil_in(isr)%nslay)
       end do
 
@@ -975,8 +974,11 @@
          call destroy_biototal(biotot(isr))
          call destroy_decomp_factors(decompfac(isr))
          call destroy_wepp_param(wp(isr))
+         call destroy_subregion_alloc(subrsurf(isr))
       end do
       sum_stat = 0
+      !deallocate subrsurf array
+      deallocate(subrsurf, stat=alloc_stat)
       !deallocate management data arrays
       deallocate(mandatbs, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat

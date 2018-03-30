@@ -43,11 +43,14 @@ module mproc_bio_mod
       type(plant_pointer), pointer :: plant ! pointer to youngest plant data, which chains to older plant data
       integer :: bflg  ! flag indicating what to flatten
                        ! 0 - All standing material is flatttened (both crop and residue)
-                       ! 1 - 1'st Crop/residue is flattened
-                       ! 2 - 2'nd Crop/residue
-                       ! 4 - 3'rd Crop/residue
+
+                       ! single subregion legacy understanding
+                       ! 1 - Growing Crop is flattened
+                       ! 2 - 1st residue pool is flattened
+                       ! 4 - 2nd residue pool is flattened
+                       ! 8 - 3rd residue pool is flattened
                        ! ....
-                       ! 2**n - (n-1)th Crop/residue
+                       ! 2**n - (n-1)th residue pool is flattened
 
                        ! Note that any combination of pools or crop may be used
                        ! A bit test is done on the binary number to see what to modify
@@ -62,21 +65,28 @@ module mproc_bio_mod
       ! set tflg bits correctly for "all" pools if bflg=0
       if (bflg .eq. 0) then
         tflg = 0
-        do idy = 0, (bit_size(tflg) - 1)
+        do idy = 0, (bit_size(tflg) - 2)
            tflg = ibset(tflg, idy)
         end do
       else
-          tflg = bflg
+        ! to deal with legacy understanding that crop or residue are flattened (or both),
+        ! pad values to end so all residue pools after third are flattened if 3rd is flattened
+        tflg = bflg
+        if (BTEST(tflg,3)) then
+          do idy = 4, (bit_size(tflg) - 2)
+            tflg = ibset(tflg, idy)
+          end do
+        end if
       endif
 
       ! begin with provided plant then loop to older plants
       idy = 0
       thisPlant => plant
       do while( associated(thisPlant) )
-        if (BTEST(tflg,idy)) then
+        if( (thisPlant%database%rbc.ge.1).and.(thisPlant%database%rbc.le.mnrbc) ) then
+          ! residue burial class indexes are within range
+          if (BTEST(tflg,0)) then
           ! flag indicates to flatten this plant
-          if( (thisPlant%database%rbc.ge.1).and.(thisPlant%database%rbc.le.mnrbc) ) then
-            ! residue burial class indexes are within range
             flatfrac = min( 1.0, fltcoef(thisPlant%database%rbc) * tillf )
             if( flatfrac .gt. 0.0 ) then
               ! flatten standing living plant biomass for thisPlant
@@ -90,30 +100,32 @@ module mproc_bio_mod
               thisPlant%mass%standstore = thisPlant%mass%standstore * (1.0 - flatfrac)
               ! reduce # of stems
               thisPlant%geometry%dstm = thisPlant%geometry%dstm * (1.0 - flatfrac)
-
-              ! flatten standing residue biomass for thisPlant
-              thisResidue => thisPlant%residue
-              do while( associated(thisResidue) )
-                ! increase flat pools
-                thisResidue%flatstem = thisResidue%flatstem + thisResidue%standstem * flatfrac
-                thisResidue%flatleaf = thisResidue%flatleaf + thisResidue%standleaf * flatfrac
-                thisResidue%flatstore = thisResidue%flatstore + thisResidue%standstore * flatfrac
-                ! decrease standing pools
-                thisResidue%standstem = thisResidue%standstem * (1.0 - flatfrac)
-                thisResidue%standleaf = thisResidue%standleaf * (1.0 - flatfrac)
-                thisResidue%standstore = thisResidue%standstore * (1.0 - flatfrac)
-                ! reduce # of stems
-                thisResidue%dstm = thisResidue%dstm * (1.0 - flatfrac)
-
-                ! go to next older residue in thisPlant
-                thisResidue => thisResidue%olderResidue
-              end do
             end if
           end if
+
+          ! flatten standing residue biomass for thisPlant
+          thisResidue => thisPlant%residue
+          do while( associated(thisResidue) )
+            idy = idy + 1
+            if (BTEST(tflg,idy)) then
+              ! increase flat pools
+              thisResidue%flatstem = thisResidue%flatstem + thisResidue%standstem * flatfrac
+              thisResidue%flatleaf = thisResidue%flatleaf + thisResidue%standleaf * flatfrac
+              thisResidue%flatstore = thisResidue%flatstore + thisResidue%standstore * flatfrac
+              ! decrease standing pools
+              thisResidue%standstem = thisResidue%standstem * (1.0 - flatfrac)
+              thisResidue%standleaf = thisResidue%standleaf * (1.0 - flatfrac)
+              thisResidue%standstore = thisResidue%standstore * (1.0 - flatfrac)
+              ! reduce # of stems
+              thisResidue%dstm = thisResidue%dstm * (1.0 - flatfrac)
+
+              ! go to next older residue in thisPlant
+              thisResidue => thisResidue%olderResidue
+            end if
+          end do
         end if
 
         ! go to next older plant
-        idy = idy+1
         thisPlant => thisPlant%olderPlant
       end do
 
@@ -223,7 +235,7 @@ module mproc_bio_mod
       ! set tflg bits correctly for "all" pools if bflg=0
       if (bflg .eq. 0) then
         tflg = 0
-        do idy = 0, (bit_size(tflg) - 1)
+        do idy = 0, (bit_size(tflg) - 2)
            tflg = ibset(tflg, idy)
         end do
       else
@@ -385,7 +397,7 @@ module mproc_bio_mod
       ! set tflg bits correctly for "all" pools if bflg=0
       if (bflg .eq. 0) then
         tflg = 0
-        do idy = 0, (bit_size(tflg) - 1)
+        do idy = 0, (bit_size(tflg) - 2)
            tflg = ibset(tflg, idy)
         end do
       else

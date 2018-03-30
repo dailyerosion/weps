@@ -116,7 +116,7 @@ module mproc_remove_mod
       ! set tflg bits correctly for "all" pools if bflg=0
       if (bflg .eq. 0) then
         tflg = 0
-        do idy = 0, (bit_size(tflg) - 1)
+        do idy = 0, (bit_size(tflg) - 2)
            tflg = ibset(tflg, idy)
         end do
       else

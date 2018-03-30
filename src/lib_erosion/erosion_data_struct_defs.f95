@@ -216,6 +216,56 @@ contains
      end if
   end subroutine destroy_cellsurfacestate
 
+  subroutine create_subregion_alloc(nslay, nswet, subrsurf)
+     integer, intent(in) :: nslay             ! number of soil layers
+     integer, intent(in) :: nswet             ! number of surface wetness values
+     type(subregionsurfacestate), intent(inout) :: subrsurf
+
+     ! create zero size brcdInput array
+     call create_brcdinputpools(0, subrsurf)
+     ! allocate soil layer arrays
+     call create_subregionsoillayers(nslay, subrsurf)
+     ! allocate surface wetness arrays
+     call create_subregionsurfacewet(nswet, subrsurf)
+
+     ! initialize values to zero
+     subrsurf%abffcv = 0.0    ! (b1geom.inc) Flat biomass cover (m^2/m^2)
+     subrsurf%asfcr = 0.0      ! Surface crust fraction (m^2/m^2)
+     subrsurf%aszcr = 0.0      ! Surface crust thickness (mm)
+     subrsurf%asflos = 0.0     ! Fraction of loose material on surface (m^2/m^2)
+     subrsurf%asmlos = 0.0     ! Mass of loose material on crust (kg/m^2)
+     subrsurf%asdcr = 0.0      ! Soil crust density (Mg/m^3)
+     subrsurf%asecr = 0.0      ! Soil crust stability ln(J/kg)
+     subrsurf%aszrgh = 0.0     ! Ridge height (mm)
+     subrsurf%aszrho = 0.0     ! Original ridge height, after tillage, (mm)
+     subrsurf%asxrgw = 0.0     ! Ridge width (mm)
+     subrsurf%asxrgs = 0.0     ! Ridge spacing (mm)
+     subrsurf%asargo = 0.0     ! Ridge orientation (deg)
+     subrsurf%asxdks = 0.0     ! Dike spacing (mm)
+     subrsurf%asxdkh = 0.0     ! Dike Height (mm)
+     subrsurf%aslrr = 0.0      ! Allmaras random roughness (mm)
+     subrsurf%ahzsnd = 0.0     ! (h1db1.inc) Snow depth (mm)
+     ! derived
+     subrsurf%abrsai = 0.0     ! abrsai - Biomass stem area index (m^2/m^2)
+     subrsurf%abrlai = 0.0     ! abrlai - Biomass leaf area index (m^2/m^2)
+     subrsurf%abzht = 0.0      ! abzht  - Composite weighted average biomass height (m)
+     subrsurf%sxprg = 0.0      ! sxprg  - ridge spacing parallel the wind direction(mm)
+     subrsurf%acanag = 0.0     ! acanag - coefficient of abrasion for aggregates (1/m)
+     subrsurf%acancr = 0.0     ! acancr - coefficient of abrasion for crust (1/m)
+     subrsurf%asf10an = 0.0    ! asf10an - soil fraction pm10 in abraded suspension
+     subrsurf%asf10en = 0.0    ! asf10en - soil fraction pm10 in emitted suspension
+     subrsurf%asf10bk = 0.0    ! asf10bk - soil fraction pm10 in saltation breakage suspension
+     subrsurf%sfd1 = 0.0       ! soil fraction less than 0.01 mm diameter
+     subrsurf%sfd10 = 0.0      ! soil fraction less than 0.1 mm diameter
+     subrsurf%sfd84 = 0.0      ! soil fraction less than 0.84 mm diameter
+     subrsurf%sfd200 = 0.0     ! soil fraction less than 2.0 mm diameter
+     subrsurf%sf1ic = 0.0      ! initial condition (modified) of soil fraction less than 0.1 mm diameter
+     subrsurf%sf10ic = 0.0     ! initial condition (modified) of soil fraction less than 0.1 mm diameter
+     subrsurf%sf84ic = 0.0     ! initial condition (modified) of soil fraction less than 0.84 mm diameter
+     subrsurf%sf200ic = 0.0    ! initial condition (modified) of soil fraction less than 0.84 mm diameter
+
+  end subroutine create_subregion_alloc
+
   ! NOTE: defined as subroutine to accomodate sweep usage. Values are assigned to non-array elements before number of layers is known.
   subroutine create_subregionsoillayers(nslay, subrsurf)
      integer, intent(in) :: nslay             ! number of soil layers

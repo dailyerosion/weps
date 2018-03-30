@@ -813,12 +813,6 @@ contains
      integer :: alloc_stat  ! allocation status return
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
      integer :: idx
-     real, dimension(nslay) :: laythk
-     real :: dmassres
-     real :: zmassres
-     real :: dmassrot
-     real :: zmassrot
-
 
      allocate(residueNew, stat=alloc_stat)
      if( alloc_stat .gt. 0 ) then
@@ -887,18 +881,13 @@ contains
      residueNew%flatrootstore = 0.0
      residueNew%flatrootfiber = 0.0
      ! layer thickness can be anything > 0 since setting all values to zero
-     do idx=1,nslay
-       laythk(idx) = 100.0
+     do idx = 1, nslay
+       residueNew%stemz(idx) = 0.0
+       residueNew%leafz(idx) = 0.0
+       residueNew%storez(idx) = 0.0
+       residueNew%rootstorez(idx) = 0.0
+       residueNew%rootfiberz(idx) = 0.0
      end do
-     dmassres = 0.0
-     zmassres = 0.0
-     dmassrot = 0.0
-     zmassrot = 0.0
-     call resinit(dmassres, zmassres, nslay, residueNew%stemz, laythk)
-     call resinit(dmassres, zmassres, nslay, residueNew%leafz, laythk)
-     call resinit(dmassres, zmassres, nslay, residueNew%storez, laythk)
-     call resinit(dmassrot, zmassrot, nslay, residueNew%rootstorez, laythk)
-     call resinit(dmassrot, zmassrot, nslay, residueNew%rootfiberz, laythk)
 
      ! set other state variables
      residueNew%zht = 0.0
