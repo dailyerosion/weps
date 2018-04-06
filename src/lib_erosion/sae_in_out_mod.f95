@@ -531,7 +531,7 @@ module sae_in_out_mod
       write (o_unit,*)
 !     write losses as positive numbers
       write (o_unit,17) -aegt, aegtss-aegt, -aegtss, -aegt10, -aegt2_5
-   17 format (' repeat of total, salt/creep, susp, PM10:', 3f12.4,2f12.6)
+   17 format (' repeat of total, salt/creep, susp, PM10, PM2.5:', 3f12.4,3f12.6)
 
       close(o_unit)
 
@@ -578,7 +578,7 @@ module sae_in_out_mod
        write (sgrd_u,*) '     Total    salt/creep      susp       PM10        PM2.5'
        write (sgrd_u,*) '     egt                      egtss      egt10       egt2_5'
        write (sgrd_u,*) '   -----------------------kg/m^2---------------------------'
-       write (sgrd_u,15)    aegt, aegt-aegtss, aegtss, aegt10
+       write (sgrd_u,15)    aegt, aegt-aegtss, aegtss, aegt10, aegt2_5
        write (sgrd_u,*)
        write (sgrd_u,*) '**Averages - Crossing Boundaries '
        write (sgrd_u,*) 'Location      Total  Salt/Creep   Susp    PM10     PM2_5'
