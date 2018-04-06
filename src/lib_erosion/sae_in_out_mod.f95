@@ -1128,7 +1128,7 @@ module sae_in_out_mod
 
   100 format (1x,'  yr  mo  day     hr  ws  emission (kg m-2 s-1)')
   110 format (22x,'        total    salt/creep    susp      PM10       PM2_5')
-  120 format (1x,3(i4),F7.3,F6.2, 1x,5(F11.8))
+  120 format (1x,3(i4),F7.3,F6.2, 5(1x,F11.8))
 
 !     +++ END SPECIFICATIONS +++
 
