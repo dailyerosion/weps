@@ -15,11 +15,13 @@
 !     + + + KEYWORDS + + +
 !     texture properties 
 
-      use soilden_mod
+      use soilden_mod, only: setpartden, setbds, setbdproc
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer nlay
-      real sandf(*),clayf(*),organf(*)
+      real sandf(*)
+      real clayf(*)
+      real organf(*)
       real bulkden(*)
       real settled_bulkden(*)
       real proctor_bulkden(*)

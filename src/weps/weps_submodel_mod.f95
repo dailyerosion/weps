@@ -15,7 +15,6 @@ module weps_submodel_mod
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: decomp_factors
       use biomaterial, only: plant_pointer, residue_pointer, biototal
-      use biomaterial, only: plantPrint
       use input_run_mod, only: iy
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et

@@ -50,7 +50,9 @@ module mproc_cut_mod
 
       ! + + + LOCAL VARIABLES + + +
       real :: mod_cutht  ! cut height modified locally for units and sense (from top or ground)
-      real :: max_zht    ! maximum height for all plants (and residue)
+      real :: mass_zht   ! standing mass weighted height for all plants (and residue)
+      real :: mass_sum   ! standing mass sum for all plants (and residue)
+      real :: standmass  ! standing mass components
       type(plant_pointer), pointer :: thisPlant
       type(residue_pointer), pointer :: thisResidue
       real :: tflatstem  ! flat stem mass returned from cut
@@ -59,26 +61,36 @@ module mproc_cut_mod
 
       ! + + + END SPECIFICATIONS + + +
 
-      ! find maximum height of biomass in all plants
-      max_zht = 0.0
+      ! find mass weighted height of biomass in all plants
+      mass_zht = 0.0
+      mass_sum = 0.0
       ! check all plants for height (including all residue)
       thisPlant => plant
       do while( associated(thisPlant) )
-        ! living height
-        max_zht = max(max_zht, thisPlant%geometry%zht)
+        ! standing mass
+        standmass = thisPlant%mass%standstem + thisPlant%mass%standleaf + thisPlant%mass%standstore
+        ! mass time living height
+        mass_zht = mass_zht + standmass * thisPlant%geometry%zht
+        ! standing mass sum
+        mass_sum = mass_sum + standmass
         ! check all residue pools for this plant
         thisResidue => thisPlant%residue
         do while( associated(thisResidue) )
+          ! standing mass
+          standmass = thisResidue%standstem + thisResidue%standleaf + thisResidue%standstore
           ! residue height
-          max_zht = max(max_zht, thisResidue%zht)
+          mass_zht = mass_zht + standmass * thisResidue%zht
+          ! standing mass sum
+          mass_sum = mass_sum + standmass
           ! go to next older residue in thisPlant
           thisResidue => thisResidue%olderResidue
         end do
         ! go to next older plant
         thisPlant => thisPlant%olderPlant
       end do
-
-      if( max_zht .le. 0.0) then
+      ! mass weighted height
+      mass_zht = mass_zht / mass_sum
+      if( mass_zht .le. 0.0) then
         ! nothing to cut
         return
       end if
@@ -92,10 +104,10 @@ module mproc_cut_mod
           mod_cutht = cutht*mmtom
       case(1)
           mod_cutht = cutht*mmtom
-          mod_cutht = max_zht - mod_cutht
+          mod_cutht = mass_zht - mod_cutht
           if(mod_cutht.lt.0.0) mod_cutht = 0.0
       case(2)
-          mod_cutht = (1.0-cutht) * max_zht
+          mod_cutht = (1.0-cutht) * mass_zht
       case default
           write(*,*) 'Invalid cutht flag, nothing cut'
           return

@@ -65,7 +65,7 @@
       use manage_data_struct_defs, only: lastoper, manFile
       use manage_mod, only: mfinit
       use erosion_mod, only: erosion, erodinit
-      use erosion_data_struct_defs, only: create_subregion_alloc, destroy_subregion_alloc, &
+      use erosion_data_struct_defs, only: in_sweep, create_subregion_alloc, destroy_subregion_alloc, &
                                           subregionsurfacestate, threshold, cellsurfacestate, &
                                           erod_interval, awudmx, am0eif, am0efl, subrsurf
       use wind_mod, only: anemometer_init
@@ -212,6 +212,9 @@
       write(6,"(a22,a)") 'SVN update Revision: ', trim(build_svn_updt_revision)
       write(6,"(a30,a)") 'Local and SVN Modfied Files: ', trim(build_cnt_mods)
       write(6,"(a)")
+
+      ! indicates not running stand alone erosion
+      in_sweep = .false.
 
       ! Determine date of Run
       call update_system_time

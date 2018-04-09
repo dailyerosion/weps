@@ -149,6 +149,7 @@ module erosion_data_struct_defs
   end type subdailyvalues
 
 !  type simulationregionvalues
+     logical :: in_sweep      ! set to true by sweep main, set false in weps main
      real :: awdair           ! Daily average air density (Kg/m^3) (set by getcli daily) 
      real :: awzypt           ! Average yearly total precipitation (mm)
      integer :: ntstep        ! Number of timesteps per day for erosion.

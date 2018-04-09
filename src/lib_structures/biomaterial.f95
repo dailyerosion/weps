@@ -769,18 +769,20 @@ contains
      type(residue_pointer), pointer :: thisResidue
      integer :: idx
      real :: totmass
+     real :: standmass
+     real :: flatmass
 
      ! print mass values
      if ( associated(plantPntr) ) then
-       totmass = 0.0
        !write(*,*) 'Plant stand: ', plantPntr%mass%standstem, plantPntr%mass%standleaf, plantPntr%mass%standstore
-       totmass = totmass + plantPntr%mass%standstem + plantPntr%mass%standleaf + plantPntr%mass%standstore
+       standmass = plantPntr%mass%standstem + plantPntr%mass%standleaf + plantPntr%mass%standstore
 
        !write(*,*) 'Plant  flat: ', plantPntr%mass%flatstem, plantPntr%mass%flatleaf, plantPntr%mass%flatstore, &
        !                            plantPntr%mass%flatrootstore, plantPntr%mass%flatrootfiber
-       totmass = totmass + plantPntr%mass%flatstem + plantPntr%mass%flatleaf + plantPntr%mass%flatstore &
-                         + plantPntr%mass%flatrootstore + plantPntr%mass%flatrootfiber
+       flatmass = plantPntr%mass%flatstem + plantPntr%mass%flatleaf + plantPntr%mass%flatstore &
+                + plantPntr%mass%flatrootstore + plantPntr%mass%flatrootfiber
 
+       totmass = standmass + flatmass
        do idx = 1, nsoillay
          !write(*,*) 'Plant below: ', idx, plantPntr%mass%stemz(idx), plantPntr%mass%leafz(idx), plantPntr%mass%storez(idx), &
          !                                 plantPntr%mass%rootstorez(idx), plantPntr%mass%rootfiberz(idx)
@@ -789,7 +791,7 @@ contains
 
        end do
 
-       write(*,*) 'PLANT TOTMASS HT: ', totmass, plantPntr%deriv%m, plantPntr%geometry%zht
+       write(*,*) 'PLANT STANDMASS HT: ', standmass, plantPntr%geometry%zht
 
        thisResidue => plantPntr%residue
        do while( associated(thisResidue) )
@@ -1015,33 +1017,69 @@ contains
      ! local variable
      integer :: idx
      real :: totmass
+     real :: totstand
+     real :: totflat
+     real :: totburied
+     real :: layersum
 
      ! print mass values
-     totmass = 0.0
+     totburied = 0.0
      if ( associated(residuePntr) ) then
        !write(*,*) 'Residue stand: ', residuePntr%standstem, residuePntr%standleaf, residuePntr%standstore
-       totmass = totmass + residuePntr%standstem + residuePntr%standleaf + residuePntr%standstore
+       totstand = residuePntr%standstem + residuePntr%standleaf + residuePntr%standstore
 
        !write(*,*) 'Residue  flat: ', residuePntr%flatstem, residuePntr%flatleaf, residuePntr%flatstore, &
        !                            residuePntr%flatrootstore, residuePntr%flatrootfiber
-       totmass = totmass + residuePntr%flatstem + residuePntr%flatleaf + residuePntr%flatstore &
-                         + residuePntr%flatrootstore + residuePntr%flatrootfiber
+       totflat = residuePntr%flatstem + residuePntr%flatleaf + residuePntr%flatstore &
+               + residuePntr%flatrootstore + residuePntr%flatrootfiber
 
        do idx = 1, nsoillay
-         !write(*,*) 'Residue below: ', idx, residuePntr%stemz(idx), residuePntr%leafz(idx), residuePntr%storez(idx), &
-         !                                  residuePntr%rootstorez(idx), residuePntr%rootfiberz(idx)
-         totmass = totmass + residuePntr%stemz(idx) + residuePntr%leafz(idx) + residuePntr%storez(idx) &
+         layersum = residuePntr%stemz(idx) + residuePntr%leafz(idx) + residuePntr%storez(idx) &
                            + residuePntr%rootstorez(idx) + residuePntr%rootfiberz(idx)
+         !write(*,*) 'RESID BY LAY: ', idx, residuePntr%stemz(idx), residuePntr%leafz(idx), residuePntr%storez(idx), &
+         !                                  residuePntr%rootstorez(idx), residuePntr%rootfiberz(idx), layersum
+         totburied = totburied + layersum
 
        end do
 
-       write(*,*) 'RESID TOTMASS HT: ', totmass, residuePntr%deriv%m, residuePntr%zht
+       totmass = totstand + totflat + totburied
+       write(*,*) 'RESID TOTALS: ', totmass, totstand, totflat, totburied !residuePntr%deriv%m, residuePntr%zht
 
      else
        write(*,*) 'No Residue'
      end if
         
   end subroutine residuePrint
+
+  subroutine plantPrintAll(plantPntr, nsoillay)
+     type(plant_pointer), pointer :: plantPntr
+     integer, intent(in) :: nsoillay
+
+     ! local variable
+     type(plant_pointer), pointer :: thisPlant
+     type(residue_pointer), pointer :: thisResidue
+     integer :: idx
+     real :: totmass
+
+     ! print mass values
+     thisPlant => plantPntr
+     if( .not. associated(thisPlant) ) then
+       write(*,*) 'NO PLANT'
+     end if
+
+     do while( associated(thisPlant) )
+       write(*,*) 'PLANT NAME: ', trim( thisPlant%bname )
+       call plantPrint( thisPlant, nsoillay )
+
+       !thisResidue => thisPlant%residue
+       !do while( associated(thisResidue) )
+       !  call residuePrint( thisResidue, nsoillay)
+       !  thisResidue => thisResidue%olderResidue
+       !end do
+       thisPlant => thisPlant%olderPlant
+     end do
+        
+  end subroutine plantPrintAll
 
 end module biomaterial
 

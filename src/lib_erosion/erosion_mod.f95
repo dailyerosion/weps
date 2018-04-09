@@ -19,7 +19,7 @@ module erosion_mod
 !     - updates soil  variables changed by erosion.
 
       use file_io_mod, only: fopenk, makenamnum, luo_erod, luo_egrd, luo_emit, luo_sgrd
-      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, threshold, &
+      use erosion_data_struct_defs, only: in_sweep, subregionsurfacestate, cellsurfacestate, threshold, &
                                           ntstep, erod_interval, anemht, awzzo, &
                                           wzoflg, awadir, awudmx, subday, am0efl
       use sae_in_out_mod, only: mksaeinp, mksaeout, saeinp, daily_erodout, sb1out, sb2out, sbemit
@@ -260,11 +260,13 @@ module erosion_mod
       !  endif
       
       ! Check wind ratio
-      if (rusust_max .le. wr) then
+      if( .not. in_sweep ) then
+        if (rusust_max .le. wr) then
           ! exit out of erosion submodel
           call timer(TIMEROS,TIMSTOP)
           return
-      endif
+        endif
+      end if
 
       ! entering erosion submodel
 

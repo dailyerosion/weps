@@ -63,12 +63,10 @@ module sae_in_out_mod
         call fopenk (luo_saeinp, trim(mksaeinp%fullpath) // makenamnum('saeros', mksaeinp%simday, mksaeinp%maxday, '.in'),'unknown')
         call caldat (mksaeinp%jday,day,mon,yr)
         write(*,'(4(a,i0))') 'Made SWEEP input file D/M/Y: ', day,'/', mon,'/', yr,' simulation day: ', mksaeinp%simday
-        ! XML header
-        write(luo_saeinp,"(a)") '<?xml version="1.0" encoding="ISO-8859-1"?>'
-        write(luo_saeinp,"(a)") '<!DOCTYPE sweepData SYSTEM "sweep.dtd">'
-      else
-        write(luo_saeinp,*) '      REPORT OF INPUTS (read by erodin.for) '
       end if
+      ! XML header
+      write(luo_saeinp,"(a)") '<?xml version="1.0" encoding="ISO-8859-1"?>'
+      write(luo_saeinp,"(a)") '<!DOCTYPE sweepData SYSTEM "sweep.dtd">'
 
       call init_input_xml()
 

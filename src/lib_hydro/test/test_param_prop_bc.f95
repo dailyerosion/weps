@@ -18,6 +18,9 @@ program test_param_prop_bc
   real, dimension(:), allocatable :: bszlyd   ! Depth to bottom of each soil layer for each subregion (mm)
   real, dimension(:), allocatable :: bsdblk   ! bulk density (Mg/m^3) = (g/cm^3)
   real, dimension(:), allocatable :: bsdsblk  ! settled bulk density (Mg/m^3) = (g/cm^3)
+  real, dimension(:), allocatable :: bsdpblk  ! proctor bulk density (Mg/m^3) = (g/cm^3)
+  real, dimension(:), allocatable :: bsdwblk  ! wet bulk density (Mg/m^3) = (g/cm^3)
+  real, dimension(:), allocatable :: wet_set_rat  ! wet to settled bulk density ratio
   real, dimension(:), allocatable :: bsdpart  ! particle density (Mg/m^3)
   real, dimension(:), allocatable :: bsfcla   ! fraction of soil mineral portion which is clay
   real, dimension(:), allocatable :: bsfsan   ! fraction of soil mineral portion which is sand
@@ -35,13 +38,16 @@ program test_param_prop_bc
                                               ! while wetting under normal field conditions due to entrapped air
 
   ! the soils are the standard soils defined by texture by NRCS
-  nsoil = 11
+  nsoil = 12
 
   ! allocate arrays
   allocate( soilname(nsoil) )
   allocate( bszlyd(nsoil) )
   allocate( bsdblk(nsoil) )
   allocate( bsdsblk(nsoil) )
+  allocate( bsdpblk(nsoil) )
+  allocate( bsdwblk(nsoil) )
+  allocate( wet_set_rat(nsoil) )
   allocate( bsdpart(nsoil) )
   allocate( bsfcla(nsoil) )
   allocate( bsfsan(nsoil) )
@@ -157,8 +163,21 @@ program test_param_prop_bc
   bsfom(idx) = 0.015
   bsfcec(idx) = 35.5
 
-  ! find the partile density adjusted for organic matter
-  call proptext( nsoil, bsfcla, bsfsan, bsfom, bsdsblk, bsdpart )
+  idx = 12  ! pure sand
+  soilname(idx) = 'PS'
+  bszlyd(idx) = 100
+  bsdblk(idx) = 1.64
+  bsfcla(idx) = 0.0000001
+  bsfsan(idx) = 1.0
+  bsfom(idx) = 0.0
+  bsfcec(idx) = 0.0000001
+
+  do idx = 1, nsoil
+    wet_set_rat(idx) = -1.0
+  end do
+
+  ! find the particle density adjusted for organic matter
+  call proptext( nsoil, bsfcla, bsfsan, bsfom, bsdblk, bsdsblk, bsdpblk, bsdwblk, wet_set_rat, bsdpart )
 
   call param_prop_bc( nsoil, bszlyd, bsdblk, bsdpart, bsfcla, bsfsan, bsfom, bsfcec, &
                       bhrwcs, bhrwcf, bhrwcw, bhrwcr, bhrwca, bh0cb, bheaep, bhrsk, bhfredsat )
@@ -166,7 +185,7 @@ program test_param_prop_bc
   ! print out results
   ! to match Rawls table, potential converted from m to cm and conductivity converted from m/s to cm/hr
   write(*,*) 'Texture tot_porosity residual eff_porosity bub_press pore_size_dist -0.33bar -15bar k_sat'
-  do idx = 1, 11
+  do idx = 1, nsoil
     write(*,*) soilname(idx), bhrwcs(idx)*bsdblk(idx), bhrwcr(idx)*bsdblk(idx), bhrwcs(idx)*bsdblk(idx)-bhrwcr(idx)*bsdblk(idx), &
                100*bheaep(idx)/gravconst, 1.0/bh0cb(idx), bhrwcf(idx)*bsdblk(idx), bhrwcw(idx)*bsdblk(idx), 100*3600*bhrsk(idx)
   end do

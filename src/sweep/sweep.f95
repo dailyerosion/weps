@@ -16,8 +16,8 @@
       use file_io_mod, only: fopenk, luo_erod, luo_egrd, luo_emit, luo_sgrd
       use f2kcli, only: COMMAND_ARGUMENT_COUNT, GET_COMMAND_ARGUMENT
       use erosion_mod, only: erosion, erodinit
-      use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, &
-                                          am0eif, am0efl, subrsurf
+      use erosion_data_struct_defs, only: in_sweep, subregionsurfacestate, threshold, cellsurfacestate, erod_interval, &
+                                          ntstep, am0eif, am0efl, subrsurf
       use barriers_mod, only: minht_barriers
       use wind_mod, only: anemometer_init
       use grid_mod, only: sbgrid, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
@@ -100,6 +100,8 @@
       integer :: SURF_UPD_FLG    ! erosion surface updating (0 - disabled, 1 - enabled)
 
 !     +++ END SPECIFICATIONS +++
+      ! indicates running stand alone erosion
+      in_sweep = .true.
 
       ! Determine date of Run
       call update_system_time

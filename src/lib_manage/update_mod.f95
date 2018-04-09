@@ -143,7 +143,8 @@ module update_mod
                      thisPlant%geometry%rg, thisPlant%geometry%xrow, thisPlant%geometry%zht, soil%aszrgh)
           ! surface cover
           thisPlant%deriv%ffcv = 1.0 - exp( -thisPlant%database%covfact * thisPlant%deriv%mf )
-          thisPlant%deriv%fscv = thisPlant%geometry%dstm * pi * (thisPlant%database%xstm/2.0)*(thisPlant%database%xstm/2.0)
+          ! cover from standing stems  !!! should this really use geometry%xstmrep for consistency ???
+          thisPlant%deriv%fscv = thisPlant%geometry%dstm * pi * (thisPlant%geometry%xstmrep/2.0)**2.0
           if (thisPlant%deriv%fscv > 1.0) thisPlant%deriv%fscv = 1.0
           thisPlant%deriv%ftcv = thisPlant%deriv%fscv + thisPlant%deriv%ffcv !no overlap
           if (thisPlant%deriv%ftcv > 1.0) thisPlant%deriv%ftcv = 1.0
@@ -207,6 +208,7 @@ module update_mod
           ! check for standing mass. If zero adjust standing height to zero.
           if( thisResidue%deriv%mst .le. 0.0 ) then
             thisResidue%zht = 0.0
+            thisResidue%dstm = 0.0
           end if
 
           ! calculate residue stem area index (plants/m^2 ground) * m * m/plant = m^2 stem / m^2 ground
