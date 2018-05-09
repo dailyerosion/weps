@@ -319,11 +319,10 @@ contains
             ! We now have a global wind_gen format flag we will set once we know.
             read(luiwin,fmt="(a80)",err=191) line
             ! write(6,*) 'line:', line
-            if (index(line,'WIND_GEN4') > 0 ) then
-               wind_gen_fmt_flag = 2
-            else if (index(line,'WIND_GEN3') > 0 ) then
-               wind_gen_fmt_flag = 2
-            else if (index(line,'WIND_GEN2') > 0 ) then
+            if (    (index(line,'WIND_GEN5') > 0) &
+               .or. (index(line,'WIND_GEN4') > 0) &
+               .or. (index(line,'WIND_GEN3') > 0) &
+               .or. (index(line,'WIND_GEN2') > 0) ) then
                wind_gen_fmt_flag = 2
             else
                wind_gen_fmt_flag = 1
@@ -816,11 +815,10 @@ contains
             ! We now have a global wind_gen format flag we will set once we know.
             read(luiwin,fmt="(a80)",err=291) line
             ! write(6,*) 'line:', line
-            if (index(line,'WIND_GEN4') > 0 ) then
-               wind_gen_fmt_flag = 2
-            else if (index(line,'WIND_GEN3') > 0 ) then
-               wind_gen_fmt_flag = 2
-            else if (index(line,'WIND_GEN2') > 0 ) then
+            if (    (index(line,'WIND_GEN5') > 0) &
+               .or. (index(line,'WIND_GEN4') > 0) &
+               .or. (index(line,'WIND_GEN3') > 0) &
+               .or. (index(line,'WIND_GEN2') > 0) ) then
                wind_gen_fmt_flag = 2
             else
                wind_gen_fmt_flag = 1

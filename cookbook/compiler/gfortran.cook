@@ -55,8 +55,8 @@ else {
 	fc_flags	= "";
 }
 
-/* add preprocessing for all builds */
-fc_flags		+= "-cpp";
+/* add preprocessing for all builds, turn off negative zero */
+fc_flags		+= "-cpp -fno-sign-zero";
 
 fc_compile_flag		= "-c ";
 fc_out_flag		= "-o ";

@@ -1181,11 +1181,10 @@ contains
           write(*,*) 'Error in file ', winfil, ' reading: ', param_value
           call exit(1)
         end if
-        if (index(param_value,'WIND_GEN4') > 0 ) then
-           wind_gen_fmt_flag = 2
-        else if (index(param_value,'WIND_GEN3') > 0 ) then
-           wind_gen_fmt_flag = 2
-        else if (index(param_value,'WIND_GEN2') > 0 ) then
+        if (    (index(param_value,'WIND_GEN5') > 0) &
+           .or. (index(param_value,'WIND_GEN4') > 0) &
+           .or. (index(param_value,'WIND_GEN3') > 0) &
+           .or. (index(param_value,'WIND_GEN2') > 0) ) then
            wind_gen_fmt_flag = 2
         else
            wind_gen_fmt_flag = 1

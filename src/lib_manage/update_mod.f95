@@ -11,7 +11,7 @@ module update_mod
     real :: evapredu_b
   end type evap_redu
 
-  real, parameter :: minimum_res = 0.001 ! (kg/m^2) ie. 0.001 = 1 gram/m^2
+  real, parameter :: minimum_res = 0.0001 ! (kg/m^2) ie. 0.001 = 1 gram/m^2
 
   logical :: am0cropupfl  ! flag to determine that the crop state has been changed
                           ! external to crop and that the crop update process must
