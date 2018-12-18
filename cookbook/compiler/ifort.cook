@@ -99,8 +99,8 @@ fc			= ifort;
 fc_compile_flag		= "-c -Tf";
 fc_out_flag		= "-o ";
 
-fc_flags		= "-nologo"; /* this is overwritten by following statement ??*/
-fc_flags		= "";
+fc_flags		= "-nologo";
+fc_flags		+= "-assume:nominus0 -assume:nostd_minus0_rounding"; /* use old Fortran std for printing out zeros */
 
 /* add preprocessing for all builds */
 fc_flags		+= "-fpp";
