@@ -1,4 +1,4 @@
-#!bash
+#!/bin/bash
 
 # the required command arguments from the jenkins environment in 1-2-3-4 order
 os=$1
@@ -15,6 +15,19 @@ case $compiler in
 	"ifort" )
 		case $os in
 			"linux" )
+				case $arch in
+					"x86" )
+						echo "Calling ia32"
+						source /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh ia32
+						;;
+					"x86_64" )
+						echo "Calling intel64"
+						source /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh intel64
+						;;
+					* )
+						echo "Bad value, ARCH=$arch";
+						;;
+				esac
 				source jenkins/dobuild.sh;
 				;;
 			"windows" )

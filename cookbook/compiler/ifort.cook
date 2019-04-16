@@ -5,90 +5,6 @@
 /*required reentry of the cook process to setup the environment*/
 #include [cookbook]/reentry.cook
 
-/**********************************
-	INITILIZE IFORT ENVIRONMENT
- **********************************/
-
-if [is_windows] then {
-	if [and [not [defined ifort_arch]] [strlen [getenv TARGET_ARCH]]] then{
-		ifort_arch	= [getenv TARGET_ARCH];
-	}
-} else {
-
-	/*if not set inspect the environment variable IFORT_HOME*/
-	if [and [not [defined ifort_home]] [strlen [getenv IFORT_HOME]]] then{
-		ifort_home	= [getenv IFORT_HOME];
-	}
-
-	if [not [defined ifort_home]] then{
-		function print ****************************************************;
-		function print "INVALID INTEL COMPILER CONFIGURATION";
-		function print "ifort_home not defined in a config file or IFORT_HOME enviroment variable not set:";
-		function print [config];
-		function print [config-system];
-		function print [config-node];
-		function print ****************************************************;
-		fail;	
-	}
-}
-
-/*if the target platform for ifort has not been set then figure it out*/
-if [not [defined ifort_arch]] then{
-	if [in [os machine] x86 i386] then{
-		ifort_arch = ia32;
-	}
-	else if [in [os machine] x86_64 i686] then{
-		ifort_arch = intel64;
-	}
-	else{
-		function print ****************************************************;
-		function print "INVALID INTEL COMPILER CONFIGURATION";
-		function print "Unknown machine type:" [os machine];
-		function print ****************************************************;
-		fail;
-	}	
-}
-else if [not [in [ifort_arch] ia32 intel64]] then{
-	function print ****************************************************;
-	function print "INVALID INTEL COMPILER CONFIGURATION";
-	function print "ifort_arch="[ifort_arch];
-	function print "Valid values: ia32|intel64";
-	function print ****************************************************;
-	fail;
-}
-
-/*init different variables if windows or unix*/
-if [is_windows] then {
-	/*if [exists [ifort_home]/bin/compilervars.bat] then{
-		function print "Calling reentry";
-		function print "ifort_arch="[ifort_arch];
-		function enqueue-reentry-win \"[ifort_home]/bin/compilervars.bat\" \"[ifort_arch]\";
-	}
-	else{
-		function print ****************************************************;
-		function print "INVALID INTEL COMPILER CONFIGURATION";
-		function print "Valid ifort installation not found.";
-		function print "WINDOWS: ifort_home="[ifort_home];
-		function print ****************************************************;
-		fail;	
-	}*/
-}
-else{
-/*unix ifort*/
-	if [exists [ifort_home]/bin/compilervars.sh] then{
-		function print "Calling reentry";
-		function print "ifort_arch="[ifort_arch];
-		function enqueue-reentry [ifort_home]/bin/compilervars.sh [ifort_arch];
-	}
-	else{
-		function print ****************************************************;
-		function print "INVALID INTEL COMPILER CONFIGURATION";
-		function print "Valid ifort installation not found.";
-		function print "ifort_home="[ifort_home];
-		function print ****************************************************;
-		fail;	
-	}
-}
 
 /**********************************
 	    	  COMPILER
@@ -96,14 +12,27 @@ else{
 
 fc			= ifort;
 
-fc_compile_flag		= "-c -Tf";
-fc_out_flag		= "-o ";
+if [is_windows] then {
+	fc_compile_flag		= "/c /Tf ";
 
-fc_flags		= "-nologo";
-fc_flags		+= "-assume:nominus0 -assume:nostd_minus0_rounding"; /* use old Fortran std for printing out zeros */
+	fc_flags		= "/nologo";
+	/* use old Fortran std for printing out zeros */
+	fc_flags		+= "/assume:nominus0 /assume:nostd_minus0_rounding";
 
-/* add preprocessing for all builds */
-fc_flags		+= "-fpp";
+	/* add preprocessing for all builds */
+	fc_flags		+= "/fpp";
+}
+else {
+	fc_compile_flag		= "-c -Tf ";
+	fc_out_flag		= "-o ";
+
+	fc_flags		= "-nologo";
+	/* use old Fortran std for printing out zeros */
+	fc_flags		+= "-assume nominus0 -assume nostd_minus0_rounding";
+
+	/* add preprocessing for all builds */
+	fc_flags		+= "-fpp";
+}
 
 
 if [is_windows] then {

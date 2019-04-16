@@ -1,4 +1,4 @@
-#!bash
+#!/bin/bash
 
 # the required command arguments from the jenkins environment
 echo "ARCH is set to:" $arch
