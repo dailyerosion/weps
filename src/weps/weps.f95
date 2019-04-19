@@ -38,10 +38,10 @@
                                init_loop, calib_loop, report_loop, &
                                calibrate_crops, calibrate_rotcycles, max_calib_cycles, calib_cycle, calib_done, &
                                am0ifl, init_cycle, calc_confidence, report_debug, run_erosion, &
-                               saeinp_all, saeinp_daysim, saeinp_jday
+                               saeinp_all, saeinp_daysim, saeinp_jday, wepp_hydro
+
       use weps_submodel_mod, only: submodels, erodsubr_update
       use weps_output_mod
-      use weps_interface_defs
       use wepp_interface_defs
       use timer_mod, only: timer, TIMWEPS, TIMSTART, TIMSTOP, TIMPRINT
       use datetime_mod, only: update_system_time, get_systime_string, julday, lstday, isleap, &
@@ -50,6 +50,10 @@
       USE pd_update_vars
       USE pd_report_vars
       USE pd_var_tables
+      use report_update_vars_mod
+      use report_init_mod
+      use report_print_mod
+      use print_ui1_output_mod
       use Polygons_Mod, only: destroy_polygon
       use subregions_mod, only: subr_poly, acct_poly
       use barriers_mod, only: barrier, barseas, minht_barriers, destroy_barrier, set_barrier_season
@@ -75,8 +79,13 @@
       use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier
       use sci_soil_texture_mod, only: create_sci_soil_multiplier, destroy_sci_soil_multiplier
       use stir_report_mod, only: alloc_stir_accumulators, destroy_stir_accumulators, stir_report
-      use sci_report_mod
-      use hydro_data_struct_defs, only: hydro_derived_et
+      use sci_report_mod, only: scisum, sci_cum, sci_report
+      use hydro_data_struct_defs, only: hydro_derived_et, hydro_state, hhrs
+      use hydro_mod, only: hydrinit
+      use hydro_darcy_mod, only: allocate_lsoda_sls1, allocate_lsoda_slsa, allocate_lsoda_sloc
+      use hydro_darcy_mod, only: allocate_lsoda_stoc, allocate_dvolw_param
+      use hydro_darcy_mod, only: deallocate_lsoda_sls1, deallocate_lsoda_slsa, deallocate_lsoda_sloc
+      use hydro_darcy_mod, only: deallocate_lsoda_stoc, deallocate_dvolw_param
       use report_hydrobal_mod, only: h1bal
       use sim_area_average_mod, only: sim_area_average
       use wepp_param_mod
@@ -85,11 +94,11 @@
       use lcm_mod, only: lcm_n
       use asd_mod, only: asdini
       use decomp_out_mod, only: decopen
+      use water_erosion_mod, only: water_erosion, weppsum
+      use confidence_interval_mod, only: confidence_interval
 
 ! build and release info, fpp created by cook
       include 'build.inc'
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
 
 !     + + + LOCAL VARIABLES + + +
       character(len=21) :: rundatetime
@@ -130,6 +139,7 @@
       type(reporting_update), dimension(:), target, allocatable :: rep_update
       type(reporting_dates), dimension(:), target, allocatable :: rep_dates
       type(hydro_derived_et), dimension(:), allocatable :: h1et   ! structure with reporting values for Evaporation/Transpiration
+      type(hydro_state), dimension(:), allocatable :: hstate
       type(wepp_param), dimension(:), allocatable :: wp           ! structure for wepp parameters by subregion
 
       integer :: alloc_stat, sum_stat
@@ -256,7 +266,7 @@
 
       ! open input files and read run files
       ! The argument soil_in is only accessed when reading the leagacy run file
-      ! When reading the xml input, soil_in is accessed through the soil_def module.
+      ! When reading the xml input, soil_in is accessed through the input_soil_mod definition.
       call input(soil_in)
 
       ! set total number of subregions from size of allocated subr_poly array
@@ -279,11 +289,13 @@
       sum_stat = sum_stat + alloc_stat
       allocate(soil(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
+      allocate(hstate(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
 
       ! done before allocations which use layers
       do isr = 1, nsubr 
          ! read soil file and setup layers
-         call input_ifc(isr, soil_in(isr))
+         call input_ifc(isr, soil_in(isr), hstate(isr))
       end do
 
       ! allocate subregion crop and residue pool arrays
@@ -341,6 +353,15 @@
          Write(*,*) 'ERROR: unable to allocate enough memory for weps main data arrays'
       end if
 
+      if( wepp_hydro .eq. 0 ) then
+        ! allocate arrays used in darcy
+        call allocate_lsoda_sls1(nsubr)
+        call allocate_lsoda_slsa(nsubr)
+        call allocate_lsoda_sloc(nsubr)
+        call allocate_lsoda_stoc(nsubr)
+        call allocate_dvolw_param(nsubr, soil_in)
+      end if
+
       do isr = 1, nsubr
          ! no plants yet
          nullify(plants(isr)%plant)
@@ -352,7 +373,7 @@
          biotot(isr) = create_biototal(soil_in(isr)%nslay)
          decompfac(isr) = create_decomp_factors(soil_in(isr)%nslay)
          ! zero brcdinput, allocate layer and per/day in subregion surface state passed to erosion
-         call create_subregion_alloc(soil_in(isr)%nslay, 24, subrsurf(isr))
+         call create_subregion_alloc(soil_in(isr)%nslay, hhrs, subrsurf(isr))
          wp(isr) = create_wepp_param(soil_in(isr)%nslay)
       end do
 
@@ -450,7 +471,7 @@
          lastoper(isr)%mon = -1
          lastoper(isr)%day = -1
          ! this prints header to plot.out file
-         call plotdata( isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
+         call plotdata( isr, soil(isr), plants(isr)%plant, hstate(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), &
                              manFile(isr), subrsurf(isr), cellstate )
          ! this prints header to decomp.out file
          call bpools( isr, plants(isr)%plant, restot(isr), biotot(isr), decompfac(isr) )
@@ -472,7 +493,7 @@
       do isr=1,nsubr
          call decopen(isr) ! prints headers in above.out and below.out
          ! Initialize the water holding capacity variable
-         call hydrinit(isr, soil(isr), h1et(isr), h1bal(isr), wp(isr))
+         call hydrinit(isr, soil(isr), hstate(isr), h1et(isr), h1bal(isr), wp(isr))
          ! initialize all dependent variables
          call plantupdate( soil(isr), &
                            plants(isr)%plant, croptot(isr), restot(isr), biotot(isr) )
@@ -526,11 +547,11 @@
         do isr=1,nsubr
           ! do multiple subregion
           call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr),  &
-               biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
+               biotot(isr), decompfac(isr), mandatbs(isr)%mandate, hstate(isr), h1et(isr), h1bal(isr), wp(isr), manFile(isr))
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
           ! print to plot data file
-          call plotdata(isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
+          call plotdata(isr, soil(isr), plants(isr)%plant, hstate(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), &
                              manFile(isr), subrsurf(isr), cellstate)
 
           !call print_soil( 6, soil(isr) )
@@ -605,9 +626,9 @@
 
            do isr=1,nsubr   ! do multiple subregion     
              call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr), &
-                 biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
+                 biotot(isr), decompfac(isr), mandatbs(isr)%mandate, hstate(isr), h1et(isr), h1bal(isr), wp(isr), manFile(isr))
              ! print to plot data file
-             call plotdata(isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
+             call plotdata(isr, soil(isr), plants(isr)%plant, hstate(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), &
                                 manFile(isr), subrsurf(isr), cellstate)
 
              ! write decomposition biomass pool amounts to files
@@ -730,14 +751,15 @@
 
             do isr=1,nsubr   ! do multiple subregion     
                !if (am0jd.eq.ijday+1) then
-               !   call dbgdmp(daysim, isr, soil(isr), croptot(isr),biotot(isr),h1et(isr))
+               !   call dbgdmp(daysim, isr, soil(isr), croptot(isr),biotot(isr),hstate(isr),h1et(isr))
                !end if
                !if (am0jd.eq.ljday) then
-               !   call dbgdmp(daysim, isr, soil(isr), croptot(isr),biotot(isr),h1et(isr))
+               !   call dbgdmp(daysim, isr, soil(isr), croptot(isr),biotot(isr),hstate(isr),h1et(isr))
                !end if
 
                call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr), &
-                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
+                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, hstate(isr), h1et(isr), h1bal(isr), wp(isr), &
+                              manFile(isr))
             end do
 
             ! set the barrier interpolation in time
@@ -748,7 +770,7 @@
               ! transfer data values from submodel structures into erosion input structure
               ! some of these values are shown in plot.out, so do every day
                do isr=1,nsubr   ! do multiple subregion
-                  call erodsubr_update( isr, soil(isr), plants(isr)%plant, biotot(isr), h1et(isr), subrsurf(isr) )
+                  call erodsubr_update( isr, soil(isr), plants(isr)%plant, biotot(isr), hstate(isr), h1et(isr), subrsurf(isr) )
                end do
 
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
@@ -784,11 +806,11 @@
 
             do isr=1,nsubr   ! do multiple subregion     
                if ((run_erosion .eq. 2) .or. (run_erosion .eq. 3)) then
-                  call water_erosion( isr, cd, cm, cy, soil(isr), restot(isr), croptot(isr) )
+                  call water_erosion( isr, cd, cm, cy, soil(isr), restot(isr), croptot(isr), wp(isr) )
                end if
 
                call sci_cum( isr, restot(isr), cellstate )   ! Keep running total for soil conditioning index (SCI)
-               call plotdata( isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
+               call plotdata( isr, soil(isr), plants(isr)%plant, hstate(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), &
                                    manFile(isr), subrsurf(isr), cellstate)  ! print to plot data file
                ! write decomposition biomass pool amounts to files
                call bpools(isr, plants(isr)%plant, restot(isr), biotot(isr), decompfac(isr))
@@ -955,6 +977,15 @@
               call destroy_barrier(barseas(isr))
           end do
           deallocate(barseas)
+      end if
+
+      if( wepp_hydro .eq. 0 ) then
+        ! allocate arrays used in darcy
+        call deallocate_lsoda_sls1()
+        call deallocate_lsoda_slsa()
+        call deallocate_lsoda_sloc()
+        call deallocate_lsoda_stoc()
+        call deallocate_dvolw_param(nsubr)
       end if
 
       ! deallocate soil arrays

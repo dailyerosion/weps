@@ -347,15 +347,6 @@
       real, intent(inout) :: factor, expon
       end subroutine undflo
 !----------------------------------
-      SUBROUTINE water_erosion(isr, cd, cm, cy, soil, restot, croptot)
-      use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biototal
-      integer, intent(in):: isr,cd,cm,cy
-      type(soil_def), intent(in) :: soil  ! soil for this subregion
-      type(biototal), intent(in) :: restot, croptot
-      end subroutine water_erosion
-!----------------------------------
-
       subroutine write_main_event(sumfile,cd, cm, cy, precp,            &
      &        runoff,                                                   &
      &      irdgdx,avedet,maxdet,ptdet,avedep,maxdep,ptdep,avsole,      &
@@ -404,13 +395,6 @@
      
       end subroutine write_hydro_summary
 !---------------------------------------      
-      subroutine weppsum(isr, years, wp)
-      use wepp_param_mod, only: wepp_param
-      integer, intent(in) :: isr, years
-      type(wepp_param), intent(inout) :: wp
-
-      end subroutine weppsum
-!-----------------------------------
       subroutine xcrit(a,b,c,tauc,xb,xe,xc1,xc2,mshear)
      
       real, intent(in) :: a, b, c, tauc, xb, xe
@@ -440,15 +424,6 @@
       end subroutine yalin
 !------------------------------------   
 !------------- WEPP Hydro Routines ---------------------
-      subroutine arraymerge( nr, dt, trf, rf, irrig, durirr,            &
-     &                       nf, tr, r, rr)
-
-      integer, intent(in) :: nr
-      real, intent(in) :: dt, trf(*), rf(*), irrig, durirr
-      integer, intent(inout) :: nf
-      real, intent(inout) :: tr(*), r(*), rr(*)   
-      end subroutine arraymerge
-!----------------------
       SUBROUTINE BGNRND(X0, X, A, MRND)
       
       REAL, intent(in) :: X0
@@ -456,42 +431,6 @@
       real, intent(out) :: A, MRND                            
       end subroutine bgnrnd
 !-----------------------
-      SUBROUTINE CONST(NR, DELTFQ, TIMEDL, INTDL)
-      INTEGER NR
-      REAL DELTFQ, TIMEDL(*), INTDL(*)       
-      end subroutine const
-!------------------------
-      SUBROUTINE DBLEX(NR, DELTFQ, TIMEDL, INTDL, TPD, IP)
-     
-      INTEGER NR
-      REAL DELTFQ, TIMEDL(*), INTDL(*), IP, TPD 
-      end subroutine dblex           
-!------------------------
-      SUBROUTINE DISAG(NR, TRF, RF, P, DURD, TPD, IP)
-
-      INTEGER NR
-      REAL TRF(*), RF(*), P, DURD, TPD, IP      
-      end subroutine disag
-!-------------------------
-      real FUNCTION EQROOT(A,ERR)      
-      real a
-      integer err
-      end function eqroot
-!-------------------------
-      SUBROUTINE GRNA( NF, DEPSTO, TR, R, RR, KS, SM,                   &
-     &     NS, TF, RCUM, F, FF, RE, RECUM, TP,                          &
-     &     RPRINT, DDEPSTO, RUNOFF, DUREXR, EFFINT, EFFDRR )
-
-      INTEGER, intent(in) :: NF
-      REAL, intent(in) :: DEPSTO, TR(*), R(*), RR(*),                   &
-     &     KS, SM
-      INTEGER, intent(inout) :: NS
-      REAL, intent(inout) :: TF(*), RCUM(*),                            &
-     &     F(*), FF(*), RE(*), RECUM(*), TP(*),                         &
-     &     RPRINT(*), DDEPSTO(*),                                       &
-     &     RUNOFF, DUREXR, EFFINT, EFFDRR     
-     end subroutine grna
-!-------------------------
       SUBROUTINE HDEPTH(T2, X, A1, A2, TSTAR, T, S, SI, NS, II, M,      & 
      &                 HDPTHO, A, MRND)
 
@@ -527,40 +466,6 @@
       real, intent(out) :: PEAKRO,DURRUN
       end subroutine hdriveflow
 !---------------------------------
-      subroutine infparsub( nsl, ssc, sscv, dg, cec1, st, ul, frzw,     &
-     &                      avclay, avsand, avbdin, avporin, avrocvol,  &
-     &                      avsatin, rescov, cancov, canhgt,            &
-     &                      rrc, dsnow, prcp, rkecum, bcdayap,          &
-     &                      ks, sm, frdp )
-
-      integer, intent(in) :: nsl
-      real, intent(in) :: ssc(*), sscv(*), dg(*), cec1(*), st(*), ul(*)
-      real, intent(in) :: avclay, avsand, avbdin, avporin, avrocvol
-      real, intent(in) :: avsatin, rescov, cancov, canhgt
-      real, intent(in) :: rrc, dsnow, prcp, rkecum
-      integer, intent(in) :: bcdayap
-      real, intent(inout) :: ks, sm
-      real, intent(in) :: frzw(*),frdp
-      end subroutine infparsub
-!---------------------------------
-      SUBROUTINE NEWTON(TIME, FFPAST, FFNOW, KS, SM)
-      REAL TIME, FFPAST, FFNOW, KS, SM                      
-      end subroutine newton
-!---------------------------------
-      SUBROUTINE PARESTSUB(SAND, CLAY, SAT, CC, SC, KS, SM)
-
-      REAL, intent(in) :: SAND, CLAY, SAT, CC, SC
-      REAL, intent(inout) :: KS, SM      
-      end subroutine PARESTSUB
-!---------------------------------
-      subroutine perc(vv, k1, nsl, st, ul, hk, ssc, sep)
-
-      integer, intent(in) :: k1, nsl
-      real, intent(in) :: vv, st(*), ul(*), hk, ssc
-
-      real, intent(inout) :: sep      
-      end subroutine perc
-!----------------------------
       SUBROUTINE PHI_SUB(TIME, TSTAR, SI, NS, II, M, A2, S, T, OPHI)
      
       INTEGER, intent(in) :: NS
@@ -595,20 +500,6 @@
       double precision, intent(out) :: DPSI, PSI
       end subroutine psis
 !-------------------------------
-      subroutine purk(nsl, st, fc, ul, hk, ssc, sep)
-
-      integer, intent(in) :: nsl
-      real, intent(in)  :: fc(*),ul(*), hk(*), ssc(*)
-
-      real, intent(inout) :: st(*), sep 
-      end subroutine purk
-!-------------------------------
-      real function rainenergy( ninten, timem, intensity)
-
-      integer, intent(in) :: ninten
-      real, intent(in) :: timem(*), intensity(*)
-      end function rainenergy
-!--------------------------------
       SUBROUTINE RANDM(X, A, MRND, RNUMB)
       
       real, intent(in) :: MRND, A
@@ -635,43 +526,6 @@
       integer, intent(in) :: NS
       real, intent(out) :: OSINT  
       end subroutine sint
-!-----------------------------
-      subroutine usdatx( sand, clay, class)
-      integer class
-      real sand, clay
-      end subroutine usdatx
-!-----------------------------
-      subroutine waterbal(layrsn, thetas, thetes, thetaf, thetaw,       &
-     &                   bszlyt, bszlyd, satcond,                       &
-     &                   dprecip, bwdurpt, bwpeaktpt, bwpeakipt,        &
-     &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
-     &                   bhzsno, bslrr, bmrslp, bsfsan, bsfcla,         &
-     &                   bsvroc, bsdblk, bsfcec,                        &
-     &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
-     &                   bhzep, theta, thetadmx, bhrwc0,                &
-     &                   bhzea, bhzper, bhzrun, bhzinf, bhzwid,         &
-     &                   rkecum, slen, cd, cm, cy, luowepphdrive,       &
-     &                   wepp_hydro,init_loop,calib_loop,bhfice)
-
-      integer, intent(in) :: layrsn
-      real, intent(in) :: thetas(*), thetes(*), thetaf(*), thetaw(*)
-      real, intent(in) :: bszlyt(*), bszlyd(*), satcond(*)
-      real, intent(in) :: dprecip, bwdurpt, bwpeaktpt, bwpeakipt
-      real, intent(in) :: dirrig, bhdurirr, bhlocirr, bhzoutflow
-      real, intent(in) :: bhzsno, bslrr, bmrslp, bsfsan(*), bsfcla(*)
-      real, intent(in) :: bsvroc(*), bsdblk(*), bsfcec(*)
-      real, intent(in) :: bbffcv, bbfcancov, bbzht
-      integer, intent(in) :: bcdayap
-      real, intent(in) :: bhzep
-      real, intent(inout) :: theta(0:*), thetadmx(*), bhrwc0(*)
-      real, intent(inout) :: bhzea, bhzper, bhzrun, bhzinf, bhzwid
-      real, intent(inout) :: rkecum
-      logical, intent(in) :: init_loop,calib_loop
-      integer, intent(in) :: cd, cm, cy, luowepphdrive, wepp_hydro
-      real, intent(inout) :: slen
-      real, intent(in) :: bhfice(*)
-      end subroutine waterbal 
-!-----------------------------
 !------------------------------------      
        end interface
        end module

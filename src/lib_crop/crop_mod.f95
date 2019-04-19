@@ -13,7 +13,6 @@ module crop_mod
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
-      use weps_interface_defs
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residue_pointer, biototal, residueAdd
       use timer_mod, only: timer, TIMCROP, TIMSTART, TIMSTOP
@@ -21,6 +20,7 @@ module crop_mod
       use hydro_data_struct_defs, only: hydro_derived_et
       use crop_growth_mod, only: cropgrow
       use update_mod, only: plantupdate
+      use WEPS_UPGM_mod, only: run_UPGM
 
       ! + + +   ARGUMENT DECLARATIONS + + +
       integer daysim
@@ -31,10 +31,6 @@ module crop_mod
       type(biototal), intent(inout) :: restot
       type(biototal), intent(inout) :: biotot  ! structure array containing summary amounts for all biomass
       type(hydro_derived_et), intent(in) :: h1et
-
-! Includes
-      include 'p1werm.inc'
-      include 'h1temp.inc'
 
 ! Local Variables
       integer lay
@@ -68,6 +64,12 @@ module crop_mod
 
          if( crop_growing ) then
 
+           if( associated(thisPlant%upgm_grow%plant) ) then
+
+            call run_UPGM( sr, soil, thisPlant )
+
+           else
+
             cropres = create_crop_residue(soil%nslay)
 
             if (am0cdb(sr).eq.1) call cdbug(sr, soil, thisPlant, restot, h1et)
@@ -75,17 +77,17 @@ module crop_mod
             call cropgrow(sr, soil%nslay, soil%aszlyd, &
               thisPlant%database%ck, thisPlant%database%grf, thisPlant%database%ehu0, thisPlant%database%zmxc, &
               thisPlant%bname, thisPlant%database%idc, thisPlant%geometry%xrow, &
-              thisPlant%database%tdtm, thisPlant%database%zmrt, thisPlant%database%tmin, thisPlant%database%topt, &
+              thisPlant%database%zmrt, thisPlant%database%tmin, thisPlant%database%topt, &
               thisPlant%database%fd1(1), thisPlant%database%fd2(1), thisPlant%database%fd1(2), thisPlant%database%fd2(2), &
               thisPlant%database%bceff, &
               thisPlant%database%alf, thisPlant%database%blf, thisPlant%database%clf, &
               thisPlant%database%dlf, thisPlant%database%arp, thisPlant%database%brp, thisPlant%database%crp, &
               thisPlant%database%drp, thisPlant%database%aht, thisPlant%database%bht, &
               thisPlant%database%sla, thisPlant%database%hue, thisPlant%database%tverndel, &
-              ahtsmx(1,sr), ahtsmn(1,sr), &
+              soil%tsmx, soil%tsmn, &
               thisPlant%growth%fwsf, &
               thisPlant%growth%am0cif, &
-              thisPlant%database%thudf, thisPlant%database%baf, &
+              thisPlant%database%baf, &
               thisPlant%geometry%hyfg, thisPlant%database%thum, thisPlant%geometry%dpop, thisPlant%database%dmaxshoot, &
               thisPlant%database%storeinit, thisPlant%database%fshoot, &
               thisPlant%database%growdepth, thisPlant%database%fleafstem, thisPlant%database%shoot, &
@@ -114,7 +116,7 @@ module crop_mod
               cropres%standstem, cropres%standleaf, cropres%standstore, &
               cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
               cropres%stemz, &
-              cropres%zht, cropres%dstm, cropres%xstmrep, cropres%grainf )
+              cropres%zht, cropres%dstm, cropres%xstmrep, cropres%grainf, thisPlant%database%plant_doy )
 
             ! check for abandoned stems in crop regrowth
             if( ( cropres%standstem + cropres%standleaf + cropres%standstore &
@@ -132,18 +134,24 @@ module crop_mod
               do lay = 1, soil%nslay
                 thisPlant%residue%stemz(lay) = cropres%stemz(lay)
               end do
+              thisPlant%residue%zht = cropres%zht
+              thisPlant%residue%dstm = cropres%dstm
+              thisPlant%residue%xstmrep = cropres%xstmrep
+              thisPlant%residue%grainf = cropres%grainf
 
             end if
 
             call destroy_crop_residue(cropres)
 
-            if (am0cdb(sr).eq.1) call cdbug(sr, soil, thisPlant, restot, h1et)
+           end if
 
-            ! update all derived globals for thisPlant global variables
-            call plantupdate( soil, thisPlant, croptot, restot, biotot )
+           if (am0cdb(sr).eq.1) call cdbug(sr, soil, thisPlant, restot, h1et)
 
-            ! set prevday derived variable for later reference in end_season
-            thisPlant%prev%cancov = thisPlant%deriv%fcancov
+           ! update all derived globals for thisPlant global variables
+           call plantupdate( soil, thisPlant, croptot, restot, biotot )
+
+           ! set prevday derived variable for later reference in end_season
+           thisPlant%prev%cancov = thisPlant%deriv%fcancov
 
          end if
 
@@ -317,7 +325,8 @@ module crop_mod
      &   leaf    store   store   fiber   stem    leaf    stem    height &
      & #stem   lai     eff_lai rootd  grainf tempst watstf  frost  ffa  &
      &  ffw   par     apar     massinc    p_rw   p_st   p_lf   p_rp  std&
-     &flt pdiam  parea  fpdiam fparea hu_del frzhrd sai repstmd crop')
+     &flt pdiam  parea  fpdiam fparea hu_del frzhrd sai repstmd rgflg fl&
+     &ivelf crop')
  2133 format ('#                           kg/m^2  kg/m^2  kg/m^2  kg/m^&
      &2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  meters &
      &         m^2/m^2 m^2/m^2 meters                                   &
@@ -434,14 +443,7 @@ module crop_mod
       type(biototal), intent(in) :: restot   ! structure containing residue totals
       type(hydro_derived_et), intent(in) :: h1et
 
-      ! + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1db1.inc'
-      include 'h1temp.inc'
-
       ! + + + LOCAL VARIABLES + + +
-
       integer cd, cm, cy
       integer        l
 
@@ -530,7 +532,7 @@ module crop_mod
          write(luocdb(isr),2060) l,soil%aszlyt(l), soil%ahrsk(l), soil%ahrwc(l), &
      &                  soil%ahrwcs(l), soil%ahrwca(l), soil%ahrwcf(l), &
      &                  soil%ahrwcw(l), soil%ah0cb(l), soil%aheaep(l), &
-     &                  ahtsmx(l,isr), ahtsmn(l,isr)
+     &                  soil%tsmx(l), soil%tsmn(l)
   200 continue
          write(luocdb(isr),2065)
 

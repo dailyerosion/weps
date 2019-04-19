@@ -12,41 +12,36 @@ module soil_mod
 
   contains
 
-    subroutine callsoil(daysim, isr, soil, croptot, biotot, h1et)
+    subroutine callsoil(daysim, isr, soil, croptot, biotot, hstate, h1et)
       ! Wrapper to call soil
 
       use biomaterial, only: biototal
       use timer_mod, only: timer, TIMSOIL, TIMSTART, TIMSTOP
       use soil_data_struct_defs, only: am0sdb, soil_def
-      use hydro_data_struct_defs, only: hydro_derived_et
+      use hydro_data_struct_defs, only: hydro_derived_et, hydro_state
 
       ! Arguments
       integer daysim
       integer isr                   
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biototal), intent(in) :: croptot, biotot
-      type(hydro_derived_et), intent(inout) :: h1et
-
-      ! Includes
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1temp.inc'
-      include 'h1db1.inc'
+      type(hydro_state), intent(in) :: hstate
+      type(hydro_derived_et), intent(in) :: h1et
 
       call timer(TIMSOIL,TIMSTART)      
 
       if (am0sdb(isr) .eq. 1) then
-         call sdbug(isr, soil, croptot, biotot, h1et)
+         call sdbug(isr, soil, croptot, biotot, hstate, h1et)
       end if
 
-      call soilproc(isr,daysim,ahlocirr(isr),h1et%zirr, ahzsmt(isr),  &
-     &              ahtsmx(1,isr), ahtsmn(1,isr), &
+      call soilproc(isr, daysim, hstate%locirr, h1et%zirr, hstate%zsmt,  &
+     &                 soil%tsmx, soil%tsmn, &
      &                 soil%nslay, &
      &                 biotot%ffcvtot, biotot%fscvtot, &
-     &                 ahzinf(isr), ahzwid(isr), soil)
+     &                 hstate%zinf, hstate%zwid, soil)
 
       if (am0sdb(isr) .eq. 1) then
-         call sdbug(isr, soil, croptot, biotot, h1et)
+         call sdbug(isr, soil, croptot, biotot, hstate, h1et)
       end if
 
       ! recalculate  depth to bottom of soil layer
@@ -579,7 +574,7 @@ module soil_mod
       cump = cump + dcump
       end subroutine sinit
 
-    subroutine  sdbug(isr, soil, croptot, biotot, h1et)
+    subroutine  sdbug(isr, soil, croptot, biotot, hstate, h1et)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -599,18 +594,13 @@ module soil_mod
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use climate_input_mod, only: cli_today, amzele
-      use hydro_data_struct_defs, only: hydro_derived_et
-
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1db1.inc'
-      include 'h1temp.inc'
+      use hydro_data_struct_defs, only: hydro_derived_et, hydro_state
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biototal), intent(in) :: croptot, biotot
+      type(hydro_state), intent(in) :: hstate
       type(hydro_derived_et), intent(in) :: h1et
 
 !     + + + LOCAL VARIABLES + + +
@@ -690,8 +680,8 @@ module soil_mod
      &              croptot%rlaitot,                                    &
      &              biotot%mftot, h1et%zper
       write(luosdb(isr),2052) isr,isr,isr,isr,isr,isr,isr
-      write(luosdb(isr),2053) h1et%zrun,h1et%zirr,ahzsno(isr), &
-                     ahzsmt(isr), soil%asxrgs,soil%aszrgh,soil%aslrr
+      write(luosdb(isr),2053) h1et%zrun,h1et%zirr, hstate%zsno, &
+                     hstate%zsmt, soil%asxrgs,soil%aszrgh,soil%aslrr
       write(luosdb(isr),2054) isr,isr,isr,isr,isr,isr,isr
       write(luosdb(isr),2055) soil%asfcr, soil%asecr, soil%asmlos, &
      &               soil%asflos, soil%aszcr
@@ -701,7 +691,7 @@ module soil_mod
          write(luosdb(isr),2060) l, soil%aszlyt(l), soil%ahrsk(l), soil%ahrwc(l), &
      &                  soil%ahrwcs(l), soil%ahrwca(l), soil%ahrwcf(l), &
      &                  soil%ahrwcw(l), soil%ah0cb(l), soil%aheaep(l), &
-     &                  ahtsmx(l,isr), ahtsmn(l,isr)
+     &                  soil%tsmx(l), soil%tsmn(l)
   200 continue
       write(luosdb(isr),2065)
 

@@ -1035,4 +1035,194 @@ module mproc_soil_mod
       return
     end subroutine compact
 
+    subroutine crush (alpha, beta,nlay,mf)
+
+      use asd_mod, only: msieve, nsieve, mdia
+
+!     + + + PURPOSE + + +
+!     This subroutine  performs the crushing or breaking down of
+!     soil aggregates into smaller sizes based on the initial aggregate
+!     size distribution and two crushing parameters (alpha and beta).
+!     The crushing parameters are assumed to be a function of the
+!     soil intrinsic properties, soil water content, and tillage implement.
+!     
+!     + + + KEYWORDS + + +
+!     aggregate size distribution, asd, sieves, mass fractions
+!
+!     + + + ARGUMENT DECLARATIONS + + +
+      real    alpha, beta
+      integer nlay
+      real, dimension(msieve+1,*) :: mf
+!
+!
+!     + + + ARGUMENT DEFINITIONS + + +
+!
+!     alpha  - Aggregate Size Distribution Factor
+!     beta   - Crushing Intensity Factor
+!     nlay   - number of soil layers used
+!     mf     - mass fractions of aggregates within sieve cuts
+!              (sum of all mass fractions are expected to = 1.0)
+!
+!     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
+!
+!     mdia   - array containing geometric mean diameters of sieve cuts
+!     nsieve - number of sieves used
+!
+!     + + + PARAMETERS + + +
+!
+!     + + + LOCAL VARIABLES + + +
+!
+      real     pmat(msieve+1,msieve+1)
+      real     dratio
+      real     prob
+      real     chk
+      integer  i, j, k, m
+      real     predmf(msieve+1)
+!
+!     + + + LOCAL VARIABLE DEFINITIONS + + +
+!     
+!     pmat   - probability matrix
+!     dratio - ratio of sieve cut d to maximum sieve cut d
+!     prob   - probability value
+!     chk    - variable to chk prob matrix integrity
+!     i      - loop variable for sieve cut sizes
+!     j      - loop variable for soil layers
+!     k      - loop variable for sieve cut probabilities
+!     predmf - local array to hold predicted mass fractions
+!              before updating mf
+!
+!     + + + FUNCTIONS CALLED + + +
+      real     bino
+
+!     + + + END SPECIFICATIONS + + +
+
+!     for each soil layer
+      do 500 j=1,nlay
+!         compute transition matrix
+          do 100 i=1,nsieve+1
+              dratio = mdia(i)/mdia(nsieve+1)
+              prob = 1.0 - exp(-alpha+dratio*beta)
+              chk = 0.0
+              do 50 k=1,i
+                  pmat(i,k) = bino(i-1,k-1,prob)
+                  chk = chk+pmat(i,k)
+ 50           continue
+              if (abs(chk-1.0) .gt. 0.001) then
+                  write(0,*) 'Problem transition matrix (crush) chk:',  &
+     &                    (chk-1.0)
+!                 debug code to print out transition matrix
+                  do 2 k=nsieve+1,1,-1
+                      print*,(pmat(k,m), m=k,1,-1)
+2                 continue
+                  call exit (1)
+              endif
+100       continue
+          do 300 i=1,nsieve+1
+              predmf(i) = 0.0
+              do 200 k=i,nsieve+1
+                  predmf(i) = predmf(i) + mf(k,j) * pmat(k,i)
+200           continue
+300       continue
+!         put predicted mass fractions into mf
+          do 400 i=1,nsieve+1
+              mf(i,j) = predmf(i)
+400       continue
+500   continue
+      return
+    end subroutine crush
+
+    SUBROUTINE set_asd (gmdx, gsdx, mnot, minf, nlay, soil)
+
+      USE soil_data_struct_defs, only: soil_def
+      TYPE(soil_def), INTENT(INOUT) :: soil
+
+      !     + + + PURPOSE + + +
+      ! This subroutine assigns the ASD modified lognormal parameters,
+      ! e.g., the modified lognormal (transformed) GMD and GSD values
+      ! as well as the GMDmin and GMDmax values
+      ! to all soil layers within the specified depth.
+
+      ! If the user is interested in setting different ASD values to different
+      ! soil layers (depths) they should call this process repeatedly with
+      ! smaller and smaller soil depths specified.
+
+      ! Currently assumes we have "logcas = 3" condition (mnot != 0, minf != infinity)
+
+      !     + + + ARGUMENT DECLARATIONS + + +
+      REAL, INTENT (IN)    :: gmdx, gsdx
+      REAL, INTENT (IN)    :: mnot, minf
+      INTEGER, INTENT (IN) :: nlay
+
+
+      ! + + + ARGUMENT DEFINITIONS + + +
+      ! gmdx    - geometric mean diameter of aggregate size distribution
+      !          (or transformed gmd for "modified" lognormal cases)
+      ! gsdx    - geometric standard deviation of aggregate size distribution
+      !          (or transformed gsd for "modified" lognormal cases)
+      ! mnot    - minimum aggregate size in aggregate size distribution
+      !          (for "modified" lognormal cases)
+      ! minf    - maximum aggregate size in aggregate size distribution
+      !          (for "modified" lognormal cases)
+      ! nlay   - number of soil layers used
+
+
+      ! + + + LOCAL VARIABLES + + +
+      INTEGER :: j
+
+      ! + + + LOCAL VARIABLE DEFINITIONS + + +
+      ! j      - loop variable for soil layers
+
+      IF (nlay .ge. 1) THEN    !for each soil layer
+         DO j=1,nlay
+            soil%aslagm(j) = gmdx
+            soil%as0ags(j) = gsdx
+            soil%aslagn(j) = mnot
+            soil%aslagx(j) = minf
+         END DO
+      ELSE
+         write (0,*) "Depth specified is negative, ASD values not assigned."
+      END IF
+
+    END SUBROUTINE set_asd
+
+    SUBROUTINE set_wc (wc, nlay, soil)
+
+      USE soil_data_struct_defs, only: soil_def
+      TYPE(soil_def), INTENT(INOUT) :: soil
+
+      !     + + + PURPOSE + + +
+      ! This subroutine assigns the water content values,
+      ! to all soil layers within the specified depth.
+
+      ! If the user is interested in setting different water content values to different
+      ! soil layers (depths) they should call this process repeatedly with
+      ! smaller and smaller soil depths specified.
+
+      !     + + + KEYWORDS + + +
+      !     soil layer, wc
+
+      !     + + + ARGUMENT DECLARATIONS + + +
+      REAL, INTENT (IN)    :: wc
+      INTEGER, INTENT (IN) :: nlay
+
+      ! + + + ARGUMENT DEFINITIONS + + +
+      ! wc      - water content (Mg/Mg)
+      ! nlay   - number of soil layers used
+
+      ! + + + LOCAL VARIABLES + + +
+      INTEGER :: j
+
+      ! + + + LOCAL VARIABLE DEFINITIONS + + +
+      ! j      - loop variable for soil layers
+
+      IF (nlay .ge. 1) THEN    !for each soil layer
+         DO j=1,nlay
+            soil%ahrwc(j) = wc
+         END DO
+      ELSE
+         write (0,*) "Depth specified is negative, water content values not assigned."
+      END IF
+
+    END SUBROUTINE set_wc
+
 end module mproc_soil_mod

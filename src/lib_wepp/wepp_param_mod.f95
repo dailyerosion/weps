@@ -7,6 +7,15 @@ module wepp_param_mod
   implicit none
 
   type wepp_param
+     real :: peakro
+     real :: qout
+     real :: qin
+     real :: effdrr
+     real :: effdrn
+     real :: effint
+     real :: qsout
+     real :: runoff
+
      real :: totalRunoff
      real :: totalPrecip
      real :: totalSnowrunoff

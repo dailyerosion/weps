@@ -11,7 +11,7 @@ module input_soil_mod
 
   contains
 
-    subroutine input_ifc(isr, soil)
+    subroutine input_ifc(isr, soil, hstate)
 ! ***************************************************************** wjr
 ! reads initial field conditions (IFC) file (Version: 1.0)
 
@@ -26,10 +26,13 @@ module input_soil_mod
       use stir_soil_texture_mod, only : update_stir_soil_multiplier
       use file_io_mod, only: fopenk
       use split_layers_mod, only: spllay_ifc
+      use hydro_data_struct_defs, only: hydro_state
+      use hydro_util_mod, only: param_pot_bc, param_prop_bc
 
 !     + + + ARGUMENTS + + +
       integer, intent(in) :: isr
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
+      type(hydro_state), intent(inout) :: hstate
 
 !     + + + LOCAL VARIABLES + + +
       integer       lay
@@ -50,12 +53,12 @@ module input_soil_mod
 !     Check to see if this is a "versioned" IFC file
       read (lui1,'(a)',err=901) line
       if (line(1:12) .eq. 'Version: 1.0') then
-         call inp_ifc_v1(isr, lui1, soil)  ! For version 1.0 IFC file format only
+         call inp_ifc_v1(isr, lui1, soil, hstate)  ! For version 1.0 IFC file format only
       else if (line(1:12) .eq. 'Version: 1.1') then
-         call inp_ifc_v1_1(isr, lui1, soil)  ! For version 1.1 IFC file format only
+         call inp_ifc_v1_1(isr, lui1, soil, hstate)  ! For version 1.1 IFC file format only
       else  ! Assuming obsolete unversioned IFC file formats only
          close (lui1)    
-         call inpsub(isr, soil)  ! For obsolete IFC file formats only
+         call inpsub(isr, soil, hstate)  ! For obsolete IFC file formats only
          return            ! initialization is already done in inpsub
       end if
                    
@@ -182,18 +185,16 @@ module input_soil_mod
 
 !      subroutine inp_ifc_v1 (isr, lui1, soil)
 !      subroutine inp_ifc_v1_1 (isr, lui1, soil)
-    subroutine inp_ifc_v1 (isr, lui1, soil)
+    subroutine inp_ifc_v1 (isr, lui1, soil, hstate)
 
       use soil_data_struct_defs, only: soil_def, allocate_soil
-
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1db1.inc'
+      use hydro_data_struct_defs, only: hydro_state
 
 !     + + + Arguments + + +
       integer isr
       integer lui1
       type(soil_def), intent(inout) :: soil  ! soil structure
+      type(hydro_state), intent(inout) :: hstate
 
 !     + + + LOCAL VARIABLES + + +
       integer       lay
@@ -233,13 +234,13 @@ module input_soil_mod
           read(line,*,err=902) soil%asfald
         case (6)                                                      ! Slope gradient (m/m)
           ! set default outflow height to zero (minimum depression storage)
-          ahzoutflow(isr) = 0.0d0
+          hstate%zoutflow = 0.0d0
           ! check value read in from weps.run
           if( soil%amrslp .lt. -1.5 ) then
              ! weps.run specifies a level basin with no runoff
              soil%amrslp = 0.0d0
              ! set outflow height of 1/2 meter (minimum depression storage)
-             ahzoutflow(isr) = 0.5
+             hstate%zoutflow = 0.5
           else if( soil%amrslp .lt. 0.0d0 ) then
              ! no value entered by user (from weps.run)
              read(line,*,err=902) soil%amrslp
@@ -427,7 +428,7 @@ module input_soil_mod
     end subroutine inp_ifc_v1
 
 !-----------------------------------------------------------------------
-    subroutine inp_ifc_v1_1 (isr, lui1, soil)
+    subroutine inp_ifc_v1_1 (isr, lui1, soil, hstate)
 
       ! input routine for Version 1.1 IFC file format
 
@@ -436,15 +437,13 @@ module input_soil_mod
       ! dike height and spacing values
 
       use soil_data_struct_defs, only: soil_def, allocate_soil
-
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1db1.inc'
+      use hydro_data_struct_defs, only: hydro_state
 
 !     + + + Arguments + + +
       integer isr
       integer lui1
       type(soil_def), intent(inout) :: soil  ! subregion surface conditions
+      type(hydro_state), intent(inout) :: hstate
 
 !     + + + LOCAL VARIABLES + + +
       integer       lay
@@ -490,13 +489,13 @@ module input_soil_mod
           read(line,*,err=902) soil%asfald
         case (8)                                                      ! Slope gradient (m/m)
           ! set default outflow height to zero (minimum depression storage)
-          ahzoutflow(isr) = 0.0d0
+          hstate%zoutflow = 0.0d0
           ! check value read in from weps.run
           if( soil%amrslp .lt. -1.5 ) then
              ! weps.run specifies a level basin with no runoff
              soil%amrslp = 0.0d0
              ! set outflow height of 1/2 meter (minimum depression storage)
-             ahzoutflow(isr) = 0.5
+             hstate%zoutflow = 0.5
           else if( soil%amrslp .lt. 0.0d0 ) then
              ! no value entered by user (from weps.run)
              read(line,*,err=902) soil%amrslp
@@ -684,7 +683,7 @@ module input_soil_mod
     end subroutine inp_ifc_v1_1
 
 !      subroutine inpsub (isr, soil_in, soil)
-    subroutine inpsub (isr, soil)
+    subroutine inpsub (isr, soil, hstate)
 ! ***************************************************************** wjr
 ! reads initial field conditions (IFC) file for all subregions
 !
@@ -699,14 +698,13 @@ module input_soil_mod
       use file_io_mod, only: fopenk
       use split_layers_mod, only: spllay
       use soil_data_struct_defs, only: soil_def, allocate_soil
-
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1db1.inc'
+      use hydro_data_struct_defs, only: hydro_state
+      use hydro_util_mod, only: param_pot_bc, param_prop_bc
 
 !     + + + Arguments + + +
       integer, intent(in) :: isr
       type(soil_def), intent(inout) :: soil  ! subregion surface conditions
+      type(hydro_state), intent(inout) :: hstate
 
 !     + + + LOCAL VARIABLES + + +
       integer       lay
@@ -854,14 +852,14 @@ module input_soil_mod
 
 !         Code added to "skip" extra parameter not available in "old" ifc files
           ! set default outflow height to zero (minimum depression storage)
-          ahzoutflow(isr) = 0.0d0
+          hstate%zoutflow = 0.0d0
           if (ifc_format .eq. 1) then !old ifc format (skip next typidx line)
              typidx = typidx + 1
              if( soil%amrslp .lt. -1.5 ) then
                 ! weps.run specifies a level basin with no runoff
                 soil%amrslp = 0.0d0
                 ! set outflow height of 1/2 meter (minimum depression storage)
-                ahzoutflow(isr) = 0.5
+                hstate%zoutflow = 0.5
              else if( soil%amrslp .lt. 0.0d0 ) then
                 ! no value entered by user (from weps.run)
                 ! no valid value found in IFC file either, set default value of 1%
@@ -875,7 +873,7 @@ module input_soil_mod
              ! weps.run specifies a level basin with no runoff
              soil%amrslp = 0.0d0
              ! set outflow height of 1/2 meter (minimum depression storage)
-             ahzoutflow(isr) = 0.5
+             hstate%zoutflow = 0.5
           else if( soil%amrslp .lt. 0.0d0 ) then
              ! no value entered by user (from weps.run)
              read(line,*,err=82) soil%amrslp
@@ -1058,5 +1056,161 @@ module input_soil_mod
       stop
 
     end subroutine inpsub
+
+    subroutine propsaxt( sandf, clayf, sat, fc, pwp )
+
+!     Reference: K.E. Saxton et al., 1986, Estimating generalized soil-water
+!     characteristics from texture. Soil Sci. Soc. Amer. J. 50(4):1031-1036
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      real sandf, clayf, sat, fc, pwp
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     sandf - fraction of soil mineral portion which is sand
+!     clayf - fraction of soil mineral portion which is clay
+!     sat - saturated volumetric water content
+!     fc - 1/3 bar volumetric water content
+!     pwp - 15 bar volumetric water content
+
+!     + + + LOCAL VARIABLES + + +
+      real sand_2, clay_2, percent_sand, percent_clay, acoef, bcoef
+
+!     + + + LOCAL DEFINITION + + +
+!     percent_sand - sand fraction expressed as percent
+!     percent_clay - clay fraction expressed as percent
+!     acoef - intermediate expression
+!     bcoef - intermediate expression
+
+      percent_sand = sandf * 100.0
+      percent_clay = clayf * 100.0
+
+!     equations are only valid in this range. This makes any outside
+!     stay at the boundary value.
+      percent_sand = max( min( percent_sand, 95.0), 5.0)
+      percent_clay = max( min( percent_clay, 60.0), 5.0)
+
+      sand_2 = percent_sand * percent_sand
+      clay_2 = percent_clay * percent_clay
+
+      acoef = exp(-4.396 - 0.0715 * percent_clay -                      &
+     &        4.88e-4 * sand_2 - 4.285e-5 * sand_2 * percent_clay)
+
+      bcoef = - 3.140 - 0.00222 * clay_2                                &  
+     &        - 3.484e-5 * sand_2 * percent_clay
+
+      sat = 0.332 - 7.251e-4 * percent_sand                             &
+     &    + 0.1276 * log10(percent_clay)
+
+      if ((acoef .ne. 0.0) .and. (bcoef .ne. 0.0)) then
+          fc   = (0.3333/ acoef)**(1.0 / bcoef)
+          pwp  = (15.0  / acoef)**(1.0 / bcoef)
+      end if
+
+!      if (sat .ne. 0.0) then
+!          ksat = exp((12.012 - 0.0755 * percent_sand)  +
+!     &        (- 3.895 + 0.03671 * percent_sand 
+!     &         - 0.1103 * percent_clay + 8.7546e-4 * clay_2) / sat)
+!      end if
+
+      return
+    end subroutine propsaxt
+
+    subroutine proptext( nlay, clayf, sandf, organf,                  &
+     &                     bulkden, settled_bulkden, proctor_bulkden,   &
+     &                     wet_bulkden, wet_set_rat, partden )
+
+!     + + + PURPOSE + + +
+!     
+!     This subroutine updates the properties that depend on soil texture 
+!     (texture can change in the model due to mixing and removal by wind)
+
+!     + + + KEYWORDS + + +
+!     texture properties 
+
+      use soilden_mod, only: setpartden, setbds, setbdproc
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer nlay
+      real sandf(*)
+      real clayf(*)
+      real organf(*)
+      real bulkden(*)
+      real settled_bulkden(*)
+      real proctor_bulkden(*)
+      real wet_bulkden(*)
+      real wet_set_rat(*)
+      real partden(*)
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     nlay     - number of soil layers to be updated
+!     clayf    - fraction of soil mineral portion which is clay
+!     sandf    - fraction of soil mineral portion which is sand
+!     organf   - fraction of total soil mass which is organic matter
+!     bulkden  - bulk density state of the soil.
+!     settled_bulkden - settled bulk density (Mg/m^3)
+!     proctor_bulkden - proctor bulk density (Mg/m^3)
+!     wet_bulkden - 1/3 bar bulk density (Mg/m^3)
+!     wet_sat_rat - Nondimensional ratio of wet to settled bulk density
+!     partden  - particle density (Mg/m^3)
+
+!     + + + LOCAL VARIABLES + + +
+      integer lay
+
+!     + + + LOCAL VARIABLE DEFINITIONS + + +
+
+!     + + + END SPECIFICATIONS + + + 
+
+      do lay=1,nlay
+
+          ! settled bulk density
+          settled_bulkden(lay) = setbds( clayf(lay), sandf(lay),        &
+     &                                   organf(lay))
+
+          ! calculate an average soil particle density
+          partden(lay) = setpartden( organf(lay) )
+
+          ! reference bulk density
+          proctor_bulkden(lay) = setbdproc( clayf(lay), sandf(lay),     &
+     &                                      organf(lay), partden(lay))
+
+          ! make sure particle density is significantly greater than settled bulk density
+          if( partden(lay).lt.(1.2*settled_bulkden(lay)) ) then
+              partden(lay) = 1.2*settled_bulkden(lay)
+          endif
+
+          if( wet_set_rat(lay) .lt. 0.0 ) then
+              ! ratio wet_set_rat is negative, so initialize it
+              wet_set_rat(lay) = (partden(lay) - settled_bulkden(lay))  &
+     &                         / (partden(lay) - wet_bulkden(lay))
+              if( wet_set_rat(lay) .gt. 1.0 ) then
+                  ! wet bulk density is greater than settled bulk density, adjust
+                  write(*,"(a,f9.7,a,f9.7,a)") 'WARNING: settled bd(',  &
+     &                                          settled_bulkden(lay),   &  ! NOTE:  Changed to "WARNING" so message
+     &                                         ') < wet bd (',          &
+     &                                          bulkden(lay),           &
+     &                                         '), wbd = sbd'   !wouldn't display in GUI popup Warning dialog box
+                  wet_set_rat(lay) = 1.0
+                  wet_bulkden(lay) = settled_bulkden(lay)
+              end if
+              if( bulkden(lay) .gt. settled_bulkden(lay) ) then
+                  ! do not start simulation in compacted state
+                  write(*,"(a,f9.7,a,f9.7,a)") 'WARNING: settled bd(',  &
+     &                                          settled_bulkden(lay),   &  ! NOTE:  Changed to "WARNING" so message
+     &                                         ') < initial bd(',       &
+     &                                          bulkden(lay),           &
+     &                                         '), bd = sbd'   !wouldn't display in GUI popup Warning dialog box
+                  bulkden(lay) = settled_bulkden(lay)
+              end if
+
+          else
+              ! ratio wet_set_rat is positive, so use it to adjust wet_bulkden
+              wet_bulkden(lay) = partden(lay)                           &
+     &        - (partden(lay) - settled_bulkden(lay)) / wet_set_rat(lay)
+
+          end if
+
+      end do
+
+    end subroutine proptext
 
 end module input_soil_mod

@@ -4,7 +4,10 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine ssolsy (wm, iwm, x, tem)
+      subroutine ssolsy (isr, wm, iwm, x, tem)
+
+      use hydro_darcy_mod, only: sls1
+
 !***BEGIN PROLOGUE  SSOLSY
 !***SUBSIDIARY
 !***PURPOSE  ODEPACK linear system solver.
@@ -46,47 +49,48 @@
 !   010412  Reduced size of Common block /SLS001/. (ACH)
 !***END PROLOGUE  SSOLSY
 !**End
+      integer :: isr
       integer iwm
-      integer icf, ierpj, iersl, jcur, jstart, kflag, l
-      integer   lyh, lewt, lacor, lsavr, lwm, liwm, meth, miter
-      integer   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
+!      integer icf, ierpj, iersl, jcur, jstart, kflag, l
+!      integer   lyh, lewt, lacor, lsavr, lwm, liwm, meth, miter
+!      integer   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
       integer i, meband, ml, mu
       real wm, x, tem
-      real ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround
+!      real ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround
       real di, hl0, phl0, r
       dimension wm(*), iwm(*), x(*), tem(*)
-      common /sls001/ ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround,    &
-     &   icf, ierpj, iersl, jcur, jstart, kflag, l,                     &
-     &   lyh, lewt, lacor, lsavr, lwm, liwm, meth, miter,               &
-     &   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
+!      common /sls001/ ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround,    &
+!     &   icf, ierpj, iersl, jcur, jstart, kflag, l,                     &
+!     &   lyh, lewt, lacor, lsavr, lwm, liwm, meth, miter,               &
+!     &   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
 
-      save :: /sls001/
+!      save :: /sls001/
 !
 !***first executable statement  ssolsy
-      iersl = 0
-      go to (100, 100, 300, 400, 400), miter
- 100  call sgesl (wm(3), n, n, iwm(21), x, 0)
+      sls1(isr)%iersl = 0
+      go to (100, 100, 300, 400, 400), sls1(isr)%miter
+ 100  call sgesl (wm(3), sls1(isr)%n, sls1(isr)%n, iwm(21), x, 0)
       return
 !
  300  phl0 = wm(2)
-      hl0 = h*el0
+      hl0 = sls1(isr)%h*sls1(isr)%el0
       wm(2) = hl0
       if (hl0 .eq. phl0) go to 330
       r = hl0/phl0
-      do 320 i = 1,n
+      do 320 i = 1,sls1(isr)%n
         di = 1.0e0 - r*(1.0e0 - 1.0e0/wm(i+2))
         if (abs(di) .eq. 0.0e0) go to 390
  320    wm(i+2) = 1.0e0/di
- 330  do 340 i = 1,n
+ 330  do 340 i = 1,sls1(isr)%n
  340    x(i) = wm(i+2)*x(i)
       return
- 390  iersl = 1
+ 390  sls1(isr)%iersl = 1
       return
 !
  400  ml = iwm(1)
       mu = iwm(2)
       meband = 2*ml + mu + 1
-      call sgbsl (wm(3), meband, n, ml, mu, iwm(21), x, 0)
+      call sgbsl (wm(3), meband, sls1(isr)%n, ml, mu, iwm(21), x, 0)
       return
 !----------------------- end of subroutine ssolsy ----------------------
       end

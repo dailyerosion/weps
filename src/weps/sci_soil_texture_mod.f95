@@ -22,7 +22,7 @@ contains
     ! called at the end of input_ifc.for
     subroutine update_sci_soil_multiplier(sub, sand, clay)
 
-        use weps_interface_defs
+        use hydro_wepp_util_mod, only: usdatx
 
         integer, intent(in) :: sub       ! subregion number
         real, intent(in) :: sand, clay

@@ -7,14 +7,13 @@ module decomp_process_mod
 
   contains
 
-    subroutine decomp(isr, soil, plant, decompfac, h1et)
+    subroutine decomp(isr, soil, plant, decompfac, hstate, h1et)
 
-      use weps_interface_defs
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residue_pointer, decomp_factors
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_today
-      use hydro_data_struct_defs, only: hydro_derived_et
+      use hydro_data_struct_defs, only: hydro_derived_et, hydro_state, hhrs
       use decomp_out_mod, only: ddbug, decout
 
 !     +++ PURPOSE + + +
@@ -34,21 +33,12 @@ module decomp_process_mod
 !     decompdays, standing residue, surface residue, buried residue,
 !     soil cover, residue cover, decomposition day
 
-!       + + +  PARAMTERS AND COMMON BLOCKS +++
-
-      include 'p1werm.inc'
-
-!   These hydrology common blocks provide soil temp, moisture and irrigation
-
-      include 'h1temp.inc'
-      include 'h1db1.inc'
-      include 'h1hydro.inc'
-
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr                               ! current subregion
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
       type(decomp_factors), intent(inout) :: decompfac
+      type(hydro_state), intent(in) :: hstate
       type(hydro_derived_et), intent(in) :: h1et
 
 !     + + + VARIABLE DECLARATIONS + + +
@@ -106,7 +96,7 @@ module decomp_process_mod
 ! sum rain, irr, snow melt
 
       if (dbgflg) write(*,*) 'decomp 2'
-      decompfac%aqua = cli_today%zdpt + h1et%zirr + ahzsmt(isr)
+      decompfac%aqua = cli_today%zdpt + h1et%zirr + hstate%zsmt
 
 ! Test for water input day.
 
@@ -135,7 +125,7 @@ module decomp_process_mod
 !     code changed to use hydrology global variables  HHS 1- 4- 1994
 !     old code >    decompfac%iwcf = theta(1)/thetaf(1)
 
-      decompfac%iwcf = ahrwc0(12,isr) / soil%ahrwcf(1) !use water content at surface at 12 noon
+      decompfac%iwcf = hstate%rwc0(hhrs/2) / soil%ahrwcf(1) !use water content at surface at midday
       !decompfac%iwcf = ahrwc(1,isr) / soil%ahrwcf(1) !use water content of soil layer 1
 
 !     water factor = water content of top soil layer / optimum water content of top soil layer
@@ -189,7 +179,7 @@ module decomp_process_mod
 !              tsavg= (tsmax(isz) + tsmin(isz))/2.
 !              decompfac%itcg(isz) = tc(tsavg)
 
-         decompfac%itcg(isz) =  tc(ahtsav(isz,isr))
+         decompfac%itcg(isz) =  tc(soil%tsav(isz))
       end do
 
 ! Select minimum of temperature or water functions for

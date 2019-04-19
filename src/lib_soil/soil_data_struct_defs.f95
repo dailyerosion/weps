@@ -85,6 +85,10 @@ module soil_data_struct_defs
      real, dimension(:), allocatable :: as0ags    ! GSD (mm/mm)
      real, dimension(:), allocatable :: aslagn    ! mnot - minimum aggregate size (mm)
      real, dimension(:), allocatable :: aslagx    ! minf - maximum aggregate size (mm)
+     real, dimension(:), allocatable :: tsav      ! Mean daily soil temperature (deg C)
+     real, dimension(:), allocatable :: tsmx      ! Maximum daily soil temperature (deg C)
+     real, dimension(:), allocatable :: tsmn      ! Minimum daily soil temperature (deg C)
+     real, dimension(:), allocatable :: fice      ! fraction of soil water in layer which is frozen
 
      ! derived - calculate values from state and intrinsics that are used by other process modules
      real :: acanag     ! coefficient of abrasion for aggregates (1/m)
@@ -94,25 +98,37 @@ module soil_data_struct_defs
      real :: asf10bk    ! soil fraction pm10 in saltation breakage suspension
      real, dimension(:), allocatable :: asdpart   ! Soil layer average particle density adjusted from mineral only
                                               ! to include organic matter content
-     real, dimension(:), allocatable :: aszlyd    ! Depth to bottom of each soil layer for each subregion (mm)
-     real, dimension(:), allocatable :: asdwsrat  ! Nondimensional ratio of wet to settled bulk density
-     real, dimension(:), allocatable :: asdblk0   ! Soil layer bulk density from previous day
-                                              ! for use in hydro to update parameters based on bulk density changes
+     real, dimension(:), allocatable :: aszlyd   ! Depth to bottom of each soil layer for each subregion (mm)
+     real, dimension(:), allocatable :: asdwsrat ! Nondimensional ratio of wet to settled bulk density
+     real, dimension(:), allocatable :: asdblk0  ! Soil layer bulk density from previous day
+                                                 ! for use in hydro to update parameters based on bulk density changes
 
-     real, dimension(:), allocatable :: ahrwc     ! Soil water content (Mg/Mg)
-     real, dimension(:), allocatable :: ahrwcdmx  ! daily maximum soil water content (Mg/Mg)
-     real, dimension(:), allocatable :: aheaep    ! Soil air entry potential (J/kg)
-     real, dimension(:), allocatable :: ah0cb     ! Power of Brooks and Corey water release curve model (unitless)
-     real, dimension(:), allocatable :: ahrsk     ! Saturated soil hydraulic conductivity (m/s)
+     real, dimension(:), allocatable :: ahrwc    ! Soil water content (Mg/Mg)
+     real, dimension(:), allocatable :: ahrwcdmx ! daily maximum soil water content (Mg/Mg)
+     real, dimension(:), allocatable :: aheaep   ! Soil air entry potential (J/kg)
+     real, dimension(:), allocatable :: ah0cb    ! Power of Brooks and Corey water release curve model (unitless)
+     real, dimension(:), allocatable :: ahrsk    ! Saturated soil hydraulic conductivity (m/s)
 
-     real, dimension(:), allocatable :: ahrwcr    ! Soil layer residual water content (Mg/Mg)
-     real, dimension(:), allocatable :: ahrwcw    ! Soil layer wilting point water content (Mg/Mg)
-     real, dimension(:), allocatable :: ahrwcf    ! Soil layer field capacity water content (Mg/Mg)
-     real, dimension(:), allocatable :: ahrwcs    ! Soil layer saturated water content (Mg/Mg)
-     real, dimension(:), allocatable :: ahrwca    ! Available soil layer water content (Mg/Mg)
-     real, dimension(:), allocatable :: ahrwc1    ! Soil layer water content at 0.1 bar (Mg/Mg)
+     real, dimension(:), allocatable :: ahrwcr   ! Soil layer residual water content (Mg/Mg)
+     real, dimension(:), allocatable :: ahrwcw   ! Soil layer wilting point water content (Mg/Mg)
+     real, dimension(:), allocatable :: ahrwcf   ! Soil layer field capacity water content (Mg/Mg)
+     real, dimension(:), allocatable :: ahrwcs   ! Soil layer saturated water content (Mg/Mg)
+     real, dimension(:), allocatable :: ahrwca   ! Available soil layer water content (Mg/Mg)
+     real, dimension(:), allocatable :: ahrwc1   ! Soil layer water content at 0.1 bar (Mg/Mg)
      real, dimension(:), allocatable :: ahfredsat ! fraction of soil porosity that will be filled with water
-                                              ! while wetting under normal field conditions due to entrapped air
+                                                 ! while wetting under normal field conditions due to entrapped air
+
+     real :: swci      ! initial soil profile water content (mm)
+     real :: swc       ! soil profile water content (mm)
+     real, dimension(:), allocatable :: theta    ! soil layer water content (m^3/m^3)
+                                                 ! surface soil water content (m^3/m^3) (theta(0))
+     real, dimension(:), allocatable :: thetadmx ! daily maximum soil layer water content (m^3/m^3)
+     real, dimension(:), allocatable :: thetas   ! soil water content at saturation (m^3/m^3)
+     real, dimension(:), allocatable :: thetes   ! effective saturated water content (m^3/m^3)
+     real, dimension(:), allocatable :: thetaf   ! soil water content at field capacity (m^3/m^3)
+     real, dimension(:), allocatable :: thetar   ! residual soil water cotent (m^3/m^3)
+     real, dimension(:), allocatable :: thetaw   ! soil water content at wilting point (m^3/m^3)
+
   end type soil_def
 
 contains
@@ -199,6 +215,14 @@ contains
      sum_stat = sum_stat + alloc_stat
      allocate(soil%aslagx(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
+     allocate(soil%tsav(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%tsmx(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%tsmn(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%fice(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
 
      ! derived
      allocate(soil%asdpart(nsoillay), stat=alloc_stat)
@@ -232,6 +256,21 @@ contains
      allocate(soil%ahrwc1(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
      allocate(soil%ahfredsat(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
+     allocate(soil%theta(0:nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%thetadmx(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%thetas(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%thetes(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%thetaf(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%thetar(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%thetaw(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
      if( sum_stat .gt. 0 ) then
@@ -319,6 +358,15 @@ contains
      sum_stat = sum_stat + dealloc_stat
      deallocate(soil%aslagx, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%tsav, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%tsmx, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%tsmn, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%fice, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+
      ! derived
      deallocate(soil%asdpart, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
@@ -351,6 +399,21 @@ contains
      deallocate(soil%ahrwc1, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
      deallocate(soil%ahfredsat, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+
+     deallocate(soil%theta, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%thetadmx, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%thetas, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%thetes, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%thetaf, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%thetar, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%thetaw, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
 
      if( sum_stat .gt. 0 ) then
@@ -440,6 +503,10 @@ contains
         write(luo, '(e15.7)') soil%as0ags(lay)
         write(luo, '(e15.7)') soil%aslagn(lay)
         write(luo, '(e15.7)') soil%aslagx(lay)
+        write(luo, '(e15.7)') soil%tsav(lay)
+        write(luo, '(e15.7)') soil%tsmx(lay)
+        write(luo, '(e15.7)') soil%tsmn(lay)
+        write(luo, '(e15.7)') soil%fice(lay)
      end do
 
      write(luo, '(a)') 'derived'
@@ -466,6 +533,13 @@ contains
         write(luo, '(e15.7)') soil%ahrwca(lay)
         write(luo, '(e15.7)') soil%ahrwc1(lay)
         write(luo, '(e15.7)') soil%ahfredsat(lay)
+        write(luo, '(e15.7)') soil%theta(lay)
+        write(luo, '(e15.7)') soil%thetadmx(lay)
+        write(luo, '(e15.7)') soil%thetas(lay)
+        write(luo, '(e15.7)') soil%thetes(lay)
+        write(luo, '(e15.7)') soil%thetaf(lay)
+        write(luo, '(e15.7)') soil%thetar(lay)
+        write(luo, '(e15.7)') soil%thetaw(lay)
      end do
 
   end subroutine print_soil

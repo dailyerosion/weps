@@ -117,7 +117,7 @@ contains
     man_tag(13)%name = "version"
     man_tag(14)%name = "wepsmanDB"
 
-    max_ogp = 42   ! count of total number of operations, groups, and processes
+    max_ogp = 53   ! count of total number of operations, groups, and processes
     sum_stat = 0
     allocate( param_nt(max_ogp), stat=alloc_stat)
     sum_stat = sum_stat + alloc_stat
@@ -743,6 +743,177 @@ contains
     sum_stat = sum_stat + alloc_stat
     param_nt(42)%r_name(1)="wcdepth"
     param_nt(42)%r_name(2)="wc"
+
+    ! upgm_initialize
+    param_nt(43)%ogp="P"
+    param_nt(43)%id="100"
+    allocate( param_nt(43)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(43)%r_name(5), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(43)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(43)%s_name(1)="stage_label"
+    param_nt(43)%i_name(1)="stage_type"
+    param_nt(43)%r_name(1)="GDD_germination"
+    param_nt(43)%r_name(2)="soil_water_content"
+    param_nt(43)%r_name(3)="leaf_partition"
+    param_nt(43)%r_name(4)="stem_partition"
+    param_nt(43)%r_name(5)="reproductive_partition"
+    ! pmms_germination
+    param_nt(44)%ogp="P"
+    param_nt(44)%id="110"
+    allocate( param_nt(44)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(44)%r_name(6), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(44)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(44)%s_name(1)="stage_label"
+    param_nt(44)%i_name(1)="stage_type"
+    param_nt(44)%r_name(1)="GDD_to_next_stage"
+    param_nt(44)%r_name(2)="GDD_to_stage_termination"
+    param_nt(44)%r_name(3)="stress_factor"
+    param_nt(44)%r_name(4)="leaf_partition"
+    param_nt(44)%r_name(5)="stem_partition"
+    param_nt(44)%r_name(6)="reproductive_partition"
+    ! pmms_basephenol
+    param_nt(45)%ogp="P"
+    param_nt(45)%id="120"
+    allocate( param_nt(45)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(45)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(45)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(45)%s_name(1)="stage_label"
+    param_nt(45)%i_name(1)="stage_type"
+    param_nt(45)%r_name(1)="Vern_k"
+    param_nt(45)%r_name(2)="Vern_days"
+    param_nt(45)%r_name(3)="Photo_c"
+    param_nt(45)%r_name(4)="Photo_daylen"
+    ! pmms_fallphenol
+    param_nt(46)%ogp="P"
+    param_nt(46)%id="121"
+    allocate( param_nt(46)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(46)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(46)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(46)%s_name(1)="stage_label"
+    param_nt(46)%i_name(1)="stage_type"
+    param_nt(46)%r_name(1)="Vern_k"
+    param_nt(46)%r_name(2)="Vern_days"
+    param_nt(46)%r_name(3)="Photo_c"
+    param_nt(46)%r_name(4)="Photo_daylen"
+    ! pmms_springphenol
+    param_nt(47)%ogp="P"
+    param_nt(47)%id="122"
+    allocate( param_nt(47)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(47)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(47)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(47)%s_name(1)="stage_label"
+    param_nt(47)%i_name(1)="stage_type"
+    param_nt(47)%r_name(1)="Vern_k"
+    param_nt(47)%r_name(2)="Vern_days"
+    param_nt(47)%r_name(3)="Photo_c"
+    param_nt(47)%r_name(4)="Photo_daylen"
+
+    ! gddmethod1
+    param_nt(48)%ogp="P"
+    param_nt(48)%id="200"
+    allocate( param_nt(48)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(48)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(48)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(48)%s_name(1)="stage_label"
+    param_nt(48)%i_name(1)="stage_type"
+    param_nt(48)%r_name(1)="Vern_k"
+    param_nt(48)%r_name(2)="Vern_days"
+    param_nt(48)%r_name(3)="Photo_c"
+    param_nt(48)%r_name(4)="Photo_daylen"
+    ! gddweps_method
+    param_nt(49)%ogp="P"
+    param_nt(49)%id="201"
+    allocate( param_nt(49)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(49)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(49)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(49)%s_name(1)="stage_label"
+    param_nt(49)%i_name(1)="stage_type"
+    param_nt(49)%r_name(1)="Vern_k"
+    param_nt(49)%r_name(2)="Vern_days"
+    param_nt(49)%r_name(3)="Photo_c"
+    param_nt(49)%r_name(4)="Photo_daylen"
+    ! ritchie_vernalization
+    param_nt(50)%ogp="P"
+    param_nt(50)%id="210"
+    allocate( param_nt(50)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(50)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(50)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(50)%s_name(1)="stage_label"
+    param_nt(50)%i_name(1)="stage_type"
+    param_nt(50)%r_name(1)="Vern_k"
+    param_nt(50)%r_name(2)="Vern_days"
+    param_nt(50)%r_name(3)="Photo_c"
+    param_nt(50)%r_name(4)="Photo_daylen"
+    ! ritchie_winterhardening
+    param_nt(51)%ogp="P"
+    param_nt(51)%id="211"
+    allocate( param_nt(51)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(51)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(51)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(51)%s_name(1)="stage_label"
+    param_nt(51)%i_name(1)="stage_type"
+    param_nt(51)%r_name(1)="Vern_k"
+    param_nt(51)%r_name(2)="Vern_days"
+    param_nt(51)%r_name(3)="Photo_c"
+    param_nt(51)%r_name(4)="Photo_daylen"
+    ! weps_warmdays
+    param_nt(52)%ogp="P"
+    param_nt(52)%id="220"
+    allocate( param_nt(52)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(52)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(52)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(52)%s_name(1)="stage_label"
+    param_nt(52)%i_name(1)="stage_type"
+    param_nt(52)%r_name(1)="Vern_k"
+    param_nt(52)%r_name(2)="Vern_days"
+    param_nt(52)%r_name(3)="Photo_c"
+    param_nt(52)%r_name(4)="Photo_daylen"
+    ! weps_tempstress
+    param_nt(53)%ogp="P"
+    param_nt(53)%id="221"
+    allocate( param_nt(53)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(53)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(53)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(53)%s_name(1)="stage_label"
+    param_nt(53)%i_name(1)="stage_type"
+    param_nt(53)%r_name(1)="Vern_k"
+    param_nt(53)%r_name(2)="Vern_days"
+    param_nt(53)%r_name(3)="Photo_c"
+    param_nt(53)%r_name(4)="Photo_daylen"
+
     if( alloc_stat .gt. 0 ) then
       write(*,*) 'ERROR: memory alloc., parameter names reference'
     end if

@@ -251,6 +251,7 @@ module split_layers_mod
     subroutine move_ave_val( nlay_old, laydepth_old, valuearr_old, nlay_new, laydepth_new, valuearr_new )
       !   + + + PURPOSE + + +
       ! averages new layer values across old layers and moves new values into the same array
+      use soillay_mod, only: valbydepth
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: nlay_old    ! number of layers in old layering
@@ -267,9 +268,6 @@ module split_layers_mod
 !     + + + LOCAL DEFINITIONS + + +
 !     lay     - layer index
 !     depth   - depth in soil of top of layer
-
-!     + + + FUNCTIONS CALLED + + +
-      real valbydepth
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -297,10 +295,6 @@ module split_layers_mod
 
 !     + + + ARGUMENTS + + +
       type(soil_def), intent(inout) :: soil  ! soil for the subregion
-
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1db1.inc'
 
 !     + + + LOCAL VARIABLES + + +
       type(soil_def) :: soil_split
@@ -412,10 +406,6 @@ module split_layers_mod
 
 !     + + + ARGUMENTS + + +
       type(soil_def), intent(inout) :: soil  ! subregion surface conditions
-
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1db1.inc'
 
 !     + + + LOCAL VARIABLES + + +
       type(soil_def) :: soil_split

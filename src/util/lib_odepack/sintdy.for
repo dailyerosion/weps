@@ -4,7 +4,10 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine sintdy (t, k, yh, nyh, dky, iflag)
+      subroutine sintdy (isr, t, k, yh, nyh, dky, iflag)
+
+      use hydro_darcy_mod, only: sls1
+
 !***BEGIN PROLOGUE  SINTDY
 !***SUBSIDIARY
 !***PURPOSE  Interpolate solution derivatives.
@@ -42,42 +45,44 @@
 !   010412  Reduced size of Common block /SLS001/. (ACH)
 !***END PROLOGUE  SINTDY
 !**End
+      integer :: isr
       integer k, nyh, iflag
-      integer icf, ierpj, iersl, jcur, jstart, kflag, l
-      integer lyh, lewt, lacor, lsavr, lwm, liwm, meth, miter
-      integer maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
+!      integer icf, ierpj, iersl, jcur, jstart, kflag, l
+!      integer lyh, lewt, lacor, lsavr, lwm, liwm, meth, miter
+!      integer maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
       integer i, ic, j, jb, jb2, jj, jj1, jp1
       real t, yh, dky
-      real ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround
+!      real ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround
       real c, r, s, tp
       character*80 msg
       dimension yh(nyh,*), dky(*)
-      common /sls001/ ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround,    &
-     &   icf, ierpj, iersl, jcur, jstart, kflag, l,                     &
-     &   lyh, lewt, lacor, lsavr, lwm, liwm, meth, miter,               &
-     &   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
+!      common /sls001/ ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround,    &
+!     &   icf, ierpj, iersl, jcur, jstart, kflag, l,                     &
+!     &   lyh, lewt, lacor, lsavr, lwm, liwm, meth, miter,               &
+!     &   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
 
-      save :: /sls001/
+!      save :: /sls001/
 !
 !***first executable statement  sintdy
       iflag = 0
-      if (k .lt. 0 .or. k .gt. nq) go to 80
-      tp = tn - hu -  100.0e0*uround*(tn + hu)
-      if ((t-tp)*(t-tn) .gt. 0.0e0) go to 90
+      if (k .lt. 0 .or. k .gt. sls1(isr)%nq) go to 80
+      tp = sls1(isr)%tn - sls1(isr)%hu -  100.0e0*sls1(isr)%uround      &
+     &   * (sls1(isr)%tn + sls1(isr)%hu)
+      if ((t-tp)*(t-sls1(isr)%tn) .gt. 0.0e0) go to 90
 !
-      s = (t - tn)/h
+      s = (t - sls1(isr)%tn)/sls1(isr)%h
       ic = 1
       if (k .eq. 0) go to 15
-      jj1 = l - k
-      do 10 jj = jj1,nq
+      jj1 = sls1(isr)%l - k
+      do 10 jj = jj1,sls1(isr)%nq
  10     ic = ic*jj
  15   c = ic
-      do 20 i = 1,n
- 20     dky(i) = c*yh(i,l)
-      if (k .eq. nq) go to 55
-      jb2 = nq - k
+      do 20 i = 1,sls1(isr)%n
+ 20     dky(i) = c*yh(i,sls1(isr)%l)
+      if (k .eq. sls1(isr)%nq) go to 55
+      jb2 = sls1(isr)%nq - k
       do 50 jb = 1,jb2
-        j = nq - jb
+        j = sls1(isr)%nq - jb
         jp1 = j + 1
         ic = 1
         if (k .eq. 0) go to 35
@@ -85,12 +90,12 @@
         do 30 jj = jj1,j
  30       ic = ic*jj
  35     c = ic
-        do 40 i = 1,n
+        do 40 i = 1,sls1(isr)%n
  40       dky(i) = c*yh(i,jp1) + s*dky(i)
  50     continue
       if (k .eq. 0) return
- 55   r = h**(-k)
-      do 60 i = 1,n
+ 55   r = sls1(isr)%h**(-k)
+      do 60 i = 1,sls1(isr)%n
  60     dky(i) = r*dky(i)
       return
 !
@@ -101,7 +106,7 @@
  90   msg = 'sintdy-  t (=r1) illegal      '
       call xerrwv (msg, 30, 52, 0, 0, 0, 0, 1, t, 0.0e0)
       msg='      t not in interval tcur - hu (= r1) to tcur (=r2)      '
-      call xerrwv (msg, 60, 52, 0, 0, 0, 0, 2, tp, tn)
+      call xerrwv (msg, 60, 52, 0, 0, 0, 0, 2, tp, sls1(isr)%tn)
       iflag = -2
       return
 !----------------------- end of subroutine sintdy ----------------------

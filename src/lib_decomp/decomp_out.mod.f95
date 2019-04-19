@@ -16,10 +16,6 @@ module decomp_out_mod
       use biomaterial, only: plant_pointer, residue_pointer
       use decomp_data_struct_defs, only: am0dfl
 
-      ! +  + +  COMMON  BLOCKS + + +
-
-      include 'p1werm.inc'
-
       ! + + + ARGUMENT DECLARATIONS + + +
       integer :: isr
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
@@ -184,12 +180,6 @@ module decomp_out_mod
       use file_io_mod, only: luoddb
       use biomaterial, only: plant_pointer, residue_pointer
       use debug_mod, only: tddbug
-
-      !  + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1db1.inc'
-      include 'h1temp.inc'
 
       !  + + + ARGUMENT DECLARATIONS + + +
       integer :: isr     ! subregion number

@@ -525,5 +525,141 @@ module stir_report_mod
 
     end subroutine stir_report
 
+    subroutine sci_stir_init(isr)
+
+      use weps_main_mod, only: soil_cond
+      use file_io_mod, only: luostir
+      use sci_report_mod, only: scisum
+      use manage_data_struct_defs, only: manFile
+
+!     + + + ARGUMENT VARIABLES + + +
+      integer isr
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     isr - subregion index
+
+!     + + + PURPOSE + + +
+!     each time it is called, it adds a value to the total biomass increments
+!     the counter for number of values added together.
+
+!     + + + LOCAL VARIABLES + + +
+      integer idx
+
+      ! only do if flag is set 
+      if( soil_cond .eq. 0 ) return
+
+      ! initialize sci accumulator values
+      scisum(isr)%allbiomass = 0.0
+      scisum(isr)%allerosion = 0.0
+      scisum(isr)%days = 0
+      scisum(isr)%stir = 0.0
+      scisum(isr)%energy = 0.0
+
+      ! initialize stir accumulator values
+      stircum(isr)%oper_cnt = 0
+      stircum(isr)%proc_cnt = 0
+      stircum(isr)%stir_op_sum = 0.0
+      stircum(isr)%stir_op_energy = 0.0
+
+      ! initialize counters and arrays for planting and harvest operation tracking
+      stircum(isr)%phopcnt = 0
+      stircum(isr)%phopidx = 0
+      do idx = 1, size(stircum(isr)%phop)
+          stircum(isr)%phop(idx)%stir_opname = ''
+          stircum(isr)%phop(idx)%stir_cropname = ''
+          stircum(isr)%phop(idx)%stir_fuelname = ''
+          stircum(isr)%phop(idx)%phop_type = 0
+          stircum(isr)%phop(idx)%phop_stir = 0.0
+          stircum(isr)%phop(idx)%phop_energy = 0.0
+          stircum(isr)%phop(idx)%crop_num = 0
+          stircum(isr)%phop(idx)%last_harv = 0
+      end do 
+
+      if (stircum(isr)%header_not_printed) then
+          ! write header to stir_energy.out file
+          write(luostir(isr), '(5A)') '#dd/mm/yyyy | operation name',   &
+     &       ' | crop name (optional) | fuel display name (optional)',  &
+     &       ' | stir | energy (L diesel/ha) (soil texture adjusted)',  &
+     &       ' | crop sequence number',                                 &
+     &       ' | 1 if last harvest/termination of crop'
+          ! write number of years in management rotation
+          write(luostir(isr),'(i4,(A))') manFile(isr)%mperod,           &
+     &              '  Number of years in WEPS management rotation file'
+         stircum(isr)%header_not_printed = .FALSE.
+      end if
+
+      return
+    end subroutine sci_stir_init
+
+    subroutine stir_cum(isr, speed, depth, tilltype, fracarea)
+
+      use weps_main_mod, only: soil_cond
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer isr
+      real speed, depth
+      integer tilltype
+      real fracarea
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     isr - subregion index
+!     speed - operation speed (m/s)
+!     depth - tillage depth (mm)
+!     tilltype - tillage burial distribution type (0-5)
+!              0    o uniform distribution
+!              1    o Mixing+Inversion Burial Distribution
+!              2    o Mixing Burial Distribution
+!              3    o Inversion Burial Distribution
+!              4    o Lifting, Fracturing Burial Distribution
+!              5    o Compression
+!     fracarea - fraction of area affected (fraction)
+
+!     + + + PURPOSE + + +
+!     each time it is called, it calculates the Soil Tillage Intensity Rating
+!     for the current operation and adds it to the total.
+
+!     + + + LOCAL VARIABLES + + +
+      real stir_val
+      real mstomph, mmtoin
+      real tilltype_coef
+
+!     + + + LOCAL DEFINITIONS + + +
+!     stir_val - soil tilage intensity rating value for this residue burial
+!     mstomph - conversion constant from meters per second to miles per hour
+!     mmtoin  - conversion constant from millimeters to inches
+!     tilltype_coef - multiplier value assigned to each tillage type
+
+      parameter (mstomph = 2.237)
+      parameter (mmtoin = 0.03937)
+
+      ! only do if flag is set 
+      if( soil_cond .eq. 0 ) return
+
+      select case (tilltype)
+      case (1)  ! Mixing, some inversion
+          tilltype_coef = 0.8
+      case (2)  ! Mixing
+          tilltype_coef = 0.7
+      case (3)  ! Inversion + some mixing
+          tilltype_coef = 1.0
+      case (4)  ! Lifting, Fracturing
+          tilltype_coef = 0.4
+      case (5)  ! Compression
+          tilltype_coef = 0.15
+      case default
+          tilltype_coef = 0.4
+      end select
+
+      stir_val = speed * mstomph * 0.5                                  &
+     &         * tilltype_coef * 3.25                                   &
+     &         * depth * mmtoin                                         &
+     &         * fracarea
+
+      stircum(isr)%stir_op_sum = stircum(isr)%stir_op_sum + stir_val
+      stircum(isr)%proc_cnt = stircum(isr)%proc_cnt + 1
+
+      return
+    end subroutine stir_cum
+
 end module stir_report_mod
 

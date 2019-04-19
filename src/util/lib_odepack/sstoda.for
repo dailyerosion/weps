@@ -4,37 +4,43 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine sstoda (neq, y, yh, nyh, yh1, ewt, savf, acor,         &
+      subroutine sstoda (isr, neq, y, yh, nyh, yh1, ewt, savf, acor,    &
      &   wm, iwm, f, jac, pjac, slvs)
+
+      use hydro_darcy_mod, only: sls1, slsa, stoc
+
       external f, jac, pjac, slvs
-      integer neq, nyh, iwm
-      integer icf, ierpj, iersl, jcur, jstart, kflag, l
-      integer   lyh, lewt, lacor, lsavf, lwm, liwm, meth, miter
-      integer   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
-      integer jtyp, mused, mxordn, mxords
-      integer i, i1, icount, irflag, iredo, iret, j, jb, m, ncf, newq
+      integer isr, neq, nyh, iwm
+!      integer icf, ierpj, iersl, jcur, jstart, kflag, l
+!      integer   lyh, lewt, lacor, lsavf, lwm, liwm, meth, miter
+!      integer   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
+!      integer jtyp, mused, mxordn, mxords
+!      integer i, i1, icount, irflag, iredo, iret, j, jb, m, ncf, newq
+      integer i, i1, iredo, iret, j, jb, m, ncf, newq
       integer lm1, lm1p1, lm2, lm2p1, nqm1, nqm2
-      integer ialth, ipup, lmax, nqnyh, nslp
+!      integer ialth, ipup, lmax, nqnyh, nslp
       real y, yh, yh1, ewt, savf, acor, wm
-      real ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround
-      real pdnorm
-      real conit, crate, el(13), elco(13,12), hold, rmax, tesco(3,12)
+!      real ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround
+!      real pdnorm
+!      real conit, crate, el(13), elco(13,12), hold, rmax, tesco(3,12)
       real dcon, ddn, del, delp, dsm, dup, exdn, exsm, exup
       real   r, rh, rhdn, rhsm, rhup, told, smnorm
-      real alpha, cm1(12),cm2(5), dm1,dm2, exm1,exm2, pdest
-      real pdlast, pdh, pnorm, rate, ratio, rh1, rh1it, rh2, rm, sm1(12)
+!      real alpha, cm1(12),cm2(5), dm1,dm2, exm1,exm2, pdest
+      real alpha, dm1,dm2, exm1,exm2
+!      real pdlast, pdh, pnorm, rate, ratio, rh1, rh1it, rh2, rm, sm1(12)
+      real pdh, pnorm, rate, rh1, rh1it, rh2, rm
       dimension neq(*), y(*), yh(nyh,*), yh1(*), ewt(*), savf(*)
       dimension   acor(*), wm(*), iwm(*)
-      save conit, crate, el, elco, hold, rmax, tesco
-      save   ialth, ipup, lmax, nqnyh, nslp
-      save cm1, cm2, pdest, pdlast, ratio, sm1, icount, irflag
-      common /sls001/ ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround,    &
-     &   icf, ierpj, iersl, jcur, jstart, kflag, l,                     &
-     &   lyh, lewt, lacor, lsavf, lwm, liwm, meth, miter,               &
-     &   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
-      common /slsa01/ pdnorm, jtyp, mused, mxordn, mxords
-      data sm1/0.5e0, 0.575e0, 0.55e0, 0.45e0, 0.35e0, 0.25e0,          &
-     &   0.20e0, 0.15e0, 0.10e0, 0.075e0, 0.050e0, 0.025e0/
+!      save conit, crate, el, elco, hold, rmax, tesco
+!      save   ialth, ipup, lmax, nqnyh, nslp
+!      save cm1, cm2, pdest, pdlast, ratio, sm1, icount, irflag
+!      common /sls001/ ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround,    &
+!     &   icf, ierpj, iersl, jcur, jstart, kflag, l,                     &
+!     &   lyh, lewt, lacor, lsavf, lwm, liwm, meth, miter,               &
+!     &   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
+!      common /slsa01/ pdnorm, jtyp, mused, mxordn, mxords
+!      data stoc(isr)%sm1/0.5e0, 0.575e0, 0.55e0, 0.45e0, 0.35e0, 0.25e0,&
+!     &   0.20e0, 0.15e0, 0.10e0, 0.075e0, 0.050e0, 0.025e0/
 !-----------------------------------------------------------------------
 ! SSTODA performs one step of the integration of an initial value
 ! problem for a system of ordinary differential equations.
@@ -115,17 +121,17 @@
 !          MITER may be reset by SSTODA.
 ! N      = the number of first-order differential equations.
 !-----------------------------------------------------------------------
-      kflag = 0
-      told = tn
+      sls1(isr)%kflag = 0
+      told = sls1(isr)%tn
       ncf = 0
-      ierpj = 0
-      iersl = 0
-      jcur = 0
-      icf = 0
+      sls1(isr)%ierpj = 0
+      sls1(isr)%iersl = 0
+      sls1(isr)%jcur = 0
+      sls1(isr)%icf = 0
       delp = 0.0e0
-      if (jstart .gt. 0) go to 200
-      if (jstart .eq. -1) go to 100
-      if (jstart .eq. -2) go to 160
+      if (sls1(isr)%jstart .gt. 0) go to 200
+      if (sls1(isr)%jstart .eq. -1) go to 100
+      if (sls1(isr)%jstart .eq. -2) go to 160
 !-----------------------------------------------------------------------
 ! on the first call, the order is set to 1, and other variables are
 ! initialized.  rmax is the maximum ratio by which h can be increased
@@ -135,30 +141,30 @@
 ! for the next increase.
 ! scfode is called to get the needed coefficients for both methods.
 !-----------------------------------------------------------------------
-      lmax = maxord + 1
-      nq = 1
-      l = 2
-      ialth = 2
-      rmax = 10000.0e0
-      rc = 0.0e0
-      el0 = 1.0e0
-      crate = 0.7e0
-      hold = h
-      nslp = 0
-      ipup = miter
+      stoc(isr)%lmax = sls1(isr)%maxord + 1
+      sls1(isr)%nq = 1
+      sls1(isr)%l = 2
+      stoc(isr)%ialth = 2
+      stoc(isr)%rmax = 10000.0e0
+      sls1(isr)%rc = 0.0e0
+      sls1(isr)%el0 = 1.0e0
+      stoc(isr)%crate = 0.7e0
+      stoc(isr)%hold = sls1(isr)%h
+      stoc(isr)%nslp = 0
+      stoc(isr)%ipup = sls1(isr)%miter
       iret = 3
 ! initialize switching parameters.  meth = 1 is assumed initially. -----
-      icount = 20
-      irflag = 0
-      pdest = 0.0e0
-      pdlast = 0.0e0
-      ratio = 5.0e0
-      call scfode (2, elco, tesco)
+      stoc(isr)%icount = 20
+      stoc(isr)%irflag = 0
+      stoc(isr)%pdest = 0.0e0
+      stoc(isr)%pdlast = 0.0e0
+      stoc(isr)%ratio = 5.0e0
+      call scfode (2, stoc(isr)%elco, stoc(isr)%tesco)
       do 10 i = 1,5
- 10     cm2(i) = tesco(2,i)*elco(i+1,i)
-      call scfode (1, elco, tesco)
+ 10     stoc(isr)%cm2(i) = stoc(isr)%tesco(2,i)*stoc(isr)%elco(i+1,i)
+      call scfode (1, stoc(isr)%elco, stoc(isr)%tesco)
       do 20 i = 1,12
- 20     cm1(i) = tesco(2,i)*elco(i+1,i)
+ 20     stoc(isr)%cm1(i) = stoc(isr)%tesco(2,i)*stoc(isr)%elco(i+1,i)
       go to 150
 !-----------------------------------------------------------------------
 ! the following block handles preliminaries needed when jstart = -1.
@@ -171,23 +177,23 @@
 ! if h or meth is being changed, ialth is reset to l = nq + 1
 ! to prevent further changes in h for that many steps.
 !-----------------------------------------------------------------------
- 100  ipup = miter
-      lmax = maxord + 1
-      if (ialth .eq. 1) ialth = 2
-      if (meth .eq. mused) go to 160
-      call scfode (meth, elco, tesco)
-      ialth = l
+ 100  stoc(isr)%ipup = sls1(isr)%miter
+      stoc(isr)%lmax = sls1(isr)%maxord + 1
+      if (stoc(isr)%ialth .eq. 1) stoc(isr)%ialth = 2
+      if (sls1(isr)%meth .eq. slsa(isr)%mused) go to 160
+      call scfode (sls1(isr)%meth, stoc(isr)%elco, stoc(isr)%tesco)
+      stoc(isr)%ialth = sls1(isr)%l
       iret = 1
 !-----------------------------------------------------------------------
 ! the el vector and related constants are reset
 ! whenever the order nq is changed, or at the start of the problem.
 !-----------------------------------------------------------------------
- 150  do 155 i = 1,l
- 155    el(i) = elco(i,nq)
-      nqnyh = nq*nyh
-      rc = rc*el(1)/el0
-      el0 = el(1)
-      conit = 0.5e0/(nq+2)
+ 150  do 155 i = 1,sls1(isr)%l
+ 155    stoc(isr)%el(i) = stoc(isr)%elco(i,sls1(isr)%nq)
+      stoc(isr)%nqnyh = sls1(isr)%nq*nyh
+      sls1(isr)%rc = sls1(isr)%rc*stoc(isr)%el(1)/sls1(isr)%el0
+      sls1(isr)%el0 = stoc(isr)%el(1)
+      stoc(isr)%conit = 0.5e0/(sls1(isr)%nq+2)
       go to (160, 170, 200), iret
 !-----------------------------------------------------------------------
 ! if h is being changed, the h ratio rh is checked against
@@ -195,34 +201,34 @@
 ! l = nq + 1 to prevent a change of h for that many steps, unless
 ! forced by a convergence or error test failure.
 !-----------------------------------------------------------------------
- 160  if (h .eq. hold) go to 200
-      rh = h/hold
-      h = hold
+ 160  if (sls1(isr)%h .eq. stoc(isr)%hold) go to 200
+      rh = sls1(isr)%h/stoc(isr)%hold
+      sls1(isr)%h = stoc(isr)%hold
       iredo = 3
       go to 175
- 170  rh = max(rh,hmin/abs(h))
- 175  rh = min(rh,rmax)
-      rh = rh/max(1.0e0,abs(h)*hmxi*rh)
+ 170  rh = max(rh,sls1(isr)%hmin/abs(sls1(isr)%h))
+ 175  rh = min(rh,stoc(isr)%rmax)
+      rh = rh/max(1.0e0,abs(sls1(isr)%h)*sls1(isr)%hmxi*rh)
 !-----------------------------------------------------------------------
 ! if meth = 1, also restrict the new step size by the stability region.
 ! if this reduces h, set irflag to 1 so that if there are roundoff
 ! problems later, we can assume that is the cause of the trouble.
 !-----------------------------------------------------------------------
-      if (meth .eq. 2) go to 178
-      irflag = 0
-      pdh = max(abs(h)*pdlast,0.000001e0)
-      if (rh*pdh*1.00001e0 .lt. sm1(nq)) go to 178
-      rh = sm1(nq)/pdh
-      irflag = 1
+      if (sls1(isr)%meth .eq. 2) go to 178
+      stoc(isr)%irflag = 0
+      pdh = max(abs(sls1(isr)%h)*stoc(isr)%pdlast,0.000001e0)
+      if (rh*pdh*1.00001e0 .lt. stoc(isr)%sm1(sls1(isr)%nq)) go to 178
+      rh = stoc(isr)%sm1(sls1(isr)%nq)/pdh
+      stoc(isr)%irflag = 1
  178  continue
       r = 1.0e0
-      do 180 j = 2,l
+      do 180 j = 2,sls1(isr)%l
         r = r*rh
-        do 180 i = 1,n
+        do 180 i = 1,sls1(isr)%n
  180      yh(i,j) = yh(i,j)*r
-      h = h*rh
-      rc = rc*rh
-      ialth = l
+      sls1(isr)%h = sls1(isr)%h*rh
+      sls1(isr)%rc = sls1(isr)%rc*rh
+      stoc(isr)%ialth = sls1(isr)%l
       if (iredo .eq. 0) go to 690
 !-----------------------------------------------------------------------
 ! this section computes the predicted values by effectively
@@ -232,17 +238,21 @@
 ! to force pjac to be called, if a jacobian is involved.
 ! in any case, pjac is called at least every msbp steps.
 !-----------------------------------------------------------------------
- 200  if (abs(rc-1.0e0) .gt. ccmax) ipup = miter
-      if (nst .ge. nslp+msbp) ipup = miter
-      tn = tn + h
-      i1 = nqnyh + 1
-      do 215 jb = 1,nq
+ 200  if (abs(sls1(isr)%rc-1.0e0) .gt. sls1(isr)%ccmax) then
+        stoc(isr)%ipup = sls1(isr)%miter
+      end if
+      if (sls1(isr)%nst .ge. stoc(isr)%nslp+sls1(isr)%msbp) then
+        stoc(isr)%ipup = sls1(isr)%miter
+      end if
+      sls1(isr)%tn = sls1(isr)%tn + sls1(isr)%h
+      i1 = stoc(isr)%nqnyh + 1
+      do 215 jb = 1,sls1(isr)%nq
         i1 = i1 - nyh
 !dir$ ivdep
-        do 210 i = i1,nqnyh
+        do 210 i = i1,stoc(isr)%nqnyh
  210      yh1(i) = yh1(i) + yh1(i+nyh)
  215    continue
-      pnorm = smnorm (n, yh1, ewt)
+      pnorm = smnorm (sls1(isr)%n, yh1, ewt)
 !-----------------------------------------------------------------------
 ! up to maxcor corrector iterations are taken.  a convergence test is
 ! made on the rms-norm of each correction, weighted by the error
@@ -252,35 +262,35 @@
  220  m = 0
       rate = 0.0e0
       del = 0.0e0
-      do 230 i = 1,n
+      do 230 i = 1,sls1(isr)%n
  230    y(i) = yh(i,1)
-      call f (neq, tn, y, savf)
-      nfe = nfe + 1
-      if (ipup .le. 0) go to 250
+      call f (isr, neq, sls1(isr)%tn, y, savf)
+      sls1(isr)%nfe = sls1(isr)%nfe + 1
+      if (stoc(isr)%ipup .le. 0) go to 250
 !-----------------------------------------------------------------------
 ! if indicated, the matrix p = i - h*el(1)*j is reevaluated and
 ! preprocessed before starting the corrector iteration.  ipup is set
 ! to 0 as an indicator that this has been done.
 !-----------------------------------------------------------------------
-      call pjac (neq, y, yh, nyh, ewt, acor, savf, wm, iwm, f, jac)
-      ipup = 0
-      rc = 1.0e0
-      nslp = nst
-      crate = 0.7e0
-      if (ierpj .ne. 0) go to 430
- 250  do 260 i = 1,n
+      call pjac (isr, neq, y, yh, nyh, ewt, acor, savf, wm, iwm, f, jac)
+      stoc(isr)%ipup = 0
+      sls1(isr)%rc = 1.0e0
+      stoc(isr)%nslp = sls1(isr)%nst
+      stoc(isr)%crate = 0.7e0
+      if (sls1(isr)%ierpj .ne. 0) go to 430
+ 250  do 260 i = 1,sls1(isr)%n
  260    acor(i) = 0.0e0
- 270  if (miter .ne. 0) go to 350
+ 270  if (sls1(isr)%miter .ne. 0) go to 350
 !-----------------------------------------------------------------------
 ! in the case of functional iteration, update y directly from
 ! the result of the last function evaluation.
 !-----------------------------------------------------------------------
-      do 290 i = 1,n
-        savf(i) = h*savf(i) - yh(i,2)
+      do 290 i = 1,sls1(isr)%n
+        savf(i) = sls1(isr)%h*savf(i) - yh(i,2)
  290    y(i) = savf(i) - acor(i)
-      del = smnorm (n, y, ewt)
-      do 300 i = 1,n
-        y(i) = yh(i,1) + el(1)*savf(i)
+      del = smnorm (sls1(isr)%n, y, ewt)
+      do 300 i = 1,sls1(isr)%n
+        y(i) = yh(i,1) + stoc(isr)%el(1)*savf(i)
  300    acor(i) = savf(i)
       go to 400
 !-----------------------------------------------------------------------
@@ -288,15 +298,15 @@
 ! and solve the linear system with that as right-hand side and
 ! p as coefficient matrix.
 !-----------------------------------------------------------------------
- 350  do 360 i = 1,n
- 360    y(i) = h*savf(i) - (yh(i,2) + acor(i))
-      call slvs (wm, iwm, y, savf)
-      if (iersl .lt. 0) go to 430
-      if (iersl .gt. 0) go to 410
-      del = smnorm (n, y, ewt)
-      do 380 i = 1,n
+ 350  do 360 i = 1,sls1(isr)%n
+ 360    y(i) = sls1(isr)%h*savf(i) - (yh(i,2) + acor(i))
+      call slvs (isr, wm, iwm, y, savf)
+      if (sls1(isr)%iersl .lt. 0) go to 430
+      if (sls1(isr)%iersl .gt. 0) go to 410
+      del = smnorm (sls1(isr)%n, y, ewt)
+      do 380 i = 1,sls1(isr)%n
         acor(i) = acor(i) + y(i)
- 380    y(i) = yh(i,1) + el(1)*acor(i)
+ 380    y(i) = yh(i,1) + stoc(isr)%el(1)*acor(i)
 !-----------------------------------------------------------------------
 ! test for convergence.  if m .gt. 0, an estimate of the convergence
 ! rate constant is stored in crate, and this is used in the test.
@@ -310,25 +320,30 @@
 ! estimate.  pdlast is the most recent nonzero estimate.
 !-----------------------------------------------------------------------
  400  continue
-      if (del .le. 100.0e0*pnorm*uround) go to 450
-      if (m .eq. 0 .and. meth .eq. 1) go to 405
+      if (del .le. 100.0e0*pnorm*sls1(isr)%uround) go to 450
+      if (m .eq. 0 .and. sls1(isr)%meth .eq. 1) go to 405
       if (m .eq. 0) go to 402
       rm = 1024.0e0
       if (del .le. 1024.0e0*delp) rm = del/delp
       rate = max(rate,rm)
-      crate = max(0.2e0*crate,rm)
- 402  dcon = del*min(1.0e0,1.5e0*crate)/(tesco(2,nq)*conit)
+      stoc(isr)%crate = max(0.2e0*stoc(isr)%crate,rm)
+ 402  dcon = del*min(1.0e0,1.5e0*stoc(isr)%crate)                       &
+     &     / (stoc(isr)%tesco(2,sls1(isr)%nq)                           &
+     &     * stoc(isr)%conit)
       if (dcon .gt. 1.0e0) go to 405
-      pdest = max(pdest,rate/abs(h*el(1)))
-      if (pdest .ne. 0.0e0) pdlast = pdest
+      stoc(isr)%pdest = max(stoc(isr)%pdest,rate/abs(sls1(isr)%h        &
+     &                * stoc(isr)%el(1)))
+      if (stoc(isr)%pdest .ne. 0.0e0) then
+        stoc(isr)%pdlast = stoc(isr)%pdest
+      end if
       go to 450
  405  continue
       m = m + 1
-      if (m .eq. maxcor) go to 410
+      if (m .eq. sls1(isr)%maxcor) go to 410
       if (m .ge. 2 .and. del .gt. 2.0e0*delp) go to 410
       delp = del
-      call f (neq, tn, y, savf)
-      nfe = nfe + 1
+      call f (isr, neq, sls1(isr)%tn, y, savf)
+      sls1(isr)%nfe = sls1(isr)%nfe + 1
       go to 270
 !-----------------------------------------------------------------------
 ! the corrector iteration failed to converge.
@@ -337,26 +352,26 @@
 ! before prediction, and h is reduced, if possible.  if h cannot be
 ! reduced or mxncf failures have occurred, exit with kflag = -2.
 !-----------------------------------------------------------------------
- 410  if (miter .eq. 0 .or. jcur .eq. 1) go to 430
-      icf = 1
-      ipup = miter
+ 410  if (sls1(isr)%miter .eq. 0 .or. sls1(isr)%jcur .eq. 1) go to 430
+      sls1(isr)%icf = 1
+      stoc(isr)%ipup = sls1(isr)%miter
       go to 220
- 430  icf = 2
+ 430  sls1(isr)%icf = 2
       ncf = ncf + 1
-      rmax = 2.0e0
-      tn = told
-      i1 = nqnyh + 1
-      do 445 jb = 1,nq
+      stoc(isr)%rmax = 2.0e0
+      sls1(isr)%tn = told
+      i1 = stoc(isr)%nqnyh + 1
+      do 445 jb = 1,sls1(isr)%nq
         i1 = i1 - nyh
 !dir$ ivdep
-        do 440 i = i1,nqnyh
+        do 440 i = i1,stoc(isr)%nqnyh
  440      yh1(i) = yh1(i) - yh1(i+nyh)
  445    continue
-      if (ierpj .lt. 0 .or. iersl .lt. 0) go to 680
-      if (abs(h) .le. hmin*1.00001e0) go to 670
-      if (ncf .eq. mxncf) go to 670
+      if (sls1(isr)%ierpj .lt. 0 .or. sls1(isr)%iersl .lt. 0) go to 680
+      if (abs(sls1(isr)%h) .le. sls1(isr)%hmin*1.00001e0) go to 670
+      if (ncf .eq. sls1(isr)%mxncf) go to 670
       rh = 0.25e0
-      ipup = miter
+      stoc(isr)%ipup = sls1(isr)%miter
       iredo = 1
       go to 170
 !-----------------------------------------------------------------------
@@ -365,9 +380,11 @@
 ! the local error test is made and control passes to statement 500
 ! if it fails.
 !-----------------------------------------------------------------------
- 450  jcur = 0
-      if (m .eq. 0) dsm = del/tesco(2,nq)
-      if (m .gt. 0) dsm = smnorm (n, acor, ewt)/tesco(2,nq)
+ 450  sls1(isr)%jcur = 0
+      if (m .eq. 0) dsm = del/stoc(isr)%tesco(2,sls1(isr)%nq)
+      if (m .gt. 0) then
+        dsm=smnorm(sls1(isr)%n,acor,ewt)/stoc(isr)%tesco(2,sls1(isr)%nq)
+      end if
       if (dsm .gt. 1.0e0) go to 500
 !-----------------------------------------------------------------------
 ! after a successful step, update the yh array.
@@ -382,18 +399,18 @@
 ! factor of at least 1.1.  if not, ialth is set to 3 to prevent
 ! testing for that many steps.
 !-----------------------------------------------------------------------
-      kflag = 0
+      sls1(isr)%kflag = 0
       iredo = 0
-      nst = nst + 1
-      hu = h
-      nqu = nq
-      mused = meth
-      do 460 j = 1,l
-        do 460 i = 1,n
- 460      yh(i,j) = yh(i,j) + el(j)*acor(i)
-      icount = icount - 1
-      if (icount .ge. 0) go to 488
-      if (meth .eq. 2) go to 480
+      sls1(isr)%nst = sls1(isr)%nst + 1
+      sls1(isr)%hu = sls1(isr)%h
+      sls1(isr)%nqu = sls1(isr)%nq
+      slsa(isr)%mused = sls1(isr)%meth
+      do 460 j = 1,sls1(isr)%l
+        do 460 i = 1,sls1(isr)%n
+ 460      yh(i,j) = yh(i,j) + stoc(isr)%el(j)*acor(i)
+      stoc(isr)%icount = stoc(isr)%icount - 1
+      if (stoc(isr)%icount .ge. 0) go to 488
+      if (sls1(isr)%meth .eq. 2) go to 480
 !-----------------------------------------------------------------------
 ! we are currently using an adams method.  consider switching to bdf.
 ! if the current order is greater than 5, assume the problem is
@@ -412,41 +429,44 @@
 ! compare the two step sizes to decide whether to switch.
 ! the step size advantage must be at least ratio = 5 to switch.
 !-----------------------------------------------------------------------
-      if (nq .gt. 5) go to 488
-      if (dsm .gt. 100.0e0*pnorm*uround .and. pdest .ne. 0.0e0)         &
-     &   go to 470
-      if (irflag .eq. 0) go to 488
+      if (sls1(isr)%nq .gt. 5) go to 488
+      if (   dsm .gt. 100.0e0*pnorm*sls1(isr)%uround                    &
+     & .and. stoc(isr)%pdest.ne.0.0e0 ) then
+        go to 470
+      end if
+      if (stoc(isr)%irflag .eq. 0) go to 488
       rh2 = 2.0e0
-      nqm2 = min(nq,mxords)
+      nqm2 = min(sls1(isr)%nq,slsa(isr)%mxords)
       go to 478
  470  continue
-      exsm = 1.0e0/l
+      exsm = 1.0e0/sls1(isr)%l
       rh1 = 1.0e0/(1.2e0*dsm**exsm + 0.0000012e0)
       rh1it = 2.0e0*rh1
-      pdh = pdlast*abs(h)
-      if (pdh*rh1 .gt. 0.00001e0) rh1it = sm1(nq)/pdh
+      pdh = stoc(isr)%pdlast*abs(sls1(isr)%h)
+      if (pdh*rh1 .gt. 0.00001e0) rh1it=stoc(isr)%sm1(sls1(isr)%nq)/pdh
       rh1 = min(rh1,rh1it)
-      if (nq .le. mxords) go to 474
-         nqm2 = mxords
-         lm2 = mxords + 1
+      if (sls1(isr)%nq .le. slsa(isr)%mxords) go to 474
+         nqm2 = slsa(isr)%mxords
+         lm2 = slsa(isr)%mxords + 1
          exm2 = 1.0e0/lm2
          lm2p1 = lm2 + 1
-         dm2 = smnorm (n, yh(1,lm2p1), ewt)/cm2(mxords)
+         dm2 = smnorm (sls1(isr)%n, yh(1,lm2p1), ewt)                   &
+     &       / stoc(isr)%cm2(slsa(isr)%mxords)
          rh2 = 1.0e0/(1.2e0*dm2**exm2 + 0.0000012e0)
          go to 476
- 474  dm2 = dsm*(cm1(nq)/cm2(nq))
+ 474  dm2 =dsm*(stoc(isr)%cm1(sls1(isr)%nq)/stoc(isr)%cm2(sls1(isr)%nq))
       rh2 = 1.0e0/(1.2e0*dm2**exsm + 0.0000012e0)
-      nqm2 = nq
+      nqm2 = sls1(isr)%nq
  476  continue
-      if (rh2 .lt. ratio*rh1) go to 488
+      if (rh2 .lt. stoc(isr)%ratio*rh1) go to 488
 ! the switch test passed.  reset relevant quantities for bdf. ----------
  478  rh = rh2
-      icount = 20
-      meth = 2
-      miter = jtyp
-      pdlast = 0.0e0
-      nq = nqm2
-      l = nq + 1
+      stoc(isr)%icount = 20
+      sls1(isr)%meth = 2
+      sls1(isr)%miter = slsa(isr)%jtyp
+      stoc(isr)%pdlast = 0.0e0
+      sls1(isr)%nq = nqm2
+      sls1(isr)%l = sls1(isr)%nq + 1
       go to 170
 !-----------------------------------------------------------------------
 ! we are currently using a bdf method.  consider switching to adams.
@@ -459,46 +479,47 @@
 ! roundoff pollution, we stay with bdf.
 !-----------------------------------------------------------------------
  480  continue
-      exsm = 1.0e0/l
-      if (mxordn .ge. nq) go to 484
-         nqm1 = mxordn
-         lm1 = mxordn + 1
+      exsm = 1.0e0/sls1(isr)%l
+      if (slsa(isr)%mxordn .ge. sls1(isr)%nq) go to 484
+         nqm1 = slsa(isr)%mxordn
+         lm1 = slsa(isr)%mxordn + 1
          exm1 = 1.0e0/lm1
          lm1p1 = lm1 + 1
-         dm1 = smnorm (n, yh(1,lm1p1), ewt)/cm1(mxordn)
+         dm1 = smnorm (sls1(isr)%n, yh(1,lm1p1), ewt)                   &
+     &       / stoc(isr)%cm1(slsa(isr)%mxordn)
          rh1 = 1.0e0/(1.2e0*dm1**exm1 + 0.0000012e0)
          go to 486
- 484  dm1 = dsm*(cm2(nq)/cm1(nq))
+ 484  dm1 =dsm*(stoc(isr)%cm2(sls1(isr)%nq)/stoc(isr)%cm1(sls1(isr)%nq))
       rh1 = 1.0e0/(1.2e0*dm1**exsm + 0.0000012e0)
-      nqm1 = nq
+      nqm1 = sls1(isr)%nq
       exm1 = exsm
  486  rh1it = 2.0e0*rh1
-      pdh = pdnorm*abs(h)
-      if (pdh*rh1 .gt. 0.00001e0) rh1it = sm1(nqm1)/pdh
+      pdh = slsa(isr)%pdnorm*abs(sls1(isr)%h)
+      if (pdh*rh1 .gt. 0.00001e0) rh1it = stoc(isr)%sm1(nqm1)/pdh
       rh1 = min(rh1,rh1it)
       rh2 = 1.0e0/(1.2e0*dsm**exsm + 0.0000012e0)
-      if (rh1*ratio .lt. 5.0e0*rh2) go to 488
+      if (rh1*stoc(isr)%ratio .lt. 5.0e0*rh2) go to 488
       alpha = max(0.001e0,rh1)
       dm1 = (alpha**exm1)*dm1
-      if (dm1 .le. 1000.0e0*uround*pnorm) go to 488
+      if (dm1 .le. 1000.0e0*sls1(isr)%uround*pnorm) go to 488
 ! the switch test passed.  reset relevant quantities for adams. --------
       rh = rh1
-      icount = 20
-      meth = 1
-      miter = 0
-      pdlast = 0.0e0
-      nq = nqm1
-      l = nq + 1
+      stoc(isr)%icount = 20
+      sls1(isr)%meth = 1
+      sls1(isr)%miter = 0
+      stoc(isr)%pdlast = 0.0e0
+      sls1(isr)%nq = nqm1
+      sls1(isr)%l = sls1(isr)%nq + 1
       go to 170
 !
 ! no method switch is being made.  do the usual step/order selection. --
  488  continue
-      ialth = ialth - 1
-      if (ialth .eq. 0) go to 520
-      if (ialth .gt. 1) go to 700
-      if (l .eq. lmax) go to 700
-      do 490 i = 1,n
- 490    yh(i,lmax) = acor(i)
+      stoc(isr)%ialth = stoc(isr)%ialth - 1
+      if (stoc(isr)%ialth .eq. 0) go to 520
+      if (stoc(isr)%ialth .gt. 1) go to 700
+      if (sls1(isr)%l .eq. stoc(isr)%lmax) go to 700
+      do 490 i = 1,sls1(isr)%n
+ 490    yh(i,stoc(isr)%lmax) = acor(i)
       go to 700
 !-----------------------------------------------------------------------
 ! the error test failed.  kflag keeps track of multiple failures.
@@ -507,18 +528,18 @@
 ! one lower order.  after 2 or more failures, h is forced to decrease
 ! by a factor of 0.2 or less.
 !-----------------------------------------------------------------------
- 500  kflag = kflag - 1
-      tn = told
-      i1 = nqnyh + 1
-      do 515 jb = 1,nq
+ 500  sls1(isr)%kflag = sls1(isr)%kflag - 1
+      sls1(isr)%tn = told
+      i1 = stoc(isr)%nqnyh + 1
+      do 515 jb = 1,sls1(isr)%nq
         i1 = i1 - nyh
 !dir$ ivdep
-        do 510 i = i1,nqnyh
+        do 510 i = i1,stoc(isr)%nqnyh
  510      yh1(i) = yh1(i) - yh1(i+nyh)
  515    continue
-      rmax = 2.0e0
-      if (abs(h) .le. hmin*1.00001e0) go to 660
-      if (kflag .le. -3) go to 640
+      stoc(isr)%rmax = 2.0e0
+      if (abs(sls1(isr)%h) .le. sls1(isr)%hmin*1.00001e0) go to 660
+      if (sls1(isr)%kflag .le. -3) go to 640
       iredo = 2
       rhup = 0.0e0
       go to 540
@@ -532,59 +553,65 @@
 ! additional scaled derivative.
 !-----------------------------------------------------------------------
  520  rhup = 0.0e0
-      if (l .eq. lmax) go to 540
-      do 530 i = 1,n
- 530    savf(i) = acor(i) - yh(i,lmax)
-      dup = smnorm (n, savf, ewt)/tesco(3,nq)
-      exup = 1.0e0/(l+1)
+      if (sls1(isr)%l .eq. stoc(isr)%lmax) go to 540
+      do 530 i = 1,sls1(isr)%n
+ 530    savf(i) = acor(i) - yh(i,stoc(isr)%lmax)
+      dup = smnorm (sls1(isr)%n, savf, ewt)                             &
+     &    / stoc(isr)%tesco(3,sls1(isr)%nq)
+      exup = 1.0e0/(sls1(isr)%l+1)
       rhup = 1.0e0/(1.4e0*dup**exup + 0.0000014e0)
- 540  exsm = 1.0e0/l
+ 540  exsm = 1.0e0/sls1(isr)%l
       rhsm = 1.0e0/(1.2e0*dsm**exsm + 0.0000012e0)
       rhdn = 0.0e0
-      if (nq .eq. 1) go to 550
-      ddn = smnorm (n, yh(1,l), ewt)/tesco(1,nq)
-      exdn = 1.0e0/nq
+      if (sls1(isr)%nq .eq. 1) go to 550
+      ddn = smnorm (sls1(isr)%n, yh(1,sls1(isr)%l), ewt)                &
+     &    / stoc(isr)%tesco(1,sls1(isr)%nq)
+      exdn = 1.0e0/sls1(isr)%nq
       rhdn = 1.0e0/(1.3e0*ddn**exdn + 0.0000013e0)
 ! if meth = 1, limit rh according to the stability region also. --------
- 550  if (meth .eq. 2) go to 560
-      pdh = max(abs(h)*pdlast,0.000001e0)
-      if (l .lt. lmax) rhup = min(rhup,sm1(l)/pdh)
-      rhsm = min(rhsm,sm1(nq)/pdh)
-      if (nq .gt. 1) rhdn = min(rhdn,sm1(nq-1)/pdh)
-      pdest = 0.0e0
+ 550  if (sls1(isr)%meth .eq. 2) go to 560
+      pdh = max(abs(sls1(isr)%h)*stoc(isr)%pdlast,0.000001e0)
+      if (sls1(isr)%l .lt. stoc(isr)%lmax) then
+        rhup = min(rhup,stoc(isr)%sm1(sls1(isr)%l)/pdh)
+      end if
+      rhsm = min(rhsm,stoc(isr)%sm1(sls1(isr)%nq)/pdh)
+      if (sls1(isr)%nq .gt. 1) then
+        rhdn = min(rhdn,stoc(isr)%sm1(sls1(isr)%nq-1)/pdh)
+      end if
+      stoc(isr)%pdest = 0.0e0
  560  if (rhsm .ge. rhup) go to 570
       if (rhup .gt. rhdn) go to 590
       go to 580
  570  if (rhsm .lt. rhdn) go to 580
-      newq = nq
+      newq = sls1(isr)%nq
       rh = rhsm
       go to 620
- 580  newq = nq - 1
+ 580  newq = sls1(isr)%nq - 1
       rh = rhdn
-      if (kflag .lt. 0 .and. rh .gt. 1.0e0) rh = 1.0e0
+      if (sls1(isr)%kflag .lt. 0 .and. rh .gt. 1.0e0) rh = 1.0e0
       go to 620
- 590  newq = l
+ 590  newq = sls1(isr)%l
       rh = rhup
       if (rh .lt. 1.1e0) go to 610
-      r = el(l)/l
-      do 600 i = 1,n
+      r = stoc(isr)%el(sls1(isr)%l)/sls1(isr)%l
+      do 600 i = 1,sls1(isr)%n
  600    yh(i,newq+1) = acor(i)*r
       go to 630
- 610  ialth = 3
+ 610  stoc(isr)%ialth = 3
       go to 700
 ! if meth = 1 and h is restricted by stability, bypass 10 percent test.
- 620  if (meth .eq. 2) go to 622
-      if (rh*pdh*1.00001e0 .ge. sm1(newq)) go to 625
- 622  if (kflag .eq. 0 .and. rh .lt. 1.1e0) go to 610
- 625  if (kflag .le. -2) rh = min(rh,0.2e0)
+ 620  if (sls1(isr)%meth .eq. 2) go to 622
+      if (rh*pdh*1.00001e0 .ge. stoc(isr)%sm1(newq)) go to 625
+ 622  if (sls1(isr)%kflag .eq. 0 .and. rh .lt. 1.1e0) go to 610
+ 625  if (sls1(isr)%kflag .le. -2) rh = min(rh,0.2e0)
 !-----------------------------------------------------------------------
 ! if there is a change of order, reset nq, l, and the coefficients.
 ! in any case h is reset according to rh and the yh array is rescaled.
 ! then exit from 690 if the step was ok, or redo the step otherwise.
 !-----------------------------------------------------------------------
-      if (newq .eq. nq) go to 170
- 630  nq = newq
-      l = nq + 1
+      if (newq .eq. sls1(isr)%nq) go to 170
+ 630  sls1(isr)%nq = newq
+      sls1(isr)%l = sls1(isr)%nq + 1
       iret = 2
       go to 150
 !-----------------------------------------------------------------------
@@ -596,39 +623,39 @@
 ! h is reduced by a factor of 10, and the step is retried,
 ! until it succeeds or h reaches hmin.
 !-----------------------------------------------------------------------
- 640  if (kflag .eq. -10) go to 660
+ 640  if (sls1(isr)%kflag .eq. -10) go to 660
       rh = 0.1e0
-      rh = max(hmin/abs(h),rh)
-      h = h*rh
-      do 645 i = 1,n
+      rh = max(sls1(isr)%hmin/abs(sls1(isr)%h),rh)
+      sls1(isr)%h = sls1(isr)%h*rh
+      do 645 i = 1,sls1(isr)%n
  645    y(i) = yh(i,1)
-      call f (neq, tn, y, savf)
-      nfe = nfe + 1
-      do 650 i = 1,n
- 650    yh(i,2) = h*savf(i)
-      ipup = miter
-      ialth = 5
-      if (nq .eq. 1) go to 200
-      nq = 1
-      l = 2
+      call f (isr, neq, sls1(isr)%tn, y, savf)
+      sls1(isr)%nfe = sls1(isr)%nfe + 1
+      do 650 i = 1,sls1(isr)%n
+ 650    yh(i,2) = sls1(isr)%h*savf(i)
+      stoc(isr)%ipup = sls1(isr)%miter
+      stoc(isr)%ialth = 5
+      if (sls1(isr)%nq .eq. 1) go to 200
+      sls1(isr)%nq = 1
+      sls1(isr)%l = 2
       iret = 3
       go to 150
 !-----------------------------------------------------------------------
 ! all returns are made through this section.  h is saved in hold
 ! to allow the caller to change h on the next step.
 !-----------------------------------------------------------------------
- 660  kflag = -1
+ 660  sls1(isr)%kflag = -1
       go to 720
- 670  kflag = -2
+ 670  sls1(isr)%kflag = -2
       go to 720
- 680  kflag = -3
+ 680  sls1(isr)%kflag = -3
       go to 720
- 690  rmax = 10.0e0
- 700  r = 1.0e0/tesco(2,nqu)
-      do 710 i = 1,n
+ 690  stoc(isr)%rmax = 10.0e0
+ 700  r = 1.0e0/stoc(isr)%tesco(2,sls1(isr)%nqu)
+      do 710 i = 1,sls1(isr)%n
  710    acor(i) = acor(i)*r
- 720  hold = h
-      jstart = 1
+ 720  stoc(isr)%hold = sls1(isr)%h
+      sls1(isr)%jstart = 1
       return
 !----------------------- end of subroutine sstoda ----------------------
       end

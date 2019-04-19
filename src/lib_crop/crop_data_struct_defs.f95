@@ -47,7 +47,7 @@ module crop_data_struct_defs
     real :: zht    ! Crop height (m)
     real :: dstm   ! Number of crop stems per unit area (#/m^2)
                    ! It is computed by taking the tillering factor times the plant population density.
-    real :: xstmrep   ! a representative diameter so that acdstm*acxstmrep*aczht=acrsai
+    double precision :: xstmrep   ! a representative diameter so that acdstm*acxstmrep*aczht=acrsai
     real :: zrtd      ! Crop root depth (m)
     real :: grainf    ! internally computed grain fraction of reproductive mass
   end type crop_residue

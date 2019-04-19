@@ -49,7 +49,6 @@ module manage_mod
 !
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
 
-      use weps_interface_defs
       use file_io_mod, only: fopenk
       use manage_data_struct_defs, only: man_file_struct, operation_date
       use flib_sax
@@ -126,7 +125,6 @@ module manage_mod
 !     wind, erosion, tillage, soil, plant, decomposition
 !     management
 
-      use weps_interface_defs
       use file_io_mod, only: luotdb
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residue_pointer
@@ -140,33 +138,12 @@ module manage_mod
 !     sr      - subregion number
 !     output  - process number for debugging output
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1db1.inc'
-
 !     + + + LOCAL VARIABLES + + +
-      integer idx
-      real total
-
-!     + + + LOCAL DEFINITIONS + + +
-
-!     idx     - loop indexing variable
-!     total   - summation variable
-
-!     + + + SUBROUTINES CALLED + + +
-
-!     + + + FUNCTIONS CALLED + + +
-
-!     + + + UNIT NUMBERS FOR INPUT/OUTPUT DEVICES + + +
-!     * = screen and keyboard
-!    29 = debug MANAGement
-
-!     + + + DATA INITIALIZATIONS + + +
-
-!     + + + INPUT FORMATS + + +
-
-!     + + + OUTPUT FORMATS + + +
+      integer :: idx  ! loop counter for printing output
+      integer :: jdx  ! loop counter for printing output
+      real :: total   ! summation variable
+      type(plant_pointer), pointer :: thisPlant
+      type(residue_pointer), pointer :: thisResidue
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -263,41 +240,74 @@ module manage_mod
       case (25) ! mass bury process variable toughness (process code 25)
  2500     format ('pool stem leaf store rootstore rootfiber (all flat)')
  2501     format ( i2, 5(1x, f7.4) )
+ 2502     format ( 2(1x,i2), 5(1x, f7.4) )
           ! sum pools to get total flat mass
           total = cropres%flatstem + cropres%flatleaf + cropres%flatstore &
                 + cropres%flatrootstore + cropres%flatrootfiber
-          do idx = 1, mnbpls
-            total = total + plant%residue%flatstem + plant%residue%flatleaf &
-                  + plant%residue%flatstore + plant%residue%flatrootstore &
-                  + plant%residue%flatrootfiber
+          thisPlant => plant
+          do while( associated(thisPlant) )
+            thisResidue => thisPlant%residue
+            do while( associated(thisResidue) )
+              total = total + thisResidue%flatstem + thisResidue%flatleaf &
+                    + thisResidue%flatstore + thisResidue%flatrootstore &
+                    + thisResidue%flatrootfiber
+              thisResidue => thisResidue%olderResidue
+            end do
+            thisPlant => thisPlant%olderPlant
           end do 
           write(luotdb(sr),*) total, ' total flat mass'
           write(luotdb(sr),2500)
           write(luotdb(sr),2501) 0, cropres%flatstem, cropres%flatleaf, &
             cropres%flatstore, cropres%flatrootstore, cropres%flatrootfiber
-          do idx = 1, mnbpls
-            write(luotdb(sr),2501) idx, plant%residue%flatstem, &
-              plant%residue%flatleaf, plant%residue%flatstore, &
-              plant%residue%flatrootstore, plant%residue%flatrootfiber
+          idx = 0
+          thisPlant => plant
+          do while( associated(thisPlant) )
+            idx = idx + 1
+            jdx = 0
+            thisResidue => thisPlant%residue
+            do while( associated(thisResidue) )
+              jdx = jdx + 1
+              write(luotdb(sr),2502) idx, jdx, thisResidue%flatstem, &
+              thisResidue%flatleaf, thisResidue%flatstore, &
+              thisResidue%flatrootstore, thisResidue%flatrootfiber
+              thisResidue => thisResidue%olderResidue
+            end do
+            thisPlant => thisPlant%olderPlant
           end do 
 
       case (26) ! re-surface process variable toughness (process code 26)
           ! sum pools to get total flat mass
           total = cropres%flatstem + cropres%flatleaf + cropres%flatstore &
                 + cropres%flatrootstore + cropres%flatrootfiber
-          do idx = 1, mnbpls
-            total = total + plant%residue%flatstem + plant%residue%flatleaf &
-                  + plant%residue%flatstore + plant%residue%flatrootstore &
-                  + plant%residue%flatrootfiber
+          thisPlant => plant
+          do while( associated(thisPlant) )
+            thisResidue => thisPlant%residue
+            do while( associated(thisResidue) )
+              total = total + thisResidue%flatstem + thisResidue%flatleaf &
+                    + thisResidue%flatstore + thisResidue%flatrootstore &
+                    + thisResidue%flatrootfiber
+              thisResidue => thisResidue%olderResidue
+            end do
+            thisPlant => thisPlant%olderPlant
           end do 
           write(luotdb(sr),*) total, ' total flat mass'
           write(luotdb(sr),2500)
           write(luotdb(sr),2501) 0, cropres%flatstem, cropres%flatleaf, &
             cropres%flatstore, cropres%flatrootstore, cropres%flatrootfiber
-          do idx = 1, mnbpls
-            write(luotdb(sr),2501) idx, plant%residue%flatstem, &
-              plant%residue%flatleaf, plant%residue%flatstore, &
-              plant%residue%flatrootstore, plant%residue%flatrootfiber
+          idx = 0
+          thisPlant => plant
+          do while( associated(thisPlant) )
+            idx = idx + 1
+            jdx = 0
+            thisResidue => thisPlant%residue
+            do while( associated(thisResidue) )
+              jdx = jdx + 1
+              write(luotdb(sr),2502) idx, jdx, thisResidue%flatstem, &
+              thisResidue%flatleaf, thisResidue%flatstore, &
+              thisResidue%flatrootstore, thisResidue%flatrootfiber
+              thisResidue => thisResidue%olderResidue
+            end do
+            thisPlant => thisPlant%olderPlant
           end do 
 
       case (31) ! killing process (process code 31)
@@ -387,7 +397,6 @@ module manage_mod
 !     + + + KEYWORDS + + +
 !     tillage, operation, management
 
-      use weps_interface_defs
       use manage_data_struct_defs, only: lastoper, man_file_struct 
       use manage_data_struct_mod, only: getManVal
 
@@ -482,7 +491,6 @@ module manage_mod
 !     + + + KEYWORDS + + +
 !     tillage, operation, management
 
-      use weps_interface_defs
       use manage_data_struct_defs, only: lastoper, man_file_struct
       use soil_data_struct_defs, only: soil_def
       use manage_data_struct_mod, only: getManVal
@@ -550,7 +558,7 @@ module manage_mod
 
     end subroutine dogroup
 
-    subroutine doproc (soil, plant, biotot, mandate, h1et, manFile)
+    subroutine doproc (soil, plant, biotot, mandate, hstate, h1et, manFile)
 
 !     + + + PURPOSE + + +
 !     Doproc is called when a processline is found in the management file
@@ -562,43 +570,45 @@ module manage_mod
 !     + + + KEYWORDS + + +
 !     tillage, process, management
 
-      use weps_interface_defs
-      use weps_main_mod, only: cook_yield, resurf_roots, wc_type
+      use weps_main_mod, only: cook_yield, resurf_roots, upgm_growth, wc_type
       use file_io_mod, only: luomanage, luotdb, luoasd, luowc
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: plant_pointer, residue_pointer, biototal
+      use input_soil_mod, only: proptext
+      use biomaterial, only: plant_pointer, biototal
       use biomaterial, only: plantDestroy, residueAdd, residueDestroyAll
       use mandate_mod, only: opercrop_date
       use p1unconv_mod, only: mmtom
       use manage_data_struct_defs, only: lastoper, man_file_struct
       use crop_data_struct_defs, only: am0cfl
       use soilden_mod, only: setbdproc_wc
-      use hydro_data_struct_defs, only: hydro_derived_et
+      use hydro_data_struct_defs, only: hydro_derived_et, hydro_state
+      use hydro_util_mod, only: param_blkden_adj, param_pot_bc, param_prop_bc
+      use hydro_main_mod, only: ratedura
       use soil_mod, only: depthini
       use crop_mod, only: plant_endseason
       use report_harvest_mod, only: report_harvest, report_calib_harvest
       use report_hydrobal_mod, only: report_hydrobal
-      use datetime_mod, only: get_simdate, get_simdate_jday, get_simdate_doy
+      use datetime_mod, only: get_simdate, get_simdate_jday, get_simdate_doy, dayear
       use manage_data_struct_mod, only: getManVal
       use asd_mod, only: msieve, nsieve, sdia, mdia, asd2m, m2asd
-      use mproc_bio_mod, only: mnrbc, flatvt, fall_mod_vt, liftvt, mburyvt, kill_plant, defoliate
+      use mproc_bio_mod, only: mnrbc, flatvt, fall_mod_vt, liftvt, mburyvt, kill_plant, defoliate, buryadj, resinit
       use mproc_cut_mod, only: cut
       use mproc_thin_mod, only: thin
       use mproc_remove_mod, only: remove
-      use mproc_soil_mod, only: mix, invert, loosn, compact
+      use mproc_soil_mod, only: mix, invert, loosn, compact, crush, set_asd, set_wc
+      use mproc_surface_mod, only: crust, rough, orient
       use calib_plant_mod, only: get_calib_crops, get_calib_yield, set_calib
       use update_mod, only: am0cropupfl
-
-!     + + + PARAMETERS AND COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1db1.inc'
+      use WEPS_UPGM_mod, only: init_WEPS_UPGM
+      use upgm_mod
+      use constants, only : dp, int32
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
+      type(hydro_state), intent(inout) :: hstate
       type(hydro_derived_et), intent(inout) :: h1et
       type(man_file_struct), intent(inout) :: manFile
 
@@ -661,7 +671,6 @@ module manage_mod
       real    dmassres, zmassres, dmassrot, zmassrot
       real    mass_rem, mass_left
       integer crop_present
-      real    noparam1, noparam2, noparam3
       real    rate_mult_vt(mnrbc), thresh_mult_vt(mnrbc)
       ! temporary crop parameter values for process 66 only
       real    manure_buried_fraction, manure_total_mass
@@ -701,6 +710,12 @@ module manage_mod
                            ! 3 - leaves killed and dropped to ground (defoliation)
       type(plant_pointer), pointer :: thisPlant  ! pointer for interating through plant list
       type(plant_pointer), pointer :: harvPlant  ! pointer to the most recent harvestable plant
+
+      logical :: succ      ! return value for JSON name assignment
+      real(dp) :: r_setter
+      real(dp), dimension(:), allocatable :: ra_setter
+      integer(int32) :: i_setter
+      logical :: l_setter
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 
@@ -777,7 +792,6 @@ module manage_mod
 !     crop_present - flag to show crop biomass pool status
 !                0 - no crop biomass present
 !                1 - crop biomass present
-!     noparam1-6   - variaable to allow reading in six non-used crop parameters in single read statement
 !     rate_mult_vt - array of multipliers for modifying standing stem fall rate
 !     thresh_mult_vt - array of multipliers for modifying standing stem fall threshold
 
@@ -802,8 +816,6 @@ module manage_mod
 !     tdbug     - subroutine which writes out variables for debugging purposes
 
 !     + + + DATA INITIALIZATIONS + + +
-      noparam1 = 0.0
-      noparam2 = 0.0
       sr = manFile%isub
 
 !     + + + OUTPUT FORMATS + + +
@@ -887,7 +899,7 @@ module manage_mod
         ! the best estimate is the number from sumbio from the previous day.
         call rough(roughflg,rrimpl,ti,fracarea,soil%aslrr, &
                    tlayer, soil%asfcla, soil%asfsil, &
-                   biotot%mbgz, biotot%mrtz, &
+                   biotot%mrtz, biotot%mbgz, &
                    soil%aszlyd)
 
         ! post-process stuff
@@ -1919,78 +1931,13 @@ module manage_mod
         call getManVal(manFile%proc, 'yield_coefficient', plant%database%yld_coef)
         call getManVal(manFile%proc, 'residue_intercept', plant%database%resid_int)
         call getManVal(manFile%proc, 'regrow_location', plant%database%zloc_regrow)
-        call getManVal(manFile%proc, 'noparam3', noparam3)
-        call getManVal(manFile%proc, 'noparam2', noparam2)
-        call getManVal(manFile%proc, 'noparam1', noparam1)
 
         ! reading of process parameters complete
 
-        ! input is residue yield ratio. internal use is total biomass yield ratio
-        ! all input values are on a dry weight basis.
-        ! plant%database%yld_coef = plant%database%yld_coef + 1.0
-
-        ! adjust yield coefficient to generate values on dry weight basis
-        ! from total above ground biomass increments
-        plant%database%yld_coef = (plant%database%yld_coef + 1.0 - plant%database%ywct/100.0) / (1.0-plant%database%ywct/100.0)
-
-        ! check crop type to see if yield coefficient and grain fraction are used
-        if( cook_yield .eq. 1 ) then
-            if(     (plant%geometry%hyfg .eq. 0) &
-               .or. (plant%geometry%hyfg .eq. 1) &
-               .or. (plant%geometry%hyfg .eq. 5) ) then
-            ! grain fraction is used
-                if(       (plant%database%yld_coef .gt. 1.0 ) &
-                    .and. (plant%database%yld_coef * plant%database%grf .lt. 1.0) ) then
-                    ! these values will physically require the transfer of
-                    ! biomass from stem or leaf pools to meet the incremental
-                    ! need for reproductive mass to meet the residue yield ratio.
-                    ! If acresid_int is not greateer than zero, this will
-                    ! not be possible
-                    write(*,*) 'Error: crop named (', trim(cropname), &
-               ') has bad grain fraction and residue yield ratio values'
-                    write(*,*) 'Error: grf*(ryrat+1-mc)/(1-mc) must be > 1',&
-                               ', Value is: ',plant%database%yld_coef*plant%database%grf
-                    stop
-                end if
-            end if
-        end if
-
-        ! set planting date vars (day, month, rotation year)
-        plant%database%plant_day = lastoper(sr)%day
-        plant%database%plant_month = lastoper(sr)%mon
-        plant%database%plant_rotyr = lastoper(sr)%yr
+        call plant_setup( sr, plant, soil, lastoper(sr), imprs, rdgflag )
 
         ! initialize flag to prevent multiple calibration harvests for single crop
         manFile%harv_calib_not_selected = .true.
-
-        ! initialize transpiration depth parameters
-        plant%geometry%zfurcut = 0.0
-        plant%geometry%ztransprtmin = 0.0
-        plant%geometry%ztransprtmax = 0.0
-        ! set row spacing based on flag
-        select case( plant%geometry%rsfg )
-        case(0) ! Broadcast Planting
-            plant%geometry%xrow = 0.0
-        case(1) ! Use Implement Ridge Spacing
-           if(imprs.gt.0.001) then
-             plant%geometry%xrow = imprs * mmtom
-             ! check for implement seed placement and ridging
-             if( (plant%geometry%rg .eq. 0) .and. (rdgflag .eq. 1) ) then
-               ! seed placed in furrow bottom and ridge made unconditionally
-               ! set transpiration depth parameters (meters)
-               plant%geometry%zfurcut = mmtom * furrowcut(soil%aszrgh,soil%asxrgw,soil%asxrgs)
-               plant%geometry%ztransprtmin = plant%geometry%zfurcut + plant%database%growdepth
-               plant%geometry%ztransprtmax = plant%database%zmrt
-             end if
-           else  ! no ridges, so this is a broadcast crop
-              plant%geometry%xrow = 0.0
-           endif
-        case(2) ! Use Specified Row Spacing
-           ! convert incoming mm to meters used in acxrow
-           plant%geometry%xrow = plant%geometry%xrow*mmtom
-        case default
-           write(*,*) 'Invalid row spacing flag value'
-        end select
 
         ! do process
         ! do not initialize crop if no crop is present
@@ -1999,6 +1946,11 @@ module manage_mod
           plant%growth%am0cif = .true.
           ! set crop growth flag on - jt
           plant%growth%am0cgf = .true.
+
+          if( upgm_growth .eq. 1 ) then
+            ! grow WEPS crop using upgm
+            call init_WEPS_UPGM( soil, plant )
+          end if
         endif
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
@@ -2254,18 +2206,18 @@ module manage_mod
         call getManVal(manFile%proc, 'irrdepth', irrig)
 
         ! do process
-        ! replaced am0irr (1 - sprinkler, 2 furrow) with ahlocirr
+        ! replaced am0irr (1 - sprinkler, 2 furrow) with locirr
         ! using roughflg to read in old value and set some default values
         if( roughflg .eq. 1 ) then
-            ahlocirr(sr) = 2000.0
+            hstate%locirr = 2000.0
         else
-            ahlocirr(sr) = 0.0
+            hstate%locirr = 0.0
         end if
         h1et%zirr = h1et%zirr + irrig
         ! make sure rate and duration are consistent
         ! these values are not set in this process but may have been set
         ! in process 72, if this is used in conjunction with it
-        call ratedura(h1et%zirr, ahratirr(sr), ahdurirr(sr))
+        call ratedura(h1et%zirr, hstate%ratirr, hstate%durirr)
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*) '//After irrigate process//'
@@ -2280,20 +2232,20 @@ module manage_mod
           call tdbug(sr, prcode, soil, plant)
         end if
 
-        call getManVal(manFile%proc, 'irrmonflag', am0monirr(sr))
-        call getManVal(manFile%proc, 'irrmaxapp', ahzdmaxirr(sr))
-        call getManVal(manFile%proc, 'irrrate', ahratirr(sr))
-        call getManVal(manFile%proc, 'irrduration', ahdurirr(sr))
-        call getManVal(manFile%proc, 'irrapploc', ahlocirr(sr))
-        call getManVal(manFile%proc, 'irrminapp', ahminirr(sr))
-        call getManVal(manFile%proc, 'irrmad', ahmadirr(sr))
-        call getManVal(manFile%proc, 'irrminint', ahmintirr(sr))
+        call getManVal(manFile%proc, 'irrmonflag', hstate%monirr)
+        call getManVal(manFile%proc, 'irrmaxapp', hstate%zdmaxirr)
+        call getManVal(manFile%proc, 'irrrate', hstate%ratirr)
+        call getManVal(manFile%proc, 'irrduration', hstate%durirr)
+        call getManVal(manFile%proc, 'irrapploc', hstate%locirr)
+        call getManVal(manFile%proc, 'irrminapp', hstate%minirr)
+        call getManVal(manFile%proc, 'irrmad', hstate%madirr)
+        call getManVal(manFile%proc, 'irrminint', hstate%mintirr)
 
         ! do process
         ! set next irrigation day to zero so irrigations will trigger
-        ahndayirr(sr) = 0
+        hstate%ndayirr = 0
         ! use inputs to set the irrigation rate, if 
-        call ratedura(ahzdmaxirr(sr), ahratirr(sr), ahdurirr(sr))
+        call ratedura(hstate%zdmaxirr, hstate%ratirr, hstate%durirr)
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*) '//After irrigation monitoring process//'
@@ -2309,15 +2261,15 @@ module manage_mod
         end if
 
         call getManVal(manFile%proc, 'irrdepth', irrig)
-        call getManVal(manFile%proc, 'irrrate', ahratirr(sr))
-        call getManVal(manFile%proc, 'irrduration', ahdurirr(sr))
-        call getManVal(manFile%proc, 'irrapploc', ahlocirr(sr))
+        call getManVal(manFile%proc, 'irrrate', hstate%ratirr)
+        call getManVal(manFile%proc, 'irrduration', hstate%durirr)
+        call getManVal(manFile%proc, 'irrapploc', hstate%locirr)
 
         ! do process
         ! add this irrigation event to any previous event on this same day
         h1et%zirr = h1et%zirr + irrig
         ! use inputs to set the irrigation rate, if 
-        call ratedura(h1et%zirr, ahratirr(sr), ahdurirr(sr))
+        call ratedura(h1et%zirr, hstate%ratirr, hstate%durirr)
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*) '//After single event irrigation process//'
           !call tdbug(sr, prcode, soil, plant)
@@ -2337,7 +2289,7 @@ module manage_mod
         end if
 
         ! do process
-        am0monirr(sr) = 0
+        hstate%monirr = 0
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*) '//After terminate irrigation monitoring//'
@@ -2633,6 +2585,121 @@ module manage_mod
           ! write(luowc(sr),"(i10,4(i5))",ADVANCE="YES") get_simdate_jday(), cd, cm, cy, get_simdate_doy()
         end if
 
+      case(100)  !  UPGMinWEPS_init
+
+        ! new plant created by biomass group (G 03)
+
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = .true.
+
+        ! read population, spacing and yield flags
+        call getManVal(manFile%proc, 'rowflag', plant%geometry%rsfg)        ! setup
+        call getManVal(manFile%proc, 'rowspac', plant%geometry%xrow)        ! setup
+        call getManVal(manFile%proc, 'rowridge', plant%geometry%rg)         ! setup
+        call getManVal(manFile%proc, 'plantpop', plant%geometry%dpop)       ! setup
+        call getManVal(manFile%proc, 'dmaxshoot', plant%database%dmaxshoot) ! setup
+        call getManVal(manFile%proc, 'cbaflag', plant%database%baflg)       ! calibration
+        call getManVal(manFile%proc, 'tgtyield', plant%database%ytgt)       ! calibration
+        call getManVal(manFile%proc, 'cbafact', plant%database%baf)         ! calibration
+        call getManVal(manFile%proc, 'cyrafact', plant%database%yraf)       ! not used
+        call getManVal(manFile%proc, 'hyldflag', plant%geometry%hyfg)       ! setup
+        ! read yield reporting values and growth characteristics
+        call getManVal(manFile%proc, 'hyldunits', plant%database%ynmu)      ! report
+        call getManVal(manFile%proc, 'hyldwater', plant%database%ywct)      ! setup, calibration, report
+        call getManVal(manFile%proc, 'hyconfact', plant%database%ycon)      ! calibration, report
+        call getManVal(manFile%proc, 'idc', plant%database%idc)             ! setup, growth
+        call getManVal(manFile%proc, 'grf', plant%database%grf)             ! setup
+        call getManVal(manFile%proc, 'ck', plant%database%ck)               ! growth
+        call getManVal(manFile%proc, 'hui0', plant%database%ehu0)           ! senescence
+        ! read crop growth parameters
+        call getManVal(manFile%proc, 'hmx', plant%database%zmxc)            ! growth
+        call getManVal(manFile%proc, 'growdepth', plant%database%growdepth) ! setup
+        call getManVal(manFile%proc, 'rdmx', plant%database%zmrt)           ! setup
+        call getManVal(manFile%proc, 'tbas', plant%database%tmin)           ! setup (days to maturity)
+        call getManVal(manFile%proc, 'topt', plant%database%topt)           ! setup (days to maturity)
+        call getManVal(manFile%proc, 'thudf', plant%database%thudf)         ! setup (days to maturity)
+        call getManVal(manFile%proc, 'dtm', plant%database%tdtm)            ! setup (days to maturity)
+        call getManVal(manFile%proc, 'thum', plant%database%thum)           ! setup (days to maturity)
+        call getManVal(manFile%proc, 'frsx1', plant%database%fd1(1))        ! not used
+        call getManVal(manFile%proc, 'frsx2', plant%database%fd2(1))        ! not used
+        call getManVal(manFile%proc, 'frsy1', plant%database%fd1(2))        ! not used
+        call getManVal(manFile%proc, 'frsy2', plant%database%fd2(2))        ! not used
+        call getManVal(manFile%proc, 'verndel', plant%database%tverndel)    ! not used
+        call getManVal(manFile%proc, 'bceff', plant%database%bceff)         ! growth
+        call getManVal(manFile%proc, 'a_lf', plant%database%alf)            ! not used
+        call getManVal(manFile%proc, 'b_lf', plant%database%blf)            ! not used
+        call getManVal(manFile%proc, 'c_lf', plant%database%clf)            ! not used
+        call getManVal(manFile%proc, 'd_lf', plant%database%dlf)            ! not used
+        call getManVal(manFile%proc, 'a_rp', plant%database%arp)            ! not used
+        call getManVal(manFile%proc, 'b_rp', plant%database%brp)            ! not used
+        call getManVal(manFile%proc, 'c_rp', plant%database%crp)            ! not used
+        call getManVal(manFile%proc, 'd_rp', plant%database%drp)            ! not used
+        call getManVal(manFile%proc, 'a_ht', plant%database%aht)            ! not used
+        call getManVal(manFile%proc, 'b_ht', plant%database%bht)            ! not used
+        call getManVal(manFile%proc, 'ssaa', plant%database%ssa)            ! growth, report
+        call getManVal(manFile%proc, 'ssab', plant%database%ssb)            ! growth, report
+        call getManVal(manFile%proc, 'sla', plant%database%sla)             ! growth
+        call getManVal(manFile%proc, 'huie', plant%database%hue)            ! setup
+        call getManVal(manFile%proc, 'transf', plant%database%transf)       ! not used
+        call getManVal(manFile%proc, 'diammax', plant%database%diammax)     ! growth
+        call getManVal(manFile%proc, 'storeinit', plant%database%storeinit) ! setup
+        call getManVal(manFile%proc, 'mshoot', plant%database%shoot)        ! setup
+        call getManVal(manFile%proc, 'leafstem', plant%database%fleafstem)  ! growth
+        call getManVal(manFile%proc, 'fshoot', plant%database%fshoot)       ! growth
+        call getManVal(manFile%proc, 'leaf2stor', plant%database%fleaf2stor) ! growth
+        call getManVal(manFile%proc, 'stem2stor', plant%database%fstem2stor) ! growth
+        call getManVal(manFile%proc, 'stor2stor', plant%database%fstor2stor) ! growth
+        call getManVal(manFile%proc, 'rbc',plant%database%rbc)               ! decomp, mproc
+        call getManVal(manFile%proc, 'standdk', plant%database%dkrate(1))   ! decomp
+        call getManVal(manFile%proc, 'surfdk', plant%database%dkrate(2))    ! decomp
+        call getManVal(manFile%proc, 'burieddk', plant%database%dkrate(3))  ! decomp
+        call getManVal(manFile%proc, 'rootdk', plant%database%dkrate(4))    ! decomp
+        call getManVal(manFile%proc, 'stemnodk', plant%database%dkrate(5))  ! decomp
+        call getManVal(manFile%proc, 'stemdia', plant%database%xstm)        ! decomp
+        call getManVal(manFile%proc, 'thrddys', plant%database%ddsthrsh)    ! decomp
+        call getManVal(manFile%proc, 'covfact', plant%database%covfact)     ! decomp
+        call getManVal(manFile%proc, 'resevapa', plant%database%resevapa)   ! hydro
+        call getManVal(manFile%proc, 'resevapb', plant%database%resevapb)   ! hydro
+        call getManVal(manFile%proc, 'yield_coefficient', plant%database%yld_coef)  ! growth
+        call getManVal(manFile%proc, 'residue_intercept', plant%database%resid_int) ! growth
+        call getManVal(manFile%proc, 'regrow_location', plant%database%zloc_regrow) ! not used
+
+        ! reading of process parameters complete
+
+        call plant_setup( sr, plant, soil, lastoper(sr), imprs, rdgflag )
+
+        ! initialize flag to prevent multiple calibration harvests for single crop
+        manFile%harv_calib_not_selected = .true.
+
+        ! do process
+        ! do not initialize crop if no crop is present
+        if( (plant%geometry%dpop .gt. 0.0) .and. (plant%database%idc .gt. 0) ) then
+          ! set flag for crop initialization - jt
+          plant%growth%am0cif = .true.
+          ! set crop growth flag on - jt
+          plant%growth%am0cgf = .true.
+
+          ! initialize upgm_grow model
+          plant%upgm_grow = UPGM()
+          call plant%upgm_grow%plant%plantstate%init()
+
+          ! create all input names
+          r_setter = plant%geometry%dpop
+          call plant%upgm_grow%plant%plantstate%pars%put("plantpop", r_setter, succ)        
+
+        endif
+
+        ! post-process stuff
+        if (manFile%am0tdb .eq. 1) then
+          write (luotdb(sr),*) '//After planting process//'
+          call tdbug(sr, prcode, soil, plant)
+        end if
+        call set_calib(sr, plant)
+        if( manFile%rpt_season_flg ) then
+          ! not reported by the kill process in this
+          call report_hydrobal( sr, manFile%mcount, manFile%mperod )
+        end if
+
       case default
         write(0,*) 'Invalid process: ', prname, ' ', prcode
         call exit (1)
@@ -2670,7 +2737,7 @@ module manage_mod
       return
     end subroutine mgdreset
 
-    subroutine manage( sr, startyr, soil, plant, plantIndex, biotot, mandate, h1et, manFile)
+    subroutine manage( sr, startyr, soil, plant, plantIndex, biotot, mandate, hstate, h1et, manFile)
 
 !     + + + PURPOSE + + +
 !     This is the main routine of the MANAGEMENT submodel. The date passed
@@ -2686,14 +2753,13 @@ module manage_mod
 !     + + + KEYWORDS + + +
 !     tillage, management
 
-      use weps_interface_defs
       use datetime_mod, only: difdat, get_simdate
       use file_io_mod, only: luomanage
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: plant_pointer, residue_pointer, biototal
+      use biomaterial, only: plant_pointer, biototal
       use mandate_mod, only: opercrop_date
       use stir_report_mod, only: stir_report
-      use hydro_data_struct_defs, only: hydro_derived_et
+      use hydro_data_struct_defs, only: hydro_derived_et, hydro_state
       use manage_data_struct_defs, only: man_file_struct, lastoper
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -2704,6 +2770,7 @@ module manage_mod
       integer, intent(inout) :: plantIndex      ! index used for detailed plant/residue output
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
+      type(hydro_state), intent(inout) :: hstate
       type(hydro_derived_et), intent(inout) :: h1et
       type(man_file_struct), intent(inout) :: manFile
 
@@ -2764,7 +2831,7 @@ module manage_mod
             ! do processes
             manFile%proc => manFile%grp%procFirst
             do while ( associated(manFile%proc) )
-              call doproc(soil, plant, biotot, mandate, h1et, manFile)
+              call doproc(soil, plant, biotot, mandate, hstate, h1et, manFile)
               ! next process
               manFile%proc => manFile%proc%procNext
             end do
@@ -2888,6 +2955,361 @@ module manage_mod
       tillay = nlay
       return
     end function tillay
+
+    real function furrowcut ( bszrgh, bsxrgw, bsxrgs )
+!     + + + PURPOSE + + +
+!     This function estimates the depth of soil cut from a flat surface
+!     to form a ridge and furrow. It is used to find a transpiration depth
+!     where a newly planted seed is placed in a deeper, wetter soil layer.
+
+!     + + + KEYWORDS + + +
+!     ridges, furrow, seeding, transpiration
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      real bszrgh, bsxrgw, bsxrgs
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     bszrgh - Ridge height (mm)
+!     bsxrgw - Ridge width (mm)
+!     bsxrgs - Ridge spacing (mm)
+
+!     + + + LOCAL VARIABLES + + +
+      real furrowdepth
+
+!     + + + LOCAL DEFINITIONS + + +
+!     furrowdepth - the furrow depth that the combination of spacing and
+!     top width will give if the furrow side slope is limited to 1:1
+
+!     + + + END SPECIFICATIONS + + +
+
+      if ( bszrgh .ge. (bsxrgs - bsxrgw) ) then
+          ! ridge height is greater than furrow width
+          ! ie. side slope is steeper than 1:1 then limit to 1:1
+         furrowdepth = bsxrgs - bsxrgw
+      else
+         furrowdepth = bszrgh
+      endif
+
+      furrowcut = 0.5 * furrowdepth * (1.0 + bsxrgw/bsxrgs)
+
+      return
+    end function furrowcut
+
+    subroutine set_prevday_blk( nlay, bsdblk, bsdblk0 )
+
+!     + + + PURPOSE + + +
+!     This subroutine sets the previous day bulk density to the present
+!     day bulk density
+
+!     + + + KEYWORDS + + +
+!     bulk density
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer nlay
+      real bsdblk(*), bsdblk0(*)
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     nlay     - number of soil layers to be updated
+!     bsdblk   - bulk density (Mg/m^3)
+
+!     + + + LOCAL VARIABLES + + +
+      integer lay
+
+!     + + + END SPECIFICATIONS + + + 
+
+      do lay = 1,nlay
+          bsdblk0(lay) = bsdblk(lay)
+      end do
+
+    end subroutine set_prevday_blk
+
+    subroutine plant_setup( isr, plant, soil, lastoper, imprs, rdgflag )
+
+      use biomaterial, only: plant_pointer
+      use manage_data_struct_defs, only: last_operation
+      use weps_main_mod, only: cook_yield
+      use p1unconv_mod, only: mgtokg, mmtom
+      use datetime_mod, only: dayear
+      use soil_data_struct_defs, only: soil_def
+      use climate_input_mod, only: cli_mav
+      use crop_climate_mod, only: huc1
+      use cubic_spline_mod
+      use file_io_mod, only: luoinpt
+      use crop_data_struct_defs, only: am0cfl
+
+      ! + + +   ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr
+      type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
+      type(last_operation), intent(in) :: lastoper
+      real, intent(in) :: imprs     ! implement ridge spacing (can be used to set row spacing)
+      integer, intent(in) :: rdgflag
+
+!     + + + LOCAL VARIABLES + +
+      integer idx, mdx, hdate, ydx, lay, bnslay
+      integer dtm
+      real phu
+      real jreal
+      real dy_mon(14),mx_air_temp(14),mn_air_temp(14)
+      real mx_air_temp2(14), mn_air_temp2(14)
+      real sphu, yp1, ypn, bphu, ephu
+      real max_air, min_air, heat_unit
+      type day_heatunits
+          integer day
+          real heatunits
+          real cumheatunits
+      end type day_heatunits
+      type(day_heatunits) d1(365), d2(730)
+
+!     Initialize
+
+      bnslay = size(soil%aszlyd)
+
+!     initialize variables needed for season heat unit computation: added on
+!     3/16/1998 (A. Retta)
+      data dy_mon /-15,15,45,74,105,135,166,196,227,258,288,319,349,380/
+!     transfer average monthly temperatures from the global array to a local.
+!     For the southern hemisphere, monthly average temperatures should start
+!     in July.1?
+      do idx=1,12
+          mx_air_temp(idx+1) = cli_mav%tmx(idx)
+          mn_air_temp(idx+1) = cli_mav%tmn(idx)
+      end do
+      mx_air_temp(1) = mx_air_temp(13)
+      mx_air_temp(14) = mx_air_temp(2)
+      mn_air_temp(1) = mn_air_temp(13)
+      mn_air_temp(14) = mn_air_temp(2)
+
+
+        ! input is residue yield ratio. internal use is total biomass yield ratio
+        ! all input values are on a dry weight basis.
+        ! plant%database%yld_coef = plant%database%yld_coef + 1.0
+
+        ! adjust yield coefficient to generate values on dry weight basis
+        ! from total above ground biomass increments
+        plant%database%yld_coef = (plant%database%yld_coef + 1.0 - plant%database%ywct/100.0) / (1.0-plant%database%ywct/100.0)
+
+        ! check crop type to see if yield coefficient and grain fraction are used
+        if( cook_yield .eq. 1 ) then
+            if(     (plant%geometry%hyfg .eq. 0) &
+               .or. (plant%geometry%hyfg .eq. 1) &
+               .or. (plant%geometry%hyfg .eq. 5) ) then
+            ! grain fraction is used
+                if(       (plant%database%yld_coef .gt. 1.0 ) &
+                    .and. (plant%database%yld_coef * plant%database%grf .lt. 1.0) ) then
+                    ! these values will physically require the transfer of
+                    ! biomass from stem or leaf pools to meet the incremental
+                    ! need for reproductive mass to meet the residue yield ratio.
+                    ! If acresid_int is not greateer than zero, this will
+                    ! not be possible
+                    write(*,*) 'Error: crop named (', trim(plant%bname), &
+               ') has bad grain fraction and residue yield ratio values'
+                    write(*,*) 'Error: grf*(ryrat+1-mc)/(1-mc) must be > 1',&
+                               ', Value is: ',plant%database%yld_coef*plant%database%grf
+                    stop
+                end if
+            end if
+        end if
+
+        ! set planting date vars (day, month, rotation year)
+        plant%database%plant_doy = dayear(lastoper%day, lastoper%mon, lastoper%yr)
+        plant%database%plant_day = lastoper%day
+        plant%database%plant_month = lastoper%mon
+        plant%database%plant_rotyr = lastoper%yr
+
+        ! initialize transpiration depth parameters
+        plant%geometry%zfurcut = 0.0
+        plant%geometry%ztransprtmin = 0.0
+        plant%geometry%ztransprtmax = 0.0
+        ! set row spacing based on flag
+        select case( plant%geometry%rsfg )
+        case(0) ! Broadcast Planting
+            plant%geometry%xrow = 0.0
+        case(1) ! Use Implement Ridge Spacing
+           if(imprs.gt.0.001) then
+             plant%geometry%xrow = imprs * mmtom
+             ! check for implement seed placement and ridging
+             if( (plant%geometry%rg .eq. 0) .and. (rdgflag .eq. 1) ) then
+               ! seed placed in furrow bottom and ridge made unconditionally
+               ! set transpiration depth parameters (meters)
+               plant%geometry%zfurcut = mmtom * furrowcut(soil%aszrgh,soil%asxrgw,soil%asxrgs)
+               plant%geometry%ztransprtmin = plant%geometry%zfurcut + plant%database%growdepth
+               plant%geometry%ztransprtmax = plant%database%zmrt
+             end if
+           else  ! no ridges, so this is a broadcast crop
+              plant%geometry%xrow = 0.0
+           endif
+        case(2) ! Use Specified Row Spacing
+           ! convert incoming mm to meters used in acxrow
+           plant%geometry%xrow = plant%geometry%xrow*mmtom
+        case default
+           write(*,*) 'Invalid row spacing flag value'
+        end select
+
+!     start calculation of seasonal heat unit requirement
+      sphu = 0.
+      ephu = 0.
+      bphu = 0.
+      mdx = 14
+      yp1 = 1.0e31    ! signals spline to use natural bound (2nd deriv = 0)
+      ypn = 1.0e31    ! signals spline to use natural bound (2nd deriv = 0)
+
+      ! call cubic spline interpolation routines for air temperature
+      call spline (dy_mon, mx_air_temp, mdx, yp1, ypn, mx_air_temp2)
+      call spline (dy_mon, mn_air_temp, mdx, yp1, ypn, mn_air_temp2)
+      do idx = 1, 365
+          jreal = idx
+          ! calculate daily temps. and heat units
+          call splint(dy_mon,mx_air_temp,mx_air_temp2,mdx,jreal,max_air)
+          call splint(dy_mon,mn_air_temp,mn_air_temp2,mdx,jreal,min_air)
+          heat_unit = huc1(max_air, min_air, plant%database%topt, plant%database%tmin)
+          d1(idx)%day=idx
+          d1(idx)%heatunits=heat_unit
+          d2(idx)%day=idx
+          d2(idx)%heatunits=heat_unit
+      end do
+!     duplicate the first year into the second year
+      do idx=1,365
+          ydx=idx+365
+          d2(ydx)%day=ydx
+          d2(ydx)%heatunits=d1(idx)%heatunits
+      end do
+!     running sum of heat units
+      do idx=1,730
+          sphu=sphu+d2(idx)%heatunits
+          d2(idx)%cumheatunits=sphu
+!          if (am0cfl(isr) .gt. 0) then
+!              print for debugging
+!              write(luoinpt(isr),*) d2(idx)%day,d2(idx)%heatunits,d2(idx)%cumheatunits
+!          end if
+      end do
+      sphu=0.
+
+!     find dtm or phu depending on heat unit flag=1
+      do idx=1,730
+            if (d2(idx)%day.eq.plant%database%plant_doy) bphu = d2(idx)%cumheatunits
+      end do
+      if( plant%database%thudf .eq. 1 ) then
+         ! use heat unit calculations to find dtm 
+         phu = plant%database%thum
+         do idx=1,730
+            if (d2(idx)%cumheatunits.le.bphu+phu) dtm = d2(idx)%day - plant%database%plant_doy
+         end do
+         hdate = plant%database%plant_doy + dtm
+      else
+         ! calculate average seasonal heat units
+         dtm=plant%database%tdtm
+         hdate = plant%database%plant_doy + dtm
+         if( hdate.gt.d2(730)%day) then
+            ! this crop grows longer than one year
+            ephu = d2(730)%cumheatunits
+            phu = ephu - bphu
+            ! cap this at two years
+            ydx = min(730,hdate - int(d2(730)%day))
+            phu = phu + d2(ydx)%cumheatunits
+         else
+            do idx=1,730
+               if (d2(idx)%day.eq.hdate) ephu = d2(idx)%cumheatunits
+            end do
+            phu = ephu - bphu
+         end if
+         if (phu .le. 10*(plant%database%topt - plant%database%tmin)) then
+            write(*,"(a,i3,a)") 'Warning: Crop will not grow in the',   &
+                                 dtm, &
+                                 ' days specified. Insufficient heat units accumulate. Check planting date.'
+         end if
+      end if
+
+      ! print out heat average heat unit and days to maturity
+      if (am0cfl(isr) .gt. 0) then
+         write(luoinpt(isr), "(i5, i7, i9, i11, i10, 2x, 2f10.1)" ) &
+               plant%database%plant_doy, hdate, plant%database%thudf, dtm, plant%database%tdtm, phu, plant%database%thum
+      end if
+
+      ! Set the global parameter for maximum heat units to the new calculated value
+      ! (this database value is read from management file every time crop is planted,
+      ! so changing it here does not corrupt it)
+      plant%database%thum = phu
+
+      ! brought in from cinit
+
+      ! determine number of shoots (for seeds, plant%database%shoot should be much
+      ! greater than plant%database%storeinit resulting in one shoot with a mass
+      ! reduced below plant%database%shoot
+      ! units are mg/plant * plant/m^2 / mg/shoot = shoots/m^2
+      plant%geometry%dstm = plant%database%storeinit * plant%geometry%dpop / plant%database%shoot
+      if( plant%geometry%dstm .lt. plant%geometry%dpop ) then
+          ! adjust count to reflect limit
+          plant%geometry%dstm = plant%geometry%dpop
+          ! not enough mass to make a full shoot
+          ! adjust shoot mass to reflect storage mass for one shoot per plant
+          ! units are mg/plant * kg/mg * plant/m^2 = kg/m^2
+          plant%growth%mtotshoot = plant%database%storeinit * mgtokg * plant%geometry%dpop
+      else if( plant%geometry%dstm .gt. plant%database%dmaxshoot*plant%geometry%dpop ) then
+          ! adjust count to reflect limit
+          plant%geometry%dstm = plant%database%dmaxshoot * plant%geometry%dpop
+          ! more mass than maximum number of shoots
+          ! adjust total shoot mass to reflect maximum number of shoots
+          ! units are shoots/m^2 * mg/shoot * kg/mg = kg/m^2
+          plant%growth%mtotshoot = plant%geometry%dstm * plant%database%shoot * mgtokg
+      else
+          ! mass and shoot number correspond
+          ! units are mg/plant * kg/mg * plant/m^2 = kg/m^2
+          plant%growth%mtotshoot = plant%database%storeinit * mgtokg * plant%geometry%dpop
+      end if
+
+      plant%growth%zgrowpt = plant%database%growdepth
+
+      ! root depth
+      plant%geometry%zrtd = plant%database%growdepth
+
+      ! initialize the root storage mass into a single layer
+      if( (soil%aszlyd(1)*mmtom .gt. plant%geometry%zrtd) ) then
+          ! mg/plant * #/m^2 * 1kg/1.0e6mg = kg/m^2
+          plant%mass%rootstorez(1) = plant%database%storeinit * plant%geometry%dpop * mgtokg
+      else
+          plant%mass%rootstorez(1) = 0.0
+      end if
+      do lay = 2, bnslay
+          if( ( (soil%aszlyd(lay-1)*mmtom .le. plant%geometry%zrtd) &
+              .and. (soil%aszlyd(lay)*mmtom .gt. plant%geometry%zrtd) ) ) then
+              ! mg/plant * #/m^2 * 1kg/1.0e6mg = kg/m^2
+              plant%mass%rootstorez(lay) = plant%database%storeinit * plant%geometry%dpop * mgtokg
+          else
+              plant%mass%rootstorez(lay) = 0.0
+          end if
+      end do
+
+      ! set initial emergence (shoot growth) values
+      plant%growth%thu_shoot_end = plant%database%hue
+
+      ! set previous values to initial values
+      plant%prev%standstem = plant%mass%standstem
+      plant%prev%standleaf = plant%mass%standleaf
+      plant%prev%standstore = plant%mass%standstore
+      plant%prev%flatstem = plant%mass%flatstem
+      plant%prev%flatleaf = plant%mass%flatleaf
+      plant%prev%flatstore = plant%mass%flatstore
+      plant%prev%mshoot = plant%growth%mshoot
+      do lay = 1, bnslay
+         plant%prev%stemz(lay) = plant%mass%stemz(lay)
+         plant%prev%rootstorez(lay) = plant%mass%rootstorez(lay)
+         plant%prev%rootfiberz(lay) = plant%mass%rootfiberz(lay)
+      end do
+      plant%prev%ht = plant%geometry%zht
+      plant%prev%zshoot = plant%geometry%zshoot
+      plant%prev%stm = plant%geometry%dstm
+      plant%prev%rtd = plant%geometry%zrtd
+      plant%prev%dayap = plant%growth%dayap
+      plant%prev%hucum = plant%growth%thucum
+      plant%prev%rthucum = plant%growth%trthucum
+      plant%prev%grainf = plant%geometry%grainf
+      plant%prev%chillucum = plant%growth%tchillucum
+      plant%prev%liveleaf = plant%growth%fliveleaf
+      plant%prev%dayspring = plant%growth%dayspring
+
+
+    end subroutine plant_setup
 
 end module manage_mod
 

@@ -4,10 +4,13 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine slsoda (f, neq, y, t, tout, itol, rtol, atol, itask,   &
-     &            istate, iopt, rwork, lrw, iwork, liw, jac, jt)
+      subroutine slsoda (isr, f, neq, y, t, tout, itol, rtol, atol,     &
+     &            itask, istate, iopt, rwork, lrw, iwork, liw, jac, jt)
+
+      use hydro_darcy_mod, only: sls1, slsa, sloc
+
       external f, jac
-      integer neq, itol, itask, istate, iopt, lrw, iwork, liw, jt
+      integer isr, neq, itol, itask, istate, iopt, lrw, iwork, liw, jt
       real y, t, tout, rtol, atol, rwork
       dimension neq(*), y(*), rtol(*), atol(*), rwork(lrw), iwork(liw)
 !-----------------------------------------------------------------------
@@ -985,23 +988,25 @@
 !-----------------------------------------------------------------------
       external sprja, ssolsy
       real rumach, smnorm
-      integer icf, ierpj, iersl, jcur, jstart, kflag, l
-      integer   lyh, lewt, lacor, lsavf, lwm, liwm, meth, miter
-      integer   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
-      integer jtyp, mused, mxordn, mxords
-      integer i, i1, i2, iflag, imxer, insufr, insufi, ixpr, kgo, lf0
+!      integer icf, ierpj, iersl, jcur, jstart, kflag, l
+!      integer   lyh, lewt, lacor, lsavf, lwm, liwm, meth, miter
+!      integer   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
+!      integer jtyp, mused, mxordn, mxords
+!      integer i, i1, i2, iflag, imxer, insufr, insufi, ixpr, kgo, lf0
+      integer i, i1, i2, iflag, imxer, kgo, lf0
       integer   leniw, lenrw, lenwm, ml, mord, mu, mxhnl0, mxstp0
-      integer init, mxstep, mxhnil, nhnil, nslast, nyh
+!      integer init, mxstep, mxhnil, nhnil, nslast, nyh
       integer len1, len1c, len1n, len1s, len2, leniwc, lenrwc
-      real ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround
-      real pdnorm
+!      real ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround
+!      real pdnorm
       real atoli, ayi, big, ewti, h0, hmax, hmx, rh, rtoli
-      real   tcrit, tdist, tnext, tol, tolsf, tp, tsw, size, sum, w0
+!      real   tcrit, tdist, tnext, tol, tolsf, tp, tsw, size, sum, w0
+      real   tcrit, tdist, tnext, tol, tolsf, tp, size, sum, w0
       dimension mord(2)
       logical ihit
       character*60 msg
-      save init, mxstep, mxhnil, nhnil, nslast, nyh
-      save tsw, insufr, insufi, ixpr
+!      save init, mxstep, mxhnil, nhnil, nslast, nyh
+!      save tsw, insufr, insufi, ixpr
 !-----------------------------------------------------------------------
 ! the following two internal common blocks contain variables which are
 ! communicated between subroutines.  in each block, all real variables
@@ -1009,12 +1014,12 @@
 ! subroutines slsoda, sintdy, sstoda, sprja, ssolsy.
 ! /slsa01/ is declared in subroutines slsoda, sstoda, sprja.
 !-----------------------------------------------------------------------
-      common /sls001/ ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround,    &
-     &   icf, ierpj, iersl, jcur, jstart, kflag, l,                     &
-     &   lyh, lewt, lacor, lsavf, lwm, liwm, meth, miter,               &
-     &   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
+!      common /sls001/ ccmax, el0, h, hmin, hmxi, hu, rc, tn, uround,    &
+!     &   icf, ierpj, iersl, jcur, jstart, kflag, l,                     &
+!     &   lyh, lewt, lacor, lsavf, lwm, liwm, meth, miter,               &
+!     &   maxord, maxcor, msbp, mxncf, n, nq, nst, nfe, nje, nqu
 !
-      common /slsa01/ pdnorm, jtyp, mused, mxordn, mxords
+!      common /slsa01/ pdnorm, jtyp, mused, mxordn, mxords
 !
       data mord(1),mord(2)/12,5/, mxstp0/500/, mxhnl0/10/
 !-----------------------------------------------------------------------
@@ -1028,10 +1033,10 @@
       if (istate .lt. 1 .or. istate .gt. 3) go to 601
       if (itask .lt. 1 .or. itask .gt. 5) go to 602
       if (istate .eq. 1) go to 10
-      if (init .eq. 0) go to 603
+      if (sloc(isr)%init .eq. 0) go to 603
       if (istate .eq. 2) go to 200
       go to 20
- 10   init = 0
+ 10   sloc(isr)%init = 0
       if (tout .eq. t) return
 !-----------------------------------------------------------------------
 ! block b.
@@ -1044,55 +1049,55 @@
 !-----------------------------------------------------------------------
  20   if (neq(1) .le. 0) go to 604
       if (istate .eq. 1) go to 25
-      if (neq(1) .gt. n) go to 605
- 25   n = neq(1)
+      if (neq(1) .gt. sls1(isr)%n) go to 605
+ 25   sls1(isr)%n = neq(1)
       if (itol .lt. 1 .or. itol .gt. 4) go to 606
       if (iopt .lt. 0 .or. iopt .gt. 1) go to 607
       if (jt .eq. 3 .or. jt .lt. 1 .or. jt .gt. 5) go to 608
-      jtyp = jt
+      slsa(isr)%jtyp = jt
       if (jt .le. 2) go to 30
       ml = iwork(1)
       mu = iwork(2)
-      if (ml .lt. 0 .or. ml .ge. n) go to 609
-      if (mu .lt. 0 .or. mu .ge. n) go to 610
+      if (ml .lt. 0 .or. ml .ge. sls1(isr)%n) go to 609
+      if (mu .lt. 0 .or. mu .ge. sls1(isr)%n) go to 610
  30   continue
 ! next process and check the optional inputs. --------------------------
       if (iopt .eq. 1) go to 40
-      ixpr = 0
-      mxstep = mxstp0
-      mxhnil = mxhnl0
-      hmxi = 0.0e0
-      hmin = 0.0e0
+      sloc(isr)%ixpr = 0
+      sloc(isr)%mxstep = mxstp0
+      sloc(isr)%mxhnil = mxhnl0
+      sls1(isr)%hmxi = 0.0e0
+      sls1(isr)%hmin = 0.0e0
       if (istate .ne. 1) go to 60
       h0 = 0.0e0
-      mxordn = mord(1)
-      mxords = mord(2)
+      slsa(isr)%mxordn = mord(1)
+      slsa(isr)%mxords = mord(2)
       go to 60
- 40   ixpr = iwork(5)
-      if (ixpr .lt. 0 .or. ixpr .gt. 1) go to 611
-      mxstep = iwork(6)
-      if (mxstep .lt. 0) go to 612
-      if (mxstep .eq. 0) mxstep = mxstp0
-      mxhnil = iwork(7)
-      if (mxhnil .lt. 0) go to 613
-      if (mxhnil .eq. 0) mxhnil = mxhnl0
+ 40   sloc(isr)%ixpr = iwork(5)
+      if (sloc(isr)%ixpr .lt. 0 .or. sloc(isr)%ixpr .gt. 1) go to 611
+      sloc(isr)%mxstep = iwork(6)
+      if (sloc(isr)%mxstep .lt. 0) go to 612
+      if (sloc(isr)%mxstep .eq. 0) sloc(isr)%mxstep = mxstp0
+      sloc(isr)%mxhnil = iwork(7)
+      if (sloc(isr)%mxhnil .lt. 0) go to 613
+      if (sloc(isr)%mxhnil .eq. 0) sloc(isr)%mxhnil = mxhnl0
       if (istate .ne. 1) go to 50
       h0 = rwork(5)
-      mxordn = iwork(8)
-      if (mxordn .lt. 0) go to 628
-      if (mxordn .eq. 0) mxordn = 100
-      mxordn = min(mxordn,mord(1))
-      mxords = iwork(9)
-      if (mxords .lt. 0) go to 629
-      if (mxords .eq. 0) mxords = 100
-      mxords = min(mxords,mord(2))
+      slsa(isr)%mxordn = iwork(8)
+      if (slsa(isr)%mxordn .lt. 0) go to 628
+      if (slsa(isr)%mxordn .eq. 0) slsa(isr)%mxordn = 100
+      slsa(isr)%mxordn = min(slsa(isr)%mxordn,mord(1))
+      slsa(isr)%mxords = iwork(9)
+      if (slsa(isr)%mxords .lt. 0) go to 629
+      if (slsa(isr)%mxords .eq. 0) slsa(isr)%mxords = 100
+      slsa(isr)%mxords = min(slsa(isr)%mxords,mord(2))
       if ((tout - t)*h0 .lt. 0.0e0) go to 614
  50   hmax = rwork(6)
       if (hmax .lt. 0.0e0) go to 615
-      hmxi = 0.0e0
-      if (hmax .gt. 0.0e0) hmxi = 1.0e0/hmax
-      hmin = rwork(7)
-      if (hmin .lt. 0.0e0) go to 616
+      sls1(isr)%hmxi = 0.0e0
+      if (hmax .gt. 0.0e0) sls1(isr)%hmxi = 1.0e0/hmax
+      sls1(isr)%hmin = rwork(7)
+      if (sls1(isr)%hmin .lt. 0.0e0) go to 616
 !-----------------------------------------------------------------------
 ! set work array pointers and check lengths lrw and liw.
 ! if istate = 1, meth is initialized to 1 here to facilitate the
@@ -1106,47 +1111,47 @@
 ! continuation call.  if the lengths are sufficient for the current
 ! method but not for both methods, a warning message is sent.
 !-----------------------------------------------------------------------
- 60   if (istate .eq. 1) meth = 1
-      if (istate .eq. 1) nyh = n
-      lyh = 21
-      len1n = 20 + (mxordn + 1)*nyh
-      len1s = 20 + (mxords + 1)*nyh
-      lwm = len1s + 1
-      if (jt .le. 2) lenwm = n*n + 2
-      if (jt .ge. 4) lenwm = (2*ml + mu + 1)*n + 2
+ 60   if (istate .eq. 1) sls1(isr)%meth = 1
+      if (istate .eq. 1) sloc(isr)%nyh = sls1(isr)%n
+      sls1(isr)%lyh = 21
+      len1n = 20 + (slsa(isr)%mxordn + 1)*sloc(isr)%nyh
+      len1s = 20 + (slsa(isr)%mxords + 1)*sloc(isr)%nyh
+      sls1(isr)%lwm = len1s + 1
+      if (jt .le. 2) lenwm = sls1(isr)%n*sls1(isr)%n + 2
+      if (jt .ge. 4) lenwm = (2*ml + mu + 1)*sls1(isr)%n + 2
       len1s = len1s + lenwm
       len1c = len1n
-      if (meth .eq. 2) len1c = len1s
+      if (sls1(isr)%meth .eq. 2) len1c = len1s
       len1 = max(len1n,len1s)
-      len2 = 3*n
+      len2 = 3*sls1(isr)%n
       lenrw = len1 + len2
       lenrwc = len1c + len2
       iwork(17) = lenrw
-      liwm = 1
-      leniw = 20 + n
+      sls1(isr)%liwm = 1
+      leniw = 20 + sls1(isr)%n
       leniwc = 20
-      if (meth .eq. 2) leniwc = leniw
+      if (sls1(isr)%meth .eq. 2) leniwc = leniw
       iwork(18) = leniw
       if (istate .eq. 1 .and. lrw .lt. lenrwc) go to 617
       if (istate .eq. 1 .and. liw .lt. leniwc) go to 618
       if (istate .eq. 3 .and. lrw .lt. lenrwc) go to 550
       if (istate .eq. 3 .and. liw .lt. leniwc) go to 555
-      lewt = len1 + 1
-      insufr = 0
+      sls1(isr)%lewt = len1 + 1
+      sloc(isr)%insufr = 0
       if (lrw .ge. lenrw) go to 65
-      insufr = 2
-      lewt = len1c + 1
+      sloc(isr)%insufr = 2
+      sls1(isr)%lewt = len1c + 1
       msg='slsoda-  warning.. rwork length is sufficient for now, but  '
       call xerrwv (msg, 60, 103, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       msg='      may not be later.  integration will proceed anyway.   '
       call xerrwv (msg, 60, 103, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       msg = '      length needed is lenrw = i1, while lrw = i2.'
       call xerrwv (msg, 50, 103, 0, 2, lenrw, lrw, 0, 0.0e0, 0.0e0)
- 65   lsavf = lewt + n
-      lacor = lsavf + n
-      insufi = 0
+ 65   sls1(isr)%lsavf = sls1(isr)%lewt + sls1(isr)%n
+      sls1(isr)%lacor = sls1(isr)%lsavf + sls1(isr)%n
+      sloc(isr)%insufi = 0
       if (liw .ge. leniw) go to 70
-      insufi = 2
+      sloc(isr)%insufi = 2
       msg='slsoda-  warning.. iwork length is sufficient for now, but  '
       call xerrwv (msg, 60, 104, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       msg='      may not be later.  integration will proceed anyway.   '
@@ -1157,7 +1162,7 @@
 ! check rtol and atol for legality. ------------------------------------
       rtoli = rtol(1)
       atoli = atol(1)
-      do 75 i = 1,n
+      do 75 i = 1,sls1(isr)%n
         if (itol .ge. 3) rtoli = rtol(i)
         if (itol .eq. 2 .or. itol .eq. 4) atoli = atol(i)
         if (rtoli .lt. 0.0e0) go to 619
@@ -1165,11 +1170,11 @@
  75     continue
       if (istate .eq. 1) go to 100
 ! if istate = 3, set flag to signal parameter changes to sstoda. -------
-      jstart = -1
-      if (n .eq. nyh) go to 200
+      sls1(isr)%jstart = -1
+      if (sls1(isr)%n .eq. sloc(isr)%nyh) go to 200
 ! neq was reduced.  zero part of yh to avoid undefined references. -----
-      i1 = lyh + l*nyh
-      i2 = lyh + (maxord + 1)*nyh - 1
+      i1 = sls1(isr)%lyh + sls1(isr)%l*sloc(isr)%nyh
+      i2 = sls1(isr)%lyh + (sls1(isr)%maxord + 1)*sloc(isr)%nyh - 1
       if (i1 .gt. i2) go to 200
       do 95 i = i1,i2
  95     rwork(i) = 0.0e0
@@ -1181,42 +1186,43 @@
 ! and the calculation of the initial step size.
 ! the error weights in ewt are inverted after being loaded.
 !-----------------------------------------------------------------------
- 100  uround = rumach()
-      tn = t
-      tsw = t
-      maxord = mxordn
+ 100  sls1(isr)%uround = rumach()
+      sls1(isr)%tn = t
+      sloc(isr)%tsw = t
+      sls1(isr)%maxord = slsa(isr)%mxordn
       if (itask .ne. 4 .and. itask .ne. 5) go to 110
       tcrit = rwork(1)
       if ((tcrit - tout)*(tout - t) .lt. 0.0e0) go to 625
       if (h0 .ne. 0.0e0 .and. (t + h0 - tcrit)*h0 .gt. 0.0e0)           &
      &   h0 = tcrit - t
- 110  jstart = 0
-      nhnil = 0
-      nst = 0
-      nje = 0
-      nslast = 0
-      hu = 0.0e0
-      nqu = 0
-      mused = 0
-      miter = 0
-      ccmax = 0.3e0
-      maxcor = 3
-      msbp = 20
-      mxncf = 10
+ 110  sls1(isr)%jstart = 0
+      sloc(isr)%nhnil = 0
+      sls1(isr)%nst = 0
+      sls1(isr)%nje = 0
+      sloc(isr)%nslast = 0
+      sls1(isr)%hu = 0.0e0
+      sls1(isr)%nqu = 0
+      slsa(isr)%mused = 0
+      sls1(isr)%miter = 0
+      sls1(isr)%ccmax = 0.3e0
+      sls1(isr)%maxcor = 3
+      sls1(isr)%msbp = 20
+      sls1(isr)%mxncf = 10
 ! initial call to f.  (lf0 points to yh(*,2).) -------------------------
-      lf0 = lyh + nyh
-      call f (neq, t, y, rwork(lf0))
-      nfe = 1
+      lf0 = sls1(isr)%lyh + sloc(isr)%nyh
+      call f (isr, neq, t, y, rwork(lf0))
+      sls1(isr)%nfe = 1
 ! load the initial value vector in yh. ---------------------------------
-      do 115 i = 1,n
- 115    rwork(i+lyh-1) = y(i)
+      do 115 i = 1,sls1(isr)%n
+ 115    rwork(i+sls1(isr)%lyh-1) = y(i)
 ! load and invert the ewt array.  (h is temporarily set to 1.0.) -------
-      nq = 1
-      h = 1.0e0
-      call sewset (n, itol, rtol, atol, rwork(lyh), rwork(lewt))
-      do 120 i = 1,n
-        if (rwork(i+lewt-1) .le. 0.0e0) go to 621
- 120    rwork(i+lewt-1) = 1.0e0/rwork(i+lewt-1)
+      sls1(isr)%nq = 1
+      sls1(isr)%h = 1.0e0
+      call sewset (sls1(isr)%n, itol, rtol, atol, rwork(sls1(isr)%lyh), &
+     &                                  rwork(sls1(isr)%lewt))
+      do 120 i = 1,sls1(isr)%n
+        if (rwork(i+sls1(isr)%lewt-1) .le. 0.0e0) go to 621
+ 120    rwork(i+sls1(isr)%lewt-1) = 1.0e0/rwork(i+sls1(isr)%lewt-1)
 !-----------------------------------------------------------------------
 ! the coding below computes the step size, h0, to be attempted on the
 ! first step, unless the user has supplied a value for this.
@@ -1239,31 +1245,31 @@
       if (h0 .ne. 0.0e0) go to 180
       tdist = abs(tout - t)
       w0 = max(abs(t),abs(tout))
-      if (tdist .lt. 2.0e0*uround*w0) go to 622
+      if (tdist .lt. 2.0e0*sls1(isr)%uround*w0) go to 622
       tol = rtol(1)
       if (itol .le. 2) go to 140
-      do 130 i = 1,n
+      do 130 i = 1,sls1(isr)%n
  130    tol = max(tol,rtol(i))
  140  if (tol .gt. 0.0e0) go to 160
       atoli = atol(1)
-      do 150 i = 1,n
+      do 150 i = 1,sls1(isr)%n
         if (itol .eq. 2 .or. itol .eq. 4) atoli = atol(i)
         ayi = abs(y(i))
         if (ayi .ne. 0.0e0) tol = max(tol,atoli/ayi)
  150    continue
- 160  tol = max(tol,100.0e0*uround)
+ 160  tol = max(tol,100.0e0*sls1(isr)%uround)
       tol = min(tol,0.001e0)
-      sum = smnorm (n, rwork(lf0), rwork(lewt))
+      sum = smnorm (sls1(isr)%n, rwork(lf0), rwork(sls1(isr)%lewt))
       sum = 1.0e0/(tol*w0*w0) + tol*sum**2
       h0 = 1.0e0/sqrt(sum)
       h0 = min(h0,tdist)
       h0 = sign(h0,tout-t)
 ! adjust h0 if necessary to meet hmax bound. ---------------------------
- 180  rh = abs(h0)*hmxi
+ 180  rh = abs(h0)*sls1(isr)%hmxi
       if (rh .gt. 1.0e0) h0 = h0/rh
 ! load h with h0 and scale yh(*,2) by h0. ------------------------------
-      h = h0
-      do 190 i = 1,n
+      sls1(isr)%h = h0
+      do 190 i = 1,sls1(isr)%n
  190    rwork(i+lf0-1) = h0*rwork(i+lf0-1)
       go to 270
 !-----------------------------------------------------------------------
@@ -1271,36 +1277,38 @@
 ! the next code block is for continuation calls only (istate = 2 or 3)
 ! and is to check stop conditions before taking a step.
 !-----------------------------------------------------------------------
- 200  nslast = nst
+ 200  sloc(isr)%nslast = sls1(isr)%nst
       go to (210, 250, 220, 230, 240), itask
- 210  if ((tn - tout)*h .lt. 0.0e0) go to 250
-      call sintdy (tout, 0, rwork(lyh), nyh, y, iflag)
+ 210  if ((sls1(isr)%tn - tout)*sls1(isr)%h .lt. 0.0e0) go to 250
+      call sintdy (isr, tout, 0, rwork(sls1(isr)%lyh), sloc(isr)%nyh,   &
+     &             y, iflag)
       if (iflag .ne. 0) go to 627
       t = tout
       go to 420
- 220  tp = tn - hu*(1.0e0 + 100.0e0*uround)
-      if ((tp - tout)*h .gt. 0.0e0) go to 623
-      if ((tn - tout)*h .lt. 0.0e0) go to 250
-      t = tn
+ 220  tp = sls1(isr)%tn - sls1(isr)%hu*(1.0e0+100.0e0*sls1(isr)%uround)
+      if ((tp - tout)*sls1(isr)%h .gt. 0.0e0) go to 623
+      if ((sls1(isr)%tn - tout)*sls1(isr)%h .lt. 0.0e0) go to 250
+      t = sls1(isr)%tn
       go to 400
  230  tcrit = rwork(1)
-      if ((tn - tcrit)*h .gt. 0.0e0) go to 624
-      if ((tcrit - tout)*h .lt. 0.0e0) go to 625
-      if ((tn - tout)*h .lt. 0.0e0) go to 245
-      call sintdy (tout, 0, rwork(lyh), nyh, y, iflag)
+      if ((sls1(isr)%tn - tcrit)*sls1(isr)%h .gt. 0.0e0) go to 624
+      if ((tcrit - tout)*sls1(isr)%h .lt. 0.0e0) go to 625
+      if ((sls1(isr)%tn - tout)*sls1(isr)%h .lt. 0.0e0) go to 245
+      call sintdy (isr, tout, 0, rwork(sls1(isr)%lyh), sloc(isr)%nyh,   &
+     &             y, iflag)
       if (iflag .ne. 0) go to 627
       t = tout
       go to 420
  240  tcrit = rwork(1)
-      if ((tn - tcrit)*h .gt. 0.0e0) go to 624
- 245  hmx = abs(tn) + abs(h)
-      ihit = abs(tn - tcrit) .le. 100.0e0*uround*hmx
+      if ((sls1(isr)%tn - tcrit)*sls1(isr)%h .gt. 0.0e0) go to 624
+ 245  hmx = abs(sls1(isr)%tn) + abs(sls1(isr)%h)
+      ihit = abs(sls1(isr)%tn - tcrit) .le. 100.0e0*sls1(isr)%uround*hmx
       if (ihit) t = tcrit
       if (ihit) go to 400
-      tnext = tn + h*(1.0e0 + 4.0e0*uround)
-      if ((tnext - tcrit)*h .le. 0.0e0) go to 250
-      h = (tcrit - tn)*(1.0e0 - 4.0e0*uround)
-      if (istate .eq. 2 .and. jstart .ge. 0) jstart = -2
+      tnext =sls1(isr)%tn + sls1(isr)%h*(1.0e0 + 4.0e0*sls1(isr)%uround)
+      if ((tnext - tcrit)*sls1(isr)%h .le. 0.0e0) go to 250
+      sls1(isr)%h =(tcrit - sls1(isr)%tn)*(1.0e0-4.0e0*sls1(isr)%uround)
+      if (istate.eq.2 .and. sls1(isr)%jstart.ge.0) sls1(isr)%jstart = -2
 !-----------------------------------------------------------------------
 ! block e.
 ! the next block is normally executed for all calls and contains
@@ -1313,41 +1321,48 @@
 ! check for h below the roundoff level in t.
 !-----------------------------------------------------------------------
  250  continue
-      if (meth .eq. mused) go to 255
-      if (insufr .eq. 1) go to 550
-      if (insufi .eq. 1) go to 555
- 255  if ((nst-nslast) .ge. mxstep) go to 500
-      call sewset (n, itol, rtol, atol, rwork(lyh), rwork(lewt))
-      do 260 i = 1,n
-        if (rwork(i+lewt-1) .le. 0.0e0) go to 510
- 260    rwork(i+lewt-1) = 1.0e0/rwork(i+lewt-1)
- 270  tolsf = uround*smnorm (n, rwork(lyh), rwork(lewt))
+      if (sls1(isr)%meth .eq. slsa(isr)%mused) go to 255
+      if (sloc(isr)%insufr .eq. 1) go to 550
+      if (sloc(isr)%insufi .eq. 1) go to 555
+ 255  if ((sls1(isr)%nst-sloc(isr)%nslast).ge.sloc(isr)%mxstep)go to 500
+      call sewset (sls1(isr)%n, itol, rtol, atol, rwork(sls1(isr)%lyh), &
+     &                                  rwork(sls1(isr)%lewt))
+      do 260 i = 1,sls1(isr)%n
+        if (rwork(i+sls1(isr)%lewt-1) .le. 0.0e0) go to 510
+ 260    rwork(i+sls1(isr)%lewt-1) = 1.0e0/rwork(i+sls1(isr)%lewt-1)
+ 270  tolsf = sls1(isr)%uround                                          &
+     &      * smnorm (sls1(isr)%n, rwork(sls1(isr)%lyh),                &
+     &      rwork(sls1(isr)%lewt))
       if (tolsf .le. 1.0e0) go to 280
       tolsf = tolsf*2.0e0
-      if (nst .eq. 0) go to 626
+      if (sls1(isr)%nst .eq. 0) go to 626
       go to 520
- 280  if ((tn + h) .ne. tn) go to 290
-      nhnil = nhnil + 1
-      if (nhnil .gt. mxhnil) go to 290
+ 280  if ((sls1(isr)%tn + sls1(isr)%h) .ne. sls1(isr)%tn) go to 290
+      sloc(isr)%nhnil = sloc(isr)%nhnil + 1
+      if (sloc(isr)%nhnil .gt. sloc(isr)%mxhnil) go to 290
       msg = 'slsoda-  warning..internal t (=r1) and h (=r2) are'
       call xerrwv (msg, 50, 101, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       msg='      such that in the machine, t + h = t on the next step  '
       call xerrwv (msg, 60, 101, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       msg = '     (h = step size). solver will continue anyway.'
-      call xerrwv (msg, 50, 101, 0, 0, 0, 0, 2, tn, h)
-      if (nhnil .lt. mxhnil) go to 290
+      call xerrwv(msg, 50, 101, 0, 0, 0, 0, 2,sls1(isr)%tn, sls1(isr)%h)
+      if (sloc(isr)%nhnil .lt. sloc(isr)%mxhnil) go to 290
       msg = 'slsoda-  above warning has been issued i1 times.  '
       call xerrwv (msg, 50, 102, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       msg = '     it will not be issued again for this problem.'
-      call xerrwv (msg, 50, 102, 0, 1, mxhnil, 0, 0, 0.0e0, 0.0e0)
+      call xerrwv (msg, 50,102, 0, 1,sloc(isr)%mxhnil, 0, 0,0.0e0,0.0e0)
  290  continue
 !-----------------------------------------------------------------------
 !   call sstoda(neq,y,yh,nyh,yh,ewt,savf,acor,wm,iwm,f,jac,sprja,ssolsy)
 !-----------------------------------------------------------------------
-      call sstoda (neq, y, rwork(lyh), nyh, rwork(lyh), rwork(lewt),    &
-     &   rwork(lsavf), rwork(lacor), rwork(lwm), iwork(liwm),           &
+      call sstoda(isr, neq, y, rwork(sls1(isr)%lyh), sloc(isr)%nyh,     &
+     &   rwork(sls1(isr)%lyh),                                          &
+     &   rwork(sls1(isr)%lewt),                                         &
+     &   rwork(sls1(isr)%lsavf), rwork(sls1(isr)%lacor),                &
+     &   rwork(sls1(isr)%lwm),                                          &
+     &   iwork(sls1(isr)%liwm),                                         &
      &   f, jac, sprja, ssolsy)
-      kgo = 1 - kflag
+      kgo = 1 - sls1(isr)%kflag
       go to (300, 530, 540), kgo
 !-----------------------------------------------------------------------
 ! block f.
@@ -1358,51 +1373,55 @@
 ! and do extra printing of data if ixpr = 1.
 ! then, in any case, check for stop conditions.
 !-----------------------------------------------------------------------
- 300  init = 1
-      if (meth .eq. mused) go to 310
-      tsw = tn
-      maxord = mxordn
-      if (meth .eq. 2) maxord = mxords
-      if (meth .eq. 2) rwork(lwm) = sqrt(uround)
-      insufr = min(insufr,1)
-      insufi = min(insufi,1)
-      jstart = -1
-      if (ixpr .eq. 0) go to 310
-      if (meth .eq. 2) then
+ 300  sloc(isr)%init = 1
+      if (sls1(isr)%meth .eq. slsa(isr)%mused) go to 310
+      sloc(isr)%tsw = sls1(isr)%tn
+      sls1(isr)%maxord = slsa(isr)%mxordn
+      if (sls1(isr)%meth .eq. 2) sls1(isr)%maxord = slsa(isr)%mxords
+      if (sls1(isr)%meth .eq. 2)                                        &
+     &                     rwork(sls1(isr)%lwm) = sqrt(sls1(isr)%uround)
+      sloc(isr)%insufr = min(sloc(isr)%insufr,1)
+      sloc(isr)%insufi = min(sloc(isr)%insufi,1)
+      sls1(isr)%jstart = -1
+      if (sloc(isr)%ixpr .eq. 0) go to 310
+      if (sls1(isr)%meth .eq. 2) then
       msg='slsoda- a switch to the bdf (stiff) method has occurred     '
       call xerrwv (msg, 60, 105, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       endif
-      if (meth .eq. 1) then
+      if (sls1(isr)%meth .eq. 1) then
       msg='slsoda- a switch to the adams (nonstiff) method has occurred'
       call xerrwv (msg, 60, 106, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       endif
       msg='     at t = r1,  tentative step size h = r2,  step nst = i1 '
-      call xerrwv (msg, 60, 107, 0, 1, nst, 0, 2, tn, h)
+      call xerrwv(msg, 60, 107, 0, 1,sls1(isr)%nst, 0, 2, sls1(isr)%tn, &
+     &     sls1(isr)%h)
  310  go to (320, 400, 330, 340, 350), itask
 ! itask = 1.  if tout has been reached, interpolate. -------------------
- 320  if ((tn - tout)*h .lt. 0.0e0) go to 250
-      call sintdy (tout, 0, rwork(lyh), nyh, y, iflag)
+ 320  if ((sls1(isr)%tn - tout)*sls1(isr)%h .lt. 0.0e0) go to 250
+      call sintdy (isr, tout, 0, rwork(sls1(isr)%lyh), sloc(isr)%nyh,   &
+     &             y, iflag)
       t = tout
       go to 420
 ! itask = 3.  jump to exit if tout was reached. ------------------------
- 330  if ((tn - tout)*h .ge. 0.0e0) go to 400
+ 330  if ((sls1(isr)%tn - tout)*sls1(isr)%h .ge. 0.0e0) go to 400
       go to 250
 ! itask = 4.  see if tout or tcrit was reached.  adjust h if necessary.
- 340  if ((tn - tout)*h .lt. 0.0e0) go to 345
-      call sintdy (tout, 0, rwork(lyh), nyh, y, iflag)
+ 340  if ((sls1(isr)%tn - tout)*sls1(isr)%h .lt. 0.0e0) go to 345
+      call sintdy (isr, tout, 0, rwork(sls1(isr)%lyh), sloc(isr)%nyh,   &
+     &             y, iflag)
       t = tout
       go to 420
- 345  hmx = abs(tn) + abs(h)
-      ihit = abs(tn - tcrit) .le. 100.0e0*uround*hmx
+ 345  hmx = abs(sls1(isr)%tn) + abs(sls1(isr)%h)
+      ihit = abs(sls1(isr)%tn - tcrit) .le. 100.0e0*sls1(isr)%uround*hmx
       if (ihit) go to 400
-      tnext = tn + h*(1.0e0 + 4.0e0*uround)
-      if ((tnext - tcrit)*h .le. 0.0e0) go to 250
-      h = (tcrit - tn)*(1.0e0 - 4.0e0*uround)
-      if (jstart .ge. 0) jstart = -2
+      tnext =sls1(isr)%tn + sls1(isr)%h*(1.0e0 + 4.0e0*sls1(isr)%uround)
+      if ((tnext - tcrit)*sls1(isr)%h .le. 0.0e0) go to 250
+      sls1(isr)%h =(tcrit - sls1(isr)%tn)*(1.0e0-4.0e0*sls1(isr)%uround)
+      if (sls1(isr)%jstart .ge. 0) sls1(isr)%jstart = -2
       go to 250
 ! itask = 5.  see if tcrit was reached and jump to exit. ---------------
- 350  hmx = abs(tn) + abs(h)
-      ihit = abs(tn - tcrit) .le. 100.0e0*uround*hmx
+ 350  hmx = abs(sls1(isr)%tn) + abs(sls1(isr)%h)
+      ihit = abs(sls1(isr)%tn - tcrit) .le. 100.0e0*sls1(isr)%uround*hmx
 !-----------------------------------------------------------------------
 ! block g.
 ! the following block handles all successful returns from slsoda.
@@ -1410,23 +1429,23 @@
 ! istate is set to 2, and the optional outputs are loaded into the
 ! work arrays before returning.
 !-----------------------------------------------------------------------
- 400  do 410 i = 1,n
- 410    y(i) = rwork(i+lyh-1)
-      t = tn
+ 400  do 410 i = 1,sls1(isr)%n
+ 410    y(i) = rwork(i+sls1(isr)%lyh-1)
+      t = sls1(isr)%tn
       if (itask .ne. 4 .and. itask .ne. 5) go to 420
       if (ihit) t = tcrit
  420  istate = 2
-      rwork(11) = hu
-      rwork(12) = h
-      rwork(13) = tn
-      rwork(15) = tsw
-      iwork(11) = nst
-      iwork(12) = nfe
-      iwork(13) = nje
-      iwork(14) = nqu
-      iwork(15) = nq
-      iwork(19) = mused
-      iwork(20) = meth
+      rwork(11) = sls1(isr)%hu
+      rwork(12) = sls1(isr)%h
+      rwork(13) = sls1(isr)%tn
+      rwork(15) = sloc(isr)%tsw
+      iwork(11) = sls1(isr)%nst
+      iwork(12) = sls1(isr)%nfe
+      iwork(13) = sls1(isr)%nje
+      iwork(14) = sls1(isr)%nqu
+      iwork(15) = sls1(isr)%nq
+      iwork(19) = slsa(isr)%mused
+      iwork(20) = sls1(isr)%meth
       return
 !-----------------------------------------------------------------------
 ! block h.
@@ -1440,20 +1459,21 @@
  500  msg = 'slsoda-  at current t (=r1), mxstep (=i1) steps   '
       call xerrwv (msg, 50, 201, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       msg = '      taken on this call before reaching tout     '
-      call xerrwv (msg, 50, 201, 0, 1, mxstep, 0, 1, tn, 0.0e0)
+      call xerrwv (msg, 50, 201, 0, 1, sloc(isr)%mxstep, 0, 1,          &
+     &     sls1(isr)%tn, 0.0e0)
       istate = -1
       go to 580
 ! ewt(i) .le. 0.0 for some i (not at start of problem). ----------------
- 510  ewti = rwork(lewt+i-1)
+ 510  ewti = rwork(sls1(isr)%lewt+i-1)
       msg = 'slsoda-  at t (=r1), ewt(i1) has become r2 .le. 0.'
-      call xerrwv (msg, 50, 202, 0, 1, i, 0, 2, tn, ewti)
+      call xerrwv (msg, 50, 202, 0, 1, i, 0, 2, sls1(isr)%tn, ewti)
       istate = -6
       go to 580
 ! too much accuracy requested for machine precision. -------------------
  520  msg = 'slsoda-  at t (=r1), too much accuracy requested  '
       call xerrwv (msg, 50, 203, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       msg = '      for precision of machine..  see tolsf (=r2) '
-      call xerrwv (msg, 50, 203, 0, 0, 0, 0, 2, tn, tolsf)
+      call xerrwv (msg, 50, 203, 0, 0, 0, 0, 2, sls1(isr)%tn, tolsf)
       rwork(14) = tolsf
       istate = -2
       go to 580
@@ -1461,7 +1481,7 @@
  530  msg = 'slsoda-  at t(=r1) and step size h(=r2), the error'
       call xerrwv (msg, 50, 204, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       msg = '      test failed repeatedly or with abs(h) = hmin'
-      call xerrwv (msg, 50, 204, 0, 0, 0, 0, 2, tn, h)
+      call xerrwv (msg, 50, 204, 0, 0, 0, 0, 2,sls1(isr)%tn,sls1(isr)%h)
       istate = -4
       go to 560
 ! kflag = -2.  convergence failed repeatedly or with abs(h) = hmin. ----
@@ -1470,48 +1490,48 @@
       msg = '      corrector convergence failed repeatedly     '
       call xerrwv (msg, 50, 205, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       msg = '      or with abs(h) = hmin   '
-      call xerrwv (msg, 30, 205, 0, 0, 0, 0, 2, tn, h)
+      call xerrwv (msg, 30, 205, 0, 0, 0, 0, 2,sls1(isr)%tn,sls1(isr)%h)
       istate = -5
       go to 560
 ! rwork length too small to proceed. -----------------------------------
  550  msg = 'slsoda-  at current t(=r1), rwork length too small'
       call xerrwv (msg, 50, 206, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       msg='      to proceed.  the integration was otherwise successful.'
-      call xerrwv (msg, 60, 206, 0, 0, 0, 0, 1, tn, 0.0e0)
+      call xerrwv (msg, 60, 206, 0, 0, 0, 0, 1, sls1(isr)%tn, 0.0e0)
       istate = -7
       go to 580
 ! iwork length too small to proceed. -----------------------------------
  555  msg = 'slsoda-  at current t(=r1), iwork length too small'
       call xerrwv (msg, 50, 207, 0, 0, 0, 0, 0, 0.0e0, 0.0e0)
       msg='      to proceed.  the integration was otherwise successful.'
-      call xerrwv (msg, 60, 207, 0, 0, 0, 0, 1, tn, 0.0e0)
+      call xerrwv (msg, 60, 207, 0, 0, 0, 0, 1, sls1(isr)%tn, 0.0e0)
       istate = -7
       go to 580
 ! compute imxer if relevant. -------------------------------------------
  560  big = 0.0e0
       imxer = 1
-      do 570 i = 1,n
-        size = abs(rwork(i+lacor-1)*rwork(i+lewt-1))
+      do 570 i = 1,sls1(isr)%n
+        size = abs(rwork(i+sls1(isr)%lacor-1)*rwork(i+sls1(isr)%lewt-1))
         if (big .ge. size) go to 570
         big = size
         imxer = i
  570    continue
       iwork(16) = imxer
 ! set y vector, t, and optional outputs. -------------------------------
- 580  do 590 i = 1,n
- 590    y(i) = rwork(i+lyh-1)
-      t = tn
-      rwork(11) = hu
-      rwork(12) = h
-      rwork(13) = tn
-      rwork(15) = tsw
-      iwork(11) = nst
-      iwork(12) = nfe
-      iwork(13) = nje
-      iwork(14) = nqu
-      iwork(15) = nq
-      iwork(19) = mused
-      iwork(20) = meth
+ 580  do 590 i = 1,sls1(isr)%n
+ 590    y(i) = rwork(i+sls1(isr)%lyh-1)
+      t = sls1(isr)%tn
+      rwork(11) = sls1(isr)%hu
+      rwork(12) = sls1(isr)%h
+      rwork(13) = sls1(isr)%tn
+      rwork(15) = sloc(isr)%tsw
+      iwork(11) = sls1(isr)%nst
+      iwork(12) = sls1(isr)%nfe
+      iwork(13) = sls1(isr)%nje
+      iwork(14) = sls1(isr)%nqu
+      iwork(15) = sls1(isr)%nq
+      iwork(19) = slsa(isr)%mused
+      iwork(20) = sls1(isr)%meth
       return
 !-----------------------------------------------------------------------
 ! block i.
@@ -1534,7 +1554,7 @@
       call xerrwv (msg, 30, 4, 0, 1, neq(1), 0, 0, 0.0e0, 0.0e0)
       go to 700
  605  msg = 'slsoda-  istate = 3 and neq increased (i1 to i2). '
-      call xerrwv (msg, 50, 5, 0, 2, n, neq(1), 0, 0.0e0, 0.0e0)
+      call xerrwv (msg, 50, 5, 0, 2,sls1(isr)%n,neq(1), 0, 0.0e0, 0.0e0)
       go to 700
  606  msg = 'slsoda-  itol (=i1) illegal.  '
       call xerrwv (msg, 30, 6, 0, 1, itol, 0, 0, 0.0e0, 0.0e0)
@@ -1552,13 +1572,13 @@
       call xerrwv (msg, 50, 10, 0, 2, mu, neq(1), 0, 0.0e0, 0.0e0)
       go to 700
  611  msg = 'slsoda-  ixpr (=i1) illegal.  '
-      call xerrwv (msg, 30, 11, 0, 1, ixpr, 0, 0, 0.0e0, 0.0e0)
+      call xerrwv (msg, 30, 11, 0, 1,sloc(isr)%ixpr, 0, 0, 0.0e0, 0.0e0)
       go to 700
  612  msg = 'slsoda-  mxstep (=i1) .lt. 0  '
-      call xerrwv (msg, 30, 12, 0, 1, mxstep, 0, 0, 0.0e0, 0.0e0)
+      call xerrwv (msg, 30, 12, 0, 1,sloc(isr)%mxstep, 0, 0,0.0e0,0.0e0)
       go to 700
  613  msg = 'slsoda-  mxhnil (=i1) .lt. 0  '
-      call xerrwv (msg, 30, 13, 0, 1, mxhnil, 0, 0, 0.0e0, 0.0e0)
+      call xerrwv (msg, 30, 13, 0, 1,sloc(isr)%mxhnil, 0, 0,0.0e0,0.0e0)
       go to 700
  614  msg = 'slsoda-  tout (=r1) behind t (=r2)      '
       call xerrwv (msg, 40, 14, 0, 0, 0, 0, 2, tout, t)
@@ -1569,7 +1589,7 @@
       call xerrwv (msg, 30, 15, 0, 0, 0, 0, 1, hmax, 0.0e0)
       go to 700
  616  msg = 'slsoda-  hmin (=r1) .lt. 0.0  '
-      call xerrwv (msg, 30, 16, 0, 0, 0, 0, 1, hmin, 0.0e0)
+      call xerrwv (msg, 30, 16, 0, 0, 0, 0, 1, sls1(isr)%hmin, 0.0e0)
       go to 700
  617  msg='slsoda-  rwork length needed, lenrw (=i1), exceeds lrw (=i2)'
       call xerrwv (msg, 60, 17, 0, 2, lenrw, lrw, 0, 0.0e0, 0.0e0)
@@ -1583,7 +1603,7 @@
  620  msg = 'slsoda-  atol(i1) is r1 .lt. 0.0        '
       call xerrwv (msg, 40, 20, 0, 1, i, 0, 1, atoli, 0.0e0)
       go to 700
- 621  ewti = rwork(lewt+i-1)
+ 621  ewti = rwork(sls1(isr)%lewt+i-1)
       msg = 'slsoda-  ewt(i1) is r1 .le. 0.0         '
       call xerrwv (msg, 40, 21, 0, 1, i, 0, 1, ewti, 0.0e0)
       go to 700
@@ -1594,7 +1614,7 @@
       call xerrwv (msg, 60, 23, 0, 1, itask, 0, 2, tout, tp)
       go to 700
  624  msg='slsoda-  itask = 4 or 5 and tcrit (=r1) behind tcur (=r2)   '
-      call xerrwv (msg, 60, 24, 0, 0, 0, 0, 2, tcrit, tn)
+      call xerrwv (msg, 60, 24, 0, 0, 0, 0, 2, tcrit, sls1(isr)%tn)
       go to 700
  625  msg='slsoda-  itask = 4 or 5 and tcrit (=r1) behind tout (=r2)   '
       call xerrwv (msg, 60, 25, 0, 0, 0, 0, 2, tcrit, tout)
@@ -1609,10 +1629,10 @@
       call xerrwv (msg, 50, 27, 0, 1, itask, 0, 1, tout, 0.0e0)
       go to 700
  628  msg = 'slsoda-  mxordn (=i1) .lt. 0  '
-      call xerrwv (msg, 30, 28, 0, 1, mxordn, 0, 0, 0.0e0, 0.0e0)
+      call xerrwv (msg, 30,28, 0, 1, slsa(isr)%mxordn, 0, 0,0.0e0,0.0e0)
       go to 700
  629  msg = 'slsoda-  mxords (=i1) .lt. 0  '
-      call xerrwv (msg, 30, 29, 0, 1, mxords, 0, 0, 0.0e0, 0.0e0)
+      call xerrwv (msg, 30,29, 0, 1, slsa(isr)%mxords, 0, 0,0.0e0,0.0e0)
 !
  700  istate = -3
       return

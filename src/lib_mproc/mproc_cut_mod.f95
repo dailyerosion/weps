@@ -89,7 +89,11 @@ module mproc_cut_mod
         thisPlant => thisPlant%olderPlant
       end do
       ! mass weighted height
-      mass_zht = mass_zht / mass_sum
+      if( mass_sum .gt. 0.0 ) then
+        mass_zht = mass_zht / mass_sum
+      else
+        mass_zht = 0.0
+      end if
       if( mass_zht .le. 0.0) then
         ! nothing to cut
         return

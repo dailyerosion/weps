@@ -33,6 +33,7 @@ module update_mod
       use wind_mod, only: biodrag
       use crop_growth_mod, only: ht_dia_sai
       use soil_data_struct_defs, only: soil_def
+      use soillay_mod, only: valbydepth
 
       use weps_main_mod, only: daysim
 
@@ -48,7 +49,8 @@ module update_mod
       type(residue_pointer), pointer :: thisResidue   ! pointer used to interate residue pointer chain
       type(plant_pointer), pointer :: parentPlant     ! retain parent pointer to update on plantDestroy
       type(residue_pointer), pointer :: parentResidue ! retain parent pointer to update on residueDestroy
-      real temp1, temp2
+      real temp1
+      double precision temp2
       integer :: idx  ! indexing variable
       integer :: jdx  ! indexing variable
       real :: atotal  ! total used in weighting
@@ -67,12 +69,8 @@ module update_mod
       real weppdepth
       parameter( weppdepth = 150.0 ) ! mm 150.0 = 5.9 inches for WEPP
 
-      ! function declarations
-      real valbydepth
-      real transpdepth
-
       temp1 = 0.0
-      temp2 = 0.0
+      temp2 = 0.0d0
       iplt = 0
       iallres = 0
 
@@ -123,9 +121,9 @@ module update_mod
           thisPlant%deriv%dmbgto15 = valbydepth(soil%nslay, soil%aszlyd, thisPlant%deriv%mbgz, 2, 0.0, weppdepth)
 
           ! calculate new stem area index and representative stem diameter
-          call ht_dia_sai( thisPlant%geometry%dpop, thisPlant%mass%standstem, temp1, &
-                         thisPlant%database%ssa, thisPlant%database%ssb, thisPlant%geometry%dstm, &
-                         thisPlant%geometry%zht, temp2, thisPlant%geometry%xstmrep, thisPlant%deriv%rsai )
+          call ht_dia_sai( dble(thisPlant%geometry%dpop), dble(thisPlant%mass%standstem), dble(temp1), &
+                         dble(thisPlant%database%ssa), dble(thisPlant%database%ssb), dble(thisPlant%geometry%dstm), &
+                         dble(thisPlant%geometry%zht), temp2, thisPlant%geometry%xstmrep, thisPlant%deriv%rsai )
 
           ! leaf area index for standing material
           ! m^2 leaf/kg * kg/m^2 ground = m^2 leaf/m^2 ground
@@ -139,7 +137,7 @@ module update_mod
           end do
 
           ! effective silhouette
-          thisPlant%deriv%rcd = biodrag(0.0, 0.0, thisPlant%deriv%rlai, thisPlant%deriv%rsai, &
+          thisPlant%deriv%rcd = biodrag(0.0, 0.0, thisPlant%deriv%rlai, sngl(thisPlant%deriv%rsai), &
                      thisPlant%geometry%rg, thisPlant%geometry%xrow, thisPlant%geometry%zht, soil%aszrgh)
           ! surface cover
           thisPlant%deriv%ffcv = 1.0 - exp( -thisPlant%database%covfact * thisPlant%deriv%mf )
@@ -216,7 +214,7 @@ module update_mod
           ! leaf area index for standing material, m^2 leaf/kg * kg/m^2 ground = m^2 leaf/m^2 ground
           thisResidue%deriv%rlai = thisPlant%database%sla * thisResidue%standleaf
           ! effective silhouette
-          thisResidue%deriv%rcd = biodrag(thisResidue%deriv%rlai, thisResidue%deriv%rsai, 0.0, 0.0, 0, 0.0, 0.0, 0.0)
+          thisResidue%deriv%rcd = biodrag(thisResidue%deriv%rlai, sngl(thisResidue%deriv%rsai), 0.0, 0.0, 0, 0.0, 0.0, 0.0)
 
           ! set stem and leaf area by plant height increments
           ! these are divided equally for now, until development of plant growth method to do this
@@ -382,9 +380,6 @@ module update_mod
         ! Living plant material section
         iplt = iplt + 1
 
-        !write(*,'(a,3(1x,i0),2f24.20,l2)') 'RSAI: ', daysim, iplt, 0, thisPlant%deriv%rlai, thisPlant%deriv%rsai, &
-        !                                                              thisPlant%growth%am0cgf
-
         if( thisPlant%growth%am0cgf ) then
 
           ! this is a living plant, add to croptot
@@ -431,7 +426,7 @@ module update_mod
           end do
 
           ! biodrag is the sum of discounted lai and sai for each pool
-          croptot%rcdtot = croptot%rcdtot + biodrag(0.0,0.0,thisPlant%deriv%rlai, thisPlant%deriv%rsai, &
+          croptot%rcdtot = croptot%rcdtot + biodrag(0.0,0.0,thisPlant%deriv%rlai, sngl(thisPlant%deriv%rsai), &
                                                     thisPlant%geometry%rg, thisPlant%geometry%xrow, &
                                                     thisPlant%geometry%zht, soil%aszrgh) 
 
@@ -457,8 +452,6 @@ module update_mod
 
           ires = ires + 1
           iallres = iallres + 1
-
-          !write(*,'(a,3(1x,i0),2f24.20)') 'RSAI: ', daysim, iplt, ires, thisResidue%deriv%rlai, thisResidue%deriv%rsai
 
           ! this is a residue, add to restot
           restot%dstmtot = restot%dstmtot + thisResidue%dstm   ! total number of stems  per unit area (#/m^2)
@@ -492,7 +485,7 @@ module update_mod
             restot%rlaz(idx) = restot%rlaz(idx) + thisResidue%deriv%rlaz(idx)
           end do
 
-          restot%rcdtot = restot%rcdtot + biodrag(0.0,0.0,thisResidue%deriv%rlai, thisResidue%deriv%rsai, &
+          restot%rcdtot = restot%rcdtot + biodrag(0.0,0.0,thisResidue%deriv%rlai, sngl(thisResidue%deriv%rsai), &
                                                   thisPlant%geometry%rg, thisPlant%geometry%xrow, &
                                                   thisResidue%zht, soil%aszrgh) 
 
@@ -730,6 +723,51 @@ module update_mod
 
       return
     end function resevapredu
+
+    real function transpdepth ( bczrtd, bhzfurcut,                    &
+     &                            bhztransprtmin, bhztransprtmax )
+!     + + + PURPOSE + + +
+!     This function estimates a depth of transpiration for crops that are
+!     planted using a "deep furrow" type drill or planter, where dry soil
+!     is pushed aside, and the seed is placed in a wetter part of the soil.
+!     As the root zone expands, this effect is reduced, with the transpiration
+!     depth equal to the root depth as calculated from a flat soil surface
+!     when the root depth exceeds bhztransprtmax.
+
+!     RETURNS: depth in soil from which transpiration is extracted (m)
+!              when crop is furrow planted, this is deeper than root depth
+!              and is used in place of root depth when calling transp subroutine
+
+!     + + + KEYWORDS + + +
+!     ridges, furrow, seeding, transpiration
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      real bczrtd, bhzfurcut
+      real bhztransprtmin, bhztransprtmax
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     bczrtd  - Crop root depth (m)
+!     bhzfurcut - estimated furrow bottom depth below flat soil surface (m)
+!     bhztransprtmin - root depth where transpiration depth reduction begins (m)
+!     bhztransprtmax - root depth where transpiration depth equals root depth (m)
+
+!     + + + END SPECIFICATIONS + + +
+
+      if( bczrtd .eq. 0.0 ) then
+          ! no plant growing, no adjustment
+          transpdepth = 0.0
+      else if( bczrtd .le. bhztransprtmin ) then
+          transpdepth = bczrtd + bhzfurcut
+      else if( (bczrtd .lt. bhztransprtmax)                             &
+     &    .and. (bhztransprtmax .gt. bhztransprtmin) ) then
+          transpdepth = bczrtd + bhzfurcut * ( (bhztransprtmax - bczrtd)&
+     &            / (bhztransprtmax - bhztransprtmin) )
+      else
+          transpdepth = bczrtd
+      end if
+
+      return
+    end function transpdepth
 
 end module update_mod
 

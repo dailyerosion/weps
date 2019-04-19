@@ -7,42 +7,31 @@ module hydro_main_mod
 
   contains
 
-    subroutine hydro ( isr, layrsn, bmrslp, brcd, bbzht, &
+    subroutine hydro ( isr, brcd, bbzht, &
                          bbrlai, bczht, bcdayap, &
                          bbfcancov, bbrlailive, &
                          bdmres, bbevapredu, &
-                         bszlyd, bsdblk, bsdblk0, bsdpart, bsdwblk, &
-                         bhrwc, bhrwcdmx, bhrwcs, bhrwcf, &
-                         bhrwcw, bhrwcr, bhrwca, &
-                         bh0cb, bheaep, bhfredsat, &
-                         bsfsan, bsfsil, bsfcla, &
-                         bsvroc, bsfom, bsfcec, &
-                         bhtsav, bbdstm, bbffcv, &
-                         bsxrgs, bszrgh, bsfcr, &
-                         bslrro, bslrr, bmzele, &
+                         bbdstm, bbffcv, &
+                         bmzele, &
                          bhzdmaxirr, bhratirr, bhdurirr, &
                          bhlocirr, bhminirr, bm0monirr, &
                          bhmadirr, bhndayirr, bhmintirr, &
                          bhzoutflow, bhzinf, &
                          bhzsno, bhtsno, bhfsnfrz, &
-                         bhzsmt, bhfice, bhrsk, &
-                         bhtsmx, bhtsmn, bhrwc0, &
-                         daysim, bsfald, bsfalw, bszlyt, &
+                         bhzsmt, &
+                         bhrwc0, daysim, &
                          bwudav, bhzwid, &
                          bhzeasurf, &
-                         plant, h1et, h1bal, wp)
+                         soil, plant, h1et, h1bal, wp)
 
       ! This subroutine is the main (supervisory) program for the
       ! HYDROLOGY submodel.  The subroutine controls the calling of the
       ! major subprograms of the HYDROLOGY submodel.
 
       use weps_main_mod, only: init_loop, calib_loop, am0ifl, transpiration_depth, wepp_hydro
-      use weps_interface_defs, only: hinit, heat, store
-      use weps_interface_defs, only: darcy, transp
-      use weps_interface_defs, only: radnet, availwc
-      use weps_interface_defs, only: plant_wat_t, movewind, volwatadsorb
       use datetime_mod, only: get_simdate, get_simdate_doy
       use file_io_mod, only: luohydro, luohlayers, luosurfwat, luoweather
+      use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, biototal
       use p1unconv_mod, only: mtomm, mmtom
       use timer_mod, only: timer, TIMHYDR, TIMDARC, TIMSTART, TIMSTOP
@@ -50,8 +39,12 @@ module hydro_main_mod
       use grid_mod, only: amxsim
       use Points_Mod, only: slen
       use wind_mod, only: sbzdisp, sbzo, biodrag
-      use hydro_data_struct_defs, only: am0hfl, hydro_derived_et
+      use hydro_data_struct_defs, only: am0hfl, hydro_derived_et, claygrav80rh, orggrav80rh, gravconst
       use report_hydrobal_mod, only: hydro_balance
+      use hydro_darcy_mod, only: darcy
+      use hydro_wepp_mod, only: waterbal
+      use hydro_heat_mod, only: heat, addsnow
+      use hydro_util_mod, only: radnet, transp, volwatadsorb
       use wepp_param_mod, only: wepp_param
       use climate_input_mod, only: cli_tyav, cli_next, cli_today, cli_prev, amalat, amalon
       use air_water_mod, only: et, rel_humid
@@ -59,23 +52,14 @@ module hydro_main_mod
 
       ! + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
-      integer layrsn
-      real bmrslp
       real, intent(in) :: brcd  ! biomass drag coefficient
       real bbzht
       real bbrlai, bczht
       integer bcdayap
       real bbfcancov, bbrlailive
       real bdmres, bbevapredu
-      real bszlyd(*), bsdblk(*), bsdblk0(*), bsdpart(*), bsdwblk(*)
-      real bhrwc(*), bhrwcdmx(*), bhrwcs(*), bhrwcf(*)
-      real bhrwcw(*), bhrwcr(*), bhrwca(*)
-      real bh0cb(*), bheaep(*), bhfredsat(*)
-      real bsfsan(*), bsfsil(*), bsfcla(*)
-      real bsvroc(*), bsfom(*), bsfcec(*)
-      real bhtsav(*), bbdstm, bbffcv
-      real bsxrgs, bszrgh, bsfcr
-      real bslrro, bslrr, bmzele
+      real bbdstm, bbffcv
+      real bmzele
       real bhzdmaxirr, bhratirr, bhdurirr
       real bhlocirr, bhminirr
       integer bm0monirr
@@ -83,20 +67,18 @@ module hydro_main_mod
       integer bhndayirr, bhmintirr
       real bhzoutflow, bhzinf
       real bhzsno, bhtsno, bhfsnfrz
-      real bhzsmt, bhfice(*), bhrsk(*)
-      real bhtsmx(*), bhtsmn(*), bhrwc0(*)
+      real bhzsmt
+      real bhrwc0(*)
       integer daysim
-      real bsfald, bsfalw, bszlyt(*)
       real bwudav, bhzwid
       real bhzeasurf
+      type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant  ! pointer to youngest plant data, which chains to older plant data
       type(hydro_derived_et), intent(inout) :: h1et
       type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
 
       ! + + +  ARGUMENT DEFINITIONS + + +
-      ! layrsn   - Number of soil layers used in simulation
-      ! bmrslp   - Average slope of subregion (mm/mm)
       ! bbzht  - composite average residue height (m)
       ! bczht  - crop height (m)
       ! bcdayap - number of days of growth completed since crop planted
@@ -104,34 +86,8 @@ module hydro_main_mod
       ! bbrlailive - leaf area index of transpiring leaves
       ! bdmres   - Plant residues on the soil surface (kg/m^2)
       ! bbevapredu - reduction in surface evaporation from flat residue (Eactual/Epotential ratio)
-      ! bszlyd   - Depth to bottom of soil layers (mm)
-      ! bsdblk   - Soil bulk density (Mg/m^3)
-      ! bsdpart  - Soil mean particle density (Mg/m^3)
-      ! bsdwblk  - Soil wet bulk density (Mg/m^3)
-      ! bhrwc    - Soil water content (mg/mg)
-      ! bhrwcdmx - daily maximum soil water content (Kg/Kg)
-      ! bhrwcs   - Soil water content at saturation (mg/mg)
-      ! bhrwcf   - Soil water content at fc and wp (mg/mg)
-      ! bhrwcw   - Soil water content at wp (mg/mg)
-      ! bhrwcr   - Residual Soil water content (mg/mg)
-      ! bh0cb    - Power of campbell's water release curve model (?)
-      ! bheaep   - Soil air entry potential (j/kg)
-      ! bhfredsat - fraction of soil porosity that will be filled with water
-      !             while wetting under normal field conditions due to entrapped air
-      ! bsfsan   - Fraction of soil mineral which is sand
-      ! bsfsil   - Fraction of soil mineral which is silt
-      ! bsfcla   - Fraction of soil mineral which is clay
-      ! bsvroc   - Soil layer coarse fragments, rock (m^3/m^3)
-      ! bsfom    - Fraction of total soil mass which is organic
-      ! bsfcec   - Soil layer cation exchange capacity (cmol/kg) (meq/100g)
-      ! bhtsav   - daily average soil temperature for each layer (C)
       ! bbdstm   - total number of stems (#/m^2)
       ! bbffcv   - 
-      ! bsxrgs  - ridge spacing (mm)
-      ! bszrgh  - ridge height (mm)
-      ! bsfcr   - fraction of the surface that is crusted
-      ! bslrro   - original random roughness height, after tillage, mm
-      ! bslrr    - Allmaras random roughness parameter (mm)
       ! bmzele   - Average site elevation (m)
       ! bhzdmaxirr - characteristic maximum irrigation system application depth (mm)
       ! bhratirr - characteristic irrigation system application rate (mm/hour)
@@ -156,15 +112,8 @@ module hydro_main_mod
       ! bhfsnfrz   - fraction of snow layer water content which is frozen
       ! bhzsnd   - depth of snow (mm)
       ! bhzsmt   - Snow melt (mm)
-      ! bhfice   - fraction of soil water in layer which is frozen
-      ! bhrsk    - Saturated soil hydraulic conductivity (m/s)
-      ! bhtsmx   - Maximum soil temperature for each layer
-      ! bhtsmn   - Minimum soil temperature for each layer
       ! bhrwc0   - Hourly water content of the soil surface - darcy supplies
       ! daysim   - day of the simulation
-      ! bsfald   - dry soil albedo
-      ! bsfalw   - wet soil albedo
-      ! bszlyt   - Soil layer thickness (mm)
       ! bwudav   - Daily average wind speed at 10 meters (m/s)
       ! bhzwid   - Water infiltration depth (mm)
       ! bhzeasurf - accumulated surface evaporation since last complete rewetting (mm)
@@ -177,16 +126,6 @@ module hydro_main_mod
       ! presswc   - present soil water content (mm)
       ! pressnow  - present snow water content (mm)
       ! presday   - present day
-
-      ! + + + COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'h1db1.inc'
-
-      include 'wepp_erosion.inc'
-      ! + + + LOCAL COMMON BLOCKS + + +
-      include 'hydro/htheta.inc'
-      include 'hydro/vapprop.inc'
-      include 'hydro/clayomprop.inc'
 
       ! + + + LOCAL VARIABLES + + +
       integer day, mo, yr
@@ -213,7 +152,7 @@ module hydro_main_mod
       parameter   (met_height = 2.0)
 
       real standevapredu, totalevapredu, accheck
-      real temp, airentry(layrsn), lambda(layrsn), theta80rh(layrsn)
+      real temp, airentry(soil%nslay), lambda(soil%nslay), theta80rh(soil%nslay)
       real :: cropdp   ! depth into soil (mm) layering that a plant extracts water
                        ! This is either zrtd or ztranspdepth depending on
                        ! the command line flag transpiration_depth
@@ -266,7 +205,6 @@ module hydro_main_mod
       ! hinit
       ! heat
       ! snomlt
-      ! store
       ! et
       ! darcy
       ! transp
@@ -288,33 +226,33 @@ module hydro_main_mod
       rise = dawn(amalat, amalon, idoy, beamrise)
       daylength = daylen(amalat, idoy, beamrise)
 
-      call hinit (layrsn, bsdblk, bsdblk0, bsdpart, bsdwblk, &
-                  bhrwc, bhrwcs, bhrwcf, bhrwcw, bhrwcr, &
-                  bhrwca, bh0cb, bheaep, bhrsk, bhfredsat, &
-                  bsfsan, bsfsil, bsfcla, bsfom, bsfcec, &
-                  bszlyd, bszlyt, vaptrans, evaplimit)
+      call hinit (soil%nslay, soil%asdblk, soil%asdblk0, soil%asdpart, soil%asdwblk, &
+                  soil%ahrwc, soil%ahrwcs, soil%ahrwcf, soil%ahrwcw, soil%ahrwcr, &
+                  soil%ahrwca, soil%ah0cb, soil%aheaep, soil%ahrsk, soil%ahfredsat, &
+                  soil%asfsan, soil%asfsil, soil%asfcla, soil%asfom, soil%asfcec, &
+                  soil%aszlyd, soil%aszlyt, vaptrans, evaplimit, soil)
 
       ! set accounting variables for water balance changes in this cycle
-      swc = dot_product(theta(1:layrsn),bszlyt(1:layrsn))
-      lswc = swc
+      soil%swc = dot_product(soil%theta(1:soil%nslay),soil%aszlyt(1:soil%nslay))
+      lswc = soil%swc
       lsno = bhzsno
 
       ! + + + END SPECIFICATIONS + + +
       ! write headers and inital values to hydro.out
-      if(    (am0ifl .eqv. .true.)   &
+      if(    (am0ifl .eqv. .true.) &
         .and.((am0hfl(isr) .eq. 1) .or. (am0hfl(isr) .eq. 3) &
         .or.  (am0hfl(isr) .eq. 5) .or. (am0hfl(isr) .eq. 7)) ) then
 
          ! Echo print of input soil data
 
          !     write(luohydro(isr),2020)
-         !     do l=1,layrsn
-         !        write(luohydro(isr),2030) l,bszlyd(l),theta(l),thetas(l),thetaf(l), &
-         !                    thetaw(l),bh0cb(l),bheaep(l),bhrsk(l),bsdblk(l)
+         !     do l=1,soil%nslay
+         !        write(luohydro(isr),2030) l,soil%aszlyd(l),soil%theta(l),soil%thetas(l),soil%thetaf(l), &
+         !                    soil%thetaw(l),soil%ah0cb(l),soil%aheaep(l),soil%ahrsk(l),soil%asdblk(l)
          !     end do
          !     write(luohydro(isr),2040)
-         !     write(luohydro(isr),2050) theta(0)
-         !     write(luohydro(isr),2060) swci
+         !     write(luohydro(isr),2050) soil%theta(0)
+         !     write(luohydro(isr),2060) soil%swci
          !     write(luohydro(isr),2070)
          write(luohydro(isr), "(3a)") &
            '# daysim doy yr  ahzetp  ahzep ahzptp  ahzea ahzpta bhzper ', &
@@ -325,36 +263,36 @@ module hydro_main_mod
          write(luohlayers(isr), "(3a,i3)") &
            '# daysim doy yr layer depth theta thetas thetaf thetaw thetar ', &
            'availwat satrat bhtsav unsatcond matricpot relhum bulkden ', &
-           'airentry expon_b k_sat numlay = ', layrsn
+           'airentry expon_b k_sat numlay = ', soil%nslay
 
          ! print out hydro values by layer (profile view)
          ! day zero values
-         ! call printlayval( isr, 0, layrsn, &
-         !         bszlyt, bszlyd, bsdblk, &
-         !         theta, thetas, thetaf, thetaw, thetar, &
-         !         bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav )
+         ! call printlayval( isr, 0, soil%nslay, &
+         !         soil%aszlyt, soil%aszlyd, soil%asdblk, &
+         !         soil%theta, soil%thetas, soil%thetaf, soil%thetaw, soil%thetar, &
+         !         soil%ahrsk, soil%aheaep, soil%ah0cb, soil%asfcla, soil%asfom, soil%tsav )
       end if
 
       if( (am0ifl .eqv. .true.) .and.((am0hfl(isr) .eq. 2).or.(am0hfl(isr) .eq. 6) &
          .or. (am0hfl(isr) .eq. 3) .or. (am0hfl(isr) .eq. 7)) ) then
 
-         write(luosurfwat(isr), "(a)") '# hr daysim idoy yr bhrwc0 bhrwc0/bhrwcw(1)'
+         write(luosurfwat(isr), "(a)") '# hr daysim idoy yr bhrwc0 bhrwc0/ahrwcw(1)'
 
          ! print out daily weather as used in hydro
          write(luoweather(isr), "(a)") '# daysim idoy yr rn cli_today%tdmx cli_today%tdmn cli_today%tdpt fld_wind rise rel_humid'
       end if
 
       !      write(*,*) 'hydro:total 500mm',
-      ! &    plant_wat_t( 0.0, 500.0, thetaf, thetaw, bszlyd, layrsn ),
-      ! &    plant_wat_t( 500.0, 1000.0, thetaf, thetaw, bszlyd, layrsn ),
-      ! &    plant_wat_t( 1000.0, 1500.0, thetaf, thetaw, bszlyd, layrsn )
+      !      plant_wat_t( 0.0, 500.0, soil%thetaf, soil%thetaw, soil%aszlyd, soil%nslay ),
+      !      plant_wat_t( 500.0, 1000.0, soil%thetaf, soil%thetaw, soil%aszlyd, soil%nslay ),
+      !      plant_wat_t( 1000.0, 1500.0, soil%thetaf, soil%thetaw, soil%aszlyd, soil%nslay )
 
       ! calculate transpiration related soil values
-      do l=1,layrsn
-          airentry(l) = bheaep(l) / gravconst
-          lambda(l) = 1.0 / bh0cb(l)
-          temp = bsdblk(l)*1000.0  !convert Mg/m^3 to kg/m^3
-          theta80rh(l) = volwatadsorb( temp, bsfcla(l), bsfom(l), claygrav80rh, orggrav80rh )
+      do l=1,soil%nslay
+          airentry(l) = soil%aheaep(l) / gravconst
+          lambda(l) = 1.0 / soil%ah0cb(l)
+          temp = soil%asdblk(l)*1000.0  !convert Mg/m^3 to kg/m^3
+          theta80rh(l) = volwatadsorb( temp, soil%asfcla(l), soil%asfom(l), claygrav80rh, orggrav80rh )
       end do
 
       ! point to youngest plant
@@ -379,9 +317,9 @@ module hydro_main_mod
            .and. (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%am0cgf ) then
 
           ! find root zone water content above wilting point
-          rootz_p_con = plant_wat_t(0.0, cropdp, theta(1), thetaw, bszlyd, layrsn)
+          rootz_p_con = plant_wat_t(0.0, cropdp, soil%theta(1), soil%thetaw, soil%aszlyd, soil%nslay)
           ! find root zone water capacity between field capacity and wilting point
-          rootz_p_cap = plant_wat_t(0.0, cropdp, thetaf, thetaw, bszlyd, layrsn)
+          rootz_p_cap = plant_wat_t(0.0, cropdp, soil%thetaf, soil%thetaw, soil%aszlyd, soil%nslay)
           ! find paw (plant available water) ratio in rootzone
           paw = rootz_p_con / rootz_p_cap
 
@@ -390,13 +328,16 @@ module hydro_main_mod
           ! this call finds stress value without extracting the water
           ! note: as written, the potential Transpiration is from previous day
           ! partition potential transpiration based on proportion of living leaf area in canopy leaf area
-          thisPlant%growth%ptp = h1et%zptp * ((thisPlant%growth%fliveleaf * thisPlant%deriv%rlai) / bbrlailive)
+          if( bbrlailive .gt. 0.0 ) then
+              thisPlant%growth%ptp = h1et%zptp * ((thisPlant%growth%fliveleaf * thisPlant%deriv%rlai) / bbrlailive)
+          else
+              thisPlant%growth%ptp = 0.0
+          end if
 
-          call transp (layrsn, 0, bszlyd, bszlyt, cropdp, &
-                       theta, thetas, thetaf, thetaw, &
-                       theta80rh, thetar, airentry, lambda, &
-                       bhrsk, bhtsav, thisPlant%growth%ptp, thisPlant%growth%pta, thisPlant%growth%fwsf)
-
+          call transp (soil%nslay, 0, soil%aszlyd, soil%aszlyt, cropdp, &
+                       soil%theta, soil%thetas, soil%thetaf, soil%thetaw, &
+                       theta80rh, soil%thetar, airentry, lambda, &
+                       soil%ahrsk, soil%tsav, thisPlant%growth%ptp, thisPlant%growth%pta, thisPlant%growth%fwsf)
           ! sum actual transipration
           h1et%zpta = h1et%zpta + thisPlant%growth%pta
 
@@ -434,7 +375,7 @@ module hydro_main_mod
       ! Convert global to net radiation
       ! this includes residue leaf area
       rn = radnet(bbrlai,cli_today%eirr, bhzsno, h1et%zsnd, cli_today%tdmx, cli_today%tdmn, amalat,&
-                  bsfalw, bsfald, idoy, cli_today%tdpt )
+                  idoy, cli_today%tdpt, soil )
 
       ! partition radiation between canopy and surface
       ! added exponential to keep above zero for very low lai
@@ -455,10 +396,10 @@ module hydro_main_mod
 
       ! Do energy balance for soil and cover temperatures 
       ! and determine snow melt (if any) or soil heat flux
-      call heat( isr, layrsn, bszlyd, bszlyt, theta, thetas, &
-                bsfsan, bsfsil, bsfcla, bsfom, bsdblk, &
+      call heat( isr, soil%nslay, soil%aszlyd, soil%aszlyt, soil%theta, soil%thetas, &
+                soil%asfsan, soil%asfsil, soil%asfcla, soil%asfom, soil%asdblk, &
                 cli_today%tdmn, cli_today%tdmx, cli_tyav, rad_surf, bdmres, &
-                bhtsmn, bhtsmx, bhtsav, bhfice, &
+                soil%tsmn, soil%tsmx, soil%tsav, soil%fice, &
                 bhzsno, bhtsno, bhfsnfrz, h1et%zsnd, &
                 bhzsmt, g_soil )
 
@@ -484,7 +425,7 @@ module hydro_main_mod
       end if
 
       ! find roughness length of the surface for et wind speed adjustment to 2m
-      call sbzo (bsxrgs, bszrgh, bslrr, bbzht, brcd, wzoflg, &
+      call sbzo (soil%asxrgs, soil%aszrgh, soil%aslrr, bbzht, brcd, wzoflg, &
                  loc_zordg, loc_zorr, loc_zo, loc_zov, awzzo)
 
       ! find zero plane displacement of location
@@ -540,7 +481,6 @@ module hydro_main_mod
          ! power relationship in subroutine resevapredu.
          totalevapredu = standevapredu * bbevapredu
          h1et%zep = h1et%zep * totalevapredu
-
       endif
 
       ! Calculate soil water redistribution using subroutine darcy
@@ -548,22 +488,22 @@ module hydro_main_mod
       call timer(TIMHYDR,TIMSTOP)
       call timer(TIMDARC,TIMSTART)
 
-      swc = dot_product(theta(1:layrsn),bszlyt(1:layrsn))
+      soil%swc = dot_product(soil%theta(1:soil%nslay),soil%aszlyt(1:soil%nslay))
 
       ! select hydrology model for infiltration (insertion), evaporation and redistribution
       if( wepp_hydro .eq. 0 ) then
          ! use darcy method
-         numeq = layrsn + 6
+         numeq = soil%nslay + 6
 
-         call darcy( isr, daysim, numeq, bszlyt,bszlyd,bsdblk, &
-            theta, thetadmx, thetas, thetaf, thetaw, thetar, &
-            bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav, &
+         call darcy( isr, daysim, numeq, soil%aszlyt,soil%aszlyd,soil%asdblk, &
+            soil%theta, soil%thetadmx, soil%thetas, soil%thetaf, soil%thetaw, soil%thetar, &
+            soil%ahrsk, soil%aheaep, soil%ah0cb, soil%asfcla, soil%asfom, soil%tsav, &
             cli_prev%tdmx, cli_today%tdmn, cli_today%tdmx, cli_next%tdmn, cli_today%tdpt, &
             rise, daylength, h1et%zep, dprecip, durprecip, tptprecip, &
             dirrig, bhdurirr, bhlocirr, bhzoutflow, &
-            bbdstm, bbffcv, bslrro, bslrr, bmzele, bhrwc0, &
+            bbdstm, bbffcv, soil%aslrro, soil%aslrr, bmzele, bhrwc0, &
             h1et%zea, h1et%zper, h1et%zrun, bhzinf, bhzwid, &
-            bhzeasurf, evaplimit, vaptrans, bmrslp )
+            bhzeasurf, evaplimit, vaptrans, soil%amrslp )
 
       else
          ! use WEPP infiltration, evaporation, redistribution
@@ -572,21 +512,21 @@ module hydro_main_mod
          ! use a representative slope length as half of the simregion diagonal distance
          len_slope = slen(amxsim(1), amxsim(2)) / 2.0
 
-         call waterbal(layrsn, thetas, thetes, thetaf, thetaw, &
-                        bszlyt, bszlyd, bhrsk, &
+         call waterbal(soil%nslay, soil%thetas, soil%thetes, soil%thetaf, soil%thetaw, &
+                        soil%aszlyt, soil%aszlyd, soil%ahrsk, &
                         dprecip, durprecip, tptprecip, cli_today%peakipt, &
                         dirrig, bhdurirr, bhlocirr, bhzoutflow, &
-                        bhzsno, bslrr, bmrslp, bsfsan, bsfcla, &
-                        bsfcr, bsvroc, bsdblk, bsfcec, &
+                        bhzsno, soil%aslrr, soil%amrslp, soil%asfsan, soil%asfcla, &
+                        soil%asfcr, soil%asvroc, soil%asdblk, soil%asfcec, &
                         bbffcv, bbfcancov, bbzht, bcdayap, &
-                        h1et%zep, theta, thetadmx, bhrwc0, &
+                        h1et%zep, soil%theta, soil%thetadmx, bhrwc0, &
                         h1et%zea, h1et%zper, h1et%zrun, bhzinf, bhzwid, &
                         len_slope, day, mo, yr, isr, &
-                        wepp_hydro, init_loop, calib_loop, bhfice, wp)
+                        wepp_hydro, init_loop, calib_loop, soil%fice, wp)
 
       end if
 
-      swc = dot_product(theta(1:layrsn),bszlyt(1:layrsn))
+      soil%swc = dot_product(soil%theta(1:soil%nslay),soil%aszlyt(1:soil%nslay))
 
       call timer(TIMDARC,TIMSTOP)
       call timer(TIMHYDR,TIMSTART)
@@ -622,11 +562,11 @@ module hydro_main_mod
         ! transpiration occurs
 
         ! recalculate transpiration related soil values
-        do l=1,layrsn
-            airentry(l) = bheaep(l) / gravconst
-            lambda(l) = 1.0 / bh0cb(l)
-            temp = bsdblk(l)*1000.0  !convert Mg/m^3 to kg/m^3
-            theta80rh(l) = volwatadsorb( temp, bsfcla(l), bsfom(l), claygrav80rh, orggrav80rh )
+        do l=1,soil%nslay
+            airentry(l) = soil%aheaep(l) / gravconst
+            lambda(l) = 1.0 / soil%ah0cb(l)
+            temp = soil%asdblk(l)*1000.0  !convert Mg/m^3 to kg/m^3
+            theta80rh(l) = volwatadsorb( temp, soil%asfcla(l), soil%asfom(l), claygrav80rh, orggrav80rh )
         end do
 
         ! point to youngest plant
@@ -644,10 +584,10 @@ module hydro_main_mod
             end if
             ! partition potential transpiration based on proportion of living leaf area in canopy leaf area
             thisPlant%growth%ptp = h1et%zptp * ((thisPlant%growth%fliveleaf * thisPlant%deriv%rlai) / bbrlailive)
-            call transp (layrsn, 1, bszlyd, bszlyt, cropdp, &
-                       theta, thetas, thetaf, thetaw, &
-                       theta80rh, thetar, airentry, lambda, &
-                       bhrsk, bhtsav, thisPlant%growth%ptp, thisPlant%growth%pta, thisPlant%growth%fwsf)
+            call transp (soil%nslay, 1, soil%aszlyd, soil%aszlyt, cropdp, &
+                       soil%theta, soil%thetas, soil%thetaf, soil%thetaw, &
+                       theta80rh, soil%thetar, airentry, lambda, &
+                       soil%ahrsk, soil%tsav, thisPlant%growth%ptp, thisPlant%growth%pta, thisPlant%growth%fwsf)
             ! sum actual transpiration
             h1et%zpta = h1et%zpta + thisPlant%growth%pta
           end if
@@ -660,6 +600,8 @@ module hydro_main_mod
         h1et%zpta = 0.0
 
         ! interate over all transpiring plants
+        ! point to youngest plant
+        thisPlant => plant
         do while ( associated(thisPlant) )
           if( thisPlant%growth%fliveleaf .gt. 0.0 ) then
             ! has transpiring leaf area
@@ -673,27 +615,27 @@ module hydro_main_mod
       h1et%zeta = h1et%zea + h1et%zpta
 
       ! Convert water from volume back to mass basis
-      do l=1,layrsn
-         bhrwc(l) = theta(l) / bsdblk(l)
-         bhrwcdmx(l) = thetadmx(l) / bsdblk(l)
+      do l=1,soil%nslay
+         soil%ahrwc(l) = soil%theta(l) / soil%asdblk(l)
+         soil%ahrwcdmx(l) = soil%thetadmx(l) / soil%asdblk(l)
       end do
 
       ! Adjust energy balance for changes in water content
-      !  call heat( layrsn, bszlyd, theta, bsfcla, bsdblk, &
-      ! &           cli_today%tdmn, cli_today%tdmx, bhtsmx, bhtsmn, bszlyt)
+      !  call heat( soil%nslay, soil%aszlyd, soil%theta, soil%asfcla, soil%asdblk, &
+      !             cli_today%tdmn, cli_today%tdmx, soil%tsmx, soil%tsmn, soil%aszlyt)
 
       ! update accumulated surface evaporation variable
       bhzeasurf = bhzeasurf + h1et%zea
 
       ! update cumulative variables
-      swc = dot_product(theta(1:layrsn),bszlyt(1:layrsn))
+      soil%swc = dot_product(soil%theta(1:soil%nslay),soil%aszlyt(1:soil%nslay))
       h1bal%cumprecip = h1bal%cumprecip + cli_today%zdpt
       h1bal%cumirrig = h1bal%cumirrig + h1et%zirr
       h1bal%cumrunoff = h1bal%cumrunoff + h1et%zrun
       h1bal%cumevap = h1bal%cumevap + h1et%zea
       h1bal%cumtrans = h1bal%cumtrans + h1et%zpta
       h1bal%cumdrain = h1bal%cumdrain + h1et%zper
-      h1bal%presswc = swc
+      h1bal%presswc = soil%swc
       h1bal%pressnow = bhzsno
       h1bal%presday = daysim
       
@@ -722,17 +664,17 @@ module hydro_main_mod
             write(luohydro(isr),*)
             write(luohydro(isr),*)
         end if
-        accheck = lswc - swc + lsno - bhzsno + h1et%zirr + cli_today%zdpt &
+        accheck = lswc - soil%swc + lsno - bhzsno + h1et%zirr + cli_today%zdpt &
                 - h1et%zea - h1et%zpta - h1et%zper - h1et%zrun
 
-        write(luohydro(isr),"(1x,i6,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),1x,f7.3,10(1x,f6.2))",ADVANCE="NO")  &
+        write(luohydro(isr),"(1x,i6,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),1x,f7.3,10(1x,f6.2))",ADVANCE="NO") &
             daysim,idoy,yr,h1et%zetp, h1et%zep, h1et%zptp,&
             h1et%zea, h1et%zpta, h1et%zper, h1et%zirr, cli_today%zdpt, dprecip, h1et%zrun, &
-            bhzinf, lswc, swc, h1et%zsnd, bhzsno, accheck, &
-            bhrwc0(12)/bhrwcw(1), cli_today%tdav, vaptrans, evaplimit, &
+            bhzinf, lswc, soil%swc, h1et%zsnd, bhzsno, accheck, &
+            bhrwc0(12)/soil%ahrwcw(1), cli_today%tdav, vaptrans, evaplimit, &
             standevapredu, bbevapredu, totalevapredu, cropdp_max*mmtom, &
-              plant_wat_t(0.0,cropdp_max,theta(1),thetaw,bszlyd,layrsn),&
-              plant_wat_t(0.0,cropdp_max,thetaf,thetaw,bszlyd,layrsn)
+              plant_wat_t(0.0,cropdp_max,soil%theta(1),soil%thetaw,soil%aszlyd,soil%nslay),&
+              plant_wat_t(0.0,cropdp_max,soil%thetaf,soil%thetaw,soil%aszlyd,soil%nslay)
 
         ! find weighted average of plant water stress factor
         ! zero out weighted average and counter
@@ -773,17 +715,17 @@ module hydro_main_mod
         write(luohydro(isr),"(1x,f6.2)",ADVANCE="YES") fwsf_wavg
 
         ! print out hydro values by layer (profile view)
-        call printlayval( isr, daysim, layrsn, &
-             bszlyt, bszlyd, bsdblk, &
-             theta, thetas, thetaf, thetaw, thetar, &
-             bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav )
+        call printlayval( isr, daysim, soil%nslay, &
+             soil%aszlyt, soil%aszlyd, soil%asdblk, &
+             soil%theta, soil%thetas, soil%thetaf, soil%thetaw, soil%thetar, &
+             soil%ahrsk, soil%aheaep, soil%ah0cb, soil%asfcla, soil%asfom, soil%tsav )
       end if
 
       if ((am0hfl(isr) .eq. 2).or.(am0hfl(isr) .eq. 6) &
          .or. (am0hfl(isr) .eq. 3) .or. (am0hfl(isr) .eq. 7)) then
          ! print out hourly surface water content values
          do idx = 1, 24
-            write(luosurfwat(isr),*) idx, daysim, idoy, yr, bhrwc0(idx), bhrwc0(idx)/bhrwcw(1)
+            write(luosurfwat(isr),*) idx, daysim, idoy, yr, bhrwc0(idx), bhrwc0(idx)/soil%ahrwcw(1)
          end do
 
          ! print out daily weather as used in hydro
@@ -793,6 +735,536 @@ module hydro_main_mod
 
       return
     end subroutine hydro
+
+    subroutine hinit(layrsn, bsdblk, bsdblk0, bsdpart, bsdwblk, &
+                     bhrwc, bhrwcs, bhrwcf, bhrwcw, bhrwcr, &
+                     bhrwca, bh0cb, bheaep, bhrsk, bhfredsat, &
+                     bsfsan, bsfsil, bsfcla, bsfom, bsfcec, &
+                     bszlyd, bszlyt, vaptrans, evaplimit, soil)
+
+      ! + + + PURPOSE + + +
+      ! This subroutine controls the initialization of the HYDROLOGY
+      ! sumbodel of WEPS.  The program initializes the depth variables
+      ! of the soil simulation layers and converts the soil water
+      ! content variables from mass basis to volume basis.
+      ! DATE:  09/16/93
+      ! MODIFIED:  12/13/93
+      ! MODIFIED:  07/28/95
+      ! MODIFIED:  07/29/95
+      ! This change was done to determine the average of soil
+      ! properties from the first simulation layer (10 mm) and the second
+      ! uppermost simulation layer (40 mm).  The average for the new
+      ! uppermost simulation layer for the HYDROLOGY submodel (50 mm thick)
+      ! Using 50 mm as the thickness of the uppermost simulation layer for the
+      ! HYDROLOGY submodel will increase the speed of simulation and reduce the
+      ! the potential for errors.
+
+      ! + + + KEYWORDS + + +
+      ! initialization, hydrology
+
+      use weps_main_mod, only: wc_type
+      use hydro_data_struct_defs, only: claygrav80rh, orggrav80rh
+      use hydro_util_mod, only: param_blkden_adj, param_prop_bc, volwatadsorb
+      use soil_data_struct_defs, only: soil_def
+
+      ! + + + ARGUMENT DECLARATIONS + + +
+      integer layrsn
+      real bsdblk(*), bsdblk0(*), bsdpart(*), bsdwblk(*)
+      real bhrwc(*), bhrwcs(*), bhrwcf(*), bhrwcw(*), bhrwcr(*)
+      real bhrwca(*), bh0cb(*), bheaep(*), bhrsk(*), bhfredsat(*)
+      real bsfsan(*), bsfsil(*), bsfcla(*), bsfom(*), bsfcec(*)
+      real bszlyd(*), bszlyt(*), vaptrans, evaplimit
+      type(soil_def), intent(inout) :: soil  ! soil for this subregion
+
+      ! + + + ARGUMENT DEFINITIONS + + +
+      ! layrsn - Number of soil layers used in simulation
+      ! bsdblk  - Soil bulk density (Mg/m^3)
+      ! bsdblk0 - Previous day soil bulk density (Mg/m^3)
+      ! bsdpart - Soil particle density (Mg/m^3)
+      ! bsdwblk - Soil wet bulk density (Mg/m^3)
+      ! bhrwc   - Soil water content (mg/mg)
+      ! bhrwcs  - Soil water content at saturation (mg/mg)
+      ! bhrwcf  - Soil water content at field capacity (mg/mg)
+      ! bhrwcw  - Soil water content at wilting point (mg/mg)
+      ! bhrwcr  - Residual Soil water content (mg/mg)
+      ! bh0cb   - Power of campbell's water release curve model (unitless)
+      ! bheaep  - Soil air entry potential (j/kg)
+      ! bhrsk   - Saturated hydraulic conductivity (m/s)
+      ! bhfredsat - fraction of soil porosity that will be filled with water
+      !             while wetting under normal field conditions due to entrapped air
+      ! bsfsan  - Sand fractions
+      ! bsfsil  - Silt fractions
+      ! bsfcla  - Clay fractions
+      ! bsfom   - fraction of total soil mass which is organic matter
+      ! bsfcec  - Soil layer cation exchange capacity (cmol/kg) (meq/100g)
+      ! bszlyd  - depth to the bottom of soil layer (mm)
+      ! bszlyt  - soil layer thickness (mm)
+      ! vaptrans - vapor transmissivity (mm/d^.5)
+      ! evaplimit - accumulated surface evaporation since last complete rewetting
+      !             defining limit of stage 1 (energy limited) and start of 
+      !             stage 2 (soil vapor transmissivity limited) evaporation (mm)
+
+      ! + + + LOCAL VARIABLES + + +
+      integer k
+      real :: potes ! locally used air entry potential
+      real :: gmd   ! locally used particle geometric mean diameter
+      real :: gsd   ! locally used particle geometric standard deviation
+      real :: temp  ! temporary variable
+      ! real temp1, temp2, temp3
+
+      ! + + + LOCAL DEFINITION + + +
+      ! potes  - Air entry potential at a std. bsdblk of 1.3 Mg/m^3
+
+      ! + + + END SPECIFICATIONS + + +
+      ! initialize various soil layer references
+
+      if( wc_type.eq.4 ) then
+          ! use texture based calculations from Rawls to set all soil
+          ! water properties.
+          call param_prop_bc( &
+              layrsn, bszlyd, bsdblk, bsdpart, &
+              bsfcla, bsfsan, bsfom, bsfcec, &
+              bhrwcs, bhrwcf, bhrwcw, bhrwcr, &
+              bhrwca, bh0cb, bheaep, bhrsk, &
+              bhfredsat )
+      else
+          ! adjust hydro parameters for a change in bulk density
+          call param_blkden_adj( layrsn, bsdblk, bsdblk0, &
+              bsdpart, bhrwcf, bhrwcw, bhrwca, &
+              bsfcla, bsfom, &
+              bh0cb, bheaep, bhrsk )
+      end if
+
+      ! convert soil water contents from mass basis to volume basis
+      do k=1,layrsn
+
+          soil%theta(k) = bhrwc(k) * bsdblk(k)
+          soil%thetadmx(k) = soil%theta(k)
+          if( soil%theta(k) .lt. 0.0 ) then
+              write (*,*) 'hinit: theta(',k,') .lt. 0'
+              write (*,*) 'hinit: bhrwc =',bhrwc(k),'bsdblk =',bsdblk(k)
+          end if
+          if( wc_type.ne.4 ) then
+              bhfredsat(k) = 0.883
+          end if
+          soil%thetas(k) = 1 - bsdblk(k) / bsdpart(k)   ! saturation
+          soil%thetes(k) = soil%thetas(k) * bhfredsat(k)     ! reduced saturation content accounted for by entrapped air
+          soil%thetaf(k) = bhrwcf(k) * bsdblk(k)        ! field capacity
+          soil%thetaw(k) = bhrwcw(k) * bsdblk(k)        ! wilting point
+
+        if( wc_type.eq.4 ) then
+          soil%thetar(k) = bhrwcr(k) * bsdblk(k)        ! residual water content
+        else
+      !    use theta corresponding to 80% relhum in soil for soil%thetar
+          temp = bsdblk(k)*1000.0  !convert Mg/m^3 to kg/m^3
+          soil%thetar(k) = volwatadsorb( temp, bsfcla(k), bsfom(k), &
+                                    claygrav80rh, orggrav80rh )
+        end if
+
+      !    call propsaxt(bsfsan(k), bsfcla(k), &
+      !                  temp, temp1, temp2 )   !soil%thetas, soil%thetaf, soil%thetaw
+
+      !    temp3 = (1.0-temp) * bsdpart(k) !bulk density
+      !    write(*,1000) k,bszlyt(k), &
+      !          bsfsan(k),bsfcla(k),bsfom(k), &
+      !          bsdblk(k),soil%thetas(k), &
+      !          soil%thetaf(k),soil%thetaw(k), &
+      !          temp3, temp,     !bulkden, sat vol &
+      !          temp1,           !field vol &
+      !          temp2            !wilt vol
+
+      !  used with output for soil file screening
+      ! 1000     format(i3,f7.0,20f7.4)
+
+      !      write(*,*) 'hinit:',k,bh0cb(k),bheaep(k),bhrsk(k),soil%thetas(k),
+      !                 soil%thetaf(k),soil%thetaw(k),soil%thetar(k)
+
+      !     Campbell functions
+      !      call psd( bsfsan(k), bsfsil(k), bsfcla(k), gmd, gsd )
+      !      potes(k) = -0.2 * gmd**(-0.5)                      !H-77
+      !      bh0cb(k) = -2. * potes(k) + 0.2 * gsd              !H-78
+      !      bheaep(k) = potes(k)*(bsdblk(k)/1.3)**(0.67*bh0cb(k)) !H-79
+
+      !     reverse calculation of field capacity and wilting point
+      !      soil%thetar(k) = 0.0
+      !      temp = -33.33
+      !      temp1 = 1.0 / bh0cb(k)
+      !      soil%thetaf(k) = volwat_matpot_bc(temp, soil%thetar(k), soil%thetas(k), &
+      !                                   bheaep(k), temp1)
+      !      temp = -1500.0
+      !      soil%thetaw(k) = volwat_matpot_bc(temp, soil%thetar(k), soil%thetas(k), &
+      !                                   bheaep(k), temp1)
+
+      !      write(*,*) 'hinit:',k,bsfsan(k),bsfsil(k),bsfcla(k),bsfom(k), &
+      !                 bh0cb(k),bheaep(k),soil%thetas(k), &
+      !                 soil%thetaf(k),soil%thetaw(k),soil%thetar(k),bhrsk(k)
+
+      !     this is used with campbell functions as well
+      !      bhrsk(k) = waterk(bsdblk(k), bh0cb(k), bsfcla(k), bsfsil(k))
+
+      !      write(*,*) 'hinit:',k,bsfsan(k),bsfsil(k),bsfcla(k),bsfom(k), &
+      !                 bh0cb(k),bheaep(k),soil%thetas(k), &
+      !                 soil%thetaf(k),soil%thetaw(k),soil%thetar(k),bhrsk(k)
+
+      end do
+
+      !  soil%swci = sum(wc(1:layrsn))
+      soil%swci = dot_product(soil%theta(1:layrsn),bszlyt(1:layrsn))
+
+      !  soil%theta(0) = calctht0(bszlyd, soil%thetes, soil%thetar, soil%theta,
+      ! *  soil%thetaw, soil%thetaf(1) - soil%thetaw(1), 0.0_8, 0.0_8)                        !H-64,65,66
+      soil%theta(0) = soil%theta(1)
+
+      ! calculate the vapor transmissivity (mm/d^.5) using the surface layer
+      ! taken from WEPP documentation eq 5.2.11 with conversion to use soil 
+      ! minerals in fractions not percent
+      vaptrans = 4.165 + 2.456 * bsfsan(1) - 1.703 * bsfcla(1) &
+               - 4.0 * bsfsan(1) * bsfsan(1)
+
+      ! calculate the cumulative evaporation limit between stage 1 and stage 2 evap
+      ! taken from WEPP documentation eq 5.2.10 with conversion to mm
+      if( vaptrans .le. 3.0 ) then
+          evaplimit = 0.0
+      else
+          evaplimit = 9.0 * (vaptrans - 3.0) ** 0.42
+      end if
+
+      ! call subroutine psd and calculate soil hydraulic parameters
+      do k=1,layrsn
+          if ( bh0cb(k) .eq. -99.9 ) then
+              call psd( bsfsan(k), bsfsil(k), bsfcla(k), gmd, gsd)
+              potes = -0.2 * gmd**(-0.5)         !H-77
+              bh0cb(k) = -2. * potes + 0.2 * gsd  !H-78
+              if ( bheaep(k) .eq. -99.90 ) then
+                 bheaep(k) = potes*(bsdblk(k)/1.3)**(0.67*bh0cb(k))    !H-79
+              end if
+          end if
+          if ( bhrsk(k) .eq. -99.90 ) then
+             bhrsk(k) = waterk(bsdblk(k), bh0cb(k), bsfcla(k),bsfsil(k))
+          end if
+      end do
+
+      return
+    end subroutine hinit
+
+    subroutine printlayval( isr, daysim, layrsn, &
+             bszlyt, bszlyd, bulkden, &
+             theta, thetas, thetaf, thetaw, thetar, &
+             bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav )
+
+!     + + + PURPOSE + + +
+!     This subroutine print out soil hydro properties by layer
+
+!     + + + KEYWORDS + + +
+!     output hydro
+
+      use file_io_mod, only: luohlayers
+      use datetime_mod, only: get_simdate_doy, get_simdate_year
+      use hydro_data_struct_defs, only: claygrav80rh, orggrav80rh, gravconst
+      use hydro_util_mod, only: matricpot_bc, volwatadsorb, availwc, unsatcond_bc
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr   ! subregion number
+      integer daysim, layrsn
+      real bszlyt(*), bszlyd(*), bulkden(*)
+      real theta(0:*), thetas(*), thetaf(*), thetar(*), thetaw(*)
+      real bhrsk(*), bheaep(*), bh0cb(*), bsfcla(*), bsfom(*), bhtsav(*)
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     daysim     - day of the simulation (very useful for debugging, not necessary otherwise)
+!     bszlyt(*)  - thickness of the soil layer (mm)
+!     bszlyd(*)  - depth to bottom of the soil layer (mm)
+!     bulkden(*) - soil bulk density Mg/m^3)
+!     theta(*)   - volumetric water content (m^3/m^3)
+!     thetas(*)  - saturated volumetric water content (m^3/m^3)
+!     thetaf(*)  - field capacity volumetric water content (m^3/m^3)
+!     thetar(*)  - residual (conductivity) volumetric water content (m^3/m^3)
+!     thetaw(*)  - wilting point volumetric water content (m^3/m^3)
+!     bhrsk(*)   - saturated hydraulic conductivity (m/s)
+!     bheaep(*)  - air entry potential (J/kg)
+!     bh0cb(*)   - exponent of Campbell soil water release curve (unitless)
+!     bsfcla(*)  - fraction of soil mineral content which is clay (unitless)
+!     bsfom(*)   - fraction of total soil which is organic (unitless)
+!     bhtsav(*)  - daily average soil temperature (C)
+
+!     + + + LOCAL VARIABLES + + +
+      integer    idx, yr
+      integer    idoy
+      real       availwat, temp
+      real       unsatcond, matricpot, soilrh
+      real       laycenter, sat_rat
+      real       airentry, lambda, theta80rh
+
+!     + + + LOCAL DEFINITIONS + + +
+!     idx   - array index for loops
+!     yr       - year of simulation
+!     availwat  - soil plant availale water content (for output)
+!     unsatcond - unsaturated hydraulic conductivity (m/s) (for output)
+!     matricpot - soil matric potential (m) (for output)
+!     layercenter - depth to the center of a soil layer (mm) (for output)
+!     sat_rat - saturation ratio (for output)
+
+!     + + + END SPECIFICATIONS + + +
+
+      yr = get_simdate_year()
+      idoy = get_simdate_doy()
+      if( idoy .eq. 1 ) then
+         ! insert double blank line to break years into blocks for graphing
+         write(luohlayers(isr),*)
+         write(luohlayers(isr),*)
+      else
+         ! print a single blank line to separate layer blocks
+         write(luohlayers(isr),*)
+      end if
+      do idx=1,layrsn
+         lambda = 1.0 / bh0cb(idx)
+         availwat = availwc( theta(idx), thetaw(idx), thetaf(idx) )
+         unsatcond = unsatcond_bc( theta(idx), thetar(idx), &
+                     thetas(idx), bhrsk(idx), lambda )
+         airentry = bheaep(idx) / gravconst
+         temp = bulkden(idx)*1000.0  !convert Mg/m^3 to kg/m^3
+         theta80rh = volwatadsorb( temp, bsfcla(idx), bsfom(idx), &
+                     claygrav80rh, orggrav80rh )
+         call matricpot_bc( theta(idx), thetar(idx), thetas(idx), &
+              airentry, lambda, thetaw(idx), theta80rh, bhtsav(idx), &
+              matricpot, soilrh )
+         laycenter = bszlyd(idx) - 0.5*bszlyt(idx)
+         sat_rat = (theta(idx)-thetar(idx)) / (thetas(idx)-thetar(idx))
+ 2190    format(1x,i5,1x,i3,1x,i4,1x,i3,1x,16g11.3)
+         write(luohlayers(isr),2190) daysim, idoy, yr, idx, laycenter, &
+               theta(idx), thetas(idx), thetaf(idx), thetaw(idx), &
+               thetar(idx), availwat, sat_rat, bhtsav(idx), &
+               unsatcond, -matricpot, soilrh, bulkden(idx), &
+               -airentry, bh0cb(idx), bhrsk(idx)
+      end do
+
+      return
+    end subroutine printlayval
+
+    real function plant_wat_t( begind, endd, thetaf, thetaw,          &
+     &                           bszlyd, nlay )
+
+!     + + + PURPOSE + + +
+!     Determines the amount of water in any soil interval between any
+!     two water contents.
+
+      use soillay_mod, only: intersect
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      real begind, endd
+      integer nlay
+      real thetaf(nlay), thetaw(nlay), bszlyd(nlay)
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     begind - uppper depth of soil interval
+!     endd   - lower depth of soil interval
+!     nlay   - number of layers in soil input array
+!     thetaf - wetter soil water content value by layer (mm/mm)
+!     thetaw - dryer soil water content value by layer (mm/mm)
+!     bszlyd - depth to bottom of soil layers (mm)
+
+!     + + + LOCAL VARIABLES + + +
+      integer lay
+      real sumwat, depth, thick
+
+!     + + + LOCAL DEFINITIONS + + +
+!     lay    - layer index
+!     sumwat - running sum of water as added from each layer
+!     depth  - cumulative depth in soil
+!     prevdepth - previous cumulative depth in soil
+!     thick  - thickness of soil slice whose water content is being
+!              added to sum
+
+!     + + + END SPECIFICATIONS + + +
+
+      sumwat = 0.0
+      depth = 0.0
+      do lay = 1,nlay
+          ! find thickness of intersection between soil layer and 
+          ! desired interval
+          thick = intersect( depth, bszlyd(lay), begind, endd )
+          if( thick .gt. 0.0 ) then
+              sumwat = sumwat + (thetaf(lay) - thetaw(lay)) * thick
+          end if
+          depth = bszlyd(lay)
+      end do
+      plant_wat_t = sumwat
+
+      return
+    end function plant_wat_t
+
+    real function movewind( meas_wind, meas_za, meas_zo, meas_zd,     &
+     &                          loc_za, loc_zo, loc_zd)
+
+!     + + + PURPOSE + + +
+      ! returns wind velocity in the same units as the measured wind 
+      ! adjusted from measured height, roughness, zero plane displacement
+      ! to the location height, roughness and zero plane displacement.
+      ! Reference: Jensen, Burman, Allen. 1989. ASCE 70, Evapotranspiration
+      ! and irrigation water requirements. Adjustment for differential roughness
+      ! included as a power function (Hagen reference: Panofsky and Dutton, 1984)
+
+!     + + + KEY WORDS + + +
+!     log law wind velocity adjustment
+
+!     + + + COMMON BLOCKS + + +
+
+!     + + + LOCAL COMMON BLOCKS + + +
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      real meas_wind, meas_za, meas_zo, meas_zd
+      real loc_za, loc_zo, loc_zd
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     meas_wind - measured wind velocity (units same as output units)
+      ! these parameters should all have the same units
+!     meas_za - measured wind anemometer height
+!     meas_zo - measured wind aerodynamic roughness
+!     meas_zd - measured wind zero plane displacement
+!     loc_za - location wind velocity height
+!     loc_zo - location wind aerodynamic roughness
+!     loc_zd - location wind zero plane displacement
+
+!     + + + PARAMETERS + + +
+
+!     + + + LOCAL VARIABLES + + +
+
+!     + + + LOCAL DEFINITIONS + + +
+
+!     + + +   FUNCTION CALLS +++
+
+!     + + + END SPECIFICATIONS + + +
+
+      movewind = meas_wind * ( log( (loc_za - loc_zd) / loc_zo )        &
+     &         / log( (meas_za - meas_zd) / meas_zo ) )                 &
+     &         * ( (loc_zo / meas_zo)**0.067 )
+
+      return
+    end function movewind
+
+    subroutine psd (sandm, siltm, claym, pgmd, pgsd)
+
+!     + + + PURPOSE + + +
+!     This subroutine calculates the soil geometric mean diameter and
+!     geometric standard deviation from percent sand, silt, and clay
+!     using geometric mean diameters within each of the three soil
+!     particle size fractions.
+!     From: Shirazi, M.A., Boersma, L. 1984. A unifying Quantitative
+!     Analysis of Soil Texture. SOil Sci. Soc. Am. J. 48:142-147
+!     DATE:  09/29/93
+
+!     + + + KEY WORDS + + +
+!     Geometric mean diameter (GMD), Geometric standard deviation (GSD)
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      real claym
+      real pgmd
+      real pgsd
+      real sandm
+      real siltm
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     sandm  - Mass fraction of sand
+!     siltm   - Mass fraction of silt
+!     claym  - Mass fraction of clay
+!     pgmd   - Geometric mean diameter of psd (mm)
+!     pgsd   - Geometric std deviation of psd (mm)
+
+!     + + + PARAMETERS + + +
+
+      real   sandg, siltg, clayg
+
+      parameter   (sandg = 1.025, siltg = 0.026, clayg = 0.001)
+
+!     sandg - percent sand
+!     siltg - percent silt
+!     clayg - percent clay
+
+!     + + + LOCAL VARIABLES + + +
+      real a, b
+
+!     + + + LOCAL DEFINITIONS + + +
+!     a, b   - Temporary variables
+
+!     + + + END SPECIFICATIONS + + +
+
+!     calculate geometric mean diameter
+          a = sandm*log(sandg)+siltm*log(siltg)+claym*log(clayg)
+          pgmd = exp(a)
+
+!     calculate geometric standard deviation
+          b = (sandm*log(sandg)**2 + siltm*log(siltg)**2 +               &
+     &         claym*log(clayg)**2)
+          pgsd = exp(sqrt(b-a**2))
+
+      return
+    end subroutine psd
+
+    subroutine ratedura(bhzirr, bhratirr, bhdurirr)
+
+!     + + + PURPOSE + + +
+!     makes sure that irrigation depth, application rate and duration
+!     are consistent. This routine always requires an irrigation depth
+!     to be set on entry, although it can be safely be zero.
+
+!     + + + ARGUMENT DECLARATIONS + + +
+
+      real bhzirr, bhratirr, bhdurirr
+
+!     + + + ARGUMENT DEFINITIONS + + +
+
+!     bhzirr    - daily irrigation application depth (mm)
+!     bhratirr  - characteristic system irrigation rate (mm/hour)
+!     bhdurirr  - irrigation application duration (hours)
+
+!     + + + END SPECIFICATIONS + + +
+
+      if( bhratirr .gt. 0.0 ) then
+          ! irrigation characteristic rate known, so find duration
+          ! to apply the given depth
+          bhdurirr = min( 24.0, bhzirr / bhratirr )
+      else if( bhdurirr .gt. 0.0 ) then
+          ! irrigation duration known, rate not known, so find the characteristic rate
+          bhratirr = bhzirr / bhdurirr
+      else
+          ! neither rate nor duration known, so apply over 24 hours
+          bhdurirr = 24.0
+          bhratirr = bhzirr / bhdurirr
+      end if
+
+      return
+    end subroutine ratedura
+
+    real function waterk (bd, cb, clay, silt)
+!
+!     + + + purpose + + +
+!     this function estimates soil saturated hydraulic conductivity
+!     if it is not readily available.  the function predicts saturated
+!     hydraulic conductivity as a function of soil particle size dis-
+!     tribution and bulk density (eq. 6.12a, p. 54)
+!     reference:  campbell, g.s. 1985. soil physics with basic: trans-
+!                 port models for soil-plant systems.  elsevier science
+!                 publishers b.v.  amsterdam, the netherlands.
+!
+!     + + + argument declaration + + +
+      real bd
+      real cb
+      real clay
+      real silt
+!
+!     + + + argument definitions + + +
+!     bd     - soil bulk density (Mg/m^3)
+!     cb     - soil pore size scaling exponent
+!     clay   - clay fraction
+!     silt   - silt fraction
+!     waterk - saturated hydraulic conductivity (m/s)
+
+!     + + + end specifications + + +
+!
+      waterk = 3.92e-5*((1.3/bd)**(1.3*cb))*exp((-6.9*clay)-(3.7*silt))
+!
+      return
+    end function waterk
 
 end module hydro_main_mod
 

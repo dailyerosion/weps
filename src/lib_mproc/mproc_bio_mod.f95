@@ -356,7 +356,6 @@ module mproc_bio_mod
       ! the above ground biomass into the soil or the inverse process of bringing
       ! buried biomass to the surface.  It deals only with flat biomass
 
-      use weps_interface_defs
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residue_pointer, residueAdd
 
@@ -643,5 +642,171 @@ module mproc_bio_mod
       end do
 
     end function defoliate
+
+! This routine adjusts the burial coefficients for operation speed
+! and tillage depth
+
+    subroutine buryadj( burycoef,mnrbc,                               &
+     &                    speed,stdspeed,minspeed,maxspeed,             &
+     &                    depth,stddepth,mindepth,maxdepth)
+
+!     argument declarations
+      real    burycoef(mnrbc)
+      integer mnrbc
+      real    speed,stdspeed,minspeed,maxspeed
+      real    depth,stddepth,mindepth,maxdepth
+
+!     argument definitions
+!     burycoef - burial fraction coefficient to be adjusted
+!     mnrbc    - number of burial coefficients (residue burial classes)
+!     speed    - actual
+!     stdspeed - standard, where coefficient remains unchanged
+!     minspeed - minimum
+!     maxspeed - maximum
+!     depth    - actual
+!     stddepth - standard, where coefficient remains unchanged
+!     mindepth - minimum
+!     maxdepth - maximum
+
+!     local variable declarations
+      integer index
+      real    rspeed, rdepth
+      real    expspeed, s1speed, s2speed, expdepth
+
+      parameter (expspeed = 0.5)
+      parameter (s1speed = 0.6)
+      parameter (s2speed = 0.4)
+      parameter (expdepth = 2.7)
+
+!     find speed adjustment parameter
+      speed = max( min(speed, maxspeed), minspeed )
+      rspeed = (s1speed+s2speed*(speed/maxspeed)**expspeed)/            &
+     &         (s1speed+s2speed*(stdspeed/maxspeed)**expspeed)
+
+!     find depth adjustment parameter
+      depth = max(min(depth, maxdepth), mindepth )
+      rdepth = (1.0-(1.0-depth/maxdepth)**expdepth)/                    &
+     &         (1.0-(1.0-stddepth/maxdepth)**expdepth)
+
+!     adjust burial coefficients and keep within range 0 to 1
+      do 100 index=1,mnrbc
+          burycoef(index) = burycoef(index)*rspeed*rdepth
+          burycoef(index) = min( 1.0, max( 0.0, burycoef(index)))
+ 100  continue
+      return
+
+    end subroutine buryadj
+
+! This routine returns the fraction of material buried in layer number 
+! LAY given the burial distribution function type BURYDISTFLG and the
+! layer thicknesses LTHICK and the total number of layers in which
+! material will be buried NLAY and the tillage depth, soil layer
+! thicknesses, and the number of soil layers.  It returns the number
+! of layers that will be considered to be within the tillage zone for
+! this operation.
+
+    real function burydist( lay, burydistflg, lthick, ldepth, nlay)
+
+!     argument declarations
+      integer lay
+      integer burydistflg
+      real    lthick(*)
+      real    ldepth(*)
+      integer nlay
+
+!     argument definitions
+!     lay         - soil layer for which fraction is returned
+!     tlay        - number of soil layers affected by tillage
+!     burydistflg - distribution function to be used
+!              0    o uniform distribution
+!              1    o Mixing+Inversion Burial Distribution
+!              2    o Mixing Burial Distribution
+!              3    o Inversion Burial Distribution
+!              4    o Lifting, Fracturing Burial Distribution
+!              5    o Compression
+!     lthick      - thickness of soil layer
+!     ldepth      - distance from surface to bottom of layer
+!     nlay        - number of soil layers affected
+
+!     local variable declarations
+      real upper, lower
+      real c1exp, c2exp
+      real c3e1, c3e2, c3brk, c3split
+
+      parameter (c1exp = 0.5)
+      parameter (c2exp = 0.3)
+      parameter (c3brk = 0.60)
+
+!     assign depth from surface to upper and lower layer bounds
+      if( lay.eq.1 ) then
+          upper = 0.0
+      else
+          upper = ldepth(lay-1) / ldepth(nlay)
+      end if
+      lower = ldepth(lay) / ldepth(nlay)
+
+!     find fraction of material buried in layer LAY
+      select case (burydistflg)
+      case(1)
+          burydist = lower**c1exp - upper**c1exp
+      case(2,5) ! same for compression and mixing from Nat. Agron. Manual, 508CrevisionwSTIR 071106DTL
+          burydist = lower**c2exp - upper**c2exp
+      case(3)
+          if(lower.le.c3brk) then 
+              burydist = 0.28*(exp(1.83*lower)-1.0)
+          else
+              burydist = 1.0-0.441*((1.0-lower)/0.4)**1.4
+          endif
+          if(upper.le.c3brk) then 
+              burydist = burydist - (0.28*(exp(1.83*upper)-1.0))
+          else
+              burydist = burydist - (1.0-0.441*((1.0-upper)/0.4)**1.4)
+          endif
+      case(4)
+          burydist = lower**c1exp - upper**c1exp
+      case default   !uniform burial distribution
+          burydist = lower - upper
+      end select
+ 1000 return
+    end function burydist
+
+    subroutine resinit(resmass, resdepth, nlay, resarray, laythick)
+
+!     + + + INPUT VARIABLE DECLARATIONS + + +
+      real resmass
+      real resdepth
+      integer nlay
+      real resarray(nlay)
+      real laythick(nlay)
+
+!     + + + INPUT VARIABLE DEFINITIONS + + +
+!     resmass - residue mass (Kg/m^2)
+!     resdepth - Depth residue is distributed in soil (mm)
+!     nlay - number of soil layers
+!     resarray(nlay) - soil residue array by layer (Kg/m^2)
+!     laythick(nlay) - soil layer thickness (mm)
+
+!     + + + LOCAL VARIABLE DECLARATIONS + + +
+      integer ilay
+      real    depth
+
+!     + + + LOCAL VARIABLE DEFINITIONS + + +
+!     ilay - array index
+!     depth - accumulator for depth
+!     thick - thickness of slice to which residue is to be added
+
+      depth = resdepth
+      do ilay = 1, nlay
+          if (depth.gt.0.0) then
+              resarray(ilay) = resmass                                  &
+     &                       * min( depth,laythick(ilay)) / (resdepth)
+              depth = depth - laythick(ilay)
+          else
+              resarray(ilay) = 0.0
+          end if
+      end do
+
+      return
+    end subroutine resinit
 
 end module mproc_bio_mod

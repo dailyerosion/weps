@@ -117,8 +117,8 @@
 !     wp_totalRunoff - total runoff all years
 !     wp_detailout - detailed event out(1) or only average annual(0)
 !
-      real wp_peakro,wp_qout,wp_qin
-      real wp_effdrr, wp_effdrn, wp_effint, wp_qsout, wp_runoff
+!      real wp_peakro,wp_qout,wp_qin
+!      real wp_effdrr, wp_effdrn, wp_effint, wp_qsout, wp_runoff
 !      real wp_totalRunoff,wp_totalPrecip,wp_totalSnowrunoff
 !      integer wp_runoffEvents,wp_precipEvents
       integer wp_detailout
@@ -188,8 +188,8 @@
      & wp_efflen, wp_fwidth, wp_avgslp, wp_slplen,                      &
      & wp_a,wp_b, wp_xu, wp_xl,                                         &
      & wp_y, wp_x, wp_irdgdx, wp_npart,                                 &
-     & wp_peakro,wp_qout,wp_qin,                                        &
-     & wp_effdrr, wp_effdrn, wp_effint, wp_qsout, wp_runoff,            &
+!     & wp_peakro,wp_qout,wp_qin,                                        &
+!     & wp_effdrr, wp_effdrn, wp_effint, wp_qsout, wp_runoff,            &
      & wp_dsmon, wp_dsavg, wp_dsyear,                                   &
      & wp_avsolm, wp_avsoly, wp_avsolf, wp_frcff1, wp_frcff2,           &
      & wp_enrff1, wp_enrff2,                                            &

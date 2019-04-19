@@ -4,6 +4,10 @@
 !$HeadURL$
 
 module biomaterial
+
+  use upgm_mod
+  use environment_state_mod
+
   implicit none
 
   ! defines mass of all plant parts
@@ -29,7 +33,7 @@ module biomaterial
   type biostate_geometry
      real :: zht            ! "stem" height (m)
      real :: dstm           ! Number of stems per unit area (#/m^2)
-     real :: xstmrep        ! a representative diameter so that dstm*xstmrep*zht=rsai
+     double precision :: xstmrep        ! a representative diameter so that dstm*xstmrep*zht=rsai
      real :: grainf         ! internally computed grain fraction of reproductive mass
      integer :: hyfg        ! flag indicating the part of plant to which the "grain fraction" GRF is applied
                             ! when removing that plant part for yield
@@ -45,8 +49,8 @@ module biomaterial
      integer :: rg      ! seeding location in relation to ridge, 0 - plant in furrow, 1 - plant on ridge
      integer :: rsfg    ! row spacing flag
                         ! 0      o Broadcast Planting
-                        ! 1      o Use Specified Row Spacing
-                        ! 2      o Use Existing Ridge Spacing
+                        ! 1      o Uses Specified Row Spacing
+                        ! 2      o Uses Existing Ridge Spacing
      real :: xrow       ! row spacing (m)
      real :: dpop       ! Crop seeding density (#/m^2)
      real :: zfurcut      ! estimated furrow bottom depth below flat soil surface (mm)
@@ -57,22 +61,22 @@ module biomaterial
   type biostate_growth
      logical :: am0cgf      ! flag if set to .true. then run CROP growth subroutines.
      logical :: am0cif      ! flag if set to .true. then run CROP growth initialization subroutine.
-     real :: thucum         ! crop accumulated heat units
-     real :: trthucum       ! accumulated root growth heat units (degree-days)
+     double precision :: thucum         ! crop accumulated heat units
+     double precision :: trthucum       ! accumulated root growth heat units (degree-days)
 
      real :: zgrowpt        ! depth in the soil of the growing point (m)
-     real :: fliveleaf      ! fraction of standing plant leaf which is living (transpiring)
-     real :: leafareatrend  ! direction in which leaf area is trending.
+     double precision :: fliveleaf      ! fraction of standing plant leaf which is living (transpiring)
+     double precision :: leafareatrend  ! direction in which leaf area is trending.
                             ! Saves trend even if leaf area is static for long periods.
-     real :: stemmasstrend  ! direction in which stem mass is trending.
+     double precision :: stemmasstrend  ! direction in which stem mass is trending.
                             ! Saves trend even if stem mass is static for long periods.
 
      real :: twarmdays      ! number of consecutive days that the temperature has been above the minimum growth temperature
-     real :: tchillucum     ! accumulated chilling units (days)
-     real :: thardnx        ! hardening index for winter annuals (range from 0 t0 2)
+     double precision :: tchillucum     ! accumulated chilling units (days)
+     double precision :: thardnx        ! hardening index for winter annuals (range from 0 t0 2)
 
-     real :: thu_shoot_beg  ! heat unit total for beginning of shoot grow from root storage period
-     real :: thu_shoot_end  ! heat unit total for end of shoot grow from root storage period
+     double precision :: thu_shoot_beg  ! heat unit total for beginning of shoot grow from root storage period
+     double precision :: thu_shoot_end  ! heat unit total for end of shoot grow from root storage period
      real :: mshoot         ! crop shoot mass grown from root storage (kg/m^2)
                             ! this is a "breakout" mass and does not represent a unique pool
                             ! since this mass is destributed into below ground stem and
@@ -109,7 +113,7 @@ module biomaterial
      real, dimension(:), pointer :: mrtz           ! Buried root mass by soil layer (kg/m^2)
      real, dimension(:), pointer :: mbgz           ! Buried mass by soil layer (kg/m^2)
 
-     real :: rsai         ! stem area index (m^2/m^2)
+     double precision :: rsai         ! stem area index (m^2/m^2)
      real :: rlai         ! leaf area index (m^2/m^2)
      real, dimension(:), pointer :: rsaz           ! stem area index by height (1/m)
      real, dimension(:), pointer :: rlaz           ! leaf area index by height (1/m)
@@ -135,7 +139,7 @@ module biomaterial
      integer :: baflg   ! flag for biomass adjustment action
                           ! 0 - normal crop growth
                           ! 1 - find biomass adjustment factor for target yield
-                          ! 2 - Use given biomass adjustment factor
+                          ! 2 - Uses given biomass adjustment factor
      real :: baf        ! biomass adjustment factor
      real :: yraf       ! yield to biomass ratio adjustment factor
      integer :: tdtm    ! days from planting to maturity for summer crops, or the days
@@ -191,6 +195,7 @@ module biomaterial
      integer :: thudf   ! heat units or days to maturity flag
                         ! 0      o Days to maturity and average conditions used to find heat units
                         ! 1      o Heat units specified used directly
+     integer :: plant_doy   ! planting date (day of year)
      integer :: plant_day   ! planting date (day of month)
      integer :: plant_month ! planting date (month of rotation year)
      integer :: plant_rotyr ! planting date (rotation year)
@@ -241,11 +246,11 @@ module biomaterial
                           ! It is computed by taking the tillering factor times the plant population density.
      real :: rtd          ! Crop root depth (m)
      integer :: dayap     ! number of days of growth completed since crop planted
-     real :: hucum        ! crop accumulated heat units
-     real :: rthucum      ! crop accumulated heat units with no vernalization/photoperiod delay
+     double precision :: hucum        ! crop accumulated heat units
+     double precision :: rthucum      ! crop accumulated heat units with no vernalization/photoperiod delay
      real :: grainf       ! internally computed grain fraction of reproductive mass
-     real :: chillucum    ! accumulated chilling units (days)
-     real :: liveleaf     ! fraction of standing plant leaf which is living (transpiring)
+     double precision :: chillucum    ! accumulated chilling units (days)
+     double precision :: liveleaf     ! fraction of standing plant leaf which is living (transpiring)
      integer :: dayspring ! day of year in which a winter annual releases stored growth
      real :: cancov       ! crop canopy cover (fraction)
   end type bio_prevday
@@ -281,7 +286,7 @@ module biomaterial
      real :: zht    ! Crop height (m)
      real :: dstm   ! Number of crop stems per unit area (#/m^2)
                    ! It is computed by taking the tillering factor times the plant population density.
-     real :: xstmrep   ! a representative diameter so that acdstm*acxstmrep*aczht=acrsai
+     double precision :: xstmrep   ! a representative diameter so that acdstm*acxstmrep*aczht=acrsai
      real :: zrtd      ! Crop root depth (m)
      real :: grainf    ! internally computed grain fraction of reproductive mass
      type(bioderived) :: deriv
@@ -303,6 +308,8 @@ module biomaterial
      type(residue_pointer), pointer :: residue
      type(bioderived) :: deriv
      type(biodatabase) :: database
+     type(upgm) :: upgm_grow
+     type(environment_state) :: env
   end type plant_pointer
 
   type plants_struct
@@ -314,7 +321,7 @@ module biomaterial
      real :: dstmtot      ! total number of stems  per unit area (#/m^2)
      real :: zht_ave      ! Weighted ave height across pools (m)
      real :: zmht         ! Tallest biomass height across pools (m)
-     real :: xstmrep      ! a representative diameter so that dstm*xstmrep*zht=rsai
+     double precision :: xstmrep      ! a representative diameter so that dstm*xstmrep*zht=rsai
      integer :: dayap     ! most recent planting (days)
 
      real :: mstandstore  ! Total reproductive mass (standing) (kg/m^2)
@@ -545,6 +552,9 @@ contains
         nullify(plantNew%olderPlant)
      end if
 
+     ! upgm inititalized to null
+     nullify(plantNew%upgm_grow%plant)
+
      ! increment global plant index
      plantIndex = plantIndex + 1
      ! carry index along with plant
@@ -574,7 +584,8 @@ contains
      plantNew%geometry%xrow = 0.0
      plantNew%geometry%zht = 0.0
      plantNew%geometry%dstm = 0.0
-     plantNew%geometry%xstmrep = 0.0
+     plantNew%geometry%xstmrep = 0.0d0
+     plantNew%geometry%zshoot = 0.0
      plantNew%geometry%zrtd = 0.0
      plantNew%geometry%grainf = 0.0
      plantNew%geometry%zfurcut = 0.0
@@ -591,14 +602,14 @@ contains
      plantNew%growth%thucum = 0.0
      plantNew%growth%trthucum = 0.0
      plantNew%growth%zgrowpt = 0.0
-     plantNew%growth%fliveleaf = 0.0
+     plantNew%growth%fliveleaf = 1.0
      plantNew%growth%leafareatrend = 0.0
      plantNew%growth%stemmasstrend = 0.0
      plantNew%growth%twarmdays = 0.0
-     plantNew%growth%tchillucum = 0.0
-     plantNew%growth%thardnx = 0.0
-     plantNew%growth%thu_shoot_beg = 0.0
-     plantNew%growth%thu_shoot_end = 0.0
+     plantNew%growth%tchillucum = 0.0d0
+     plantNew%growth%thardnx = 0.0d0
+     plantNew%growth%thu_shoot_beg = 0.0d0
+     plantNew%growth%thu_shoot_end = 0.0d0
      plantNew%growth%mshoot = 0.0
      plantNew%growth%mtotshoot = 0.0
      plantNew%growth%dayap = 0
@@ -628,7 +639,7 @@ contains
         plantNew%deriv%mbgz(idx) = 0.0
      end do
 
-     plantNew%deriv%rsai = 0.0
+     plantNew%deriv%rsai = 0.0d0
      plantNew%deriv%rlai = 0.0
      do idx = 1, ncanlay
         plantNew%deriv%rsaz(idx) = 0.0
@@ -732,6 +743,9 @@ contains
         stop 1
      end if
 
+     ! delete upgm
+     call upgm_delete(plantPntr%upgm_grow)
+     
      ! remove all residue mass for this plant
      call residueDestroyAll(plantPntr%residue)
         
@@ -774,18 +788,18 @@ contains
 
      ! print mass values
      if ( associated(plantPntr) ) then
-       !write(*,*) 'Plant stand: ', plantPntr%mass%standstem, plantPntr%mass%standleaf, plantPntr%mass%standstore
+       write(*,*) 'Plant stand: ', plantPntr%mass%standstem, plantPntr%mass%standleaf, plantPntr%mass%standstore
        standmass = plantPntr%mass%standstem + plantPntr%mass%standleaf + plantPntr%mass%standstore
 
-       !write(*,*) 'Plant  flat: ', plantPntr%mass%flatstem, plantPntr%mass%flatleaf, plantPntr%mass%flatstore, &
-       !                            plantPntr%mass%flatrootstore, plantPntr%mass%flatrootfiber
+       write(*,*) 'Plant  flat: ', plantPntr%mass%flatstem, plantPntr%mass%flatleaf, plantPntr%mass%flatstore, &
+                                   plantPntr%mass%flatrootstore, plantPntr%mass%flatrootfiber
        flatmass = plantPntr%mass%flatstem + plantPntr%mass%flatleaf + plantPntr%mass%flatstore &
                 + plantPntr%mass%flatrootstore + plantPntr%mass%flatrootfiber
 
        totmass = standmass + flatmass
        do idx = 1, nsoillay
-         !write(*,*) 'Plant below: ', idx, plantPntr%mass%stemz(idx), plantPntr%mass%leafz(idx), plantPntr%mass%storez(idx), &
-         !                                 plantPntr%mass%rootstorez(idx), plantPntr%mass%rootfiberz(idx)
+         write(*,*) 'Plant below: ', idx, plantPntr%mass%stemz(idx), plantPntr%mass%leafz(idx), plantPntr%mass%storez(idx), &
+                                          plantPntr%mass%rootstorez(idx), plantPntr%mass%rootfiberz(idx)
          totmass = totmass + plantPntr%mass%stemz(idx) + plantPntr%mass%leafz(idx) + plantPntr%mass%storez(idx) &
                            + plantPntr%mass%rootstorez(idx) + plantPntr%mass%rootfiberz(idx)
 
@@ -894,7 +908,7 @@ contains
      ! set other state variables
      residueNew%zht = 0.0
      residueNew%dstm = 0.0
-     residueNew%xstmrep = 0.0
+     residueNew%xstmrep = 0.0d0
      residueNew%zrtd = 0.0
      residueNew%grainf = 0.0
 
@@ -918,7 +932,7 @@ contains
         residueNew%deriv%mbgz(idx) = 0.0
      end do
 
-     residueNew%deriv%rsai = 0.0
+     residueNew%deriv%rsai = 0.0d0
      residueNew%deriv%rlai = 0.0
      do idx = 1, ncanlay
         residueNew%deriv%rsaz(idx) = 0.0
@@ -1025,25 +1039,25 @@ contains
      ! print mass values
      totburied = 0.0
      if ( associated(residuePntr) ) then
-       !write(*,*) 'Residue stand: ', residuePntr%standstem, residuePntr%standleaf, residuePntr%standstore
+       write(*,*) 'Residue stand: ', residuePntr%standstem, residuePntr%standleaf, residuePntr%standstore
        totstand = residuePntr%standstem + residuePntr%standleaf + residuePntr%standstore
 
-       !write(*,*) 'Residue  flat: ', residuePntr%flatstem, residuePntr%flatleaf, residuePntr%flatstore, &
-       !                            residuePntr%flatrootstore, residuePntr%flatrootfiber
+       write(*,*) 'Residue  flat: ', residuePntr%flatstem, residuePntr%flatleaf, residuePntr%flatstore, &
+                                   residuePntr%flatrootstore, residuePntr%flatrootfiber
        totflat = residuePntr%flatstem + residuePntr%flatleaf + residuePntr%flatstore &
                + residuePntr%flatrootstore + residuePntr%flatrootfiber
 
        do idx = 1, nsoillay
          layersum = residuePntr%stemz(idx) + residuePntr%leafz(idx) + residuePntr%storez(idx) &
                            + residuePntr%rootstorez(idx) + residuePntr%rootfiberz(idx)
-         !write(*,*) 'RESID BY LAY: ', idx, residuePntr%stemz(idx), residuePntr%leafz(idx), residuePntr%storez(idx), &
-         !                                  residuePntr%rootstorez(idx), residuePntr%rootfiberz(idx), layersum
+         write(*,*) 'RESID BY LAY: ', idx, residuePntr%stemz(idx), residuePntr%leafz(idx), residuePntr%storez(idx), &
+                                           residuePntr%rootstorez(idx), residuePntr%rootfiberz(idx), layersum
          totburied = totburied + layersum
 
        end do
 
        totmass = totstand + totflat + totburied
-       write(*,*) 'RESID TOTALS: ', totmass, totstand, totflat, totburied !residuePntr%deriv%m, residuePntr%zht
+       write(*,*) 'RESID TOTALS: ', totmass, totstand, totflat, totburied, residuePntr%deriv%m, residuePntr%zht
 
      else
        write(*,*) 'No Residue'
@@ -1071,15 +1085,184 @@ contains
        write(*,*) 'PLANT NAME: ', trim( thisPlant%bname )
        call plantPrint( thisPlant, nsoillay )
 
-       !thisResidue => thisPlant%residue
-       !do while( associated(thisResidue) )
-       !  call residuePrint( thisResidue, nsoillay)
-       !  thisResidue => thisResidue%olderResidue
-       !end do
+       thisResidue => thisPlant%residue
+       do while( associated(thisResidue) )
+         call residuePrint( thisResidue, nsoillay)
+         thisResidue => thisResidue%olderResidue
+       end do
        thisPlant => thisPlant%olderPlant
      end do
         
   end subroutine plantPrintAll
+
+  subroutine plantSumAll(plantPntr, nsoillay)
+
+     use weps_main_mod, only: daysim
+     use datetime_mod, only: get_simdate_doy
+
+     type(plant_pointer), pointer :: plantPntr
+     integer, intent(in) :: nsoillay
+
+     ! local variable
+     type(plant_pointer), pointer :: thisPlant
+     type(residue_pointer), pointer :: thisResidue
+     integer :: idx
+     real :: totmass
+     real :: standstem
+     real :: standleaf
+     real :: standstore
+     real :: flatstem
+     real :: flatleaf
+     real :: flatstore
+     real :: flatrootstore
+     real :: flatrootfiber
+     real :: rootstorez
+     real :: rootfiberz
+     real :: stemz
+     real :: resstandmass
+     real :: resflatmass
+     real :: resburied
+     real :: resburiedroot
+     real :: layersumburied
+     real :: layersumroot
+
+     integer:: doy
+     real :: convert
+
+     integer :: poolcount
+
+     ! sum total mass values
+     standstem = 0.0
+     standleaf = 0.0
+     standstore = 0.0
+     flatstem = 0.0
+     flatleaf = 0.0
+     flatstore = 0.0
+     flatrootstore = 0.0
+     flatrootfiber = 0.0
+     rootstorez = 0.0
+     rootfiberz = 0.0
+     stemz = 0.0
+     resstandmass = 0.0
+     resflatmass = 0.0
+     resburied = 0.0
+     resburiedroot = 0.0
+
+     poolcount = 0
+
+     thisPlant => plantPntr
+     do while( associated(thisPlant) )
+       !write(*,*) 'Plant stand: ', thisPlant%mass%standstem, thisPlant%mass%standleaf, thisPlant%mass%standstore
+       standstem = standstem + thisPlant%mass%standstem
+       standleaf = standleaf + thisPlant%mass%standleaf
+       standstore = standstore + thisPlant%mass%standstore
+
+       !write(*,*) 'Plant  flat: ', thisPlant%mass%flatstem, thisPlant%mass%flatleaf, thisPlant%mass%flatstore, &
+       !                            thisPlant%mass%flatrootstore, thisPlant%mass%flatrootfiber
+       flatstem = flatstem + thisPlant%mass%flatstem
+       flatleaf = flatleaf + thisPlant%mass%flatleaf
+       flatstore = flatstore + thisPlant%mass%flatstore
+       flatrootstore = flatrootstore + thisPlant%mass%flatrootstore
+       flatrootfiber = flatrootfiber + thisPlant%mass%flatrootfiber
+
+       do idx = 1, nsoillay
+         !write(*,*) 'Plant below: ', idx, thisPlant%mass%stemz(idx), thisPlant%mass%leafz(idx), thisPlant%mass%storez(idx), &
+         !                                 thisPlant%mass%rootstorez(idx), thisPlant%mass%rootfiberz(idx)
+         rootstorez = rootstorez + thisPlant%mass%rootstorez(idx)
+         rootfiberz = rootfiberz + thisPlant%mass%rootfiberz(idx)
+         stemz = stemz + thisPlant%mass%stemz(idx)
+
+       end do
+
+       thisResidue => thisPlant%residue
+       do while( associated(thisResidue) )
+         ! total pool count
+         poolcount = poolcount + 1
+
+         !write(*,*) 'Residue stand: ', thisResidue%standstem, thisResidue%standleaf, thisResidue%standstore
+         resstandmass = resstandmass + thisResidue%standstem + thisResidue%standleaf + thisResidue%standstore
+
+         !write(*,*) 'Residue  flat: ', thisResidue%flatstem, thisResidue%flatleaf, thisResidue%flatstore, &
+         !                            thisResidue%flatrootstore, thisResidue%flatrootfiber
+         resflatmass = resflatmass + thisResidue%flatstem + thisResidue%flatleaf + thisResidue%flatstore &
+                     + thisResidue%flatrootstore + thisResidue%flatrootfiber
+
+         do idx = 1, nsoillay
+           layersumburied = thisResidue%stemz(idx) + thisResidue%leafz(idx) + thisResidue%storez(idx)
+           layersumroot = thisResidue%rootstorez(idx) + thisResidue%rootfiberz(idx)
+           !write(*,*) 'RESID BY LAY: ', idx, thisResidue%stemz(idx), thisResidue%leafz(idx), thisResidue%storez(idx), &
+           !                                  thisResidue%rootstorez(idx), thisResidue%rootfiberz(idx), layersum
+           resburied = resburied + layersumburied
+           resburiedroot = resburiedroot + layersumroot
+         end do
+
+         thisResidue => thisResidue%olderResidue
+       end do
+       thisPlant => thisPlant%olderPlant
+     end do
+
+     totmass = resstandmass + resflatmass + resburied + resburiedroot &
+             + standstem + standleaf + standstore &
+             + flatstem + flatleaf + flatstore + flatrootstore + flatrootfiber &
+             + rootstorez + rootfiberz + stemz
+
+     doy = get_simdate_doy()
+
+     if( doy .eq. 1 ) then
+       write(*,*) 'SUMALL: '
+       write(*,*) 'SUMALL: '
+     end if
+
+!     write(*,*) 'SUMALL: ', daysim, doy, resstandmass, resflatmass, resburied, resburiedroot &
+!                          , standstem, standleaf, 0.2*standstore, 0.8*standstore &
+!                          , flatstem, flatleaf, flatstore, flatrootstore, flatrootfiber &
+!                          , rootstorez, rootfiberz, stemz, totmass
+
+     ! stacked in order of columns 3 4 5 6 16 18 7 8 17 9 10 19
+     convert = 1.0       ! output kg/m^2
+     ! convert = 8921.79 ! output lbs/acre
+!     write(*,*) 'SUMALL: ', daysim, doy, convert * (resstandmass) & ! 3
+!                , convert * (resstandmass + resflatmass) & ! 4
+!                , convert * ( resstandmass + resflatmass + resburied) & ! 5
+!                , convert * ( resstandmass + resflatmass + resburied + resburiedroot) & ! 6
+!                , convert * ( resstandmass + resflatmass + resburied + resburiedroot +rootstorez + stemz + standstem) & ! 7
+!                , convert * ( resstandmass + resflatmass + resburied + resburiedroot +rootstorez + stemz + standstem + standleaf) & ! 8
+!                , convert * ( resstandmass + resflatmass + resburied + resburiedroot +rootstorez + stemz + standstem + standleaf &
+!                          + rootfiberz + 0.2*standstore) & ! 9
+!                , convert * ( resstandmass + resflatmass + resburied + resburiedroot +rootstorez + stemz + standstem + standleaf &
+!                          + rootfiberz + 0.2*standstore + 0.8*standstore) & ! 10
+!                , convert * ( flatstem) & ! 11
+!                , convert * ( flatleaf) & ! 12
+!                , convert * ( flatstore) & ! 13
+!                , convert * ( flatrootstore) & ! 14
+!                , convert * ( flatrootfiber) & ! 15
+!                , convert * ( resstandmass + resflatmass + resburied + resburiedroot + rootstorez) & ! 16
+!                , convert * ( resstandmass + resflatmass + resburied + resburiedroot +rootstorez + stemz + standstem + standleaf &
+!                          + rootfiberz) & ! 17
+!                , convert * ( resstandmass + resflatmass + resburied + resburiedroot +rootstorez + stemz) & ! 18
+!                , convert * ( totmass) ! 19
+
+     write(*,*) 'SUMALL: ', daysim, doy, convert * (resstandmass) & ! 3
+                , convert * (resflatmass) & ! 4
+                , convert * (resburied) & ! 5
+                , convert * (resburiedroot) & ! 6
+                , convert * (standstem) & ! 7
+                , convert * (standleaf) & ! 8
+                , convert * (0.2*standstore) & ! 9
+                , convert * (0.8*standstore) & ! 10
+                , convert * (flatstem) & ! 11
+                , convert * (flatleaf) & ! 12
+                , convert * (flatstore) & ! 13
+                , convert * (flatrootstore) & ! 14
+                , convert * (flatrootfiber) & ! 15
+                , convert * (rootstorez) & ! 16
+                , convert * (rootfiberz) & ! 17
+                , convert * (stemz) & ! 18
+                , convert * ( totmass) &
+                , poolcount ! 20
+
+        
+  end subroutine plantSumAll
 
 end module biomaterial
 

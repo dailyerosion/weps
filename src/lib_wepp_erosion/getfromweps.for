@@ -26,9 +26,6 @@
 
       implicit none
 
-      include 'p1werm.inc'
-      include 'hydro/htheta.inc'
-      include 'h1temp.inc'
       include 'wepp_erosion.inc'
 
       integer, intent(in):: isr
@@ -97,7 +94,7 @@
 !
       do i=1, soil%nslay
 !       wilting point (15 bar) volumetric water content      
-        thetdr(i) = thetaw(i)
+        thetdr(i) = soil%thetaw(i)
 !       Soil layer sand content (Mg/Mg)
         sand(i) = soil%asfsan(i)
 !       Soil layer silt content (Mg/Mg)        
@@ -115,11 +112,11 @@
 !       Soil layer thicknesses for each subregion (mm)        
         dg(i) = soil%aszlyt(i) * mmtom
 
-!       theta() - soil layer water content (m^3/m^3)
-!       thetaw() - wilting point (15 bar) volumetric water content 
+!       soil%theta() - soil layer water content (m^3/m^3)
+!       soil%thetaw() - wilting point (15 bar) volumetric water content 
 !       dg() - Soil layer thicknesses for each subregion (mm)  
-        st(i) = (theta(i) - thetaw(i)) * dg(i)
-        thetfc(i) = thetaf(i)
+        st(i) = (soil%theta(i) - soil%thetaw(i)) * dg(i)
+        thetfc(i) = soil%thetaf(i)
 
         bottom = bottom + dg(i)
 
@@ -148,12 +145,12 @@
 !       is encountered.
 
 !       ahfice - fraction of soil water in layer which is frozen  
-        if (ahfice(i,isr).ge.0.5) then
+        if (soil%fice(i).ge.0.5) then
           frdp = bottom
           isFroze = 1
         end if
 
-        if ((isFroze.eq.0).and.(ahfice(i,isr).lt.0.5)) then
+        if ((isFroze.eq.0).and.(soil%fice(i).lt.0.5)) then
           thdp = bottom
         end if
 

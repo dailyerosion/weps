@@ -96,10 +96,6 @@ contains
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
 
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1db1.inc'
-
 !     + + + LOCAL VARIABLES + + +
       integer :: nacctr   ! Number of accounting regions
       integer :: nsubr    ! Number of subregions
@@ -1238,10 +1234,6 @@ contains
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), dimension(:), intent(inout) :: soil 
-
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1db1.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer :: nacctr   ! Number of accounting regions

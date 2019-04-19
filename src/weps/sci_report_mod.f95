@@ -17,9 +17,9 @@ module sci_report_mod
 
    type(sci_summations), dimension(:), allocatable :: scisum 
 
-   contains
+  contains
 
-      subroutine sci_report(isr, cellstate, soil )
+    subroutine sci_report(isr, cellstate, soil )
 
 !     + + + PURPOSE + + +
 !     Calculate and write to file the SCI values for each subregion or
@@ -27,7 +27,6 @@ module sci_report_mod
 
       use weps_main_mod, only: soil_cond
       use soil_data_struct_defs, only: soil_def
-      use weps_interface_defs
       use file_io_mod, only: luosci
       use erosion_data_struct_defs, only: cellsurfacestate
       use manage_data_struct_defs, only: manFile
@@ -206,6 +205,58 @@ module sci_report_mod
  1003 format( f10.4 )
 
       return
-      end subroutine sci_report
+    end subroutine sci_report
+
+    subroutine sci_cum( isr, restot, cellstate )
+
+      use weps_main_mod, only: soil_cond
+      use biomaterial, only: biototal
+      use erosion_data_struct_defs, only: cellsurfacestate
+      use grid_mod, only: imax, jmax
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr
+      type(biototal), intent(in) :: restot
+      type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     isr - subregion index
+!     restot - structure containing residue totals
+
+!     + + + PURPOSE + + +
+!     each time it is called, it adds a value to the total biomass increments
+!     the counter for number of values added together.
+
+!     + + + LOCAL VARIABLES + + +
+      real total
+      integer idx, jdy, ngdpt
+
+      ! only do if flag is set 
+      if( soil_cond .eq. 0 ) return
+
+      ! initialize erosion totals
+      total = 0.0
+      ngdpt = 0
+      do idx = 1, imax-1
+          do jdy = 1, jmax-1
+              if( isr .eq. cellstate(idx,jdy)%csr ) then
+                  total = total + cellstate(idx,jdy)%egt
+                  ngdpt = ngdpt + 1
+              end if
+           end do
+      end do
+      if( ngdpt .gt. 0 ) then
+          total = total/ngdpt
+      end if
+
+      ! scisum(isr)%allbiomass = scisum(isr)%allbiomass + admtotto4(isr)
+      scisum(isr)%allbiomass = scisum(isr)%allbiomass + restot%mftot    &
+     &      + restot%msttot + restot%mbgtot + restot%mrttotto4
+
+      scisum(isr)%allerosion = scisum(isr)%allerosion + total
+      scisum(isr)%days = scisum(isr)%days + 1
+
+      return
+    end subroutine sci_cum
 
 end module sci_report_mod

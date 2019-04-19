@@ -38,8 +38,6 @@
 !     November 6, 2008
 !
 !----------------------------------------------------------------------------
-      include 'p1werm.inc'
-      include 'hydro/htheta.inc'
       include 'wepp_erosion.inc'
 
 
@@ -53,8 +51,6 @@
 !              opposite points for a rectangular simulation region. (m)
 !    sim_area - area of simulation region (m^2)
 !    asvroc - Soil layer coarse fragments (m^3/m^3)
-!    theta - soil layer water content (m^3/m^3)
-
 
 !      real falvel
       REAL sandf,siltf,clayf,orgmatf
@@ -98,7 +94,7 @@
 	silt(1) = soil%asfsil(1)
 	clay(1) = soil%asfcla(1)
 	orgmat(1) = soil%asfom(1)
-	thetfc(1) = theta(1)
+	thetfc(1) = soil%theta(1)
 	rfg(1) = soil%asvroc(1)
 
 !     default rill spacing to 1m

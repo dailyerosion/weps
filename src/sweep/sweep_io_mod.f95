@@ -507,8 +507,6 @@ module sweep_io_mod
 
       ! +++ HYDROLOGY +++
 
-        ! h1db1.inc
-
         ! Snow depth
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%ahzsnd

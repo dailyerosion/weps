@@ -118,6 +118,9 @@ module weps_main_mod
     integer :: resurf_roots   ! specify whether buried roots are resurfaced via process 26
                               ! 0 ! no resurfacing of buried roots
                               ! 1 ! resurface buried roots
+    integer :: upgm_growth    ! grow WEPS crops using UPGM growth routines
+                              ! 0 ! no UPGM gowth of WEPS crops (default)
+                              ! 1 ! use UPGM routines
     integer :: calc_confidence ! flag to determine if confidence intervals for the
                                ! rotation mean annual erosion are calculated
                               ! 0 ! no confidence interval calculation
@@ -243,6 +246,7 @@ module weps_main_mod
       wind_max_flag = 0   !default is set to not use max wind speed capping
       wepp_hydro = 0      !default is set to use Darcy method for hydrology
       soil_cond = 1       !default is set to output soil conditioning index file
+      upgm_growth = 0     !default is set to not use upgm growth for WEPS crops
       resurf_roots = 1    !default is set to resurface buried roots (process 26)
       calc_confidence = 0 !default is set to not calculate confidence intervals.
       frac_frst_mass_lost = 0.0 !default is set to 0.0 fraction loss of young leaf freeze damaged mass
@@ -312,7 +316,7 @@ module weps_main_mod
               write(*,*) '    0 = Do not run any erosion submodel'
               write(*,*) '    1 = Run WEPS erosion submodel (default)'
               write(*,*) '    2 = Run only WEPP erosion submodel'
-	      write(*,*) '    3 = Run WEPS and WEPP erosion submodels'
+              write(*,*) '    3 = Run WEPS and WEPP erosion submodels'
 
               write(*,*)                                                &
      &'-e  Create stand alone erosion output files, all erosion events'
@@ -424,6 +428,11 @@ module weps_main_mod
               write(*,*) '    1 = resurface buried roots (default)'
 
               write(*,*)                                                &
+     &'-U  UPGM growth for all WEPS crops'
+              write(*,*) '    0 = no UPGM growth for WEPS crops (default)'
+              write(*,*) '    1 = grow WEPS crops using UPGM'
+
+              write(*,*)                                                &
      &'-w  Specify method of weighting for layer conductivity and flow '
               write(*,*) '    0 = arithmetic mean 0.5 method (default)'
               write(*,*) '    1 = layer thickness porportional weighted'
@@ -460,7 +469,7 @@ module weps_main_mod
      &               ' -p',i1,' -P',a,                                  &
      &               ' -r',i1,' -R',i1,' -S',i1,                        &
      &               ' -s',i1,' -T', i1,' -t', i1,                      &
-     &               ' -u', i1, ' -w',i1,' -W',i1,                      &
+     &               ' -u', i1,' -U',i1,' -w',i1,' -W',i1,              &
      &               ' -X',f4.1,' -Y',i1' -Z',i1)
 
               write(0,2600) soil_cond,                                  &
@@ -471,7 +480,7 @@ module weps_main_mod
      &          puddle_warm, trim(rootp),                               &
      &          winter_ann_root, report_debug, wc_type,                 &
      &          ifc_format, transpiration_depth, calc_confidence,       &
-     &          resurf_roots, layer_weighting, wepp_hydro,              &
+     &          resurf_roots, upgm_growth, layer_weighting, wepp_hydro, &
      &          wind_max_value, cook_yield, calibrate_rotcycles
 
               call exit(1)
@@ -680,6 +689,16 @@ module weps_main_mod
      &           'Ignoring invalid resurf_roots option: ', trim(argv)
             else
               resurf_roots = cmd_iarg
+            endif
+
+          !specify whether buried roots are resurfaced via process 26
+          else if(argv(2:2) .eq. 'U') then
+            read(argv(3:),*) cmd_iarg
+            if( cmd_iarg .gt. 1 ) then
+              write(*,*)                                                &
+     &           'Ignoring invalid upgm_growth option: ', trim(argv)
+            else
+              upgm_growth = cmd_iarg
             endif
 
           !specify internodal conductivity layer weighting setting

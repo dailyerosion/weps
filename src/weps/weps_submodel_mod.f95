@@ -8,16 +8,15 @@ module weps_submodel_mod
   contains
 
     subroutine submodels (isr, soil, plant, plantIndex, restot, croptot, &
-                          biotot, decompfac, mandate, h1et, h1bal, wp, manFile)
+                          biotot, decompfac, mandate, hstate, h1et, h1bal, wp, manFile)
 
       use weps_main_mod, only: daysim
-      use weps_interface_defs
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: decomp_factors
       use biomaterial, only: plant_pointer, residue_pointer, biototal
       use input_run_mod, only: iy
       use mandate_mod, only: opercrop_date
-      use hydro_data_struct_defs, only: hydro_derived_et
+      use hydro_data_struct_defs, only: hydro_derived_et, hydro_state
       use hydro_mod, only: callhydr
       use report_hydrobal_mod, only: hydro_balance
       use wepp_param_mod, only: wepp_param
@@ -38,6 +37,7 @@ module weps_submodel_mod
       type(biototal), intent(inout) :: biotot  ! structure array containing summary amounts for all biomass
       type(decomp_factors), intent(inout) :: decompfac
       type(opercrop_date), dimension(:), intent(inout) :: mandate
+      type(hydro_state), intent(inout) :: hstate
       type(hydro_derived_et), intent(inout) :: h1et
       type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
@@ -46,19 +46,20 @@ module weps_submodel_mod
       ! write(*,*) "Start manage", daysim
 
       ! MANAGEment (tillage) submodel
-      call manage(isr, iy, soil, plant, plantIndex, biotot, mandate, h1et, manFile)
+      call manage(isr, iy, soil, plant, plantIndex, biotot, mandate, hstate, h1et, manFile)
+
       call plantupdate( soil, plant, croptot, restot, biotot )
 
       ! write(*,*) "Start callhydr", daysim
 
       ! HYDROLOGY submodel. Do not change call order. Hydro may set irrigation
       ! amounts that will affect soil.
-      call callhydr(daysim, isr, soil, plant, croptot, restot, biotot, h1et, h1bal, wp)
+      call callhydr(daysim, isr, soil, plant, croptot, restot, biotot, hstate, h1et, h1bal, wp)
 
       ! write(*,*) "Start callsoil", daysim
 
       ! SOIL submodel
-      call callsoil(daysim, isr, soil, croptot, biotot, h1et)
+      call callsoil(daysim, isr, soil, croptot, biotot, hstate, h1et)
 
       ! write(*,*) "Start callcrop", daysim
 
@@ -69,20 +70,20 @@ module weps_submodel_mod
       ! write(*,*) "Start decomp", daysim
 
       ! DECOMPosition submodel
-      call decomp(isr, soil, plant, decompfac, h1et)
+      call decomp(isr, soil, plant, decompfac, hstate, h1et)
       call plantupdate( soil, plant, croptot, restot, biotot )
 
       return
     end subroutine submodels
 
-    subroutine erodsubr_update( sr, soil, plant, biotot, h1et, subrsurf )
+    subroutine erodsubr_update( sr, soil, plant, biotot, hstate, h1et, subrsurf )
 
       ! assign all input data for stand alone erosion to subrsurf structure
 
       use subregions_mod
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residue_pointer, biototal
-      use hydro_data_struct_defs, only: hydro_derived_et
+      use hydro_data_struct_defs, only: hydro_derived_et, hydro_state, hhrs
       use erosion_data_struct_defs, only: subregionsurfacestate, create_brcdinputpools, destroy_brcdinputpools
       use sberod_mod, only: sbsfdall
 
@@ -91,12 +92,9 @@ module weps_submodel_mod
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
       type(biototal), intent(in) :: biotot
+      type(hydro_state), intent(in) :: hstate
       type(hydro_derived_et), intent(in) :: h1et
       type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
-
-      !     + + + GLOBAL COMMON BLOCKS + + +
-      include  'p1werm.inc'
-      include  'h1db1.inc'
 
       !     +++ LOCAL VARIABLES +++
       integer :: idx  ! loop index
@@ -212,8 +210,8 @@ module weps_submodel_mod
 
       subrsurf%ahzsnd = h1et%zsnd
 
-      do idx = 1, 24
-        subrsurf%ahrwc0(idx) = ahrwc0(idx,sr)
+      do idx = 1, hhrs
+        subrsurf%ahrwc0(idx) = hstate%rwc0(idx)
       end do
 
       ! derived

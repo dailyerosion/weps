@@ -436,6 +436,35 @@ contains
 
     end function wkday
 
+    integer function wkjday (jday)
+
+!     + + + PURPOSE + + +
+!     Given a date in Julian Day format
+!     wkjday will give the day of the week.
+!     0 = Monday
+!     1 = Tuesday
+!     2 = Wednesday
+!     3 = Thursday
+!     4 = Friday
+!     5 = Saturday
+!     6 = Sunday
+
+!     + + + KEYWORDS + + +
+!     date, utility
+
+!     + + + ARGUMENT DECLARATIONS + + + 
+      integer jday
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     jday   - Julian Day
+
+!     + + + END SPECIFICATIONS + + +
+
+!     We simply take the Julian Day and do a modulo of the value
+      wkjday=mod(jday, 7)
+      return
+    end function wkjday
+
     subroutine mvdate( delta, dd, mm, yyyy, nday, nmonth, nyear )
 
 !     + + + PURPOSE + + +

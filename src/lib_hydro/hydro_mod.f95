@@ -5,9 +5,136 @@
 
 module hydro_mod
 
+    ! used in hdbug
+    integer :: tday      ! The last accessed day of simulation month.
+    integer :: tmo       ! The last accessed month of simulation year.
+    integer :: tyr       ! The last accessed year of simulation run.
+    integer :: tisr      ! The last accessed subregion index.
+
   contains
 
-    subroutine callhydr(daysim, isr, soil, plant, croptot, restot, biotot, h1et, h1bal, wp)
+    subroutine hydrinit(isr, soil, hstate, h1et, h1bal, wp)
+
+      use weps_main_mod, only: daysim
+      use hydro_wepp_util_mod, only: saxpar
+      use soil_data_struct_defs, only: soil_def
+      use hydro_data_struct_defs, only: hydro_derived_et, hydro_state, hhrs
+      use report_hydrobal_mod, only: hydro_balance
+      use wepp_param_mod, only: wepp_param
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer isr
+      type(soil_def), intent(inout) :: soil  ! soil for this subregion
+      type(hydro_state), intent(inout) :: hstate
+      type(hydro_derived_et), intent(inout) :: h1et
+      type(hydro_balance), intent(inout) :: h1bal
+      type(wepp_param), intent(inout) :: wp
+
+      integer idx
+      real ltheta(soil%nslay)
+      real sand(soil%nslay),clay(soil%nslay),orgmat(soil%nslay)
+
+      do idx = 1, soil%nslay
+        ! Initialize the water holding capacity variable
+        soil%ahrwca(idx) = soil%ahrwcf(idx) - soil%ahrwcw(idx)
+        ! set volumetric water content to initialize reporting variable
+        ltheta(idx) = soil%ahrwc(idx) * soil%asdblk(idx)
+      end do
+
+      ! Set infiltration water depth to 0.0
+      hstate%zwid = 0.0
+      hstate%zeasurf = 0.0
+
+      ! soil layer temperature, ice fraction
+      do idx = 1, soil%nslay
+          soil%tsav(idx) = 0.0
+          soil%fice(idx) = 0.0
+      end do
+
+      hstate%zsno = 0.0
+      hstate%tsno = 0.0
+      hstate%fsnfrz = 0.0
+
+      ! set hydrologic balance variables
+      h1bal%initswc = dot_product(ltheta(1:soil%nslay),                 &
+     &                            soil%aszlyt(1:soil%nslay))
+      h1bal%initsnow = hstate%zsno
+      h1bal%initday = daysim
+
+      h1bal%presswc = h1bal%initswc
+      h1bal%pressnow = h1bal%initsnow
+      h1bal%presday = h1bal%initday
+
+      h1bal%cumprecip = 0.0
+      h1bal%cumirrig = 0.0
+      h1bal%cumrunoff = 0.0
+      h1bal%cumevap = 0.0
+      h1bal%cumtrans = 0.0
+      h1bal%cumdrain = 0.0
+      h1bal%hprevrotation = 1
+
+!     Initialize irrigation type and depth so values are set if no
+!     irrigation processes are invoked
+      h1et%zirr = 0.0
+      hstate%ratirr = 0.0
+      hstate%durirr = 0.0
+      hstate%locirr = 0.0
+      hstate%monirr = 0
+      hstate%madirr = 0.0
+      hstate%minirr = 0.0
+      hstate%ndayirr = 0
+      hstate%mintirr = 0
+
+      h1et%zrun = 0.0
+      hstate%zsmt = 0.0
+      h1et%zper = 0.0
+
+      do idx = 1, soil%nslay
+          soil%tsmx(idx) = 0.0
+          soil%tsmn(idx) = 0.0
+      end do
+
+      do idx = 1, soil%nslay
+          ! Soil layer sand content (Mg/Mg)
+          sand(idx) = soil%asfsan(idx)
+          ! Soil layer clay content (Mg/Mg)		
+          clay(idx) = soil%asfcla(idx)
+          ! Soil layer organic matter content (Mg/Mg)		
+          orgmat(idx) = soil%asfom(idx)
+      end do
+	
+      call saxpar(sand,clay,orgmat,soil%nslay,wp%saxwp,wp%saxfc,        &
+     &    wp%saxenp,wp%saxpor,wp%saxA, wp%saxB,wp%saxks)
+
+      ! Added for WEPP bookeeping      
+      wp%totalPrecip = 0.0
+      wp%totalRunoff = 0.0
+      wp%precipEvents = 0
+      wp%runoffEvents = 0
+      wp%snowmeltEvents = 0
+      wp%totalSnowrunoff = 0.0
+      wp%prev_crust_frac = -1.0
+      wp%rkecum = 0.0
+      ! End WEPP addition      
+
+      ! initializing a previously un-init'd variable
+      h1et%zea = 0.0
+      h1et%zep = 0.0
+      h1et%zeta = 0.0
+      h1et%zetp = 0.0
+      h1et%zpta = 0.0
+      h1et%zptp = 0.0
+      h1et%zsnd = 0.0
+      h1et%snow_protect = 0.0
+
+      do idx = 1, hhrs
+        hstate%rwc0(idx) = 0.0
+      end do
+
+      return
+    end subroutine hydrinit
+
+    subroutine callhydr(daysim, isr, soil, plant, croptot, restot, biotot, hstate, h1et, h1bal, wp)
 
 ! ***************************************************************** wjr
 ! Wrapper to call hydro
@@ -17,7 +144,7 @@ module hydro_mod
       use biomaterial, only: plant_pointer, residue_pointer, biototal
       use timer_mod, only: timer, TIMHYDR, TIMSTART, TIMSTOP
       use erosion_data_struct_defs, only: awudav
-      use hydro_data_struct_defs, only: am0hdb, hydro_derived_et
+      use hydro_data_struct_defs, only: am0hdb, hydro_derived_et, hydro_state
       use report_hydrobal_mod, only: hydro_balance
       use wepp_param_mod, only: wepp_param
       use climate_input_mod, only: amzele
@@ -25,11 +152,12 @@ module hydro_mod
       !  + + + ARGUMENT DECLARATIONS + + +
       integer daysim
       integer isr                   
-      type(soil_def), intent(in) :: soil  ! soil for this subregion
+      type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant  ! pointer to youngest plant data, which chains to older plant data
       type(biototal), intent(in) :: croptot  ! structure containing summary crop pool amounts
       type(biototal), intent(in) :: restot   ! structure containing summary residue pool amounts
       type(biototal), intent(in) :: biotot
+      type(hydro_state), intent(inout) :: hstate
       type(hydro_derived_et), intent(inout) :: h1et
       type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
@@ -37,53 +165,37 @@ module hydro_mod
       !  + + + ARGUMENT DEFINITIONS + + +
       !  restot          - structure array containing summary residue pool amounts for all subregions
 
-      ! Includes
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1temp.inc'
-      include 'h1db1.inc'
-
-      call timer(TIMHYDR,TIMSTART)      
+      call timer(TIMHYDR,TIMSTART)
 
       if (am0hdb(isr) .eq. 1) then
-         call hdbug(isr, soil, croptot, restot, h1et)
+         call hdbug(isr, soil, croptot, restot, hstate, h1et)
       end if
 
-      call hydro( isr, soil%nslay, soil%amrslp, biotot%rcdtot, biotot%zht_ave, &
+      call hydro( isr, biotot%rcdtot, biotot%zht_ave, &
                  biotot%rlaitot, croptot%zmht, croptot%dayap, &
                  biotot%ftcancov, biotot%rlailive, &
                  biotot%mftot, biotot%evapredu, &
-                 soil%aszlyd, soil%asdblk, soil%asdblk0, &
-                 soil%asdpart, soil%asdwblk, soil%ahrwc, &
-                 soil%ahrwcdmx, soil%ahrwcs, soil%ahrwcf, &
-                 soil%ahrwcw, soil%ahrwcr, soil%ahrwca, &
-                 soil%ah0cb, soil%aheaep, soil%ahfredsat, &
-                 soil%asfsan, soil%asfsil, soil%asfcla, &
-                 soil%asvroc, soil%asfom, soil%asfcec, &
-                 ahtsav(1,isr), biotot%dstmtot, biotot%ffcvtot, &
-                 soil%asxrgs, soil%aszrgh, soil%asfcr, &
-                 soil%aslrro, soil%aslrr, amzele, &
-                 ahzdmaxirr(isr), ahratirr(isr), ahdurirr(isr), &
-                 ahlocirr(isr), ahminirr(isr), am0monirr(isr), &
-                 ahmadirr(isr), ahndayirr(isr), ahmintirr(isr), &
-                 ahzoutflow(isr), ahzinf(isr), &
-                 ahzsno(isr), ahtsno(isr), ahfsnfrz(isr), &
-                 ahzsmt(isr), ahfice(1, isr), soil%ahrsk, &
-                 ahtsmx(1, isr), ahtsmn(1, isr), &
-                 ahrwc0(1, isr), daysim, &
-                 soil%asfald, soil%asfalw, soil%aszlyt, &
-                 awudav, ahzwid(isr), &
-                 ahzeasurf(isr), &
-                 plant, h1et, h1bal, wp )
+                 biotot%dstmtot, biotot%ffcvtot, &
+                 amzele, &
+                 hstate%zdmaxirr, hstate%ratirr, hstate%durirr, &
+                 hstate%locirr, hstate%minirr, hstate%monirr, &
+                 hstate%madirr, hstate%ndayirr, hstate%mintirr, &
+                 hstate%zoutflow, hstate%zinf, &
+                 hstate%zsno, hstate%tsno, hstate%fsnfrz, &
+                 hstate%zsmt, &
+                 hstate%rwc0, daysim, &
+                 awudav, hstate%zwid, &
+                 hstate%zeasurf, &
+                 soil, plant, h1et, h1bal, wp )
 
       if (am0hdb(isr) .eq. 1) then
-         call hdbug(isr, soil, croptot, restot, h1et)
+         call hdbug(isr, soil, croptot, restot, hstate, h1et)
       end if
       call timer(TIMHYDR,TIMSTOP)      
 
     end subroutine callhydr
 
-    subroutine  hdbug(isr, soil, croptot, restot, h1et)
+    subroutine  hdbug(isr, soil, croptot, restot, hstate, h1et)
 
       ! This program prints out many of the global variables before
       ! and after the call to HYDROLOGY provide a comparison of values
@@ -95,7 +207,7 @@ module hydro_mod
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
-      use hydro_data_struct_defs, only: hydro_derived_et
+      use hydro_data_struct_defs, only: hydro_derived_et, hydro_state
       use climate_input_mod, only: cli_today
 
       !  + + + ARGUMENT DECLARATIONS + + +
@@ -103,16 +215,8 @@ module hydro_mod
       type(soil_def), intent(in) :: soil     ! soil for this subregion
       type(biototal), intent(in) :: croptot  ! structure containing summary crop pool amounts
       type(biototal), intent(in) :: restot   ! structure containing summary residue pool amounts
+      type(hydro_state), intent(in) :: hstate
       type(hydro_derived_et), intent(in) :: h1et
-
-      !  + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'h1hydro.inc'
-      include 'h1db1.inc'
-      include 'h1temp.inc'
-
-      !  + + + LOCAL COMMON BLOCKS + + +
-      include 'hydro/thdbug.inc'
 
       !  + + + LOCAL VARIABLES + + +
       integer :: cd  ! The current day of simulation month.
@@ -173,8 +277,8 @@ module hydro_mod
       write(luohdb(isr),2051) soil%amrslp, croptot%ftcvtot, croptot%rlaitot, &
                     restot%mftot, h1et%zper
       write(luohdb(isr),2052) isr, isr, isr, isr
-      write(luohdb(isr),2053) h1et%zrun, h1et%zirr, ahzsno(isr), &
-                    ahzsmt(isr), h1et%zeta, h1et%zetp, h1et%zpta
+      write(luohdb(isr),2053) h1et%zrun, h1et%zirr, hstate%zsno, &
+                    hstate%zsmt, h1et%zeta, h1et%zetp, h1et%zpta
       write(luohdb(isr),2054) isr, isr, isr, isr
       write(luohdb(isr),2055) h1et%zea, h1et%zep, h1et%zptp, soil%aslrr
       write(luohdb(isr),2056)
@@ -183,7 +287,7 @@ module hydro_mod
          write(luohdb(isr),2060) l, soil%aszlyt(l), soil%ahrsk(l), soil%ahrwc(l), &
                        soil%ahrwcs(l), soil%ahrwca(l), soil%ahrwcf(l), &
                        soil%ahrwcw(l), soil%ah0cb(l), soil%aheaep(l), &
-                       ahtsmx(l,isr), ahtsmn(l,isr)
+                       soil%tsmx(l), soil%tsmn(l)
       end do
       write(luohdb(isr),2065)
 
