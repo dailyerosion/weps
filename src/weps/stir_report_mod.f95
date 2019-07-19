@@ -103,7 +103,7 @@ module stir_report_mod
     subroutine stir_report( mandate, manFile )
 
 !     + + + MODULES + + +
-      use weps_main_mod, only: report_debug
+      use weps_cmdline_parms, only: report_debug
       use stir_soil_texture_mod, only : get_stir_soil_multiplier
       use file_io_mod, only: luostir
       use sci_report_mod, only: scisum
@@ -527,7 +527,7 @@ module stir_report_mod
 
     subroutine sci_stir_init(isr)
 
-      use weps_main_mod, only: soil_cond
+      use weps_cmdline_parms, only: soil_cond
       use file_io_mod, only: luostir
       use sci_report_mod, only: scisum
       use manage_data_struct_defs, only: manFile
@@ -593,7 +593,7 @@ module stir_report_mod
 
     subroutine stir_cum(isr, speed, depth, tilltype, fracarea)
 
-      use weps_main_mod, only: soil_cond
+      use weps_cmdline_parms, only: soil_cond
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr

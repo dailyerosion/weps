@@ -54,7 +54,7 @@ module crop_growth_mod
 !     + + + PURPOSE + + +
 !     This is the main program for implementing the crop growth calculations.
 
-      use weps_main_mod, only: frac_frst_mass_lost
+      use weps_cmdline_parms, only: frac_frst_mass_lost
       use datetime_mod, only: get_simdate_doy, get_simdate
       use file_io_mod, only: luocrop, luoshoot
       use constants, only: u_mgtokg
@@ -752,7 +752,7 @@ module crop_growth_mod
 !     + + + KEYWORDS + + +
 !     biomass
 
-      use weps_main_mod, only: growth_stress, water_stress_max, winter_ann_root, cook_yield
+      use weps_cmdline_parms, only: growth_stress, water_stress_max, winter_ann_root, cook_yield
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luocrop
       use constants, only: u_hatom2, u_pi, u_mmtom
@@ -1423,7 +1423,7 @@ module crop_growth_mod
 !     + + + KEYWORDS + + +
 !     shoot growth
 
-      use weps_main_mod, only: cook_yield
+      use weps_cmdline_parms, only: cook_yield
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luoshoot
       use constants, only: u_mgtokg, u_mmtom

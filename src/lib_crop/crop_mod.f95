@@ -13,6 +13,7 @@ module crop_mod
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
+      use weps_cmdline_parms, only: report_info
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residue_pointer, biototal, residueAdd
       use timer_mod, only: timer, TIMCROP, TIMSTART, TIMSTOP
@@ -279,16 +280,20 @@ module crop_mod
 
             ! for annual crops, ALWAYS write out warning message
             ! if harvested before maturity
+            ! Note that this is reported back to the WEPS GUI
+            ! So, 'report_info' should be set to 1 (default) or greater under normal run conditions
             if( (hui < 1.0) .and. (mature_warn_flg .gt. 0) &
               .and. ( (thisPlant%database%idc.eq.1) .or. (thisPlant%database%idc.eq.2) &
                  .or. (thisPlant%database%idc.eq.4) .or. (thisPlant%database%idc.eq.5) ) ) then
-              write(UNIT=6,FMT="(1x,3(a),i0,'/',i0,'/',i0,a,f5.1,a,a)") &
+              if (report_info >= 1) then
+                write(UNIT=6,FMT="(1x,3(a),i0,'/',i0,'/',i0,a,f5.1,a,a)") &
                  'Warning: ', &
                  thisPlant%bname(1:len_trim(thisPlant%bname)), &
                  ' harvested ', &
                  dd, mm, yy, &
                  ' only reached ', hui*100.0, '% of maturity', &
                  ' (Check crop selection, planting, harvest dates)'
+              end if
             end if
 
             ! updated every call to get newline in right place

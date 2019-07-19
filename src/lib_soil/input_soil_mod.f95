@@ -20,7 +20,7 @@ module input_soil_mod
 !     based upon "inpsub.for" routine
           
 !     + + + MODULES + + +
-      use weps_main_mod, only: wc_type
+      use weps_cmdline_parms, only: wc_type
       use soil_data_struct_defs, only: soil_def
       use sci_soil_texture_mod, only : update_sci_soil_multiplier
       use stir_soil_texture_mod, only : update_stir_soil_multiplier
@@ -694,7 +694,7 @@ module input_soil_mod
 !     Edit History
 !     06-Feb-99   wjr   created
 
-      use weps_main_mod, only: ifc_format, report_debug, wc_type
+      use weps_cmdline_parms, only: ifc_format, report_debug, wc_type
       use file_io_mod, only: fopenk
       use split_layers_mod, only: spllay
       use soil_data_struct_defs, only: soil_def, allocate_soil
@@ -1127,6 +1127,7 @@ module input_soil_mod
 !     + + + KEYWORDS + + +
 !     texture properties 
 
+      use weps_cmdline_parms, only: report_info
       use soilden_mod, only: setpartden, setbds, setbdproc
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -1177,29 +1178,32 @@ module input_soil_mod
           if( partden(lay).lt.(1.2*settled_bulkden(lay)) ) then
               partden(lay) = 1.2*settled_bulkden(lay)
           endif
-
           if( wet_set_rat(lay) .lt. 0.0 ) then
               ! ratio wet_set_rat is negative, so initialize it
               wet_set_rat(lay) = (partden(lay) - settled_bulkden(lay))  &
      &                         / (partden(lay) - wet_bulkden(lay))
               if( wet_set_rat(lay) .gt. 1.0 ) then
-                  ! wet bulk density is greater than settled bulk density, adjust
+                ! wet bulk density is greater than settled bulk density, adjust
+                if (report_info >= 1) then
                   write(*,"(a,f9.7,a,f9.7,a)") 'WARNING: settled bd(',  &
-     &                                          settled_bulkden(lay),   &  ! NOTE:  Changed to "WARNING" so message
+     &                                          settled_bulkden(lay),   & !NOTE:  Changed to "WARNING" so message
      &                                         ') < wet bd (',          &
      &                                          bulkden(lay),           &
-     &                                         '), wbd = sbd'   !wouldn't display in GUI popup Warning dialog box
-                  wet_set_rat(lay) = 1.0
-                  wet_bulkden(lay) = settled_bulkden(lay)
+     &                                         '), wbd = sbd'             !wouldn't display in GUI popup Warning dialog box
+                end if
+                wet_set_rat(lay) = 1.0
+                wet_bulkden(lay) = settled_bulkden(lay)
               end if
               if( bulkden(lay) .gt. settled_bulkden(lay) ) then
-                  ! do not start simulation in compacted state
+                ! do not start simulation in compacted state
+                if (report_info >= 1) then
                   write(*,"(a,f9.7,a,f9.7,a)") 'WARNING: settled bd(',  &
-     &                                          settled_bulkden(lay),   &  ! NOTE:  Changed to "WARNING" so message
+     &                                          settled_bulkden(lay),   & !NOTE:  Changed to "WARNING" so message
      &                                         ') < initial bd(',       &
      &                                          bulkden(lay),           &
-     &                                         '), bd = sbd'   !wouldn't display in GUI popup Warning dialog box
-                  bulkden(lay) = settled_bulkden(lay)
+     &                                         '), bd = sbd'              !wouldn't display in GUI popup Warning dialog box
+                end if
+                bulkden(lay) = settled_bulkden(lay)
               end if
 
           else

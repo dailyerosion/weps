@@ -531,7 +531,7 @@ module weps_output_mod
 !       Edit History
 !       10-Mar-99       wjr     created
 
-      use weps_main_mod, only: calc_confidence, calibrate_crops, run_erosion, soil_cond, wepp_hydro
+      use weps_cmdline_parms, only: calc_confidence, calibrate_crops, run_erosion, soil_cond, wepp_hydro
       use file_io_mod
       use erosion_data_struct_defs, only: am0efl
       use barriers_mod, only: barseas, output_done
@@ -985,7 +985,7 @@ module weps_output_mod
 
     subroutine closefils()
 
-      use weps_main_mod, only: calc_confidence, calibrate_crops, run_erosion, soil_cond, wepp_hydro
+      use weps_cmdline_parms, only: calc_confidence, calibrate_crops, run_erosion, soil_cond, wepp_hydro
       use file_io_mod
       use erosion_data_struct_defs, only: am0efl
       use barriers_mod, only: barseas

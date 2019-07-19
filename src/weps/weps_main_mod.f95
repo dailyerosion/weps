@@ -35,6 +35,7 @@ module weps_main_mod
                        ! periods of 2, 3, and 4 years each would have a "maxper" value of 12
                        ! years.  Note that each of the individual subregion rotation periods can
                        ! divide evenly into the "maxper" value.
+    integer :: longest_mgt_rotation ! longest mgt rotation file in all subregions
     integer :: ncycles ! a count of the number of maxper cycles that have been completed in the simulation run.
 
     logical :: init_loop    ! .true. indicates the simulation is in the initialization loop
@@ -50,86 +51,7 @@ module weps_main_mod
     logical :: am0ifl  ! flag to run initialization of submodels
                        ! .true. means initialization will be run
 
-    ! command line options
-    integer :: wc_type        ! Water content type (specifies units for soil wc variables)
-                              ! 0      !1/3bar(vol) 15bar(vol)
-                              ! 1      !1/3bar(vol) 15bar(grav)
-                              ! 2      !1/3bar(grav) 15bar(grav)
-                              ! 3      !ignore and compute internally
-                              ! 4      !compute everything from texture, om, and cec
-    integer :: ifc_format     ! Specifies which soil ifc file format is being used
-                              ! 0   !new ifc file format (additional parms)
-                              ! 1   !old ifc file format
-    integer :: report_debug   ! specifies action of print statements in new reporting function
-                              ! 0  !printing is off
-                              ! 1  !printing is on
-                              ! 2  !additional debug printing is on
-    integer :: saeinp_daysim  ! specifies the simulation day that a S_tand A_lone E_rosion INP_ut
-                              ! file will be created
-    integer :: saeinp_jday    ! specifies the julian day that a S_tand A_lone E_rosion INP_ut
-                              ! file will be created (used when date is input)
-    integer :: saeinp_all     ! specifies that S_tand A_lone E_rosion INP_ut files will be created
-                              ! on every day erosion is entered. (in a subdirectory with daysim # in file name)
-    integer :: init_cycle     ! Specifies how many man rotation cycles are done
-                              ! 0   !no initialization cycle
-                              ! 1   !one initialization cycle (default)
-                              ! x   !x initialization cycles
-    integer :: run_erosion    ! Specifies whether the erosion submodel is run or not
-                              ! 0   !do not run erosion submodel
-                              ! 1   !run erosion submodel (default)
-    integer :: calibrate_crops ! Specifies whether to do crop calibration or not
-                               ! 0   !do not run in crop calibration mode (default)
-                               ! 1   !run in crop calibration mode
-    integer :: calibrate_rotcycles ! Specifies maximum number of cycles to run while calibrating
-    integer :: cook_yield     ! flag setting which uses input from crop record to 
-                              ! guarantee a fixed yield/redsidue ratio at harvest
-                              ! (this is cooking the books :-(
-    integer :: growth_stress  ! flag setting which turns on water or temperature stress (or both)
-                              ! 0  ! no stress values applied
-                              ! 1  ! turn on water stress
-                              ! 2  ! turn on temperature stress
-                              ! 3  ! turn on both
-    real :: water_stress_max  ! Cap water stress at some maximum value
-                              ! (note maximum stress occurs at 0.0 and minimum stress at 1.0)
-                              ! water_stress_max = x.xx   ! specified stress limit
-    integer :: layer_scale    ! scale setting for thickness of soil layers used for 
-                              ! finite differencing in all areas of the model. This
-                              ! is used to set the minimum layer thickness for the 
-                              ! layer splitting. (Units are in millimeters, but no
-                              ! decimals are allowed)
-    integer :: layer_infla    ! setting for inflation of layer thickness with depth
-                              ! in percent of the previous layer
-    integer :: layer_weighting ! specifies the layer weighting method to use
-                               ! 0 (arithmetic mean, 0.5 method - default)
-                               ! 1 (layer thickness porportional weighted)
-                               ! 2 (internodal method, darcian mean) 
-    integer :: puddle_warm    ! Select soil puddling with saturation all above freezing
-                              ! 0   ! disable
-                              ! 1   ! enable
-    integer :: winter_ann_root ! select root growth option for winter annuals
-                               ! 0  ! root depth grows at same rate as height
-                               ! 1  ! root depth grows with fall heat units
-    integer :: wepp_hydro     ! specifies hydrology calculation method used
-                              ! 0 ! darcian flow
-                              ! 1 ! Green-Ampt infiltration, simple drainage
-    integer :: soil_cond      ! specifies output of the soil conditioning index
-                              ! 0 ! no output
-                              ! 1 ! output file created
-    integer :: resurf_roots   ! specify whether buried roots are resurfaced via process 26
-                              ! 0 ! no resurfacing of buried roots
-                              ! 1 ! resurface buried roots
-    integer :: upgm_growth    ! grow WEPS crops using UPGM growth routines
-                              ! 0 ! no UPGM gowth of WEPS crops (default)
-                              ! 1 ! use UPGM routines
-    integer :: calc_confidence ! flag to determine if confidence intervals for the
-                               ! rotation mean annual erosion are calculated
-                              ! 0 ! no confidence interval calculation
-                              ! 1 ! confidence interval calculated and reported
-                              ! 2 ! confidence interval calculated and used for early termination (not implemented)
-    real :: frac_frst_mass_lost ! fraction of leaf mass that is frozen that disappears
-    integer :: transpiration_depth ! flag to determine if deep furrows will change
-                                   ! layer in the soil to which the roots can reach for water.
-                                   ! Transpiration depth will be deeper than the crop root depth.
+    
 
   contains
 
@@ -141,6 +63,7 @@ module weps_main_mod
 
       daysim = 0
       maxper = 1
+      longest_mgt_rotation = 1
 
       ! set initialization flags
       am0eif = .true.
@@ -168,8 +91,9 @@ module weps_main_mod
 !     WEPS, cligen, windgen
 
 !     + + + GLOBAL COMMON BLOCKS + + +
+      use weps_cmdline_parms  !We use all the cmdline parms here
+
       use datetime_mod, only: julday
-      use file_io_mod, only: fopenk, luolog
       use f2kcli, only: COMMAND_ARGUMENT_COUNT, GET_COMMAND_ARGUMENT
       use climate_input_mod, only: wind_max_value, wind_max_flag
 
@@ -224,6 +148,8 @@ module weps_main_mod
                           !Note that all paths MUST end with a "/" for now.
       wc_type = 4         !default soil ifc file type (use Rawls texture for full properties)
       ifc_format = 0      !default soil ifc file format type (uses IFC specified slope value)
+      hb_freq = 1         !default is to update each year of simulation (including initialization)
+      report_info = 1     !default report information printing (0=off, 1=on)
       report_debug = 0    !default report debug printing (0=off, 1=on)
       saeinp_daysim = 0   !0 value skips creation of a stand alone erosion input file.
       saeinp_jday = 0     !0 value skips creation of a stand alone erosion input file.
@@ -260,12 +186,28 @@ module weps_main_mod
 ! Any option arguments that have any spaces in them must be quoted,
 ! e.g. '-i"C:\Program Files"' is ok but '-iC:\Program Files' is not.
 
+      ! Always print out the full  command line
+      call GET_COMMAND(argv, ll, ss)
+      write(6,*) 'WEPS cmdline: ',trim(argv)
+
+      ! 'report_info' not set yet, so we can't control it here (default value is 1)
+!      i = 0
+!      call GET_COMMAND_ARGUMENT(i,argv,ll,ss)
+!      if (report_info >= 1) then
+!        write(6,*) 'argv0 ', i, ' is: ', trim(argv)
+!      end if
       numarg = COMMAND_ARGUMENT_COUNT()  !Fortran 2k compatible call
+!      if (report_info >= 1) then
+!        write(6,*) 'numarg: ', numarg
+!      end if
 
       if (numarg .gt. 0) then
-        do 09 i = 1, numarg
+         do 09 i = 1, numarg
           call GET_COMMAND_ARGUMENT(i,argv,ll,ss)  !Fortran 2k compatible call
-          !write(6,*) 'argv ',i,' is: ', trim(argv)
+!          if (report_info >= 1) then
+!            write(6,*) 'argv ',i,' is: ', trim(argv)
+!            !write(6,*) 'll ', ll, 'ss ', ss
+!          end if
 
           if(argv(1:1) .ne. '-') then   !make sure all options start with '-'
 
@@ -334,6 +276,38 @@ module weps_main_mod
               write(*,*) '-G0.00 allows maximum water stress to occur'
               write(*,*) '-G1.00 does not allow any water stress'
 
+       ! Added to control informational messages sent to the screen
+       ! Provided to assist in debugging the code without all the screen clutter
+       ! hb_freq = 1 is default as this provides updates from model on a yearly basis
+       ! GUI uses info sent to stdout to relay simulation progress to user ('H'eartbeat info)
+       ! Thu Jul 18 09:23:31 MDT 2019 - LEW
+              write(*,*)                                                &
+     &'-H  WEPS "heartbeat" frequency (reporting interval used by GUI)'
+              write(*,*)                                                &
+     &'    0 = no yearly update messages sent to stdout'
+              write(*,*)                                                &
+     &'    1 = yearly interval update sent to stdout (default)'
+              write(*,*)                                                &
+     &'    2 = every other yearly interval update sent to stdout'
+              write(*,*)                                                &
+     &'    50 = every 50 year interval update sent to stdout'
+              write(*,*)                                                &
+     &'    etc'
+       ! Added to control informational messages sent to the screen
+       ! Thu Jul 18 09:23:31 MDT 2019 - LEW
+              write(*,*)                                                &
+     &'-i  WEPS informational messages dumped to screen'
+              write(*,*)                                                &
+     &'    0 = no informational messages sent to screen'
+              write(*,*)                                                &
+     &'    1 = 1st level informational messages sent to screen (default)'
+              write(*,*)                                                &
+     &'    2 = 1st and 2nd level informational messages sent to screen'
+              write(*,*)                                                &
+     &'    3 = 1st - 3rd level informational messages sent to screen'
+
+       ! Initialization for multiple subregions should be a multiple
+       ! of the longest mgt rotation - need to ensure this is the case - LEW
               write(*,*)                                                &
      &'-I  Specify if initialization is done and if so, the # loops'
               write(*,*) '    0 = No initialization'
@@ -464,7 +438,7 @@ module weps_main_mod
  2600         format(' -c',i1,                                          &
      &               ' -C',i1,' -E',i1,' -e',i1,                        &
      &               ' -f',f4.2,                                        &
-     &               ' -g',i1,' -G',f4.2,' -I',i1,                      &
+     &               ' -g',i1,' -G',f4.2,' -H',i1,' -i',i1,' -I',i1,    &
      &               ' -L',i1,' -l',i2,' -O(no file)',' -o(no file)',   &
      &               ' -p',i1,' -P',a,                                  &
      &               ' -r',i1,' -R',i1,' -S',i1,                        &
@@ -473,15 +447,15 @@ module weps_main_mod
      &               ' -X',f4.1,' -Y',i1' -Z',i1)
 
               write(0,2600) soil_cond,                                  &
-     &          calibrate_crops, run_erosion, saeinp_all,               &
-     &          frac_frst_mass_lost,                                    &
-     &          growth_stress, water_stress_max, init_cycle,            &
-     &          layer_scale, layer_infla,                               &
-     &          puddle_warm, trim(rootp),                               &
-     &          winter_ann_root, report_debug, wc_type,                 &
-     &          ifc_format, transpiration_depth, calc_confidence,       &
-     &          resurf_roots, upgm_growth, layer_weighting, wepp_hydro, &
-     &          wind_max_value, cook_yield, calibrate_rotcycles
+     &         calibrate_crops, run_erosion, saeinp_all,                &
+     &         frac_frst_mass_lost, growth_stress,                      &
+     &          water_stress_max, hb_freq, report_info, init_cycle,     &
+     &         layer_scale, layer_infla,                                &
+     &         puddle_warm, trim(rootp),                                &
+     &         winter_ann_root, report_debug, wc_type,                  &
+     &         ifc_format, transpiration_depth, calc_confidence,        &
+     &         resurf_roots, upgm_growth, layer_weighting, wepp_hydro,  &
+     &         wind_max_value, cook_yield, calibrate_rotcycles
 
               call exit(1)
 
@@ -553,6 +527,26 @@ module weps_main_mod
      &       'Ignoring invalid water stress maximum value: ', trim(argv)
             else
               water_stress_max = cmd_rarg
+            endif
+
+          ! specify informational (heartbeat frequency) report intervals (to stdout)
+          else if(argv(2:2) .eq. 'H') then
+            read(argv(3:),*) cmd_iarg
+            if( cmd_iarg .lt. 0 ) then
+              write(*,*)                                                &
+     &           'Ignoring invalid info report option: ', trim(argv)
+            else
+              hb_freq = cmd_iarg
+            endif
+
+          ! specify informational reporting options (to stdout)
+          else if(argv(2:2) .eq. 'i') then
+            read(argv(3:),*) cmd_iarg
+            if( cmd_iarg .gt. 3 ) then
+              write(*,*)                                                &
+     &           'Ignoring invalid info report option: ', trim(argv)
+            else
+              report_info = cmd_iarg
             endif
 
           !specify initialization cycle setting
@@ -768,14 +762,10 @@ module weps_main_mod
           call exit(1)
       endif
 
-      write(*,*) 'rootp is: ', trim(rootp)
-      write(*,*) 'wc_type: ',wc_type, ' ifc_format: ', ifc_format
-
-      call fopenk (luolog, rootp(1:len_trim(rootp)) // 'logfil.txt',    &
-     &        'unknown')
-
-      write(luolog, *) 'Using ', rootp(1:len_trim(rootp)),              &
-     &           ' as the simulation input directory'
+      if (report_info >= 1) then
+        write(*,*) 'rootp is: ', trim(rootp)
+        write(*,*) 'wc_type: ',wc_type, ' ifc_format: ', ifc_format
+      end if
 
       return
     end subroutine cmdline

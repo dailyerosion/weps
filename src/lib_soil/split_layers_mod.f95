@@ -289,7 +289,7 @@ module split_layers_mod
       ! 07-Feb-01   wjr   created
       ! 10-Oct-04   lew   modified to work with "versioned" IFC files only
 
-      use weps_main_mod, only: layer_infla, layer_scale
+      use weps_cmdline_parms, only: layer_infla, layer_scale
       use soil_data_struct_defs, only: soil_def, allocate_soil, deallocate_soil
       use soil_mod, only: depthini
 
@@ -400,7 +400,7 @@ module split_layers_mod
       ! Edit History
       ! 07-Feb-01   wjr   created
 
-      use weps_main_mod, only: ifc_format, layer_infla, layer_scale
+      use weps_cmdline_parms, only: ifc_format, layer_infla, layer_scale
       use soil_data_struct_defs, only: soil_def, allocate_soil, deallocate_soil
       use soil_mod, only: depthini
 

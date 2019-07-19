@@ -10,7 +10,7 @@ module report_init_mod
 
   SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, rep_update, rep_dates)
 
-    use weps_main_mod, only: report_debug
+    use weps_cmdline_parms, only: report_debug
     USE pd_dates_vars
     USE pd_update_vars
     USE pd_report_vars

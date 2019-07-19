@@ -1130,7 +1130,9 @@ contains
           write(*,*) 'Error in file ', clifil, ' reading: ', param_value
           call exit(1)
         end if
-        write(6,*) '1st cligen output line is: ', param_value
+        if (report_info >=1) then
+          write(6,*) '1st cligen output line is: ', param_value
+        end if
 
         ! I think this is pretty messy.  It was working with the Lahey compiler
         ! with a "73x,f" format but the Sun F95 compiler didn't like that, so
@@ -1153,8 +1155,9 @@ contains
         end if
 
         write(luolog,"(a17,f8.5)") 'cligen version: ', cligen_version
-        write(6,"(a17,f8.5)") 'cligen version: ', cligen_version
-
+        if (report_info >=1) then
+          write(6,"(a17,f8.5)") 'cligen version: ', cligen_version
+        end if
         if (cligen_version >= 5.110) then
           cli_gen_fmt_flag = 3
         else if (cligen_version >= 5.101) then

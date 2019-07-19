@@ -1173,7 +1173,7 @@ module hydro_darcy_mod
 !     + + + KEYWORDS + + +
 !     soil water redistribution, evaporation, deep percolation, runoff
 
-      use weps_main_mod, only: layer_weighting
+      use weps_cmdline_parms, only: layer_weighting
       use air_water_mod, only: satvappres, vaporden
       use hydro_util_mod, only: matricpot_bc, matricpot_from_rh, unsatcond_bc
       use hydro_data_struct_defs, only: denwat, gravconst

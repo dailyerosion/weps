@@ -28,7 +28,8 @@ module hydro_main_mod
       ! HYDROLOGY submodel.  The subroutine controls the calling of the
       ! major subprograms of the HYDROLOGY submodel.
 
-      use weps_main_mod, only: init_loop, calib_loop, am0ifl, transpiration_depth, wepp_hydro
+      use weps_cmdline_parms, only: transpiration_depth, wepp_hydro
+      use weps_main_mod, only: init_loop, calib_loop, am0ifl
       use datetime_mod, only: get_simdate, get_simdate_doy
       use file_io_mod, only: luohydro, luohlayers, luosurfwat, luoweather
       use soil_data_struct_defs, only: soil_def
@@ -762,7 +763,7 @@ module hydro_main_mod
       ! + + + KEYWORDS + + +
       ! initialization, hydrology
 
-      use weps_main_mod, only: wc_type
+      use weps_cmdline_parms, only: wc_type
       use hydro_data_struct_defs, only: claygrav80rh, orggrav80rh
       use hydro_util_mod, only: param_blkden_adj, param_prop_bc, volwatadsorb
       use soil_data_struct_defs, only: soil_def

@@ -133,7 +133,7 @@ MODULE calib_plant_mod
     USE generic_list , ONLY : LI_Get_Next, LI_Associated
     USE generic_list , ONLY : LI_Get_Len
 
-    use weps_main_mod, only: calibrate_crops
+    use weps_cmdline_parms, only: calibrate_crops
     use biomaterial, only: plant_pointer
     use manage_data_struct_defs, only: lastoper
 
@@ -220,7 +220,7 @@ MODULE calib_plant_mod
     USE generic_list , ONLY : LI_Get_Next, LI_Associated
     USE generic_list , ONLY : LI_Get_Len
 
-    use weps_main_mod, only: calibrate_rotcycles
+    use weps_cmdline_parms, only: calibrate_rotcycles
     use biomaterial, only: plant_pointer
     use manage_data_struct_defs, only: lastoper
 

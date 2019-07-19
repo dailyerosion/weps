@@ -33,12 +33,15 @@
 !     external common_handler
 !     + + + GLOBAL COMMON BLOCKS + + +
 
+      use weps_cmdline_parms, only: calibrate_crops, calibrate_rotcycles, &
+                                   init_cycle, calc_confidence, hb_freq, &
+                                   report_info, report_debug, run_erosion,&
+                                   saeinp_all, saeinp_daysim, saeinp_jday, wepp_hydro
       use weps_main_mod, only: wepsinit, cmdline, &
                                daysim, ijday, ljday, maxper, ncycles, &
                                init_loop, calib_loop, report_loop, &
-                               calibrate_crops, calibrate_rotcycles, max_calib_cycles, calib_cycle, calib_done, &
-                               am0ifl, init_cycle, calc_confidence, report_debug, run_erosion, &
-                               saeinp_all, saeinp_daysim, saeinp_jday, wepp_hydro
+                               max_calib_cycles, calib_cycle, calib_done, &
+                               am0ifl
 
       use weps_submodel_mod, only: submodels, erodsubr_update
       use weps_output_mod
@@ -57,7 +60,7 @@
       use Polygons_Mod, only: destroy_polygon
       use subregions_mod, only: subr_poly, acct_poly
       use barriers_mod, only: barrier, barseas, minht_barriers, destroy_barrier, set_barrier_season
-      use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir
+      use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir, fopenk, luolog
       use input_soil_mod, only: input_ifc, soil_in
       use soil_data_struct_defs, only: soil_def, allocate_soil, deallocate_soil, print_soil
       use crop_mod, only: cprevseasonrotation
@@ -263,6 +266,14 @@
 !     Read command line arguments and options
       call cmdline()
 
+!     Open the WEPS log file, etc.
+      call fopenk (luolog, rootp(1:len_trim(rootp)) // 'logfil.txt',    &
+     &        'unknown')
+      if (report_info >= 1) then
+        write(luolog, *) 'Using ', rootp(1:len_trim(rootp)),              &
+     &           ' as the simulation input directory'
+      end if
+
       if (calibrate_crops > 3) max_calib_cycles = calibrate_crops
 
       ! open input files and read run files
@@ -403,6 +414,10 @@
 
       ! find maxper, which is the least common multiple of the number of years in each rotation
       maxper = lcm_n( t_mperod )
+      ! find the longest mgt rotation for any subregion
+      longest_mgt_rotation = maxval(t_mperod)
+      !print *, 'longest_mgt_rotation:', longest_mgt_rotation, 'maxper:', maxper
+      !print *, 't_mperod:', t_mperod
 
 !     check for consistency maxper, n_rot_cycles, number of years to run
       if( maxper*run_rot_cycles .ne. ly-iy+1 ) then
@@ -514,7 +529,10 @@
 !     calculate last julian date for initialization cycle
       end_init_d = 31
       end_init_m = 12
-      end_init_y = iy + (maxper*init_cycle) - 1
+      ! The following line is incorrect for calculating the initialization cycles - LEW
+!      end_init_y = iy + (maxper*init_cycle) - 1
+      end_init_y = iy + (longest_mgt_rotation*init_cycle) - 1
+      !print *, 'end_init_y:', end_init_y, iy + (maxper*init_cycle) - 1
       if( end_init_y .eq. 0 ) end_init_y = -1
       end_init_jday = julday(end_init_d, end_init_m, end_init_y)
 
@@ -543,7 +561,9 @@
         if ((cm .eq. 1) .and. (cd .eq. 1)) then
             yrsim = yrsim + 1
             simyrs = (end_init_y - iy + 1)
-            write(6,*) 'Year', yrsim, ' of', simyrs, '(initialization)'
+            if (hb_freq .eq. 0 .or. mod(yrsim, hb_freq) == 0) then
+               write(6,*) 'Year', yrsim, ' of', simyrs, '(initialization)'
+            end if
             call flush(6)
         end if
         do isr=1,nsubr
@@ -621,8 +641,10 @@
            if ((cm .eq. 1) .and. (cd .eq. 1)) then
               yrsim = yrsim + 1
               simyrs = (ly - iy + 1)
-              write(6,*) 'Year', yrsim, ' of', maxper*calibrate_rotcycles, &
+              if (hb_freq .eq. 0 .or. mod(yrsim, hb_freq) == 0) then
+                write(6,*) 'Year', yrsim, ' of', maxper*calibrate_rotcycles, &
                         '(calibrating',calib_cycle,'/', max_calib_cycles,')'
+              end if
               call flush(6)
            end if
 
@@ -747,7 +769,9 @@
             if ((cm .eq. 1) .and. (cd .eq. 1)) then
                yrsim = yrsim + 1
                simyrs = (ly - iy + 1)
-               write(6,*) 'Year', yrsim, ' of', simyrs
+            if (hb_freq .eq. 0 .or. mod(yrsim, hb_freq) == 0) then
+                 write(6,*) 'Year', yrsim, ' of', simyrs
+               end if
                call flush(6)
             end if
 

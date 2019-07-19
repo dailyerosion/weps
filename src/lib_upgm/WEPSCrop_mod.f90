@@ -17,7 +17,7 @@ module WEPSCrop_mod
 
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer
-      use weps_main_mod, only: cook_yield
+      use weps_cmdline_parms, only: cook_yield
 
       ! + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), intent(in) :: soil  ! soil for this subregion
@@ -348,7 +348,7 @@ module WEPSCrop_mod
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer
       use WEPSCrop_util_mod, only: freeze_damage, shootnum
-      use weps_main_mod, only: cook_yield
+      use weps_cmdline_parms, only: cook_yield
 
       integer(int32), parameter :: growth_stress = 3
       real(dp), parameter :: water_stress_max = 0.0_dp

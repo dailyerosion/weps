@@ -5,6 +5,8 @@
 
 module file_io_mod
 
+    use weps_cmdline_parms, only: report_debug
+
     ! unit number for file input (lui) / output (luo)
     ! global in scope, so only one unit required
     integer :: luicli          ! reading cligen input
@@ -90,7 +92,9 @@ contains
         integer           ios
 
         open(newunit(filnumber), FILE=trim(filname), STATUS=filstatus, POSITION='REWIND', ERR=100, IOSTAT=ios)
-        write(*,FMT="(' Opened file: ',a,' on unit ',i3,' with status ',a)") trim(filname), filnumber, filstatus
+        if (report_debug >=1 ) then
+          write(*,FMT="(' Opened file: ',a,' on unit ',i3,' with status ',a)") trim(filname), filnumber, filstatus
+        endif
         return
 
 100     write(0,FMT="(' Cannot open file: ',a,' on unit ',i3,' with status ',a, ' and I/O status ', i5)") &

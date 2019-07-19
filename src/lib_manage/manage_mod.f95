@@ -417,7 +417,9 @@ module manage_mod
           lastoper(sr)%skip = 1
           print*, 'SR',sr,' Skip operation', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
       else
-          print*, 'SR',sr,' Do operation', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
+          if (report_info >= 1) then
+            print*, 'SR',sr,' Do operation', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
+          end if
       end if
 
       ! set value of tlayer to zero before operation begins. Compaction occurs from tlayer
@@ -570,7 +572,7 @@ module manage_mod
 !     + + + KEYWORDS + + +
 !     tillage, process, management
 
-      use weps_main_mod, only: cook_yield, resurf_roots, upgm_growth, wc_type
+      use weps_cmdline_parms, only: cook_yield, resurf_roots, upgm_growth, wc_type
       use file_io_mod, only: luomanage, luotdb, luoasd, luowc
       use soil_data_struct_defs, only: soil_def
       use input_soil_mod, only: proptext
@@ -3027,7 +3029,7 @@ module manage_mod
 
       use biomaterial, only: plant_pointer
       use manage_data_struct_defs, only: last_operation
-      use weps_main_mod, only: cook_yield
+      use weps_cmdline_parms, only: cook_yield
       use p1unconv_mod, only: mgtokg, mmtom
       use datetime_mod, only: dayear
       use soil_data_struct_defs, only: soil_def

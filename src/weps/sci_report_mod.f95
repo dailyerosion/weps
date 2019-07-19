@@ -25,7 +25,7 @@ module sci_report_mod
 !     Calculate and write to file the SCI values for each subregion or
 !     for subregion 0, calculate an area averaged value of SCI.
 
-      use weps_main_mod, only: soil_cond
+      use weps_cmdline_parms, only: soil_cond
       use soil_data_struct_defs, only: soil_def
       use file_io_mod, only: luosci
       use erosion_data_struct_defs, only: cellsurfacestate
@@ -209,7 +209,7 @@ module sci_report_mod
 
     subroutine sci_cum( isr, restot, cellstate )
 
-      use weps_main_mod, only: soil_cond
+      use weps_cmdline_parms, only: soil_cond
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: cellsurfacestate
       use grid_mod, only: imax, jmax

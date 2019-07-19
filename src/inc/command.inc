@@ -10,6 +10,7 @@
 
       integer wc_type
       integer ifc_format
+      integer info_report
       integer report_debug
       integer saeinp_daysim
       integer saeinp_jday
@@ -34,12 +35,12 @@
       real    frac_frst_mass_lost
       integer transpiration_depth
 
-      common /command_args/ wc_type, ifc_format, report_debug,          &
-     & saeinp_daysim, saeinp_jday, saeinp_all, init_cycle, run_erosion, &
-     & calibrate_crops, cook_yield, growth_stress, water_stress_max,    &
-     & layer_scale, layer_infla, layer_weighting, puddle_warm,          &
-     & winter_ann_root, wind_max_value, wepp_hydro, soil_cond,          &
-     & calibrate_rotcycles, resurf_roots, calc_confidence,              &
+      common /command_args/ wc_type, ifc_format, info_report,           &
+     & report_debug, saeinp_daysim, saeinp_jday, saeinp_all, init_cycle,&
+     & run_erosion, calibrate_crops, cook_yield, growth_stress,         &
+     & water_stress_max, layer_scale, layer_infla, layer_weighting,     &
+     & puddle_warm, winter_ann_root, wind_max_value, wepp_hydro,        &
+     & soil_cond, calibrate_rotcycles, resurf_roots, calc_confidence,   &
      & frac_frst_mass_lost, transpiration_depth
 
       save :: /command_args/
@@ -56,6 +57,11 @@
 !     ifc_format - Specifies which soil ifc file format is being used
 !                  ifc_format = 0   !new ifc file format (additional parms)
 !                  ifc_format = 1   !old ifc file format
+
+!     info_report - specifies action of print statements in new reporting function
+!                  info_report = 0  !printing is off
+!                  info_report = 1  !printing is on
+!                  info_report = 2  !additional debug printing is on
 
 !     report_debug - specifies action of print statements in new reporting function
 !                  report_debug = 0  !printing is off

@@ -6,6 +6,7 @@
 module input_run_mod
 
   use weps_main_mod
+  use weps_cmdline_parms, only: report_info
 
 contains
 
@@ -189,8 +190,9 @@ contains
          case (2)
             farmid = line(1:80)
             read (farmid((index(farmid,"|",back=.true.)+1):),*,err=80, iostat=ios) run_rot_cycles
-            print *, 'run_rot_cycles', run_rot_cycles
-
+            if (report_info >= 1) then
+              print *, 'run_rot_cycles', run_rot_cycles
+            end if
          case (3)
             fieldid = line(1:80)
 
@@ -685,7 +687,9 @@ contains
          case (2)
             farmid = line(1:80)
             read (farmid((index(farmid,"|",back=.true.)+1):),*,err=80, iostat=ios) run_rot_cycles
-            print *, 'run_rot_cycles', run_rot_cycles
+            if (report_info >= 1) then
+              print *, 'run_rot_cycles', run_rot_cycles
+            end if
 
          case (3)
             fieldid = line(1:80)
@@ -758,7 +762,9 @@ contains
             ! read 1st line of CLIGEN file
 
             read(luicli,fmt="(a)",err=290) line
-            write(6,*) '1st cligen input line is: ', line
+            if (report_info >= 1) then
+              write(6,*) '1st cligen input line is: ', line
+            end if
 
             ! I think this is pretty messy.  It was working with the Lahey compiler
             ! with a "73x,f" format but the Sun F95 compiler didn't like that, so
@@ -773,8 +779,9 @@ contains
             end if
 
             write(luolog,*) 'cligen version: ', cligen_version
-            write(6,*) 'cligen version: ', cligen_version
-
+            if (report_info >= 1) then
+              write(6,*) 'cligen version: ', cligen_version
+            end if
             ! I assume this is where I read the old cligen's version info
             ! read(luicli,fmt="(73x,f)",err=290) cligen_version
             ! write(luolog,*) 'cligen version: ', cligen_version
@@ -851,8 +858,9 @@ contains
             read (line,*,err=80) amxsim(2)%x, amxsim(2)%y
             ! compute the simulation area
             sim_area = (amxsim(2)%x - amxsim(1)%x) * (amxsim(2)%y - amxsim(1)%y)
-            write(6,*) "Simulation area (m^2)", sim_area
-
+            if (report_info >= 1) then
+              write(6,*) "Simulation area (m^2)", sim_area
+            end if
          case (19)
             ! the simulation grid resolution in x and y directions
             read (line,*,err=80) xgdpt, ygdpt
