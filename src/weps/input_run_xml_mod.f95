@@ -31,6 +31,7 @@ module input_run_xml_mod
   use barriers_mod, only: create_barrier, barrier, barseas
   use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate
   use read_write_xml_mod, only: read_param
+  use weps_cmdline_parms, only: report_info
 
   integer, parameter :: MAX_NAME_LEN  = 40
 

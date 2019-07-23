@@ -397,6 +397,7 @@ module manage_mod
 !     + + + KEYWORDS + + +
 !     tillage, operation, management
 
+      use weps_cmdline_parms, only: report_info
       use manage_data_struct_defs, only: lastoper, man_file_struct 
       use manage_data_struct_mod, only: getManVal
 

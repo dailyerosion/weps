@@ -41,7 +41,7 @@
                                daysim, ijday, ljday, maxper, ncycles, &
                                init_loop, calib_loop, report_loop, &
                                max_calib_cycles, calib_cycle, calib_done, &
-                               am0ifl
+                               am0ifl, longest_mgt_rotation
 
       use weps_submodel_mod, only: submodels, erodsubr_update
       use weps_output_mod

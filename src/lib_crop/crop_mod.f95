@@ -13,7 +13,6 @@ module crop_mod
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
-      use weps_cmdline_parms, only: report_info
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residue_pointer, biototal, residueAdd
       use timer_mod, only: timer, TIMCROP, TIMSTART, TIMSTOP
@@ -174,6 +173,7 @@ module crop_mod
       ! + + + KEYWORDS + + +
       ! crop model status
 
+      use weps_cmdline_parms, only: report_info
       use weps_main_mod, only: init_loop, calib_loop
       use datetime_mod, only: get_simdate, julday
       use file_io_mod, only: luoseason
