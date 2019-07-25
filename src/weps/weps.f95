@@ -44,8 +44,7 @@
                                am0ifl, wepsinit, cmdline
 
       use weps_submodel_mod, only: submodels, erodsubr_update
-      use weps_output_mod
-      use wepp_interface_defs
+      use weps_output_mod, only: openfils, plotdata, closefils, bpools
       use timer_mod, only: timer, TIMWEPS, TIMSTART, TIMSTOP, TIMPRINT
       use datetime_mod, only: update_system_time, get_systime_string, julday, lstday, isleap, &
                               update_simulation_date, get_simdate, get_simdate_doy
@@ -114,15 +113,23 @@
 
       integer, dimension(:), allocatable :: keep  ! in calibration, reset mnryr to precalibration loop value (why?)
 
-      integer cd, cm, cy,                                               &
-     &        end_init_jday, end_init_d, end_init_m, end_init_y,        &
-     &        ndiy,                                                     &
-     &        isr,                                                      &
-     &        simyrs,                                                   &
-     &        yrsim
-      integer lcaljday
-      integer ci_flag, ci_year
-      real    ci
+      integer :: cd            ! The current day of simulation month.
+      integer :: cm            ! The current month of simulation year.
+      integer :: cy            ! The current year of simulation run.
+      integer :: beg_init_jday ! The first julian day of initialization
+      integer :: beg_init_d    ! the first day of initialization
+      integer :: beg_init_m    ! the first month of initialization
+      integer :: beg_init_y    ! the first year of initialization
+      integer :: ndiy          ! The number of days in the year.
+      integer :: isr           ! This variable holds the subregion index.
+      integer :: simyrs        ! The number of years being simulated (for console output)
+      integer :: yrsim         ! Current simulation year (for console output)
+      integer :: lcaljday      ! last julian day of calibration cycle
+      integer :: ci_flag       ! determines when confidence interval is calculated in report loop
+                               ! 0 - no calculation
+                               ! 1 - calcuation called
+      integer :: ci_year       ! indicates how many years of data have been printed into ci.out
+      real :: ci               ! confidence interval value (decimal)
 
       integer :: SURF_UPD_FLG              ! erosion surface updating (0 - disabled, 1 - enabled)
       integer :: nsubr                     ! total number of subregions (read in inprun, derived from allocated subr_poly)
@@ -149,58 +156,11 @@
       integer :: alloc_stat, sum_stat
       integer :: am0jd   ! Current julian day of simulation
 
-!     + + + LOCAL DEFINITIONS + + +
-
-!   am0*fl    - These are switches for production of submodel
-!               output, where the asterisk represents the first
-!               letter of the submodel name.
-!   am0ifl    - This variable is an initialization flag which is
-!               set to .false. after the first simulation day.
-!   cd        - The current day of simulation month.
-!   cm        - The current month of simulation year.
-!   cy        - The current year of simulation run.
-!   end_init_jday - The last julian day of initialization
-!   end_init_d - the last day of initialization
-!   end_init_m - the last month of initialization
-!   end_init_y - the last year of initialization
-!   daysim    - This variable holds the total current days of simulation.
-!   ijday     - The initial julian day of the simulation run.
-!   isr       - This variable holds the subregion index.
-!   ljday     - The last julian day of the simulation run.
-!   maxper    - The maximum number of years in a rotation of all
-!               subregions.
-!   ndiy      - The number of days in the year.
-!   ngdpt     - This variable holds the total number of grig points in an
-!               accounting region.
-!   simyrs    - The number of years in a simulation run excluding the
-!               years for surface initialization.
-!   usrid     - This character variable is an identification string
-!               to aid the user in identifying the simulation run.
-!   usrloc    - This character variable holds a location
-!               description of the simulation site.
-!   usrnam    - This character variable holds the user name.
-!   ci_flag   - determines when confidence interval is calculated in report loop
-!               0 - no calculation
-!               1 - calcuation called
-!   ci_year   - indicates how many years of data have been printed into ci.out
-!   ci        - confidence interval value (decimal)
-
 !     + + + SUBROUTINES CALLED + + +
-!     caldat   -  Converts julian day to day, month, and year (cd,cm,cy)
-!     cdbug    -  Prints global variables before and after call to CROP
-!     crop     -  Crop submodel
-!     ddbug    -  Prints global variables before and after call to DECOMP
-!     decomp   -  Decomposition submodel
 !     erodinit -  Erosion initialization routines
 !     erosion  -  Erosion submodel
-!     growhandles - Expands the number of handles allowed.
-!     hdbug    -  Prints global variables before and after call to HYDRO
-!     hydro    -  Hydrology submodel main program
 !     input    -  Open files and perform input
-!     manage   -  Management (tillage) submodel main program
 !     mfinit   -  Management initialization subroutines
-!     sdbug    -  Prints global variables before and after call to SOIL
-!     soil     -  Soil submodel
 !     asdini - aggregate size distribution initialization
 !     bpools   -  prints many biomass pool components (for debugging)
 
@@ -527,11 +487,12 @@
       ljday = julday(ld, lm, ly)
 
 !     calculate last julian date for initialization cycle
-      end_init_d = 31
-      end_init_m = 12
+      beg_init_d = 1
+      beg_init_m = 1
       ! The following line is incorrect for calculating the initialization cycles - LEW
-!      end_init_y = iy + (maxper*init_cycle) - 1
-      end_init_y = iy + (longest_mgt_rotation*init_cycle) - 1
+!      beg_init_y = iy + (maxper*init_cycle) - 1
+!      beg_init_y = iy + (longest_mgt_rotation*init_cycle) - 1
+
       ! Wrong!! Using longest_mgt_rotation results in some management cycles being terminated
       ! part way through the rotation. This means that a winter annual may be growing
       ! only to be terminated by a spring planted crop or the erosion simulation would start with
@@ -540,9 +501,9 @@
       ! part way through managment cycles so they all end at the end of initialization, so
       ! the erosion simulation begins with all managment cycles at the beginning. - FAF
 
-      end_init_y = iy + (longest_mgt_rotation*init_cycle) - 1
-      if( end_init_y .eq. 0 ) end_init_y = -1
-      end_init_jday = julday(end_init_d, end_init_m, end_init_y)
+      beg_init_y = ly - (longest_mgt_rotation*init_cycle) + 1
+      if( beg_init_y .eq. 0 ) beg_init_y = -1
+      beg_init_jday = julday(beg_init_d, beg_init_m, beg_init_y)
 
       if (init_cycle > 0) then   ! to avoid printing it when not being done
           write(6,*) "Starting initialization phase"
@@ -555,7 +516,7 @@
 
       ! begin initialization simulation phase
       init_loop = .true. ! Signifies that we are in the "initialization" loop
-      do am0jd = ijday, end_init_jday   !will not enter if end before beginning
+      do am0jd = beg_init_jday, ljday   !will not enter if end before beginning
 
         ! store day for use in simulation date routines
         call update_simulation_date( am0jd )
@@ -568,7 +529,7 @@
         daysim = daysim + 1
         if ((cm .eq. 1) .and. (cd .eq. 1)) then
             yrsim = yrsim + 1
-            simyrs = (end_init_y - iy + 1)
+            simyrs = (ly - beg_init_y + 1)
             if (hb_freq .eq. 0 .or. mod(yrsim, hb_freq) == 0) then
                write(6,*) 'Year', yrsim, ' of', simyrs, '(initialization)'
             end if
