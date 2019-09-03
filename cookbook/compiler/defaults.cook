@@ -32,6 +32,12 @@ fc_default		= [defined-or-null fc_default];
 /* debug flags */
 fc_debug		= [defined-or-null fc_debug];
 
+/* autoparallel flags */
+fc_autoparallel		= [defined-or-null fc_autoparallel];
+
+/* omp flags */
+fc_omp			= [defined-or-null fc_omp];
+
 /* optimization flags */
 fc_optimize		= [defined-or-null fc_optimize];
 
@@ -50,6 +56,8 @@ fc_mod_flag		= [defined-or-null fc_mod_flag];
 /* Case of the module names: lower, upper or mixed*/
 fc_mod_case	= [defined-or-null fc_mod_case];
 
+/* skip module files with no required src, e.g. "omplib.mod", etc. */
+skip_mods		= [defined-or-null skip_mods];
 
 /**********************************
 	    	  LINKER
@@ -73,6 +81,12 @@ ld_default		= [defined-or-null ld_default];
 
 /* debug flags */
 ld_debug		= [defined-or-null ld_debug];
+
+/* autoparallel flags */
+ld_autoparallel		= [defined-or-null ld_autoparallel];
+
+/* omp flags */
+ld_omp			= [defined-or-null ld_omp];
 
 /* optimization flags */
 ld_optimize		= [defined-or-null ld_optimize];

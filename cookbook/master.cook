@@ -19,7 +19,7 @@ configuring	= [or [in configure [command-line-goals]]  [in unconfigure [command-
 cooking		= [not [or [cleaning] [cleaning_all] [configuring]]];
 
 /*single point to describe how to configure whenever there is a config error */
-configure_help = [self] "configure fc=compiler [mode=default|debug|optimize|release] [cross=0|1]";
+configure_help = [self] "configure fc=compiler [mode=default|debug|autoparallel|omp|optimize|release] [cross=0|1]";
 
 /*OS booleans */
 is_unix		= [in [downcase [os system]] unix linux sunos];
@@ -252,7 +252,7 @@ mode	= [downcase [mode]];
 /**********************************
         TEST VARIABLES
  **********************************/
-if [not [in [mode] default debug optimize release]] then{
+if [not [in [mode] default debug autoparallel omp optimize release]] then{
 	function print *******************************************************************;
 	function print "Compiler mode not supported:" [mode];
 	function print "Execute:" [configure_help];
@@ -268,6 +268,14 @@ if [in [mode] default] then {
 else if [in [mode] debug] then {
 	fc_flags += [fc_debug];
 	ld_flags += [ld_debug];
+}
+else if [in [mode] autoparallel] then {
+	fc_flags += [fc_autoparallel];
+	ld_flags += [ld_autoparallel];
+}
+else if [in [mode] omp] then {
+	fc_flags += [fc_omp];
+	ld_flags += [ld_omp];
 }
 else if [in [mode] optimize] then {
 	fc_flags += [fc_optimize];
@@ -370,38 +378,49 @@ show:{
         function print "SVN Revision:" [collect svn info | grep "Revision:" | sed "s/Revision://"];
         function print "Local Mods:" [collect svn status -q | wc -l];
 
+        function print "Module dir:  " [mod.dir];
+        function print "Module files:" [mod.dir]%0%[mod];
+/*        function print "Modules used:" [modules_used]; */
+/*        function print "Mods used:   " [mods_used]; */
+        function print "mod file extension: " [mod];
+	function print "fc_flags are:" [fc_flags];
+	function print "Skip mods (and src):" [skip_mods];
 }
 
 /* inc dependency */
 [dep.dir]%0%[inc][dep] : [src.dir]%0%[inc]
 set nocascade
 {
-				/*	 incl	use		mod	   prog  */
-	function update-dep [need] [target] [true] [true] [false] [false];
+	/* function print "inc dependency [skip_mods] are: " [skip_mods]; */
+	/*                                   incl   use    mod	   prog  */
+	function update-dep [need] [target] [true] [true] [false] [false] [skip_mods];
 }
 
 /* fixed form dependency */
 [dep.dir]%0%[f][dep] : [src.dir]%0%[f]
 set nocascade
 {	
-				/*	 incl	use		mod	   prog */
-	function update-dep [need] [target] [true] [true] [true] [true];
+	/* function print "fixed form dependency [skip_mods] are: " [skip_mods]; */
+	/*                                   incl   use    mod    prog  */
+	function update-dep [need] [target] [true] [true] [true] [true] [skip_mods];
 }
 
 /* free form dependency */
 [dep.dir]%0%[ff][dep] : [src.dir]%0%[ff]
 set nocascade
 {
-				/*	 incl	use		mod	   prog */
-	function update-dep [need] [target] [true] [true] [true] [true];
+	/* function print "free form (.f90) dependency [skip_mods] are: " [skip_mods]; */
+	/*                                   incl   use    mod    prog  */
+	function update-dep [need] [target] [true] [true] [true] [true] [skip_mods];
 }
 
 /* free form dependency */
 [dep.dir]%0%[fff][dep] : [src.dir]%0%[fff]
 set nocascade
 {
-				/*	 incl	use		mod	   prog */
-	function update-dep [need] [target] [true] [true] [true] [true];
+	/* function print "free form (.f95) dependency [skip_mods] are: " [skip_mods]; */
+	/*                                   incl   use    mod    prog  */
+	function update-dep [need] [target] [true] [true] [true] [true] [skip_mods];
 }
 
 /* library dependency */
@@ -603,12 +622,13 @@ clobber-all:
 
 */
 function update-dep = {
-	local dep_src = [@1];
-	local dep_target = [@2];
-	local scan-incl = [@3];
-	local scan-used = [@4];
-	local scan-provided = [@5];
-	local scan-program = [@6];
+	local dep_src = [@1];		/* [need] */
+	local dep_target = [@2];	/* [target] */
+	local scan-incl = [@3];		/* "true" or "false" */
+	local scan-used = [@4];		/* "true" or "false" */
+	local scan-provided = [@5];	/* "true" or "false" */
+	local scan-program = [@6];	/* "true" or "false" */
+	local skip-mods = [@7];  	/* copy of global [skip_mods] passed in to this function */
 
 	local result =;	/* result to be written to the dep file */
 
@@ -653,7 +673,17 @@ function update-dep = {
 
 	/* scan for modules used by this file */
 	if [scan-used] then {
+		/* function print "[skip-mods] are: " [skip-mods]; */
+                /* function print "[modules-used] are:" [modules-used]; */
+
 		local mods_used = [modules-used [dep_src]];
+                /* function print "[mods_used] are:  " [mods_used]; */
+
+                if [match_mask [skip-mods] [mods_used]] then {
+                   function print "We have omp_lib module specified. We must kick it out from the list when searching for its source.";
+                   mods_used = [filter_out [skip-mods] [mods_used]];
+                   /* function print "[mods_used] should no longer contain [skip-mods], e.g. omp_lib, etc: " [mods_used]; */
+                }
 		if [mods_used] then{
 
 			/* loop over each used module to make sure it's not provided by this file */
