@@ -37,17 +37,17 @@ module weps_output_mod
       type(residue_pointer), pointer :: thisResidue   ! pointer used to interate residue pointer chain
       character*30 :: dec_text ! decomposition detail age pool output file name text string
       character*30 :: subr_text ! subregion output directory text string
-      real, dimension(3) :: mst =  0.0
-      real, dimension(3) :: mf =  0.0
-      real, dimension(3) :: mbg =  0.0
-      real, dimension(3) :: mrt =  0.0
-      real, dimension(3) :: fscv =  0.0
-      real, dimension(3) :: ffcv =  0.0
-      real, dimension(3) :: ftcv =  0.0
-      real, dimension(3) :: rsai =  0.0
-      real, dimension(3) :: rlai =  0.0
-      real, dimension(3) :: dstm =  0.0
-      real, dimension(3) :: zht =  0.0
+      real, dimension(3) :: mst = 0.0
+      real, dimension(3) :: mf = 0.0
+      real, dimension(3) :: mbg = 0.0
+      real, dimension(3) :: mrt = 0.0
+      real, dimension(3) :: fscv = 0.0
+      real, dimension(3) :: ffcv = 0.0
+      real, dimension(3) :: ftcv = 0.0
+      real, dimension(3) :: rsai = 0.0
+      real, dimension(3) :: rlai = 0.0
+      real, dimension(3) :: dstm = 0.0
+      real, dimension(3) :: zht = 0.0
 
 !     + + + END OF SPECIFICATIONS + + +
 

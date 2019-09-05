@@ -561,7 +561,7 @@
                lastoper(isr)%yr = manfile(isr)%mnryr
             end if
           end if
-       end do  ! end for subregion loop
+        end do  ! end for subregion loop
       end do    ! end loop of multiple years
       init_loop = .false.
       ! set initialization flag to .false. if initialization was skipped
@@ -643,7 +643,7 @@
              end if
            end do  ! end subregion
          end do   ! "calibration" phase
-         do isr=1,nsubr   ! do multiple subregion     
+        do isr=1,nsubr   ! do multiple subregion     
              manfile(isr)%mnryr = keep(isr)
              ! at end of managment file, reset mcount
              manFile(isr)%mcount = 0
@@ -745,12 +745,6 @@
             end if
 
             do isr=1,nsubr   ! do multiple subregion     
-               !if (am0jd.eq.ijday+1) then
-               !   call dbgdmp(daysim, isr, soil(isr), croptot(isr),biotot(isr),hstate(isr),h1et(isr))
-               !end if
-               !if (am0jd.eq.ljday) then
-               !   call dbgdmp(daysim, isr, soil(isr), croptot(isr),biotot(isr),hstate(isr),h1et(isr))
-               !end if
 
                call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr), &
                               biotot(isr), decompfac(isr), mandatbs(isr)%mandate, hstate(isr), h1et(isr), h1bal(isr), wp(isr), &
@@ -799,7 +793,7 @@
                end if
             end if
 
-            do isr=1,nsubr   ! do multiple subregion     
+            do isr=1,nsubr   ! do multiple subregions
                if ((run_erosion .eq. 2) .or. (run_erosion .eq. 3)) then
                   call water_erosion( isr, cd, cm, cy, soil(isr), restot(isr), croptot(isr), wp(isr) )
                end if
