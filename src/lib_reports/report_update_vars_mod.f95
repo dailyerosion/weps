@@ -235,8 +235,8 @@ module report_update_vars_mod
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
-             IF ((cellstate(i,j)%egt - cellstate(i,j)%egtss) < -eros_thresh) THEN
-                sum_salt_loss = sum_salt_loss + (cellstate(i,j)%egt - cellstate(i,j)%egtss)
+             IF ((cellstate(i,j)%egtcs) < -eros_thresh) THEN
+                sum_salt_loss = sum_salt_loss + (cellstate(i,j)%egtcs)
                 cnt_eros = cnt_eros + 1
              END IF
              ngdpt = ngdpt + 1
@@ -251,8 +251,8 @@ module report_update_vars_mod
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
-             IF ((cellstate(i,j)%egt - cellstate(i,j)%egtss) > eros_thresh) THEN
-                sum_salt_dep = sum_salt_dep + (cellstate(i,j)%egt - cellstate(i,j)%egtss)
+             IF ((cellstate(i,j)%egtcs) > eros_thresh) THEN
+                sum_salt_dep = sum_salt_dep + (cellstate(i,j)%egtcs)
                 cnt_dep = cnt_dep + 1
              END IF
           end if
@@ -279,7 +279,7 @@ module report_update_vars_mod
        DO j = 1, jmax-1 
           if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
              period_update(Eros_loss)%val = period_update(Eros_loss)%val + cellstate(i,j)%egt/ngdpt
-             period_update(Salt_loss)%val = period_update(Salt_loss)%val + (cellstate(i,j)%egt - cellstate(i,j)%egtss)/ngdpt
+             period_update(Salt_loss)%val = period_update(Salt_loss)%val + (cellstate(i,j)%egtcs)/ngdpt
              period_update(Susp_loss)%val = period_update(Susp_loss)%val + cellstate(i,j)%egtss/ngdpt
              period_update(PM10_loss)%val = period_update(PM10_loss)%val + cellstate(i,j)%egt10/ngdpt
              period_update(PM2_5_loss)%val = period_update(PM2_5_loss)%val + cellstate(i,j)%egt2_5/ngdpt
@@ -299,9 +299,8 @@ module report_update_vars_mod
 
 ! Sum boundary losses  (ave value per boundary grid point)
     DO i = 0, imax 
-      ! Note that egt contains creep+saltation not total soil loss on boundary
-      period_update(Salt_1)%val = period_update(Salt_1)%val + cellstate(i,0)%egt/(imax-1)
-      period_update(Salt_3)%val = period_update(Salt_3)%val + cellstate(i,jmax)%egt/(imax-1)
+      period_update(Salt_1)%val = period_update(Salt_1)%val + cellstate(i,0)%egtcs/(imax-1)
+      period_update(Salt_3)%val = period_update(Salt_3)%val + cellstate(i,jmax)%egtcs/(imax-1)
       period_update(Susp_1)%val = period_update(Susp_1)%val + cellstate(i,0)%egtss/(imax-1)
       period_update(Susp_3)%val = period_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
       period_update(PM10_1)%val = period_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
@@ -315,9 +314,8 @@ module report_update_vars_mod
     period_update(PM10_3)%cnt = period_update(PM10_3)%cnt + 1
 
     DO j = 0, jmax 
-      ! Note that egt contains creep+saltation not total soil loss on boundary
-      period_update(Salt_2)%val = period_update(Salt_2)%val + cellstate(0,j)%egt/(jmax-1)
-      period_update(Salt_4)%val = period_update(Salt_4)%val + cellstate(imax,j)%egt/(jmax-1)
+      period_update(Salt_2)%val = period_update(Salt_2)%val + cellstate(0,j)%egtcs/(jmax-1)
+      period_update(Salt_4)%val = period_update(Salt_4)%val + cellstate(imax,j)%egtcs/(jmax-1)
       period_update(Susp_2)%val = period_update(Susp_2)%val + cellstate(0,j)%egtss/(jmax-1)
       period_update(Susp_4)%val = period_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
       period_update(PM10_2)%val = period_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)
@@ -389,15 +387,12 @@ module report_update_vars_mod
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
-             IF ( ABS((cellstate(i,j)%egt - cellstate(i,j)%egtss)) <= eros_thresh) THEN  !Sheltered/TC
-!print*, 'cellstate(i,j)%egt-cellstate(i,j)%egtss: ',ABS(cellstate(i,j)%egt-cellstate(i,j)%egtss), 'egtss: ',ABS(cellstate(i,j)%egtss)
-
+             IF ( ABS((cellstate(i,j)%egtcs)) <= eros_thresh) THEN  !Sheltered/TC
                 IF ( ABS(cellstate(i,j)%egtss) <= susp_thresh) THEN  ! Sheltered area
                    cnt_sheltered = cnt_sheltered + 1
                 ELSE                                       ! At TC
                    cnt_transp = cnt_transp + 1
                 END IF
-!print*, 'cnt sheltered/transp: ', cnt_sheltered, cnt_transp
              END IF
           end if
        END DO
@@ -692,8 +687,8 @@ module report_update_vars_mod
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
-             IF ((cellstate(i,j)%egt - cellstate(i,j)%egtss) < -eros_thresh) THEN
-                sum_salt_loss = sum_salt_loss + (cellstate(i,j)%egt - cellstate(i,j)%egtss)
+             IF ((cellstate(i,j)%egtcs) < -eros_thresh) THEN
+                sum_salt_loss = sum_salt_loss + (cellstate(i,j)%egtcs)
                 cnt_eros = cnt_eros + 1
              END IF
              ngdpt = ngdpt + 1
@@ -708,8 +703,8 @@ module report_update_vars_mod
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
-             IF ((cellstate(i,j)%egt - cellstate(i,j)%egtss) > eros_thresh) THEN
-                sum_salt_dep = sum_salt_dep + (cellstate(i,j)%egt - cellstate(i,j)%egtss)
+             IF ((cellstate(i,j)%egtcs) > eros_thresh) THEN
+                sum_salt_dep = sum_salt_dep + (cellstate(i,j)%egtcs)
                 cnt_dep = cnt_dep + 1
              END IF
           end if
@@ -742,13 +737,13 @@ module report_update_vars_mod
        DO j = 1, jmax-1 
           if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
              monthly_update(Eros_loss)%val = monthly_update(Eros_loss)%val + cellstate(i,j)%egt/ngdpt
-             monthly_update(Salt_loss)%val = monthly_update(Salt_loss)%val + (cellstate(i,j)%egt - cellstate(i,j)%egtss)/ngdpt
+             monthly_update(Salt_loss)%val = monthly_update(Salt_loss)%val + (cellstate(i,j)%egtcs)/ngdpt
              monthly_update(Susp_loss)%val = monthly_update(Susp_loss)%val + cellstate(i,j)%egtss/ngdpt
              monthly_update(PM10_loss)%val = monthly_update(PM10_loss)%val + cellstate(i,j)%egt10/ngdpt
              monthly_update(PM2_5_loss)%val = monthly_update(PM2_5_loss)%val + cellstate(i,j)%egt2_5/ngdpt
 
              mrot_update(Eros_loss,cm)%val = mrot_update(Eros_loss,cm)%val + cellstate(i,j)%egt/ngdpt
-             mrot_update(Salt_loss,cm)%val = mrot_update(Salt_loss,cm)%val + (cellstate(i,j)%egt - cellstate(i,j)%egtss)/ngdpt
+             mrot_update(Salt_loss,cm)%val = mrot_update(Salt_loss,cm)%val + (cellstate(i,j)%egtcs)/ngdpt
              mrot_update(Susp_loss,cm)%val = mrot_update(Susp_loss,cm)%val + cellstate(i,j)%egtss/ngdpt
              mrot_update(PM10_loss,cm)%val = mrot_update(PM10_loss,cm)%val + cellstate(i,j)%egt10/ngdpt
              mrot_update(PM2_5_loss,cm)%val = mrot_update(PM2_5_loss,cm)%val + cellstate(i,j)%egt2_5/ngdpt
@@ -844,7 +839,7 @@ IF (Have_Erosion) THEN      !We have erosion, so compute TC, etc.
     cnt_sheltered = 0
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
-          IF ( ABS((cellstate(i,j)%egt - cellstate(i,j)%egtss)) <= eros_thresh) THEN  !Sheltered/TC
+          IF ( ABS((cellstate(i,j)%egtcs)) <= eros_thresh) THEN  !Sheltered/TC
              IF ( ABS(cellstate(i,j)%egtss) <= susp_thresh) THEN  ! Sheltered area
                 cnt_sheltered = cnt_sheltered + 1
              ELSE                                       ! At TC
@@ -869,9 +864,8 @@ END IF  !Have_Erosion flag
 
 ! Sum boundary losses  (ave value per boundary grid point)
   DO i = 0, imax 
-    ! Note that egt contains creep+saltation not total soil loss on boundary
-    monthly_update(Salt_1)%val = monthly_update(Salt_1)%val + cellstate(i,0)%egt/(imax-1)
-    monthly_update(Salt_3)%val = monthly_update(Salt_3)%val + cellstate(i,jmax)%egt/(imax-1)
+    monthly_update(Salt_1)%val = monthly_update(Salt_1)%val + cellstate(i,0)%egtcs/(imax-1)
+    monthly_update(Salt_3)%val = monthly_update(Salt_3)%val + cellstate(i,jmax)%egtcs/(imax-1)
     monthly_update(Susp_1)%val = monthly_update(Susp_1)%val + cellstate(i,0)%egtss/(imax-1)
     monthly_update(Susp_3)%val = monthly_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
     monthly_update(PM10_1)%val = monthly_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
@@ -879,8 +873,8 @@ END IF  !Have_Erosion flag
     monthly_update(PM2_5_1)%val = monthly_update(PM2_5_1)%val + cellstate(i,0)%egt2_5/(imax-1)
     monthly_update(PM2_5_3)%val = monthly_update(PM2_5_3)%val + cellstate(i,jmax)%egt2_5/(imax-1)
 
-    mrot_update(Salt_1,cm)%val = mrot_update(Salt_1,cm)%val + cellstate(i,0)%egt/(imax-1)
-    mrot_update(Salt_3,cm)%val = mrot_update(Salt_3,cm)%val + cellstate(i,jmax)%egt/(imax-1)
+    mrot_update(Salt_1,cm)%val = mrot_update(Salt_1,cm)%val + cellstate(i,0)%egtcs/(imax-1)
+    mrot_update(Salt_3,cm)%val = mrot_update(Salt_3,cm)%val + cellstate(i,jmax)%egtcs/(imax-1)
     mrot_update(Susp_1,cm)%val = mrot_update(Susp_1,cm)%val + cellstate(i,0)%egtss/(imax-1)
     mrot_update(Susp_3,cm)%val = mrot_update(Susp_3,cm)%val + cellstate(i,jmax)%egtss/(imax-1)
     mrot_update(PM10_1,cm)%val = mrot_update(PM10_1,cm)%val + cellstate(i,0)%egt10/(imax-1)
@@ -907,9 +901,8 @@ END IF  !Have_Erosion flag
   mrot_update(PM2_5_3,cm)%cnt = mrot_update(PM2_5_3,cm)%cnt + 1
 
   DO j = 0, jmax 
-    ! Note that egt contains creep+saltation not total soil loss on boundary
-    monthly_update(Salt_2)%val = monthly_update(Salt_2)%val + cellstate(0,j)%egt/(jmax-1)
-    monthly_update(Salt_4)%val = monthly_update(Salt_4)%val + cellstate(imax,j)%egt/(jmax-1)
+    monthly_update(Salt_2)%val = monthly_update(Salt_2)%val + cellstate(0,j)%egtcs/(jmax-1)
+    monthly_update(Salt_4)%val = monthly_update(Salt_4)%val + cellstate(imax,j)%egtcs/(jmax-1)
     monthly_update(Susp_2)%val = monthly_update(Susp_2)%val + cellstate(0,j)%egtss/(jmax-1)
     monthly_update(Susp_4)%val = monthly_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
     monthly_update(PM10_2)%val = monthly_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)
@@ -917,8 +910,8 @@ END IF  !Have_Erosion flag
     monthly_update(PM2_5_2)%val = monthly_update(PM2_5_2)%val + cellstate(0,j)%egt2_5/(jmax-1)
     monthly_update(PM2_5_4)%val = monthly_update(PM2_5_4)%val + cellstate(imax,j)%egt2_5/(jmax-1)
 
-    mrot_update(Salt_2,cm)%val = mrot_update(Salt_2,cm)%val + cellstate(0,j)%egt/(jmax-1)
-    mrot_update(Salt_4,cm)%val = mrot_update(Salt_4,cm)%val + cellstate(imax,j)%egt/(jmax-1)
+    mrot_update(Salt_2,cm)%val = mrot_update(Salt_2,cm)%val + cellstate(0,j)%egtcs/(jmax-1)
+    mrot_update(Salt_4,cm)%val = mrot_update(Salt_4,cm)%val + cellstate(imax,j)%egtcs/(jmax-1)
     mrot_update(Susp_2,cm)%val = mrot_update(Susp_2,cm)%val + cellstate(0,j)%egtss/(jmax-1)
     mrot_update(Susp_4,cm)%val = mrot_update(Susp_4,cm)%val + cellstate(imax,j)%egtss/(jmax-1)
     mrot_update(PM10_2,cm)%val = mrot_update(PM10_2,cm)%val + cellstate(0,j)%egt10/(jmax-1)
@@ -1132,7 +1125,7 @@ END IF  !Have_Erosion flag
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrly_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrot_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yr_update
-    type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10
+    type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10, egt2_5
     type(hydro_derived_et), intent(in) :: h1et
 
     INTEGER :: i,j              ! local loop variables
@@ -1433,9 +1426,8 @@ END IF  !Have_Erosion flag
 
 ! Sum boundary losses  (ave value per boundary grid point)
   DO i = 0, imax 
-    ! Note that egt contains creep+saltation not total soil loss on boundary
-    yrly_update(Salt_1)%val = yrly_update(Salt_1)%val + cellstate(i,0)%egt/(imax-1)
-    yrly_update(Salt_3)%val = yrly_update(Salt_3)%val + cellstate(i,jmax)%egt/(imax-1)
+    yrly_update(Salt_1)%val = yrly_update(Salt_1)%val + cellstate(i,0)%egtcs/(imax-1)
+    yrly_update(Salt_3)%val = yrly_update(Salt_3)%val + cellstate(i,jmax)%egtcs/(imax-1)
     yrly_update(Susp_1)%val = yrly_update(Susp_1)%val + cellstate(i,0)%egtss/(imax-1)
     yrly_update(Susp_3)%val = yrly_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
     yrly_update(PM10_1)%val = yrly_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
@@ -1443,8 +1435,8 @@ END IF  !Have_Erosion flag
     yrly_update(PM2_5_1)%val = yrly_update(PM2_5_1)%val + cellstate(i,0)%egt2_5/(imax-1)
     yrly_update(PM2_5_3)%val = yrly_update(PM2_5_3)%val + cellstate(i,jmax)%egt2_5/(imax-1)
 
-    yrot_update(Salt_1)%val = yrot_update(Salt_1)%val + cellstate(i,0)%egt/(imax-1)
-    yrot_update(Salt_3)%val = yrot_update(Salt_3)%val + cellstate(i,jmax)%egt/(imax-1)
+    yrot_update(Salt_1)%val = yrot_update(Salt_1)%val + cellstate(i,0)%egtcs/(imax-1)
+    yrot_update(Salt_3)%val = yrot_update(Salt_3)%val + cellstate(i,jmax)%egtcs/(imax-1)
     yrot_update(Susp_1)%val = yrot_update(Susp_1)%val + cellstate(i,0)%egtss/(imax-1)
     yrot_update(Susp_3)%val = yrot_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
     yrot_update(PM10_1)%val = yrot_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
@@ -1453,8 +1445,8 @@ END IF  !Have_Erosion flag
     yrot_update(PM2_5_3)%val = yrot_update(PM2_5_3)%val + cellstate(i,jmax)%egt2_5/(imax-1)
 
     ! For a year by year report of yearly (and rotation year) averaged variables
-    yr_update(Salt_1)%val = yr_update(Salt_1)%val + cellstate(i,0)%egt/(imax-1)
-    yr_update(Salt_3)%val = yr_update(Salt_3)%val + cellstate(i,jmax)%egt/(imax-1)
+    yr_update(Salt_1)%val = yr_update(Salt_1)%val + cellstate(i,0)%egtcs/(imax-1)
+    yr_update(Salt_3)%val = yr_update(Salt_3)%val + cellstate(i,jmax)%egtcs/(imax-1)
     yr_update(Susp_1)%val = yr_update(Susp_1)%val + cellstate(i,0)%egtss/(imax-1)
     yr_update(Susp_3)%val = yr_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
     yr_update(PM10_1)%val = yr_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
@@ -1491,9 +1483,8 @@ END IF  !Have_Erosion flag
   yr_update(PM2_5_3)%cnt = yr_update(PM2_5_3)%cnt + 1
 
   DO j = 0, jmax 
-    ! Note that egt contains creep+saltation not total soil loss on boundary
-    yrly_update(Salt_2)%val = yrly_update(Salt_2)%val + cellstate(0,j)%egt/(jmax-1)
-    yrly_update(Salt_4)%val = yrly_update(Salt_4)%val + cellstate(imax,j)%egt/(jmax-1)
+    yrly_update(Salt_2)%val = yrly_update(Salt_2)%val + cellstate(0,j)%egtcs/(jmax-1)
+    yrly_update(Salt_4)%val = yrly_update(Salt_4)%val + cellstate(imax,j)%egtcs/(jmax-1)
     yrly_update(Susp_2)%val = yrly_update(Susp_2)%val + cellstate(0,j)%egtss/(jmax-1)
     yrly_update(Susp_4)%val = yrly_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
     yrly_update(PM10_2)%val = yrly_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)
@@ -1501,8 +1492,8 @@ END IF  !Have_Erosion flag
     yrly_update(PM2_5_2)%val = yrly_update(PM2_5_2)%val + cellstate(0,j)%egt2_5/(jmax-1)
     yrly_update(PM2_5_4)%val = yrly_update(PM2_5_4)%val + cellstate(imax,j)%egt2_5/(jmax-1)
 
-    yrot_update(Salt_2)%val = yrot_update(Salt_2)%val + cellstate(0,j)%egt/(jmax-1)
-    yrot_update(Salt_4)%val = yrot_update(Salt_4)%val + cellstate(imax,j)%egt/(jmax-1)
+    yrot_update(Salt_2)%val = yrot_update(Salt_2)%val + cellstate(0,j)%egtcs/(jmax-1)
+    yrot_update(Salt_4)%val = yrot_update(Salt_4)%val + cellstate(imax,j)%egtcs/(jmax-1)
     yrot_update(Susp_2)%val = yrot_update(Susp_2)%val + cellstate(0,j)%egtss/(jmax-1)
     yrot_update(Susp_4)%val = yrot_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
     yrot_update(PM10_2)%val = yrot_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)
@@ -1511,8 +1502,8 @@ END IF  !Have_Erosion flag
     yrot_update(PM2_5_4)%val = yrot_update(PM2_5_4)%val + cellstate(imax,j)%egt2_5/(jmax-1)
 
     ! For a year by year report of yearly (and rotation year) averaged variables
-    yr_update(Salt_2)%val = yr_update(Salt_2)%val + cellstate(0,j)%egt/(jmax-1)
-    yr_update(Salt_4)%val = yr_update(Salt_4)%val + cellstate(imax,j)%egt/(jmax-1)
+    yr_update(Salt_2)%val = yr_update(Salt_2)%val + cellstate(0,j)%egtcs/(jmax-1)
+    yr_update(Salt_4)%val = yr_update(Salt_4)%val + cellstate(imax,j)%egtcs/(jmax-1)
     yr_update(Susp_2)%val = yr_update(Susp_2)%val + cellstate(0,j)%egtss/(jmax-1)
     yr_update(Susp_4)%val = yr_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
     yr_update(PM10_2)%val = yr_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)

@@ -1,5 +1,5 @@
 #****************************************************************
-#    erod.in.template   Template INPUT DATA FILE
+#    sweep.in.template   Template INPUT DATA FILE (legacy format)
 #                       Updated January 2006 - LEW
 #                       Updated February, 2006 - JT
 #****************************************************************
@@ -20,14 +20,8 @@
 #
 #     where Var_type is: I = integer L = logical R = real
 #
-# +++ VERSION HEADER +++
-#     included to allow running old erosion file formats with the multiple subregion enabled version
-#     this must be the first non-comment line in the file
 #
-Version:   100 multiple subregions
-#
-#
-# +++ DEBUG FLAG +++
+# +++ DEBUG STUFF +++
 #
 #     debugflg - debug flag for providing different levels of debug info
 #                currently useful to debug/check input file data format
@@ -45,13 +39,24 @@ Version:   100 multiple subregions
 #                Must be set to .TRUE. for standalone erosion runs
  .TRUE.
 #
+#     am0efl, I, EROSION "print" flag
+#               Range: 0 to 6 
+#               0 = print input, no output
+#               1 = print input, standard output
+#               2 = print input, 1 line output
+#               3 = used in WEPS to print input, then create file "emit.out"
+#                       containing hourly suspended emission rates
+# 		4 = used in standalone to print input, then create file "emit.out"
+#                       containing hourly suspended emission rates
+#               5 = not used at present
+#               6 = print input, detail output each step using calls
+#                       to sb1out and sb2out
+ 1
 #
 # +++ SIMULATION REGION +++
 #
 #     amxsim(x,y), R, Simulation Region diagonal coordinates (meters)
 #                     Input (x,y) coordinates in this form: x1,y1 x2,y2
-#                     If orientation in 0 degrees, then x axis is East-West
-#                     and y axis is North-South.
 #                      Typical Range: 10.0 to 1600.0
 #
 #                     NOTE:  Accounting region and Subregion coordinates
@@ -59,78 +64,54 @@ Version:   100 multiple subregions
 #
   0.0, 0.0 1000.0, 200.0
 #
-#     amasim, R, Simulation Region orientation angle
-#     clockwise is positive with 0=north
+#     amasim, R, Simulation Region orientation angle (degrees from North)
+#                     clockwise is positive with 0=north
+#                     If orientation in 0 degrees, then x axis is East-West
+#                     and y axis is North-South.
  0.0
 #
-# +++ NUMBER OF GRID POINTS +++
-#
-#     xgdpt, ygdpt, I, Number of grid points in simulation region x and y directions
-#                      A value of 0 for both values uses the default internal grid.
-#                      A value of 0 for only one generates and error.
- 0 0
 #
 # +++ ACCOUNTING REGIONS +++
 #
 #     nacctr, I, Number of accounting regions
  1
 #
-#     accounting region polygon, count, xy pairs (subregions_mod)
-#         polygons can be:
-#         - open (the last point connects to the first point)
-#         - closed (last point is same as first point)
-#         - complex (multiple closed polygons entered as one)
-4
-0.0 0.0
-1000.0 0.0
-1000.0 200.0
-0.0 200.0
+#     amxar(x,y,a), R, Accounting Region diagonal coordinates (meters)
+#                      Input (x,y) coordinates in this form: x1,y1 x2,y2
+#                      for each Accounting Region specified (nacctr)
+#
+#                      NOTE:  Accounting Region coordinate values must
+#                             match Simulation Region coordinates above
+#
+ 0.0, 0.0 1000.0, 200.0
+#
 #
 # +++ BARRIERS +++
 #
 #     nbr, I, Number of barriers (0-5)
  2
-#
 #     NOTE: Remaining BARRIER inputs are repeated for each barrier specified
-#     If no barriers specified (nbr=0), then no BARRIER inputs will be here
+#           If no barriers specified (nbr=0), then no BARRIER inputs will
+#           be listed here.
 #
-#     barrier(b)%np, I, number of points in barrier polyline
-#     Inputs are repeated for each point specified
-#     barrier(b)%points(n)%x, barrier(b)%points(n)%y, R, x,y coordinate pair
-# Example: 0.0 500.0 
-#     barrier(b)%points(n)%amzbr, R, Barrier height (m)
-#     barrier(b)%points(n)%amxbrw, R, Barrier width (m)
-#     barrier(b)%points(n)%ampbr, R, Barrier porosity (m^2/m^2)
-# Example: 1.2 2.0 0.50 
+#     amxbr(x,y,b), R, Barrier linear coordinates (meters)
+#                      Input (x,y) coordinates in this form: x1,y1 x2,y2
+#                      for each barrier specified (nbr)
+ 0.0, 0.0 0.0, 200.0
 #
+#       amzbr(b),  R, Barrier height (meters)
+#       ampbr(b),  R, Barrier porosity (m^2/m^2)
+#       amxbrw(b), R, Barrier width (meters)
 #
-# barrier(b)%np, I, number of points in barrier polyline
-2
-# barrier(b)%points(n)%x, barrier(b)%points(n)%y, R, x,y coordinate pair
- 0.0 0.0
-# amzbr(b), amxbrw(b), ampbr(b)
- 0.2 15.0 0.5
-# barrier(b)%points(n)%x, barrier(b)%points(n)%y, R, x,y coordinate pair
- 0.0 200.0
-# amzbr(b), amxbrw(b), ampbr(b)
- 0.2 15.0 0.5
+ 0.2 0.5 15.0
 #
-#       Barrier #2 number of points
- 3
-#       Barrier #2 coordinates (x1,y1)
- 0.0 0.0
-#       Barrier #2 height, width and porosity 1
- 0.2 15.0 0.5
+#       Repeat previous two input lines for each additional barrier
 #
-#       Barrier #2 coordinates (x2,y2)
- 500.0 10.0
-#       Barrier #2 height, width and porosity 2
- 0.3 10.0 0.4
+#       Barrier #2 coordinates (x1,y1) (x2,y2)
+ 0.0, 0.0 1000.0, 0.0
+#       Barrier #2 height, porosity and width
+ 0.2 0.5 15.0
 #
-#       Barrier #2 coordinates (x3,y3)
- 1000.0 0.0
-#       Barrier #2 height, width and porosity 3
- 0.2 15.0 0.5
 #
 # +++ SUBREGIONS +++
 #
@@ -142,21 +123,20 @@ Version:   100 multiple subregions
 #     ie. variables defined by subregion) are repeated for "nsubr"
 #     subregions specified
 #
-#     subregion polygon, count, xy pairs (subregions_mod)
-#         polygons can be:
-#         - open (the last point connects to the first point)
-#         - closed (last point is same as first point)
-#         - complex (multiple closed polygons entered as one)
-4
-0.0 0.0
-1000.0 0.0
-1000.0 200.0
-0.0 200.0
+#     amxsr(x,y,s), R, Subregion diagonal coordinates (m)
+#                      Input (x,y) coordinates in this form: x1,y1 x2,y2
+#                      for each subregion specified (subr)
+#
+#                      NOTE:  Subregion coordinate values must
+#                             match Simulation Region coordinates above
+#
+ 0.0, 0.0 1000.0, 200.0
+#
 #
 #     +++ BIOMASS +++
 #
 #
-#       adzht_ave(s), R, Height of standing residue (meteres)
+#       adzht_ave(s), R, Height of standing residue (meters)
 #                        WEPS generated input files will provide
 #                        "SAI weighted" average residue height
 #                        across all residue pools.
@@ -307,10 +287,6 @@ Version:   100 multiple subregions
 # NOTE: This is the end of the SUBREGION variables
 #
 #     +++ WEATHER +++
-#
-#     awzypt, R, Average annual precipitation (mm)
-#
-300.0
 #
 #     awdair, R, Air density (kg/m^3)
 #		 Typical Range: 0.7 to 1.5

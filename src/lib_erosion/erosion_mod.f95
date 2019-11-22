@@ -443,7 +443,7 @@ module erosion_mod
                wuref = subday(i)%awu
                wr = 1
 
-            ! stop sbwind timer and start general timer
+               ! stop sbwind timer and start general timer
                call timer(TIMSBWIND,TIMSTOP)
                call timer(TIMEROS,TIMSTART)
 
@@ -454,7 +454,7 @@ module erosion_mod
                      call sb1out (j, n, hrs, subday(i)%awu, subday(i)%awdir, luo_sgrd, subrsurf(1), cellstate)
                   endif
 
-                  ! stop gneral timer and start sberod timer
+                  ! stop general timer and start sberod timer
                   call timer(TIMEROS,TIMSTOP)
                   call timer(TIMSBEROD,TIMSTART)
 

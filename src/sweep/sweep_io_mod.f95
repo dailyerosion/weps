@@ -648,7 +648,7 @@ module sweep_io_mod
       ! To print output desired from standalone EROSION submodel
 
       use erosion_data_struct_defs, only: cellsurfacestate
-      use sae_in_out_mod, only: daily_erodout, aegt, aegtss, aegt10
+      use sae_in_out_mod, only: daily_erodout, aegt, aegtcs, aegtss, aegt10
 
       ! +++ ARGUMENT DECLARATIONS +++
       logical, intent(in) :: hagen_plot_flag
@@ -677,7 +677,7 @@ module sweep_io_mod
           ycharin(3) = 'suspension'
           ycharin(4) = 'PM10(kg/m^2)'
           yin(1) = aegt
-          yin(2) = aegt-aegtss
+          yin(2) = aegtcs
           yin(3) = aegtss
           yin(4) = aegt10
 

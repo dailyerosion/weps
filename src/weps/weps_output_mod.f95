@@ -403,7 +403,7 @@ module weps_output_mod
               do jdy = 1, jmax-1
                  if( (sr .eq. 0) .or. (sr .eq. cellstate(idx,jdy)%csr) ) then
                     total = total + cellstate(idx,jdy)%egt
-                    !salt = salt + (cellstate(idx,jdy)%egt - cellstate(idx,jdy)%egtss
+                    !salt = salt + (cellstate(idx,jdy)%egtcs
                     suspen = suspen + cellstate(idx,jdy)%egtss
                     pmten = pmten + cellstate(idx,jdy)%egt10
                     ngdpt = ngdpt + 1

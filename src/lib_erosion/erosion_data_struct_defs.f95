@@ -34,15 +34,28 @@ module erosion_data_struct_defs
      real :: slrr         ! soil random roughness (mm)
      real :: w0br         ! barrier wind reduction factor for the grid cell
      ! real :: w0hill     ! ratio of hill to open, flat, field friction velocity as influenced by hills.
-     real :: egt          ! Total soil loss at a grid point accumulated for a time period (kg/m^2)
+     real :: egt          ! Total soil loss a grid point accumulated for a time period (kg/m^2)
+                          ! Total soil loss at a boundary point accumulated for a time period (kg/m)
      real :: egtcs        ! Total creep and saltation soil loss at grid point accumulated for a time period (kg/m^2)
+                          ! Total creep and saltation soil loss at a boundary point accumulated for a time period (kg/m)
      real :: egtss        ! Total suspension soil loss at grid point accumulated for a time period (kg/m^2)
+                          ! Total suspension soil loss at a boundary point accumulated for a time period (kg/m)
      real :: egt10        ! Total < 10 micron soil loss at grid point accumulated for a time period (kg/m^2)
+                          ! Total < 10 micron soil loss at a boundary point accumulated for a time period (kg/m)
      real :: egt2_5       ! Total < 2.5 micron soil loss at grid point accumulated for a time period (kg/m^2)
+                          ! Total < 2.5 micron soil loss at a boundary point accumulated for a time period (kg/m)
      real :: wus          ! Soil surface friction velocity (m/s)
      real :: wust         ! Soil surface threshold friction velocity for emission (m/s)
      real :: wusto        ! Soil surface threshold friction velocity for emission (bare, smooth surface with sf84ic, wus minus flat biomass and wetness effects) (m/s)
      real :: wusp         ! Soil surface threshold friction velocity for transport capacity (m/s)
+     real :: qi           ! input discharge (total) (kg/m/s)
+     real :: qcsi         ! input discharge (creep/saltation) (kg/m/s)
+     real :: qssi         ! input discharge (suspension) (kg/m/s)
+     real :: q10i         ! input discharge (pm10) (kg/m/s)
+     real :: qo           ! output discharge (total) (kg/m/s)
+     real :: qcso         ! output discharge (creep/saltation) (kg/m/s)
+     real :: qsso         ! output discharge (suspension) (kg/m/s)
+     real :: q10o         ! output discharge (pm10) (kg/m/s)
   end type cellsurfacestate
 
   type biodrag_input_array

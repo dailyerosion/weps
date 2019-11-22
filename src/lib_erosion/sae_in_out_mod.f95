@@ -20,7 +20,7 @@ module sae_in_out_mod
   type(make_sae_in_out) :: mksaeout
 
   ! placed here for sharing back with hagen_plot_flag by daily_erodout
-  real :: aegt, aegtss, aegt10, aegt2_5
+  real :: aegt, aegtcs, aegtss, aegt10, aegt2_5
   logical :: in_weps
 
   contains
@@ -276,109 +276,125 @@ module sae_in_out_mod
       character(len=21) :: rundatetime
       integer i, j
       real tt, lx, ly
-      real topt,topss, top10, top2_5, bott, botss, bot10, bot2_5
-      real ritt, ritss, rit10, rit2_5, lftt, lftss, lft10, lft2_5
+      real topt, topcs, topss, top10, top2_5, bott, botcs, botss, bot10, bot2_5
+      real ritt, ritcs, ritss, rit10, rit2_5, lftt, lftcs, lftss, lft10, lft2_5
       real tot, totbnd
 
       integer yr, mon, day
 
 !     +++ END SPECIFICATIONS +++
 
-!     Calculate Averages Crossing Borders
-!      top border
-       aegt   = 0.0
-       aegtss = 0.0
-       aegt10 = 0.0
-       aegt2_5 = 0.0
-       j = jmax
-       do 1 i = 1, imax-1
-         aegt    = aegt   + cellstate(i,j)%egt
-         aegtss  = aegtss + cellstate(i,j)%egtss
-         aegt10  = aegt10 + cellstate(i,j)%egt10
-         aegt2_5 = aegt2_5 + cellstate(i,j)%egt2_5
-    1  continue
-!      calc. average at top border
-       topt  = aegt/(imax-1)
-       topss = aegtss/(imax-1)
-       top10 = aegt10/(imax-1)
-       top2_5 = aegt2_5/(imax-1)
-
-!      bottom border
-       aegt   = 0.0
-       aegtss = 0.0
-       aegt10 = 0.0
-       aegt2_5 = 0.0
-       j = 0
-       do 2 i = 1, imax-1
-         aegt    = aegt   + cellstate(i,j)%egt
-         aegtss  = aegtss + cellstate(i,j)%egtss
-         aegt10  = aegt10 + cellstate(i,j)%egt10
-         aegt2_5 = aegt2_5 + cellstate(i,j)%egt2_5
-    2  continue
-!      calc. average at bottom border
-        bott  = aegt/(imax-1)
-        botss = aegtss/(imax-1)
-        bot10 = aegt10/(imax-1)
-        bot2_5 = aegt2_5/(imax-1)
-
-!     right border
-       aegt   = 0.0
-       aegtss = 0.0
-       aegt10 = 0.0
-       aegt2_5 = 0.0
-       i = imax
-       do 3 j = 1, jmax-1
-         aegt    = aegt   + cellstate(i,j)%egt
-         aegtss  = aegtss + cellstate(i,j)%egtss
-         aegt10  = aegt10 + cellstate(i,j)%egt10
-         aegt2_5 = aegt2_5 + cellstate(i,j)%egt2_5
-    3  continue
-!      calc. average at right border
-        ritt  = aegt/(jmax-1)
-        ritss = aegtss/(jmax-1)
-        rit10 = aegt10/(jmax-1)
-        rit2_5 = aegt2_5/(jmax-1)
-
-!     left border
-       aegt   = 0.0
-       aegtss = 0.0
-       aegt10 = 0.0
-       aegt2_5 = 0.0
-       i = 0
-       do 4 j = 1, jmax-1
-         aegt    = aegt   + cellstate(i,j)%egt
-         aegtss  = aegtss + cellstate(i,j)%egtss
-         aegt10  = aegt10 + cellstate(i,j)%egt10
-         aegt2_5 = aegt2_5 + cellstate(i,j)%egt2_5
-    4  continue
-!      calc. average at left border
-        lftt   = aegt/(jmax-1)
-        lftss  = aegtss/(jmax-1)
-        lft10  = aegt10/(jmax-1)
-        lft2_5  = aegt2_5/(jmax-1)
-
-!     calculate averages of inner grid points
+      ! Calculate Averages Crossing Borders
+      ! top border
       aegt   = 0.0
+      aegtcs = 0.0
       aegtss = 0.0
       aegt10 = 0.0
-      do 5 j=1,jmax-1
-       do 5 i= 1, imax-1
-        aegt= aegt + cellstate(i,j)%egt
-        aegtss = aegtss + cellstate(i,j)%egtss
-        aegt10 = aegt10 + cellstate(i,j)%egt10
-        aegt2_5 = aegt2_5 + cellstate(i,j)%egt2_5
-    5 continue
+      aegt2_5 = 0.0
+      j = jmax
+      do i = 1, imax-1
+         aegt    = aegt   + cellstate(i,j)%egt
+         aegtcs  = aegtcs + cellstate(i,j)%egtcs
+         aegtss  = aegtss + cellstate(i,j)%egtss
+         aegt10  = aegt10 + cellstate(i,j)%egt10
+         aegt2_5 = aegt2_5 + cellstate(i,j)%egt2_5
+      end do
+      ! calc. average at top border
+      topt  = aegt/(imax-1)
+      topcs = aegtcs/(imax-1)
+      topss = aegtss/(imax-1)
+      top10 = aegt10/(imax-1)
+      top2_5 = aegt2_5/(imax-1)
+
+      ! bottom border
+      aegt   = 0.0
+      aegtcs = 0.0
+      aegtss = 0.0
+      aegt10 = 0.0
+      aegt2_5 = 0.0
+      j = 0
+      do i = 1, imax-1
+         aegt    = aegt   + cellstate(i,j)%egt
+         aegtcs  = aegtcs + cellstate(i,j)%egtcs
+         aegtss  = aegtss + cellstate(i,j)%egtss
+         aegt10  = aegt10 + cellstate(i,j)%egt10
+         aegt2_5 = aegt2_5 + cellstate(i,j)%egt2_5
+      end do
+      ! calc. average at bottom border
+      bott  = aegt/(imax-1)
+      botcs = aegtcs/(imax-1)
+      botss = aegtss/(imax-1)
+      bot10 = aegt10/(imax-1)
+      bot2_5 = aegt2_5/(imax-1)
+
+      ! right border
+      aegt   = 0.0
+      aegtcs = 0.0
+      aegtss = 0.0
+      aegt10 = 0.0
+      aegt2_5 = 0.0
+      i = imax
+      do j = 1, jmax-1
+         aegt    = aegt   + cellstate(i,j)%egt
+         aegtcs  = aegtcs + cellstate(i,j)%egtcs
+         aegtss  = aegtss + cellstate(i,j)%egtss
+         aegt10  = aegt10 + cellstate(i,j)%egt10
+         aegt2_5 = aegt2_5 + cellstate(i,j)%egt2_5
+      end do
+      ! calc. average at right border
+      ritt  = aegt/(jmax-1)
+      ritcs = aegtcs/(jmax-1)
+      ritss = aegtss/(jmax-1)
+      rit10 = aegt10/(jmax-1)
+      rit2_5 = aegt2_5/(jmax-1)
+
+      ! left border
+      aegt   = 0.0
+      aegtcs = 0.0
+      aegtss = 0.0
+      aegt10 = 0.0
+      aegt2_5 = 0.0
+      i = 0
+      do j = 1, jmax-1
+         aegt    = aegt   + cellstate(i,j)%egt
+         aegtcs  = aegtcs + cellstate(i,j)%egtcs
+         aegtss  = aegtss + cellstate(i,j)%egtss
+         aegt10  = aegt10 + cellstate(i,j)%egt10
+         aegt2_5 = aegt2_5 + cellstate(i,j)%egt2_5
+      end do
+      ! calc. average at left border
+      lftt   = aegt/(jmax-1)
+      lftcs  = aegtcs/(jmax-1)
+      lftss  = aegtss/(jmax-1)
+      lft10  = aegt10/(jmax-1)
+      lft2_5  = aegt2_5/(jmax-1)
+
+      ! calculate averages of inner grid points
+      aegt   = 0.0
+      aegtcs = 0.0
+      aegtss = 0.0
+      aegt10 = 0.0
+      do j=1,jmax-1
+        do i= 1, imax-1
+          aegt   = aegt   + cellstate(i,j)%egt
+          aegtcs = aegtcs + cellstate(i,j)%egtcs
+          aegtss = aegtss + cellstate(i,j)%egtss
+          aegt10 = aegt10 + cellstate(i,j)%egt10
+          aegt2_5 = aegt2_5 + cellstate(i,j)%egt2_5
+        end do
+      end do
       tt     = (imax-1)*(jmax-1)
       aegt   = aegt/tt
+      aegtcs = aegtcs/tt
       aegtss = aegtss/tt
       aegt10 = aegt10/tt
       aegt2_5 = aegt2_5/tt
 
-!    calculate comparison of boundary and interior losses
+      ! calculate comparison of boundary and interior losses
       lx = amxsim(2)%x - amxsim(1)%x
       ly = amxsim(2)%y - amxsim(1)%y
       tot = aegt*lx*ly
-      totbnd = (topt + bott + topss + botss)*lx + (ritt + lftt + ritss + lftss)*ly
+      totbnd = (topt + bott)*lx + (ritt + lftt)*ly
 
 
       if (btest(am0efl,1)) then
@@ -412,18 +428,7 @@ module sae_in_out_mod
                        'Inner grid size: (', imax-1,',', jmax-1, ')'
 
       write (o_unit,*)
-      write (o_unit,6)
-      write (o_unit,*) '  top(i=1,imax-1,j=jmax) ', &
-                       'bottom(i=1,imax-1,j=0) ', &
-                       'right(i=imax,j=1,jmax-1) ', &
-                       'left(i=0, j=1,jmax-1) '
-      write (o_unit,10)  (cellstate(i,jmax)%egt+cellstate(i,jmax)%egtss, i = 1, imax-1)
-      write (o_unit,10)  (cellstate(i,0)%egt+cellstate(i,0)%egtss, i = 1, imax-1)
-      write (o_unit,10)  (cellstate(imax,j)%egt+cellstate(imax,j)%egtss, j = 1, jmax-1)
-      write (o_unit,10)  (cellstate(0,j)%egt+cellstate(0,j)%egtss, j = 1, jmax-1)
-
-      write (o_unit,*)
-      write (o_unit,7)
+      write (o_unit,fmt="(1x,'  Passing Border Grid Cells - Total  egt(kg/m)')")
       write (o_unit,*) '  top(i=1,imax-1,j=jmax) ', &
                        'bottom(i=1,imax-1,j=0) ', &
                        'right(i=imax,j=1,jmax-1) ', &
@@ -434,7 +439,18 @@ module sae_in_out_mod
       write (o_unit,10)  (cellstate(0,j)%egt, j = 1, jmax-1)
 
       write (o_unit,*)
-      write (o_unit,8)
+      write (o_unit,fmt="(1x,'  Passing Border Grid Cells - Salt/Creep egtcs(kg/m)')")
+      write (o_unit,*) '  top(i=1,imax-1,j=jmax) ', &
+                       'bottom(i=1,imax-1,j=0) ', &
+                       'right(i=imax,j=1,jmax-1) ', &
+                       'left(i=0, j=1,jmax-1) '
+      write (o_unit,10)  (cellstate(i,jmax)%egtcs, i = 1, imax-1)
+      write (o_unit,10)  (cellstate(i,0)%egtcs, i = 1, imax-1)
+      write (o_unit,10)  (cellstate(imax,j)%egtcs, j = 1, jmax-1)
+      write (o_unit,10)  (cellstate(0,j)%egtcs, j = 1, jmax-1)
+
+      write (o_unit,*)
+      write (o_unit,fmt="(1x,'  Passing Border Grid Cells - Suspension egtss(kg/m)')")
       write (o_unit,*) '  top(i=1,imax-1,j=jmax) ', &
                        'bottom(i=1,imax-1,j=0) ', &
                        'right(i=imax,j=1,jmax-1) ', &
@@ -445,7 +461,7 @@ module sae_in_out_mod
       write (o_unit,10)  (cellstate(0,j)%egtss, j = 1, jmax-1)
 
       write (o_unit,*)
-      write (o_unit,9)
+      write (o_unit,fmt="(1x,'  Passing Border Grid Cells - PM10       egt10(kg/m)')")
       write (o_unit,*) '  top(i=1,imax-1,j=jmax) ', &
                        'bottom(i=1,imax-1,j=0) ', &
                        'right(i=imax,j=1,jmax-1) ', &
@@ -456,7 +472,7 @@ module sae_in_out_mod
       write (o_unit,11)  (cellstate(0,j)%egt10, j = 1, jmax-1)
 
       write (o_unit,*)
-      write (o_unit,12)
+      write (o_unit,fmt="(1x,'  Passing Border Grid Cells - PM2_5      egt2_5(kg/m)')")
       write (o_unit,*) '  top(i=1,imax-1,j=jmax) ', &
                        'bottom(i=1,imax-1,j=0) ', &
                        'right(i=imax,j=1,jmax-1) ', &
@@ -468,37 +484,37 @@ module sae_in_out_mod
 
       write (o_unit,*)
       write (o_unit,fmt="(' <grid data> | ',3('|',a))") 'Total Soil Loss', 'soil loss', '(kg/m^2)'
-      do 19  j = jmax-1, 1, -1
-      write (o_unit,10)  (cellstate(i,j)%egt, i = 1, imax-1)
-   19 continue
+      do j = jmax-1, 1, -1
+        write (o_unit,10)  (cellstate(i,j)%egt, i = 1, imax-1)
+      end do
       write (o_unit,fmt="(' </grid data>')")
 
       write (o_unit,*)
       write (o_unit,fmt="(' <grid data> | ',3('|',a))") 'Saltation/Creep Soil Loss', 'salt/creep soil loss', '(kg/m^2)'
-      do 29  j = jmax-1, 1, -1
-      write (o_unit,10)  (cellstate(i,j)%egt-cellstate(i,j)%egtss, i = 1, imax-1)
-   29 continue
+      do j = jmax-1, 1, -1
+        write (o_unit,10)  (cellstate(i,j)%egtcs, i = 1, imax-1)
+      end do
       write (o_unit,fmt="(' </grid data>')")
 
       write (o_unit,*)
       write (o_unit,fmt="(' <grid data> | ',3('|',a))") 'Suspension Soil Loss', 'suspension soil loss', '(kg/m^2)'
-      do 39  j = jmax-1, 1, -1
-      write (o_unit,10)  (cellstate(i,j)%egtss, i = 1, imax-1)
-   39 continue
+      do j = jmax-1, 1, -1
+        write (o_unit,10)  (cellstate(i,j)%egtss, i = 1, imax-1)
+      end do
       write (o_unit,fmt="(' </grid data>')")
 
       write (o_unit,*)
       write (o_unit,fmt="(' <grid data> | ',3('|',a))") 'PM10 Soil Loss', 'PM10 soil loss', '(kg/m^2)'
-      do 49  j = jmax-1, 1, -1
-      write (o_unit,11)  (cellstate(i,j)%egt10, i = 1, imax-1)
-   49 continue
+      do j = jmax-1, 1, -1
+        write (o_unit,11)  (cellstate(i,j)%egt10, i = 1, imax-1)
+      end do
       write (o_unit,fmt="(' </grid data>')")
 
       write (o_unit,*)
       write (o_unit,fmt="(' <grid data> | ',3('|',a))") 'PM2_5 Soil Loss', 'PM2_5 soil loss', '(kg/m^2)'
-      do 59  j = jmax-1, 1, -1
-      write (o_unit,11)  (cellstate(i,j)%egt2_5, i = 1, imax-1)
-   59 continue
+      do j = jmax-1, 1, -1
+        write (o_unit,11)  (cellstate(i,j)%egt2_5, i = 1, imax-1)
+      end do
       write (o_unit,fmt="(' </grid data>')")
 
       write (o_unit,*)
@@ -506,15 +522,15 @@ module sae_in_out_mod
       write (o_unit,*) '     Total    salt/creep      susp       PM10        PM2.5'
       write (o_unit,*) '     egt                      egtss      egt10       egt2_5'
       write (o_unit,*) '   -----------------------kg/m^2---------------------------'
-      write (o_unit,15)    aegt, aegt-aegtss, aegtss, aegt10, aegt2_5
+      write (o_unit,fmt="(1x, 3(f12.4,2x), 2(f12.6,2x))")    aegt, aegtcs, aegtss, aegt10, aegt2_5
       write (o_unit,*)
       write (o_unit,*) '**Averages - Crossing Boundaries '
       write (o_unit,*) 'Location      Total  Salt/Creep   Susp    PM10     PM2_5'
       write (o_unit,*) '-------------------------kg/m---------------------------'
-      write (o_unit,21) topt+topss, topt, topss, top10, top2_5
-      write (o_unit,22) bott+botss, bott, botss, bot10, bot2_5
-      write (o_unit,23) ritt+ritss, ritt, ritss, rit10, rit2_5
-      write (o_unit,24) lftt+lftss, lftt, lftss, lft10, lft2_5
+      write (o_unit,fmt="(1x, 'top   ', 1x, 5(f9.2,1x))") topt, topcs, topss, top10, top2_5
+      write (o_unit,fmt="(1x, 'bottom', 1x, 5(f9.2,1x))") bott, botcs, botss, bot10, bot2_5
+      write (o_unit,fmt="(1x, 'right ', 1x, 5(f9.2,1x))") ritt, ritcs, ritss, rit10, rit2_5
+      write (o_unit,fmt="(1x, 'left  ', 1x, 5(f9.2,1x))") lftt, lftcs, lftss, lft10, lft2_5
       write (o_unit,*)
       write (o_unit,*) '   Comparison of interior & boundary loss'
       write (o_unit,*) '      interior       boundary    int/bnd ratio'
@@ -528,25 +544,14 @@ module sae_in_out_mod
 !     additional output statements for easy shell script parsing
       write (o_unit,*)
 !     write losses as positive numbers
-      write (o_unit,17) -aegt, aegtss-aegt, -aegtss, -aegt10, -aegt2_5
-   17 format (' repeat of total, salt/creep, susp, PM10, PM2.5:', 3f12.4,3f12.6)
-
+      write (o_unit,fmt="(' repeat of total, salt/creep, susp, PM10, PM2.5:', 3f12.4,3f12.6)") &
+                                    -aegt, -aegtcs, -aegtss, -aegt10, -aegt2_5
       close(o_unit)
 
 !     output formats
-    6 format (1x,'  Passing Border Grid Cells - Total  egt+egtss(kg/m)')
-    7 format (1x,'  Passing Border Grid Cells - Salt/Creep   egt(kg/m)')
-    8 format (1x,'  Passing Border Grid Cells - Suspension egtss(kg/m)')
-    9 format (1x,'  Passing Border Grid Cells - PM10       egt10(kg/m)')
-   12 format (1x,'  Passing Border Grid Cells - PM2_5      egt2_5(kg/m)')
    10 format (1x, 500f12.4)
    11 format (1x, 500f12.6)
-   15 format (1x, 3(f12.4,2x), 2(f12.6,2x))
    16 format (1x, 2(f13.4,2x),2x, f13.4)
-   21 format (1x, 'top   ', 1x, 5(f9.2,1x))
-   22 format (1x, 'bottom', 1x, 5(f9.2,1x))
-   23 format (1x, 'right ', 1x, 5(f9.2,1x))
-   24 format (1x, 'left  ', 1x, 5(f9.2,1x))
 
       end if !if (btest(am0efl,1)) then
 
@@ -557,11 +562,11 @@ module sae_in_out_mod
       if( in_weps ) then
          call caldat (mksaeout%jday,day,mon,yr)
          write(*,'(4(a,i0))') 'Wrote to Daily Erosion summary file: ', day,'/', mon,'/', yr,' simulation day: ', mksaeout%simday
-         write (UNIT=o_E_unit,FMT="(5(f12.6),' ')",ADVANCE="NO") -aegt, -(aegt-aegtss), -aegtss, -aegt10, -aegt2_5
+         write (UNIT=o_E_unit,FMT="(5(f12.6),' ')",ADVANCE="NO") -aegt, -aegtcs, -aegtss, -aegt10, -aegt2_5
          write (UNIT=o_E_unit,FMT="('# WEPS erosion day mon yr',2(1x,i2),2x,i4)",ADVANCE="NO") day, mon, yr
          write (UNIT=o_E_unit,FMT="(A)",ADVANCE="YES") ' (loss values are positive - deposition values are negative)'
       else
-         write (UNIT=o_E_unit,FMT="(5(f12.6),' ')",ADVANCE="NO") -aegt, -(aegt-aegtss), -aegtss, -aegt10, -aegt2_5
+         write (UNIT=o_E_unit,FMT="(5(f12.6),' ')",ADVANCE="NO") -aegt, -aegtcs, -aegtss, -aegt10, -aegt2_5
          write (UNIT=o_E_unit,FMT="(A)",ADVANCE="NO") trim(input_filename)
          write (UNIT=o_E_unit,FMT="(A)",ADVANCE="YES") ' (loss values are positive - deposition values are negative)'
       end if
@@ -576,15 +581,15 @@ module sae_in_out_mod
        write (sgrd_u,*) '     Total    salt/creep      susp       PM10        PM2.5'
        write (sgrd_u,*) '     egt                      egtss      egt10       egt2_5'
        write (sgrd_u,*) '   -----------------------kg/m^2---------------------------'
-       write (sgrd_u,15)    aegt, aegt-aegtss, aegtss, aegt10, aegt2_5
+       write (sgrd_u,fmt="(1x, 3(f12.4,2x), 2(f12.6,2x))")    aegt, aegtcs, aegtss, aegt10, aegt2_5
        write (sgrd_u,*)
        write (sgrd_u,*) '**Averages - Crossing Boundaries '
        write (sgrd_u,*) 'Location      Total  Salt/Creep   Susp    PM10     PM2_5'
        write (sgrd_u,*) '--------------------------kg/m--------------------------'
-       write (sgrd_u,21) topt+topss, topt, topss, top10, top2_5
-       write (sgrd_u,22) bott+botss, bott, botss, bot10, bot2_5
-       write (sgrd_u,23) ritt+ritss, ritt, ritss, rit10, rit2_5
-       write (sgrd_u,24) lftt+lftss, lftt, lftss, lft10, lft2_5
+       write (sgrd_u,fmt="(1x, 'top   ', 1x, 5(f9.2,1x))") topt, topcs, topss, top10, top2_5
+       write (sgrd_u,fmt="(1x, 'bottom', 1x, 5(f9.2,1x))") bott, botcs, botss, bot10, bot2_5
+       write (sgrd_u,fmt="(1x, 'right ', 1x, 5(f9.2,1x))") ritt, ritcs, ritss, rit10, rit2_5
+       write (sgrd_u,fmt="(1x, 'left  ', 1x, 5(f9.2,1x))") lftt, lftcs, lftss, lft10, lft2_5
        write (sgrd_u,*)
        write (sgrd_u,*) '   Comparison of interior & boundary loss'
        write (sgrd_u,*) '      interior       boundary    int/bnd ratio'
@@ -850,8 +855,7 @@ module sae_in_out_mod
    subroutine sb2out (jj, nn, hr, o_unit, cellstate)
 
 !     + + + PURPOSE + + +
-!     To print to file tst.out some key variables used in erosion
-!     use wind direction of 270 to see output along downwind direction
+!     To print to file some key variables used in erosion
 
       use datetime_mod, only: caldat
       use erosion_data_struct_defs, only: cellsurfacestate, ntstep
@@ -926,7 +930,7 @@ module sae_in_out_mod
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
             'Cumulative Saltation/Creep Soil Loss', 'salt/creep soil loss', '(kg/m^2)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)")(cellstate(i,j)%egt-cellstate(i,j)%egtss,i=1,imax-1)
+        write (o_unit, fmt="(500f12.4)")(cellstate(i,j)%egtcs,i=1,imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
 
@@ -1041,6 +1045,95 @@ module sae_in_out_mod
         write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%smlos, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
+
+      ! input fluxes
+      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Total Input Flux', 'total input flux', '(kg/m/s)'
+      do j = jmax-1, 1, -1
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qi, i = 1, imax-1)
+      end do
+      write(o_unit,fmt="(' </grid data>')")
+
+      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Saltation/Creep Input Flux', 'saltation/creep input flux', '(kg/m/s)'
+      do j = jmax-1, 1, -1
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qi-cellstate(i,j)%qssi, i = 1, imax-1)
+      end do
+      write(o_unit,fmt="(' </grid data>')")
+
+      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Suspension Input Flux', 'suspension input flux', '(kg/m/s)'
+      do j = jmax-1, 1, -1
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qssi, i = 1, imax-1)
+      end do
+      write(o_unit,fmt="(' </grid data>')")
+
+      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell PM10 Input Flux', 'pm10 input flux', '(kg/m/s)'
+      do j = jmax-1, 1, -1
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%q10i, i = 1, imax-1)
+      end do
+      write(o_unit,fmt="(' </grid data>')")
+
+      ! output fluxes
+      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Total Output Flux', 'total output flux', '(kg/m/s)'
+      do j = jmax-1, 1, -1
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qo, i = 1, imax-1)
+      end do
+      write(o_unit,fmt="(' </grid data>')")
+
+      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Saltation/Creep Output Flux', 'saltation/creep output flux', '(kg/m/s)'
+      do j = jmax-1, 1, -1
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qo-cellstate(i,j)%qsso, i = 1, imax-1)
+      end do
+      write(o_unit,fmt="(' </grid data>')")
+
+      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Suspension Output Flux', 'suspension output flux', '(kg/m/s)'
+      do j = jmax-1, 1, -1
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qsso, i = 1, imax-1)
+      end do
+      write(o_unit,fmt="(' </grid data>')")
+
+      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell PM10 Output Flux', 'pm10 output flux', '(kg/m/s)'
+      do j = jmax-1, 1, -1
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%q10o, i = 1, imax-1)
+      end do
+      write(o_unit,fmt="(' </grid data>')")
+
+      ! delta fluxes
+      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Total Flux Change', 'total flux change', '(kg/m/s)'
+      do j = jmax-1, 1, -1
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qo-cellstate(i,j)%qi, i = 1, imax-1)
+      end do
+      write(o_unit,fmt="(' </grid data>')")
+
+      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Saltation/Creep Flux Change', 'saltation/creep flux change', '(kg/m/s)'
+      do j = jmax-1, 1, -1
+        write (o_unit, fmt="(500f12.4)") ( (cellstate(i,j)%qo-cellstate(i,j)%qsso) &
+                                         - (cellstate(i,j)%qi-cellstate(i,j)%qssi), i = 1, imax-1)
+      end do
+      write(o_unit,fmt="(' </grid data>')")
+
+      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Suspension Flux Change', 'suspension flux change', '(kg/m/s)'
+      do j = jmax-1, 1, -1
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qsso-cellstate(i,j)%qssi, i = 1, imax-1)
+      end do
+      write(o_unit,fmt="(' </grid data>')")
+
+      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell PM10 Flux Change', 'pm10 flux change', '(kg/m/s)'
+      do j = jmax-1, 1, -1
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%q10o-cellstate(i,j)%q10i, i = 1, imax-1)
+      end do
+      write(o_unit,fmt="(' </grid data>')")
+
       write (o_unit,*)
 
 !!      endif
@@ -1115,12 +1208,12 @@ module sae_in_out_mod
       integer j,i
       integer yr, mo, da
       save    yr, mo, da
-      real    tims, aegtp, aegtssp, aegt10p, aegt2_5p
-      save    tims, aegtp, aegtssp, aegt10p, aegt2_5p
+      real    tims, aegtp, aegtcsp, aegtssp, aegt10p, aegt2_5p
+      save    tims, aegtp, aegtcsp, aegtssp, aegt10p, aegt2_5p
  !     real    hr
  !     save    hr
-      real    aegt, aegtss, aegt10, aegt2_5 ! these have local scope
-      real    emittot, emitss, emit10, emit2_5, tt
+      real    aegt, aegtcs, aegtss, aegt10, aegt2_5 ! these have local scope
+      real    emittot, emitcs, emitss, emit10, emit2_5, tt
 
 !     +++ OUTPUT FORMATS +++
 
@@ -1159,6 +1252,7 @@ module sae_in_out_mod
       if( first_emit ) then
           first_emit = .false.
           aegtp   = 0.0
+          aegtcsp = 0.0
           aegtssp = 0.0
           aegt10p = 0.0
           aegt2_5p = 0.0
@@ -1169,6 +1263,7 @@ module sae_in_out_mod
       call caldat( mksaeout%jday, da, mo, yr) ! Set day, month and year
 
       aegt   = 0.0
+      aegtcs = 0.0
       aegtss = 0.0
       aegt10 = 0.0
       aegt2_5 = 0.0
@@ -1176,6 +1271,7 @@ module sae_in_out_mod
       do  j=1,jmax-1
          do  i= 1, imax-1
             aegt= aegt + cellstate(i,j)%egt
+            aegtcs = aegtcs + cellstate(i,j)%egtcs
             aegtss = aegtss + cellstate(i,j)%egtss
             aegt10 = aegt10 + cellstate(i,j)%egt10
             aegt2_5 = aegt2_5 + cellstate(i,j)%egt2_5
@@ -1184,23 +1280,26 @@ module sae_in_out_mod
 
       tt     = (imax-1)*(jmax-1)
       aegt   = - aegt/tt     ! change signs to positive=emission
+      aegtcs = - aegtcs/tt
       aegtss = - aegtss/tt
       aegt10 = - aegt10/tt
       aegt2_5 = - aegt2_5/tt
 
       emittot = (aegt - aegtp)/tims
+      emitcs  = (aegtcs - aegtcsp)/tims
       emitss  = (aegtss - aegtssp)/tims
       emit10  = (aegt10 - aegt10p)/tims
       emit2_5  = (aegt2_5 - aegt2_5p)/tims
 
 !     Save prior hour average emission
       aegtp   =  aegt
+      aegtcsp =  aegtcs
       aegtssp =  aegtss
       aegt10p =  aegt10
       aegt2_5p =  aegt2_5
 
 !     Write to emit.out file
-      write (ounit,120) yr, mo, da, hhr, ws, emittot, emittot-emitss, emitss, emit10, emit2_5
+      write (ounit,120) yr, mo, da, hhr, ws, emittot, emitcs, emitss, emit10, emit2_5
 
    end subroutine sbemit
 

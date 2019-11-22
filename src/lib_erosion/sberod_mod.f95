@@ -10,7 +10,7 @@ module sberod_mod
     subroutine sberod (time, SURF_UPD_FLG, subrsurf, cellstate)
 
 !     To calc loss/dep of saltation/creep, susp. and PM-10 at cells
-!     To call sbqout to calc. qo, qsso, q10o for each cell
+!     To call sbqout to calc. qcso, qsso, q10o for each cell
 !     To calc. deposition in the boundary cells of sim. region
 !     To update the threshold friction velocity as the loose material
 !         depletes upwind and increases downwind
@@ -42,17 +42,18 @@ module sberod_mod
       real :: dd  ! discharge scalar
 
       ! these define values for each cell
-      real :: qi     ! input discharge (total)
-      real :: qssi   ! input discharge (suspension)
-      real :: q10i   ! input discharge (pm10)
-      real :: qo     ! output discharge (total)
-      real :: qsso   ! output discharge (suspension)
-      real :: q10o   ! output discharge (pm10)
+      !real :: qcsi   ! input discharge (creep/saltation)
+      !real :: qssi   ! input discharge (suspension)
+      !real :: q10i   ! input discharge (pm10)
+      !real :: qcso   ! output discharge (creep/saltation)
+      !real :: qsso   ! output discharge (suspension)
+      !real :: q10o   ! output discharge (pm10)
       real :: eg     ! accumulation (total), loss is negative
+      real :: egcs   ! accumulation (creep/saltation), loss is negative
       real :: egss   ! accumulation (suspension), loss is negative
       real :: eg10   ! accumulation (pm10), loss is negative
-      real :: qx(0:imax, 0:jmax)    ! discharge in x direction (total)
-      real :: qy(0:imax, 0:jmax)    ! discharge in y direction (total)
+      real :: qcsx(0:imax, 0:jmax)  ! discharge in x direction (creep/saltation)
+      real :: qcsy(0:imax, 0:jmax)  ! discharge in y direction (creep/saltation)
       real :: qssx(0:imax, 0:jmax)  ! discharge in x direction (suspension)
       real :: qssy(0:imax, 0:jmax)  ! discharge in y direction (suspension)
       real :: q10x(0:imax, 0:jmax)  ! discharge in x direction (pm10)
@@ -69,8 +70,8 @@ module sberod_mod
       ! set initial conditions to zero
       do 50 j = 0, jmax
       do 45 i = 0, imax
-        qx(i,j)    = 0.
-        qy(i,j)    = 0.
+        qcsx(i,j)    = 0.
+        qcsy(i,j)    = 0.
         qssx(i,j)  = 0.
         qssy(i,j)  = 0.
         q10x(i,j)  = 0.
@@ -104,9 +105,9 @@ module sberod_mod
         do j = i4, i5, i6
 
           ! calculate input discharge
-          qi   = (qx(i-i3,j)*jy   + qy(i,j-i6)*ix)/ly
-          qssi = (qssx(i-i3,j)*jy + qssy(i,j-i6)*ix)/ly
-          q10i = (q10x(i-i3,j)*jy + q10y(i,j-i6)*ix)/ly
+          cellstate(i,j)%qcsi = (qcsx(i-i3,j)*jy + qcsy(i,j-i6)*ix)/ly
+          cellstate(i,j)%qssi = (qssx(i-i3,j)*jy + qssy(i,j-i6)*ix)/ly
+          cellstate(i,j)%q10i = (q10x(i-i3,j)*jy + q10y(i,j-i6)*ix)/ly
 
           ! calc. output discharge
           icsr = cellstate(i,j)%csr
@@ -123,20 +124,21 @@ module sberod_mod
            subrsurf(icsr)%abffcv, time, &
            subrsurf(icsr)%acanag, subrsurf(icsr)%acancr, subrsurf(icsr)%asf10an, &
            subrsurf(icsr)%asf10en, subrsurf(icsr)%asf10bk, &
-           lx, qi, qssi, q10i, &
+           lx, cellstate(i,j)%qcsi, cellstate(i,j)%qssi, cellstate(i,j)%q10i, &
            cellstate(i,j)%dmlos, cellstate(i,j)%sf84mn, subrsurf(icsr)%sf84ic, subrsurf(icsr)%sf10ic, &  !edit ljh 1-22-05
            subrsurf(icsr)%bsl(1)%asvroc, cellstate(i,j)%smaglosmx, &
-           qo, qsso, q10o )
+           cellstate(i,j)%qcso, cellstate(i,j)%qsso, cellstate(i,j)%q10o )
 
           call timer(TIMSBQOUT,TIMSTOP)
           call timer(TIMSBEROD,TIMSTART)
 
           ! update output accumulation arrays
           ! soil loss is negative:
-          eg =   -time*(qo - qi)/lx
-          egss = -time*(qsso - qssi)/lx
-          eg10 = -time*(q10o - q10i)/lx
-          cellstate(i,j)%egt   = cellstate(i,j)%egt + eg + egss
+          egcs = -time*(cellstate(i,j)%qcso - cellstate(i,j)%qcsi)/lx
+          egss = -time*(cellstate(i,j)%qsso - cellstate(i,j)%qssi)/lx
+          eg10 = -time*(cellstate(i,j)%q10o - cellstate(i,j)%q10i)/lx
+          cellstate(i,j)%egt   = cellstate(i,j)%egt + egcs + egss
+          cellstate(i,j)%egtcs = cellstate(i,j)%egtcs + egcs
           cellstate(i,j)%egtss = cellstate(i,j)%egtss + egss
           cellstate(i,j)%egt10 = cellstate(i,j)%egt10 + eg10
           cellstate(i,j)%egt2_5 = pm2_5_pm10 * cellstate(i,j)%egt10
@@ -146,15 +148,15 @@ module sberod_mod
           bb = abs(-jy*sin_awa)
           dd = abs(aa)+abs(bb)
 
-          qx(i,j)   = qo*ly*bb/(jy*dd)
-          qy(i,j)   = qo*ly*aa/(ix*dd)
-          qssx(i,j) = qsso*ly*bb/(jy*dd)
-          qssy(i,j) = qsso*ly*aa/(ix*dd)
-          q10x(i,j) = q10o*ly*bb/(jy*dd)
-          q10y(i,j) = q10o*ly*aa/(ix*dd)
+          qcsx(i,j) = cellstate(i,j)%qcso*ly*bb/(jy*dd)
+          qcsy(i,j) = cellstate(i,j)%qcso*ly*aa/(ix*dd)
+          qssx(i,j) = cellstate(i,j)%qsso*ly*bb/(jy*dd)
+          qssy(i,j) = cellstate(i,j)%qsso*ly*aa/(ix*dd)
+          q10x(i,j) = cellstate(i,j)%q10o*ly*bb/(jy*dd)
+          q10y(i,j) = cellstate(i,j)%q10o*ly*aa/(ix*dd)
 
-!          qx(i,j)   = -qo*sin_awa
-!          qy(i,j)   = -(qo + (qo - qi)*cc)*cos_awa
+!          qcsx(i,j) = -qcso*sin_awa
+!          qcsy(i,j)   = -(qcso + (qcso - qcsi)*cc)*cos_awa
 !          qssx(i,j) = -qsso*sin_awa
 !          qssy(i,j) = -(qsso + (qsso -qssi)*cc)*cos_awa
 !          q10x(i,j) = -q10o*sin_awa
@@ -163,30 +165,25 @@ module sberod_mod
           ! update salt/creep, suspension & pm-10 crossing boundary
           ! note the units are kg/m and different than interior cells and
           ! the meaning also differs.
-          ! egt = salt/creep discharge (not total)
+          ! egt   = total discharge
+          ! egtcs = salt/creep discharge
           ! egtss = suspension discharge
           ! egt10 = pm-10 discharge
 
           ! calculate scalar discharge crossing borders
           if (i .eq. i2) then
-            if (qx(i,j) .gt. 1.0e-10) then
-              cellstate(i2+i3,j)%egt = cellstate(i2+i3,j)%egt + time*qx(i2, j)
-            endif
-            if (qssx(i,j) .gt. 1.0e-10) then
-              cellstate(i2+i3,j)%egtss = cellstate(i2+i3,j)%egtss + time*qssx(i2, j)
-              cellstate(i2+i3,j)%egt10 = cellstate(i2+i3,j)%egt10 + time*q10x(i2, j)
-              cellstate(i2+i3,j)%egt2_5 = pm2_5_pm10 * cellstate(i2+i3,j)%egt10
-            endif
+            cellstate(i2+i3,j)%egt = cellstate(i2+i3,j)%egt + time * (qcsx(i2, j) + qssx(i2, j))
+            cellstate(i2+i3,j)%egtcs = cellstate(i2+i3,j)%egtcs + time*qcsx(i2, j)
+            cellstate(i2+i3,j)%egtss = cellstate(i2+i3,j)%egtss + time*qssx(i2, j)
+            cellstate(i2+i3,j)%egt10 = cellstate(i2+i3,j)%egt10 + time*q10x(i2, j)
+            cellstate(i2+i3,j)%egt2_5 = pm2_5_pm10 * cellstate(i2+i3,j)%egt10
           endif
           if (j .eq. i5) then
-            if (qy(i,j) .gt. 1.0e-10) then
-              cellstate(i,i5+i6)%egt = cellstate(i,i5+i6)%egt + time*qy(i,i5)
-            endif
-            if (qssy(i,j) .gt. 1.0e-10) then
-              cellstate(i,i5+i6)%egtss = cellstate(i,i5+i6)%egtss + time*qssy(i,i5)
-              cellstate(i,i5+i6)%egt10 = cellstate(i,i5+i6)%egt10 + time*q10y(i,i5)
-              cellstate(i,i5+i6)%egt2_5 = pm2_5_pm10 * cellstate(i,i5+i6)%egt10
-            endif
+            cellstate(i,i5+i6)%egt = cellstate(i,i5+i6)%egt + time * (qcsy(i,i5) + qssy(i,i5))
+            cellstate(i,i5+i6)%egtcs = cellstate(i,i5+i6)%egtcs + time*qcsy(i,i5)
+            cellstate(i,i5+i6)%egtss = cellstate(i,i5+i6)%egtss + time*qssy(i,i5)
+            cellstate(i,i5+i6)%egt10 = cellstate(i,i5+i6)%egt10 + time*q10y(i,i5)
+            cellstate(i,i5+i6)%egt2_5 = pm2_5_pm10 * cellstate(i,i5+i6)%egt10
           endif
 
         end do
