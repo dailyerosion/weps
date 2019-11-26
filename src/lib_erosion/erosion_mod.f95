@@ -45,12 +45,13 @@ module erosion_mod
 !     +++ LOCAL VARIABLES +++
       logical :: first_emit  ! pass to sbemit on first entry to zero out daily accumulators
       integer :: luo_saeinp  ! used here to tell saeinp to make it's own file
-      integer :: i,j      ! index
+      integer :: idx      ! time step loop index    
+      integer :: ndx      ! sub_ntstep loop index
       integer :: wustfl   ! flag to update threshold friction velocity
       integer :: icsr     ! index of current subregion (now only one)
       integer :: ipool    ! index of brcdInput pool
 !      integer :: nhill    ! number of hills
-      integer :: n        ! number of ??
+      integer :: ntsub     ! number of steps within a single "ntstep" to obtain the desired update interval
       integer :: hidx     ! hour index (for referencing surface water content)
       real :: wuref      ! reference wind speed (m/s) 
       real :: rusust_max     ! ratio of friction vel. to threshold friction vel. simulation region maximum
@@ -107,9 +108,9 @@ module erosion_mod
       ! presently, there is only one direction for each day
       ! erosion stand alone may want to input wind speed
       ! and direction as subhourly pairs. If so, this can be disabled.
-      do i = 1, ntstep
-          subday(i)%awdir = awadir
-         !  rusust_preros(i) = 0.0
+      do idx = 1, ntstep
+          subday(idx)%awdir = awadir
+         !  rusust_preros(idx) = 0.0
       end do
 
       ! set ratio: defined as the ratio wus/wust
@@ -137,11 +138,11 @@ module erosion_mod
         subrsurf(icsr)%sf84ic = subrsurf(icsr)%sfd84
         subrsurf(icsr)%sf84ic = min (0.9999, max(subrsurf(icsr)%sf84ic,0.0001))    ! edit ljh 1-23-05
      
-        do i=1, ntstep
+        do idx = 1, ntstep
 
           ! calc. ridge spacing parallel the wind
           if (subrsurf(icsr)%aszrgh > 5.0) then
-            sina = abs(sin(degtorad*abs(subday(i)%awdir - subrsurf(icsr)%asargo)))
+            sina = abs(sin(degtorad*abs(subday(idx)%awdir - subrsurf(icsr)%asargo)))
             sina = max(0.10, sina)
             subrsurf(icsr)%sxprg = subrsurf(icsr)%asxrgs/sina
               if (subrsurf(icsr)%asxdks > subrsurf(icsr)%asxrgs/3.) then
@@ -165,22 +166,22 @@ module erosion_mod
                      wzoflg, wzorg, wzorr, wzzo, wzzov, awzzo )
 
           ! find hour index (1-24)
-          hidx = int(i*23.75/ntstep) + 1
+          hidx = int(idx*23.75/ntstep) + 1
 
           ! (comparison) anemometer location surface friction velocity
-          wus_anemom = sbwus( anemht, awzzo, subday(i)%awu, awzzo, 0.0 )
+          wus_anemom = sbwus( anemht, awzzo, subday(idx)%awu, awzzo, 0.0 )
 
           ! (comparison) site random roughness surface friction velocity
-          wus_random = sbwus( anemht, awzzo, subday(i)%awu, wzorr, 0.0 )
+          wus_random = sbwus( anemht, awzzo, subday(idx)%awu, wzorr, 0.0 )
 
           ! (comparison) site ridge (pattern) roughness surface friction velocity
-          wus_ridge = sbwus( anemht, awzzo, subday(i)%awu, wzorg, 0.0 )
+          wus_ridge = sbwus( anemht, awzzo, subday(idx)%awu, wzorg, 0.0 )
 
           ! (comparison) site biodrag surface friction velocity
-          wus_biodrag = sbwus( anemht, awzzo, subday(i)%awu, awzzo, brcd )
+          wus_biodrag = sbwus( anemht, awzzo, subday(idx)%awu, awzzo, brcd )
 
           ! Compute soil surface friction velocity (wus)
-          wus = sbwus( anemht, awzzo, subday(i)%awu, wzzov, brcd )
+          wus = sbwus( anemht, awzzo, subday(idx)%awu, wzzov, brcd )
 
           ! Compute friction velocity threshold for entrainment (wust) and
           ! transport friction velocity threshold (wusp)
@@ -311,9 +312,9 @@ module erosion_mod
       wuref = awudmx
 
       ! step thru each periodic wind speed
-      do i = 1, ntstep
+      do idx = 1, ntstep
         ! check for erosive wind speed
-        if (subday(i)%awu .lt. min_erosion_awu) then
+        if (subday(idx)%awu .lt. min_erosion_awu) then
           hr = hr + (24.0/ntstep)  !No sub_ntstep's (no erosion calculated for this 'ntstep'
         else
 
@@ -326,12 +327,12 @@ module erosion_mod
           !   prev_dir = subday(1)%awdir
           !end if
 
-          !rut = rusust_preros(i)  This change sabotaged code logic
+          !rut = rusust_preros(idx)  This change sabotaged code logic
           
-          rut = rusust_max*subday(i)%awu/wuref
+          rut = rusust_max*subday(idx)%awu/wuref
           !if (wustfl < 1) then
           ! no erosion aka surface updating has occurred yet
-          !if( rusust_preros(i) .gt. wr ) then
+          !if( rusust_preros(idx) .gt. wr ) then
              ! erosion will occur, updated surface requires full grid calculation
           !  wustfl = 1
 
@@ -366,67 +367,67 @@ module erosion_mod
             ! evenly divisble into the number of seconds in a day, the surface updating
             ! will occur at the computed interval of: 
 
-            !       update_interval = SEC_PER_DAY/(ntstep * n)   ! (seconds)
+            !       update_interval = SEC_PER_DAY/(ntstep * ntsub)   ! (seconds)
 
             ! if update interval is 15 minutes (900 seconds):
-            !       ntstep = 24, then n = 4
-            !       ntstep = 96, then n = 1
+            !       ntstep = 24, then ntsub = 4
+            !       ntstep = 96, then ntsub = 1
             ! if update interval is 1 minute:
-            !       ntstep = 24, then n = 60
-            !       ntstep = 96, then n = 15
+            !       ntstep = 24, then ntsub = 60
+            !       ntstep = 96, then ntsub = 15
             ! if update interval is 10 seconds:
-            !       ntstep = 24, then n = 360
-            !       ntstep = 96, then n = 90
+            !       ntstep = 24, then ntsub = 360
+            !       ntstep = 96, then ntsub = 90
             ! if update interval is 6 seconds:
-            !       ntstep = 24, then n = 600
-            !       ntstep = 96, then n = 150
+            !       ntstep = 24, then ntsub = 600
+            !       ntstep = 96, then ntsub = 150
             ! if update interval is 1 second:
-            !       ntstep = 24, then n = 3600
-            !       ntstep = 96, then n = 900
+            !       ntstep = 24, then ntsub = 3600
+            !       ntstep = 96, then ntsub = 900
 
-            ! NOTE: "n" is the number of steps within a single "ntstep" to obtain the desired update interval.
+            ! NOTE: "ntsub" is the number of steps within a single "ntstep" to obtain the desired update interval.
             if (erod_interval > 0) then   !overide the default update interval
                ! check for even divisibility done in tsterode main program
-               n = SEC_PER_DAY/(erod_interval*ntstep)
-               !write(6,*) 'erod_interval and n',erod_interval, n
+               ntsub = SEC_PER_DAY/(erod_interval*ntstep)
+               !write(6,*) 'erod_interval and ntsub',erod_interval, ntsub
             else  ! default surface updating behavior
 
                ! force calculation to 15 minute time steps:
                ! useful to allow enough updates of surface
-               n = max(1,96/ntstep)
+               ntsub = max(1,96/ntstep)
                ! modify time step to more or less than 15 minutes
-               !if (subday(i)%awu .lt. 15.0) then
+               !if (subday(idx)%awu .lt. 15.0) then
                ! if (rut < 1.1 ) then
-               !    n = n - 2
+               !    ntsub = ntsub - 2
                ! elseif (rut > 1.4) then
-               !    n = n*2
+               !    ntsub = ntsub * 2
                ! endif
-               !elseif (rut >1.4) then
-               !  n = n*4
+               !elseif (rut > 1.4) then
+               !  ntsub = ntsub * 4
                !else
-               !  n = n*2
+               !  ntsub = ntsub * 2
                !endif
 
-               ! est. n as fn. of approx max. erosive energy 9-6-06 LH
-               wuse = 0.06*subday(i)%awu
+               ! est. ntsub as fn. of approx max. erosive energy 9-6-06 LH
+               wuse = 0.06*subday(idx)%awu
                wuste = wuse/rut
                enge  = wuse*wuse*(wuse-wuste)
-               n = nint((0.5 + 4.6*enge)*n)
+               ntsub = nint((0.5 + 4.6*enge) * ntsub)
    
                ! insure at least 1 time step
-               n = max(1,n)
+               ntsub = max(1, ntsub)
             endif
 
             ! calculate the time step in seconds
-            time = SEC_PER_DAY/(n*ntstep)
+            time = SEC_PER_DAY/(ntsub * ntstep)
 
-            sub_ntstep = (24.0/ntstep)/n  !fraction of hr == sub_ntstep
+            sub_ntstep = (24.0/ntstep)/ntsub  !fraction of hr == sub_ntstep
 
             ! start the inner loop time step
-            j = 1
+            ndx = 1
             ! Let hrs be sub_ntstep interval hr and keep current ntstep hr
             hrs = hr
-            do while (j <= n)
+            do while (ndx <= ntsub)
 
                ! prepare to update rusust and wus.
                ! note: when rusust= <0.1, sbaglos does not calculate.
@@ -439,8 +440,8 @@ module erosion_mod
                ! updates the fric. vel and threshold fric. vel on grid
                ! and calc. max. for  rusust = wus/wust
                ! this subroutine calls sbzo and sbwus
-               call sbwind( wustfl, subday(i)%awu, ntstep, i, rusust_max, subrsurf, cellstate )
-               wuref = subday(i)%awu
+               call sbwind( wustfl, subday(idx)%awu, ntstep, idx, rusust_max, subrsurf, cellstate )
+               wuref = subday(idx)%awu
                wr = 1
 
                ! stop sbwind timer and start general timer
@@ -451,7 +452,7 @@ module erosion_mod
                   ! erosion will occur this time step
                   ! wustfl = 1
                   if (btest(am0efl,3)) then
-                     call sb1out (j, n, hrs, subday(i)%awu, subday(i)%awdir, luo_sgrd, subrsurf(1), cellstate)
+                     call sb1out (ndx, ntsub, hrs, subday(idx)%awu, subday(idx)%awdir, luo_sgrd, subrsurf(1), cellstate)
                   endif
 
                   ! stop general timer and start sberod timer
@@ -467,24 +468,24 @@ module erosion_mod
                   hrs = hrs + sub_ntstep
 
                   if (btest(am0efl,3)) then
-                     call sb2out (j, n, hrs, luo_sgrd, cellstate)
+                     call sb2out (ndx, ntsub, hrs, luo_sgrd, cellstate)
                   endif
 
-                  j = j + 1
+                  ndx = ndx + 1
                else
                   ! print out initial state, even if we never call sberode()
-                  if (btest(am0efl,3).and.(j .eq. 1).and.(i .eq. 1)) then
-                     call sbwind( wustfl, subday(i)%awu, ntstep, i, rusust_max, subrsurf, cellstate )
-                     wuref = subday(i)%awu
-                     call sb1out (j, n, hrs, subday(i)%awu, subday(i)%awdir, luo_sgrd, subrsurf(1), cellstate)
+                  if (btest(am0efl,3).and.(ndx .eq. 1).and.(idx .eq. 1)) then
+                     call sbwind( wustfl, subday(idx)%awu, ntstep, idx, rusust_max, subrsurf, cellstate )
+                     wuref = subday(idx)%awu
+                     call sb1out (ndx, ntsub, hrs, subday(idx)%awu, subday(idx)%awdir, luo_sgrd, subrsurf(1), cellstate)
                   endif
 
                   ! set to get out of inner loop and go to next wind speed - wustfl = 0
-                  j = n + 1
+                  ndx = ntsub + 1
                endif
    
                ! If we are ready to leave the sub_ntstep loop, update "hr" and go
-               if (j .eq. (n+1)) then
+               if (ndx .eq. (ntsub + 1)) then
                   ! skip to next "nstep" hr - don't care if all sub_ntsteps don't equal one ntstep
                   hr = hr + (24.0/ntstep)
                end if             
@@ -493,9 +494,9 @@ module erosion_mod
         end if
 
         if (btest(am0efl,2)) then
-           ! write(0,*) 'i is:', i, 'hr is:', hr
+           ! write(0,*) 'idx is:', idx, 'hr is:', hr
            ! Note that we use "hr" not "hrs" here so we report the end of the "ntstep" hr period
-           call sbemit (luo_emit, subday(i)%awu, hr, cellstate, first_emit)  !Should only write data here
+           call sbemit (luo_emit, subday(idx)%awu, hr, cellstate, first_emit)  !Should only write data here
         end if
 
       end do

@@ -1057,7 +1057,7 @@ module sae_in_out_mod
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
            'Cell Saltation/Creep Input Flux', 'saltation/creep input flux', '(kg/m/s)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qi-cellstate(i,j)%qssi, i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qcsi, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
 
@@ -1086,7 +1086,7 @@ module sae_in_out_mod
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
            'Cell Saltation/Creep Output Flux', 'saltation/creep output flux', '(kg/m/s)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qo-cellstate(i,j)%qsso, i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qcso, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
 
@@ -1115,8 +1115,7 @@ module sae_in_out_mod
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
            'Cell Saltation/Creep Flux Change', 'saltation/creep flux change', '(kg/m/s)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") ( (cellstate(i,j)%qo-cellstate(i,j)%qsso) &
-                                         - (cellstate(i,j)%qi-cellstate(i,j)%qssi), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") ( cellstate(i,j)%qcso-cellstate(i,j)%qcsi, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
 

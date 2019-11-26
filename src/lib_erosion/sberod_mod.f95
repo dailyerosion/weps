@@ -70,8 +70,8 @@ module sberod_mod
       ! set initial conditions to zero
       do 50 j = 0, jmax
       do 45 i = 0, imax
-        qcsx(i,j)    = 0.
-        qcsy(i,j)    = 0.
+        qcsx(i,j)  = 0.
+        qcsy(i,j)  = 0.
         qssx(i,j)  = 0.
         qssy(i,j)  = 0.
         q10x(i,j)  = 0.
@@ -131,6 +131,10 @@ module sberod_mod
 
           call timer(TIMSBQOUT,TIMSTOP)
           call timer(TIMSBEROD,TIMSTART)
+
+          ! update flux arrays
+          cellstate(i,j)%qi = cellstate(i,j)%qcsi + cellstate(i,j)%qssi
+          cellstate(i,j)%qo = cellstate(i,j)%qcso + cellstate(i,j)%qsso
 
           ! update output accumulation arrays
           ! soil loss is negative:
