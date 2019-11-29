@@ -22,6 +22,7 @@ module erosion_mod
       use erosion_data_struct_defs, only: in_sweep, subregionsurfacestate, cellsurfacestate, threshold, &
                                           ntstep, erod_interval, anemht, awzzo, &
                                           wzoflg, awadir, awudmx, subday, am0efl
+      use erosion_data_struct_defs, only: initflag
       use sae_in_out_mod, only: mksaeinp, mksaeout, saeinp, daily_erodout, sb1out, sb2out, sbemit
       use p1unconv_mod, only: SEC_PER_DAY, degtorad
       use timer_mod, only: timer, TIMEROS, TIMSBEROD, TIMSBWIND, TIMSTART, TIMSTOP
@@ -310,6 +311,9 @@ module erosion_mod
 
       ! set ref wind speed to daily max
       wuref = awudmx
+
+      ! controls daily detailed output, printing daily header
+      initflag = 0
 
       ! step thru each periodic wind speed
       do idx = 1, ntstep

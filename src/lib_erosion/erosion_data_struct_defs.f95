@@ -192,6 +192,9 @@ module erosion_data_struct_defs
 
      type(subregionsurfacestate), dimension(:), allocatable :: subrsurf   ! subregion surface state needed by erosion
 
+     ! erosion detailed grid output flags and counter
+     integer :: initflag, ipd, npd
+
 contains
 
   function create_cellsurfacestate(xdim, ydim) result(cellstate)

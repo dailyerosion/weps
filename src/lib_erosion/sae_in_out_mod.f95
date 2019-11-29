@@ -615,6 +615,7 @@ module sae_in_out_mod
 
       use datetime_mod, only: get_systime_string, caldat
       use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, awzypt, anemht, wzoflg, ntstep
+      use erosion_data_struct_defs, only: initflag, ipd, npd
       use grid_mod, only: awa, imax, jmax, amasim, amxsim
 
 !     + + + ARGUEMENT DECLARATIONS + + +
@@ -628,13 +629,8 @@ module sae_in_out_mod
 
 !     + + + LOCAL VARIABLES + + +
       character(len=21) :: rundatetime
-      !integer m, n, k
-      integer initflag, ipd, npd
-      save    initflag, ipd, npd
-      integer yr, mo, da
-      real    hhrr, tims
-      save    yr, mo, da, hhrr, tims
-      integer i,j, kbr
+      integer :: yr, mo, da
+      integer :: i, j, kbr
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -644,9 +640,7 @@ module sae_in_out_mod
         ipd = 0
         npd = nn * ntstep
 
-        tims = 3600*24/ntstep     ! seconds in each emission period
         call caldat( mksaeout%jday, da, mo, yr) ! Set day, month and year
-        hhrr = 0 - tims/3600        !Pre-set hhrr so we get end of period times
 
         write (o_unit,*)
         write (o_unit,*) 'OUT PUT from sb1out'
@@ -689,38 +683,27 @@ module sae_in_out_mod
         write(o_unit,fmt="(1x,5f8.2)") amasim, amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
         write (o_unit,*)
 
-       write (o_unit,*) "Surface properties"
-      write (o_unit,fmt="(a,f8.2,a)") "Ridge spacing parallel to wind direction", subrsurf%sxprg, " (mm)"
-      write (o_unit,fmt="(a,f5.2,a)") "Composite weighted average biomass height", subrsurf%abzht, " (m)"
-      write (o_unit,fmt="(a,f5.2,a)") "Biomass leaf area index", subrsurf%abrlai, " (m^2/m^2)"
-      write (o_unit,fmt="(a,f5.2,a)") "Biomass stem area index", subrsurf%abrsai, " (m^2/m^2)"
-      write (o_unit,fmt="(a,f5.2,a)") "Biomass flat cover", subrsurf%abffcv, " (m^2/m^2)"
+        write (o_unit,*) "Surface properties"
+        write (o_unit,fmt="(a,f8.2,a)") "Ridge spacing parallel to wind direction", subrsurf%sxprg, " (mm)"
+        write (o_unit,fmt="(a,f5.2,a)") "Composite weighted average biomass height", subrsurf%abzht, " (m)"
+        write (o_unit,fmt="(a,f5.2,a)") "Biomass leaf area index", subrsurf%abrlai, " (m^2/m^2)"
+        write (o_unit,fmt="(a,f5.2,a)") "Biomass stem area index", subrsurf%abrsai, " (m^2/m^2)"
+        write (o_unit,fmt="(a,f5.2,a)") "Biomass flat cover", subrsurf%abffcv, " (m^2/m^2)"
 
-      write (o_unit,fmt="(a,f8.2,a)") "Average yearly total precipitation ", awzypt, " (mm)"
-      write (o_unit,*)
-
-
+        write (o_unit,fmt="(a,f8.2,a)") "Average yearly total precipitation ", awzypt, " (mm)"
+        write (o_unit,*)
 
         write(o_unit,fmt="(1x,a)") "<field dimensions>"
-       write(o_unit,fmt="(1x,5f10.2)")amasim, amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
+        write(o_unit,fmt="(1x,5f10.2)")amasim, amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
         write(o_unit,fmt="(1x,a)") "</field dimensions>"
 
         write (o_unit,*)
-        initflag = 1    !     turn off heading output
-      endif
-
-      ipd = ipd + 1
-      if (hhrr .ge. 24) then
-         hhrr = tims/3600
-         call caldat( mksaeout%jday, da, mo, yr) ! Set day, month and year
-      else
-         hhrr = hhrr + tims/3600
       endif
 
       call caldat( mksaeout%jday, da, mo, yr) ! Set day, month and year
-!      write (o_unit, fmt="(a, 3(i3), f6.2, 4(i4)f7.2)") ' day mon yr hhrr upd_pd jj nn npd ',da,mo,yr,hr,ipd,jj,nn,npd,hhrr
+
       write (o_unit, fmt="(a, i5, 2(i3), f7.3, 4(i4))") ' yr mon day hr upd_pd jj nn(subpd) npd (sbqout 1)', &
-                                                          yr,mo, da, hr,ipd,   jj,nn,       npd
+                                                          yr,mo, da, hr, ipd,  jj, nn,      npd
       write (o_unit,*)
       write (o_unit, fmt="(a, f5.2, 2(f7.2))") ' pd wind speed, dir and dir rel to field ', ws, wdir, awa
       write (o_unit,*)
@@ -737,8 +720,289 @@ module sae_in_out_mod
       write (o_unit,fmt="(a,f5.2,a)") "Coefficient of abrasion of aggregates ", subrsurf%acanag
       write (o_unit,fmt="(a,f5.2,a)") "Coefficient of abrasion of crust ", subrsurf%acancr
 
-!Grid cell data
+      if (initflag .eq. 0) then
 
+        ! Grid cell data
+        ! Friction Velocity
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Surface Friction Velocity', 'friction velocity', '(m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%wus, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Threshold Surface Friction Velocity', 'threshold friction velocity', '(m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%wust, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Transport Threshold Surface Friction Velocity', 'transport threshold friction velocity', '(m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%wusp, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write (o_unit,*)
+
+        ! Emissions
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+             'Cumulative Total Soil Loss', 'soil loss', '(kg/m^2)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%egt, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Cumulative Saltation/Creep Soil Loss', 'salt/creep soil loss', '(kg/m^2)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)")(cellstate(i,j)%egtcs,i=1,imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Cumulative Suspension Soil Loss', 'suspension soil loss', '(kg/m^2)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%egtss, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Cumulative PM10 Soil Loss', 'PM10 soil loss', '(kg/m^2)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.6)") (cellstate(i,j)%egt10, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Cumulative PM2_5 Soil Loss', 'PM2_5 soil loss', '(kg/m^2)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.6)") (cellstate(i,j)%egt2_5, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        ! Grid Cell Surface properties
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Surface Random Roughness', 'random roughness', '(mm)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%slrr, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Surface Oriented Roughness', 'ridge height', '(mm)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%szrgh, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Surface Rock', 'surface volume rock fraction', '(m^3/m^3)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%svroc, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write (o_unit,*)
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Soil Agg. Size < 0.01','mass fraction < 0.01 mm size','(fract.)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf1, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Soil Agg. Size < 0.1', 'mass fraction < 0.1 mm size', '(fract.)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf10, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Soil Agg. Size < 0.84','mass fraction < 0.84 mm size','(fract.)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf84, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Soil Agg. Size < 2.0', 'mass fraction < 2.0 mm size', '(fract.)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf200, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Soil Agg. Size for u* to be the thresh. friction velocity', '"effective" mass fraction < 0.84 mm size', '(fract.)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf84mn, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Mobile soil removable from aggregated surface', 'mass removable', '(kg/m^2)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%smaglos, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Change in mobile soil on aggregated surface', 'net mass change', '(kg/m^2)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%dmlos, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        ! Crust properties
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Consolidated crust thickness', 'crust thickness', '(mm)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%szcr, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Fraction of Surface covered with Crust','crust cover','(fract.)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sfcr, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Fraction of Crusted Surface covered with Loose Erodible Soil', 'loose erodible material', '(fract.)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sflos, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+            'Mass of Loose Erodible Soil on Crusted Surface', 'loose erodible material', '(kg/m^2)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%smlos, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+        write (o_unit,*)
+
+        ! input fluxes
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Total Input Flux', 'total input flux', '(kg/m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qi, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Saltation/Creep Input Flux', 'saltation/creep input flux', '(kg/m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qcsi, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Suspension Input Flux', 'suspension input flux', '(kg/m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qssi, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell PM10 Input Flux', 'pm10 input flux', '(kg/m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%q10i, i = 1, imax-1)
+        end do
+       write(o_unit,fmt="(' </grid data>')")
+
+        ! output fluxes
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Total Output Flux', 'total output flux', '(kg/m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qo, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Saltation/Creep Output Flux', 'saltation/creep output flux', '(kg/m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qcso, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Suspension Output Flux', 'suspension output flux', '(kg/m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qsso, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell PM10 Output Flux', 'pm10 output flux', '(kg/m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%q10o, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        ! delta fluxes
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Total Flux Change', 'total flux change', '(kg/m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qo-cellstate(i,j)%qi, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Saltation/Creep Flux Change', 'saltation/creep flux change', '(kg/m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") ( cellstate(i,j)%qcso-cellstate(i,j)%qcsi, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell Suspension Flux Change', 'suspension flux change', '(kg/m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%qsso-cellstate(i,j)%qssi, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
+           'Cell PM10 Flux Change', 'pm10 flux change', '(kg/m/s)'
+        do j = jmax-1, 1, -1
+          write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%q10o-cellstate(i,j)%q10i, i = 1, imax-1)
+        end do
+        write(o_unit,fmt="(' </grid data>')")
+
+        initflag = 1    !     turn off heading output
+      endif
+
+   end subroutine sb1out
+
+   subroutine sb2out (jj, nn, hr, o_unit, cellstate)
+
+!     + + + PURPOSE + + +
+!     To print to file some key variables used in erosion
+
+      use datetime_mod, only: caldat
+      use erosion_data_struct_defs, only: cellsurfacestate, ntstep
+      use erosion_data_struct_defs, only: initflag, ipd, npd
+      use grid_mod, only: imax, jmax
+
+!     + + + ARGUEMENT DECLARATIONS + + +
+      real hr
+      integer  jj, nn, o_unit
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     o_unit= Unit number for output file
+
+!     + + + LOCAL VARIABLES + + +
+      real egavg(imax)
+      integer m, n, k, icsr
+      integer yr, mo, da
+      integer i,j
+
+!     outflag = 0 - print heading output, 1 - no more heading
+
+!     + + + END SPECIFICATIONS + + +
+
+!     define index of current subregions
+      icsr = 1
+
+      ipd = ipd + 1
+
+      call caldat( mksaeout%jday, da, mo, yr) ! Set day, month and year
+
+      write (o_unit, fmt="(a, i5, 2(i3), f7.3, 4(i4))") &
+             ' yr mon day hr upd_pd jj nn(subpd) npd (sbqout 2)', &
+               yr,mo, da, hr, ipd,  jj,nn,       npd
+
+      ! Friction Velocity
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
             'Surface Friction Velocity', 'friction velocity', '(m/s)'
       do j = jmax-1, 1, -1
@@ -759,167 +1023,7 @@ module sae_in_out_mod
       write(o_unit,fmt="(' </grid data>')")
       write (o_unit,*)
 
-!Grid Cell Surface properties
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Surface Random Roughness', 'random roughness', '(mm)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%slrr, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Surface Oriented Roughness', 'ridge height', '(mm)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%szrgh, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Surface Rock', 'surface volume rock fraction', '(m^3/m^3)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%svroc, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-      write (o_unit,*)
-
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Soil Agg. Size<0.01', 'mass fraction < 0.01 mm size', '(fract.)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf1, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Soil Agg. Size<0.1', 'mass fraction < 0.1 mm size', '(fract.)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf10, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Soil Agg. Size<0.84', 'mass fraction < 0.84 mm size', '(fract.)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf84, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Soil Agg. Size<2.0', 'mass fraction < 2.0 mm size', '(fract.)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf200, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Soil Agg. Size for u* to be the thresh. friction velocity', '"effective" mass fraction < 0.84 mm size', '(fract.)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf84mn, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Mobile soil removable from aggregated surface', 'mass removable', '(kg/m^2)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%smaglos, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Change in mobile soil on aggregated surface', 'net mass change', '(kg/m^2)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%dmlos, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-
-! Crust properties
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Consolidated crust thickness', 'crust thickness', '(mm)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%szcr, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Fraction of Surface covered with Crust','crust cover','(fract.)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sfcr, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Fraction of Crusted Surface covered with Loose Erodible Soil ', 'loose erodible material', '(fract.)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sflos, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-      write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Mass of Loose Erodible Soil on Crusted Surface', 'loose erodible material', '(kg/m^2)'
-      do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%smlos, i = 1, imax-1)
-      end do
-      write(o_unit,fmt="(' </grid data>')")
-      write (o_unit,*)
-
-   end subroutine sb1out
-
-   subroutine sb2out (jj, nn, hr, o_unit, cellstate)
-
-!     + + + PURPOSE + + +
-!     To print to file some key variables used in erosion
-
-      use datetime_mod, only: caldat
-      use erosion_data_struct_defs, only: cellsurfacestate, ntstep
-      use grid_mod, only: imax, jmax
-
-!     + + + ARGUEMENT DECLARATIONS + + +
-      real hr
-      integer  jj, nn, o_unit
-      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
-
-!     + + + ARGUMENT DEFINITIONS + + +
-!     o_unit= Unit number for output file
-
-!     + + + LOCAL VARIABLES + + +
-      real egavg(imax)
-      integer m, n, k, icsr
-      integer initflag, ipd, npd
-      save    initflag, ipd, npd
-
-      integer yr, mo, da
-      real    hhrr, tims
-      save    yr, mo, da, hhrr, tims
-      integer i,j
-
-!     outflag = 0 - print heading output, 1 - no more heading
-
-!     + + + END SPECIFICATIONS + + +
-
-!     define index of current subregions
-      icsr = 1
-
-!     output headings?
-      if (initflag .eq. 0) then
-
-        ipd = 0
-        npd = nn * ntstep
-
-        tims = 3600*24/ntstep !seconds in each emission period
-        call caldat( mksaeout%jday, da, mo, yr) ! Set day, month and year
-        hhrr = 0                    !Pre-set hhrr so we get start of period times
-
-!        write (o_unit,*)
-!        write (o_unit,*) 'OUT PUT from sb2out'
-!        write (o_unit,*)
-
-        initflag = 1    !     turn off heading output
-      endif
-      ipd = ipd + 1
-      if (hhrr .ge. 24) then
-         hhrr = tims/3600
-        call caldat( mksaeout%jday, da, mo, yr) ! Set day, month and year
-      else
-         hhrr = hhrr + tims/3600
-      endif
-
-        call caldat( mksaeout%jday, da, mo, yr) ! Set day, month and year
-!      write (o_unit, fmt="(a, 3(i3), f5.2, i3)") &
-!             ' day mon yr hhrr update_period ', da, mo, yr, hhrr, jj
-
-      write (o_unit, fmt="(a, i5, 2(i3), f7.3, 4(i4))") &
-             ' yr mon day hr upd_pd jj nn(subpd) npd (sbqout 2)', &
-               yr,mo, da, hr,ipd,   jj,nn,       npd
-
-
+      ! Emissions
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
              'Cumulative Total Soil Loss', 'soil loss', '(kg/m^2)'
       do j = jmax-1, 1, -1
@@ -955,22 +1059,21 @@ module sae_in_out_mod
       end do
       write(o_unit,fmt="(' </grid data>')")
 
-!!      if (ipd .eq. npd) then
-!Grid Cell Surface properties
+      ! Surface properties
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Surface Random Roughness (after)', 'random roughness', '(mm)'
+            'Surface Random Roughness', 'random roughness', '(mm)'
       do j = jmax-1, 1, -1
         write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%slrr, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Surface Oriented Roughness (after)', 'ridge height', '(mm)'
+            'Surface Oriented Roughness', 'ridge height', '(mm)'
       do j = jmax-1, 1, -1
         write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%szrgh, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Surface Rock (after)', 'surface volume rock fraction', '(m^3/m^3)'
+            'Surface Rock', 'surface volume rock fraction', '(m^3/m^3)'
       do j = jmax-1, 1, -1
         write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%svroc, i = 1, imax-1)
       end do
@@ -1002,45 +1105,45 @@ module sae_in_out_mod
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Soil Agg. Size for u* to be the thresh. friction velocity (af)','"effective" mass fraction < 0.84 mm size', '(fract.)'
+            'Soil Agg. Size for u* to be the thresh. friction velocity', '"effective" mass fraction < 0.84 mm size', '(fract.)'
       do j = jmax-1, 1, -1
         write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf84mn, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Mobile soil removable from aggregated surface (after)', 'mass removable', '(kg/m^2)'
+            'Mobile soil removable from aggregated surface', 'mass removable', '(kg/m^2)'
       do j = jmax-1, 1, -1
         write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%smaglos, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Change in mobile soil on aggregated surface (after)', 'net mass change', '(kg/m^2)'
+            'Change in mobile soil on aggregated surface', 'net mass change', '(kg/m^2)'
       do j = jmax-1, 1, -1
         write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%dmlos, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
 
-! Crust properties
+      ! Crust properties
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-             'Consolidated crust thickness (after)', 'crust thickness', '(mm)'
+             'Consolidated crust thickness', 'crust thickness', '(mm)'
       do j = jmax-1, 1, -1
         write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%szcr, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Fraction of Surface covered with Crust (after)', 'crust cover','(fract.)'
+            'Fraction of Surface covered with Crust', 'crust cover','(fract.)'
       do j = jmax-1, 1, -1
         write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sfcr, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-            'Fraction of Crusted Surface covered with Loose Erodible Soil(a)', 'loose erodible material', '(fract.)'
+            'Fraction of Crusted Surface covered with Loose Erodible Soil', 'loose erodible material', '(fract.)'
       do j = jmax-1, 1, -1
         write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sflos, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
-           'Mass of Loose Erodible Soil on Crusted Surface (after)', 'loose erodible material', '(kg/m^2)'
+           'Mass of Loose Erodible Soil on Crusted Surface', 'loose erodible material', '(kg/m^2)'
       do j = jmax-1, 1, -1
         write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%smlos, i = 1, imax-1)
       end do
