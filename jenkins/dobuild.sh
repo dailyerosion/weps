@@ -48,6 +48,6 @@ esac
 
 cook -NL configure fc=$compiler mode=$mode
 cook -NL clean
-cook -NL show weps
+cook -NL show weps sweep
 exit 0
 
