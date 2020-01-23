@@ -299,59 +299,61 @@ module mproc_remove_mod
       real pool_grainf, pool_dstm, tot_mass_rem, sel_mass_left
 
       ! + + + LOCAL VARIABLES + + +
-      integer idx, pool_flag
+      integer idx
+      logical :: store_flag = .false.
+      logical :: leaf_flag = .false.
+      logical :: stem_flag = .false.
+      logical :: sroot_flag = .false.
+      logical :: froot_flag = .false.
       real rem_frac
-
-      pool_flag = 0
 
       rem_frac = storef
       if( pool_hyfg .le. 2 ) then
           rem_frac = rem_frac * pool_grainf
       end if
-      call rem_pool(pool_store, rem_frac, pool_flag, tot_mass_rem)
+      call rem_pool(pool_store, rem_frac, store_flag, tot_mass_rem)
 
       rem_frac = leaff
       if( pool_hyfg .eq. 3 ) then
           rem_frac = rem_frac * pool_grainf
       end if
-      call rem_pool(pool_leaf, rem_frac, pool_flag, tot_mass_rem)
+      call rem_pool(pool_leaf, rem_frac, leaf_flag, tot_mass_rem)
 
       rem_frac = stemf
       if( pool_hyfg .eq. 4 ) then
           rem_frac = rem_frac * pool_grainf
       end if
-      call rem_pool(pool_stem, rem_frac, pool_flag, tot_mass_rem)
+      call rem_pool(pool_stem, rem_frac, stem_flag, tot_mass_rem)
       ! also reduce stem count
       pool_dstm = pool_dstm * (1.0 - rem_frac)
-
-      ! all above ground biomass remaining included in harvest index
-      if( pool_flag .eq. 1 ) then
-          sel_mass_left = sel_mass_left + pool_store + pool_leaf &
-                        + pool_stem
-          pool_flag = 0
-      end if
 
       rem_frac = rootstoref
       if( pool_hyfg .eq. 5 ) then
           rem_frac = rem_frac * pool_grainf
       end if
       do idx = 1, nslay
-          call rem_pool(pool_rootstore(idx), rem_frac, pool_flag, &
+          call rem_pool(pool_rootstore(idx), rem_frac, sroot_flag, &
+                        tot_mass_rem)
+      end do
+
+      rem_frac = rootfiberf
+      do idx = 1, nslay
+          call rem_pool(pool_rootfiber(idx), rem_frac, froot_flag, &
                         tot_mass_rem)
       end do
 
       ! If storage root harvested, then remaining mass included in harvest index
-      if( pool_flag .eq. 1 ) then
+      if( sroot_flag ) then
           do idx = 1, nslay
               sel_mass_left = sel_mass_left + pool_rootstore(idx)
           end do
+          sel_mass_left = sel_mass_left + pool_store + pool_leaf &
+                        + pool_stem
+      else if( store_flag .or. leaf_flag .or. stem_flag ) then
+          ! all above ground biomass remaining included in harvest index
+          sel_mass_left = sel_mass_left + pool_store + pool_leaf &
+                        + pool_stem
       end if
-
-      rem_frac = rootfiberf
-      do idx = 1, nslay
-          call rem_pool(pool_rootfiber(idx), rem_frac, pool_flag, &
-                        tot_mass_rem)
-      end do
 
       return
     end subroutine rem_stand_pool
@@ -371,40 +373,43 @@ module mproc_remove_mod
       real pool_grainf, tot_mass_rem, sel_mass_left
 
       ! + + + LOCAL VARIABLES + + +
-      integer pool_flag
+      logical :: store_flag = .false.
+      logical :: leaf_flag = .false.
+      logical :: stem_flag = .false.
+      logical :: sroot_flag = .false.
+      logical :: froot_flag = .false.
       real rem_frac
 
-      pool_flag = 0
 
       rem_frac = storef
       if( pool_hyfg .le. 2 ) then
           rem_frac = rem_frac * pool_grainf
       end if
-      call rem_pool(pool_store, rem_frac, pool_flag, tot_mass_rem)
+      call rem_pool(pool_store, rem_frac, store_flag, tot_mass_rem)
 
       rem_frac = leaff
       if( pool_hyfg .eq. 3 ) then
           rem_frac = rem_frac * pool_grainf
       end if
-      call rem_pool(pool_leaf, rem_frac, pool_flag, tot_mass_rem)
+      call rem_pool(pool_leaf, rem_frac, leaf_flag, tot_mass_rem)
 
       rem_frac = stemf
       if( pool_hyfg .eq. 4 ) then
           rem_frac = rem_frac * pool_grainf
       end if
-      call rem_pool(pool_stem, rem_frac, pool_flag, tot_mass_rem)
+      call rem_pool(pool_stem, rem_frac, stem_flag, tot_mass_rem)
 
       rem_frac = rootstoref
       if( pool_hyfg .eq. 5 ) then
           rem_frac = rem_frac * pool_grainf
       end if
-      call rem_pool(pool_rootstore, rem_frac, pool_flag, tot_mass_rem)
+      call rem_pool(pool_rootstore, rem_frac, sroot_flag, tot_mass_rem)
 
       rem_frac = rootfiberf
-      call rem_pool(pool_rootfiber, rem_frac, pool_flag, tot_mass_rem)
+      call rem_pool(pool_rootfiber, rem_frac, froot_flag, tot_mass_rem)
 
       ! all but fibrous root included in harvest index
-      if( pool_flag .eq. 1 ) then
+      if( store_flag .or. leaf_flag .or. stem_flag .or. sroot_flag .or. froot_flag ) then
           sel_mass_left = sel_mass_left + pool_store + pool_leaf &
                         + pool_stem + pool_rootstore
       end if
@@ -426,17 +431,20 @@ module mproc_remove_mod
       real pool_grainf, tot_mass_rem, sel_mass_left
 
       ! + + + LOCAL VARIABLES + + +
-      integer idx, pool_flag
+      integer idx
+      logical :: store_flag = .false.
+      logical :: leaf_flag = .false.
+      logical :: stem_flag = .false.
+      logical :: sroot_flag = .false.
+      logical :: froot_flag = .false.
       real rem_frac
-
-      pool_flag = 0
 
       rem_frac = storef
       if( pool_hyfg .le. 2 ) then
           rem_frac = rem_frac * pool_grainf
       end if
       do idx = 1, nslay
-          call rem_pool(pool_store(idx),rem_frac,pool_flag,tot_mass_rem)
+          call rem_pool(pool_store(idx),rem_frac,store_flag,tot_mass_rem)
       end do
 
       rem_frac = leaff
@@ -444,7 +452,7 @@ module mproc_remove_mod
           rem_frac = rem_frac * pool_grainf
       end if
       do idx = 1, nslay
-          call rem_pool(pool_leaf(idx),rem_frac,pool_flag,tot_mass_rem)
+          call rem_pool(pool_leaf(idx),rem_frac,leaf_flag,tot_mass_rem)
       end do
 
       rem_frac = stemf
@@ -452,7 +460,7 @@ module mproc_remove_mod
           rem_frac = rem_frac * pool_grainf
       end if
       do idx = 1, nslay
-          call rem_pool(pool_stem(idx),rem_frac,pool_flag,tot_mass_rem)
+          call rem_pool(pool_stem(idx),rem_frac,stem_flag,tot_mass_rem)
       end do
 
       rem_frac = rootstoref
@@ -460,18 +468,18 @@ module mproc_remove_mod
           rem_frac = rem_frac * pool_grainf
       end if
       do idx = 1, nslay
-          call rem_pool(pool_rootstore(idx), rem_frac, pool_flag, &
+          call rem_pool(pool_rootstore(idx), rem_frac, sroot_flag, &
                         tot_mass_rem)
       end do
 
       rem_frac = rootfiberf
       do idx = 1, nslay
-          call rem_pool(pool_rootfiber(idx), rem_frac, pool_flag, &
+          call rem_pool(pool_rootfiber(idx), rem_frac, froot_flag, &
                         tot_mass_rem)
       end do
 
       ! all but fibrous root included in harvest index
-      if( pool_flag .eq. 1 ) then
+      if( store_flag .or. leaf_flag .or. stem_flag .or. sroot_flag .or. froot_flag ) then
           do idx = 1, nslay
               sel_mass_left = sel_mass_left + pool_store(idx)
               sel_mass_left = sel_mass_left + pool_leaf(idx)
@@ -487,7 +495,7 @@ module mproc_remove_mod
 
       ! + + + ARGUMENT DECLARATIONS + + +
       real pool_mass, pool_frac
-      integer pool_flag
+      logical :: pool_flag
       real tot_mass_rem
 
       ! + + + LOCAL VARIABLES + + +
@@ -495,7 +503,7 @@ module mproc_remove_mod
 
       mass_rem = pool_mass * pool_frac
       if( mass_rem.gt.0.0 ) then 
-          pool_flag = 1
+          pool_flag = .true.
           pool_mass = pool_mass - mass_rem
           tot_mass_rem = tot_mass_rem + mass_rem
       end if
