@@ -498,10 +498,14 @@ module crop_growth_mod
                   if ( bczloc_regrow .gt. 0.0 ) then
                       ! regrows from stem, stem does not become residue
                       ! note, flat leaves are dead leaves, no storage in shoot.
-                      bcmshoot = bcmstandstem +bcmflatstem +bcmstandleaf
-                      do lay = 1, bnslay
-                          bcmshoot = bcmshoot + bcmbgstemz(lay)
-                      end do
+
+                      ! testing shows that this is not what is intended
+                      !bcmshoot = bcmstandstem +bcmflatstem +bcmstandleaf
+                      !do lay = 1, bnslay
+                      !    bcmshoot = bcmshoot + bcmbgstemz(lay)
+                      !end do
+                      ! shoot grows from stem regrow location using root reserves
+                      bcmshoot = 0.0
                       u_bcmtotshoot = min(root_store_rel, u_bcmtotshoot)
                   else
                       ! regrows from crown, stem becomes residue
