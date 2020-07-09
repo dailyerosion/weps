@@ -590,7 +590,7 @@ module manage_mod
       use crop_mod, only: plant_endseason
       use report_harvest_mod, only: report_harvest, report_calib_harvest
       use report_hydrobal_mod, only: report_hydrobal
-      use datetime_mod, only: get_simdate, get_simdate_jday, get_simdate_doy, dayear
+      use datetime_mod, only: get_simdate, get_simdate_jday, get_simdate_doy
       use manage_data_struct_mod, only: getManVal
       use asd_mod, only: msieve, nsieve, sdia, mdia, asd2m, m2asd
       use mproc_bio_mod, only: mnrbc, flatvt, fall_mod_vt, liftvt, mburyvt, kill_plant, defoliate, buryadj, resinit
@@ -1855,13 +1855,13 @@ module manage_mod
         am0kilfl = 2
         if( kill_plant( am0kilfl, soil%nslay, plant%olderPlant ) ) then
           ! Old planting still growing
-          ! non-harvest termination, suppress early harvest warnings
-          mature_warn_flg = 0
-          call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
-                               soil%nslay, mature_warn_flg, plant%olderPlant )
-          ! set to guarantee corresponding report hydrolbal at end of planting
-          manFile%rpt_season_flg = .true.
-        endif
+          if( manFile%rpt_season_flg ) then
+            ! non-harvest termination, suppress early harvest warnings
+            mature_warn_flg = 0
+            call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                                  soil%nslay, mature_warn_flg, plant%olderPlant )
+          end if
+        end if
 
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = .true.
@@ -2598,6 +2598,23 @@ module manage_mod
       case(101)  ! planting location
 
         ! new plant created by biomass group (G 03)
+
+        ! for now do not allow more than one growing planting at a time
+        ! set kill flag to kill anything living
+        am0kilfl = 2
+        if( kill_plant( am0kilfl, soil%nslay, plant%olderPlant ) ) then
+          ! Old planting still growing
+          ! non-harvest termination, suppress early harvest warnings
+
+          if( manFile%rpt_season_flg ) then
+
+            write(*,*) 'REP101: ', get_simdate_doy(), trim(plant%olderPlant%bname)
+
+            mature_warn_flg = 0
+            call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
+                                  soil%nslay, mature_warn_flg, plant%olderPlant )
+          end if
+        end if
 
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = .true.

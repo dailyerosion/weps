@@ -60,11 +60,11 @@
     ! create gddWEPS method
     call theModel%plant%add_process("gddweps_method", "WEPS GDD", 0)
     ! create input names
-    r_setter = 0.0_dp
-    call theModel%plant%plantstate%pars%put("tbase", r_setter, success)
     r_setter = 10.0_dp
-    call theModel%plant%plantstate%pars%put("topt", r_setter, success)
+    call theModel%plant%plantstate%pars%put("tbas", r_setter, success)
     r_setter = 30.0_dp
+    call theModel%plant%plantstate%pars%put("topt", r_setter, success)
+    r_setter = 0.0_dp
     call theModel%plant%plantstate%state%put("daygdd", r_setter, success)
 
 !    ! add process
@@ -166,8 +166,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
@@ -227,8 +227,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
@@ -264,8 +264,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
@@ -301,8 +301,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
@@ -338,8 +338,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
@@ -375,8 +375,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
@@ -412,8 +412,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
@@ -449,8 +449,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
@@ -486,8 +486,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
@@ -523,8 +523,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
@@ -560,8 +560,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
@@ -597,8 +597,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
@@ -634,8 +634,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
@@ -671,8 +671,8 @@
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_senes_root", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_frac", r_setter, success)
-    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_frac", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_grain_index", r_setter, success)
+    call theModel%plant%phaseCurrent%ptr%phasePars%put("end_grain_index", r_setter, success)
     r_setter = 0.4_dp
     call theModel%plant%phaseCurrent%ptr%phasePars%put("beg_p_rw", r_setter, success)
     call theModel%plant%phaseCurrent%ptr%phasePars%put("end_p_rw", r_setter, success)
