@@ -59,7 +59,6 @@ module biomaterial
   end type biostate_geometry
 
   type biostate_growth
-     logical :: am0cgf      ! flag if set to .true. then run CROP growth subroutines.
      logical :: am0cif      ! flag if set to .true. then run CROP growth initialization subroutine.
      logical :: growing     ! flag set to indicate that crop is growing
      logical :: shoot_growing     ! flag set to indicate that shoot growth occuring
@@ -610,7 +609,6 @@ contains
      plantNew%geometry%hyfg = 0
 
      ! plant not growing, just created
-     plantNew%growth%am0cgf = .false.
      plantNew%growth%am0cif = .false.
      plantNew%growth%growing = .false.
      plantNew%growth%can_regrow = .false.
@@ -713,7 +711,6 @@ contains
      integer :: alloc_stat  ! allocation status return
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
      type(plant_pointer), pointer :: olderPlant
-     type(residue_pointer), pointer :: residuePntr
 
      ! close open output file
      if( plantPntr%bout%luo .gt. 0 ) then
@@ -1093,8 +1090,6 @@ contains
      ! local variable
      type(plant_pointer), pointer :: thisPlant
      type(residue_pointer), pointer :: thisResidue
-     integer :: idx
-     real :: totmass
 
      ! print mass values
      thisPlant => plantPntr

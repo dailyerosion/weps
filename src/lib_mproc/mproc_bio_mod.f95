@@ -535,14 +535,14 @@ module mproc_bio_mod
       thisPlant => plant
       do while( associated(thisPlant) )
         ! plant exists
-        if( thisPlant%growth%am0cgf .and. .not. thisPlant%growth%am0cif ) then
+        if( thisPlant%growth%growing .and. .not. thisPlant%growth%am0cif ) then
           ! crop growth flag on and not on initialization cycle
           if ((bm0kilfl.eq.2).or.((bm0kilfl.eq.1).and.((thisPlant%database%idc.eq.1)&
              .or.(thisPlant%database%idc.eq.2).or.(thisPlant%database%idc.eq.4) &
              .or.(thisPlant%database%idc.eq.5)))) then
 
             ! stop the crop growth (ie. stop calling crop submodel)
-            thisPlant%growth%am0cgf = .false.
+            thisPlant%growth%growing = .false.
 
             ! add residue pool for living mass being killed
             thisPlant%residue => residueAdd( thisPlant%residue, thisPlant%residueIndex, nslay ) 
@@ -620,7 +620,7 @@ module mproc_bio_mod
       thisPlant => plant
       do while( associated(thisPlant) )
         ! plant exists
-        if( thisPlant%growth%am0cgf .and. .not. thisPlant%growth%am0cif ) then
+        if( thisPlant%growth%growing .and. .not. thisPlant%growth%am0cif ) then
           ! crop growth flag on and not on initialization cycle
           if( bm0kilfl .eq. 3 ) then
             ! defoliate flag set

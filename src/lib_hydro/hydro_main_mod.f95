@@ -315,7 +315,7 @@ module hydro_main_mod
 
         ! check irrigation flag for irrigation monitoring option
         if(      (bm0monirr .gt. 0) .and. (cropdp .gt. 0.0) &
-           .and. (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%am0cgf ) then
+           .and. (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%growing ) then
 
           ! find root zone water content above wilting point
           rootz_p_con = plant_wat_t(0.0, cropdp, soil%theta(1), soil%thetaw, soil%aszlyd, soil%nslay)
@@ -542,7 +542,7 @@ module hydro_main_mod
       cropdp_max = 0.0
       ! interate over all transpiring plants
       do while ( associated(thisPlant) )
-        if( (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%am0cgf) then
+        if( (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%growing) then
           ! check command line transpiration depth flag, set plant depth accordingly
           if( transpiration_depth .eq. 0 ) then
             cropdp = thisPlant%geometry%zrtd * mtomm
@@ -576,7 +576,7 @@ module hydro_main_mod
         h1et%zpta = 0.0
         ! interate over all transpiring plants
         do while ( associated(thisPlant) )
-          if( (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%am0cgf) then
+          if( (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%growing) then
             ! check command line transpiration depth flag, set plant depth accordingly
             if( transpiration_depth .eq. 0 ) then
               cropdp = thisPlant%geometry%zrtd * mtomm
@@ -687,7 +687,7 @@ module hydro_main_mod
         ! interate over all transpiring plants
         do while ( associated(thisPlant) )
 
-          if( (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%am0cgf) then
+          if( (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%growing) then
             ! increment counter
             nplant = nplant + 1 
 

@@ -594,6 +594,7 @@ module manage_mod
       use manage_data_struct_mod, only: getManVal
       use asd_mod, only: msieve, nsieve, sdia, mdia, asd2m, m2asd
       use mproc_bio_mod, only: mnrbc, flatvt, fall_mod_vt, liftvt, mburyvt, kill_plant, defoliate, buryadj, resinit
+      use mproc_prune_mod, only: prune
       use mproc_cut_mod, only: cut
       use mproc_thin_mod, only: thin
       use mproc_remove_mod, only: remove
@@ -1462,6 +1463,32 @@ module manage_mod
           call tdbug(sr, prcode, soil, plant)
         end if
 
+      case (35)  ! biomass prune pool process
+        ! pre-process stuff
+        if (manFile%am0tdb .eq. 1) then
+          write (luotdb(sr),*)
+          write (luotdb(sr),*) '//Before biomass prune pool process//'
+          call tdbug(sr, prcode, soil, plant)
+        end if
+
+        call getManVal(manFile%proc, 'rstore', storef)
+        call getManVal(manFile%proc, 'rleaf', leaff)
+        call getManVal(manFile%proc, 'rstem', stemf)
+        call getManVal(manFile%proc, 'rrootstore', rootstoref)
+        call getManVal(manFile%proc, 'rrootfiber', rootfiberf)
+
+        ! do process
+        call prune( stemf, leaff, storef, rootstoref, rootfiberf, &
+          soil%nslay, plant)
+
+        ! post-process stuff
+        if (manFile%am0tdb .eq. 1) then
+          write (luotdb(sr),*) '//After biomass remove pool process//'
+          call tdbug(sr, prcode, soil, plant)
+        end if
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = .true.
+
       case (37)  ! thinning to population process
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
@@ -1780,7 +1807,7 @@ module manage_mod
         ! Delete residue from all growing plants
         thisPlant => plant%olderPlant
         do while( associated(thisPlant) )
-          if( thisPlant%growth%am0cgf ) then
+          if( thisPlant%growth%growing ) then
             ! growing plant, delete only plant residue pools
             call residueDestroyAll( thisPlant%residue )
             ! move to next plant
@@ -1955,7 +1982,7 @@ module manage_mod
           ! set flag for crop initialization - jt
           plant%growth%am0cif = .true.
           ! set crop growth flag on - jt
-          plant%growth%am0cgf = .true.
+          plant%growth%growing = .true.
 
           if( upgm_growth .eq. 1 ) then
             ! grow WEPS crop using upgm
@@ -2701,7 +2728,7 @@ module manage_mod
           ! set flag for crop initialization - jt
           plant%growth%am0cif = .true.
           ! set crop growth flag on - jt
-          plant%growth%am0cgf = .true.
+          plant%growth%growing = .true.
 
           ! initialize upgm_grow model
           plant%upgm_grow = UPGM()

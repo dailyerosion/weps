@@ -56,10 +56,10 @@ module crop_mod
            .or. (thisPlant%geometry%dpop .le. 0.0) &
            .or. (thisPlant%database%idc .le. 0) ) then
            ! this is not a valid growing crop
-           thisPlant%growth%am0cgf = .false.
+           thisPlant%growth%growing = .false.
            crop_growing = .false.
          else
-           crop_growing = thisPlant%growth%am0cgf
+           crop_growing = thisPlant%growth%growing
          end if
 
          if( crop_growing ) then
