@@ -47,12 +47,12 @@ module gddmethod1_mod
       real(dp) :: tmin, tmax, tbase, daygdd
       logical :: succ = .false.
 
-      ! get tsMin
+      ! get temperatures
       call env%state%get("tmin", tmin, succ)
       if( .not. check_return( "tmin", succ ) ) return
       call env%state%get("tmax", tmax, succ)
       if( .not. check_return( "tmax", succ ) ) return
-      call plnt%pars%get("tbas", tbase, succ)
+      call self%processPars%get("tbas", tbase, succ)
       if( .not. check_return( "tbas", succ ) ) return
 
       daygdd =  max(0.0_dp, ((tmax+tmin)/2) - tbase)

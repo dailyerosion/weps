@@ -110,33 +110,33 @@ module plantcycle_mod
         !run the phase
         call self%phaseCurrent%ptr%doPhase(self%plantstate, env)
 
-        call self%phaseCurrent%ptr%phaseState%get("stagegdd", stagegdd, succ)
+        !call self%phaseCurrent%ptr%phaseState%get("stagegdd", stagegdd, succ)
         !write(*,*) 'Phase, stagegdd: ', trim(self%phaseCurrent%ptr%phaseLabel), stagegdd
         
         !if the next stage is ready, check the specific stage value.
-        call self%plantstate%state%get("nextstage", nextstage, succ)
+        !call self%plantstate%state%get("nextstage", nextstage, succ)
 
-        if (nextstage == 1.and.succ) then
+        !if (nextstage == 1.and.succ) then
 
-            write(*,*) 'Degree Days: ', stagegdd, ' Phase Completed: ', trim(self%phaseCurrent%ptr%phaseLabel)
+        !    write(*,*) 'Degree Days: ', stagegdd, ' Phase Completed: ', trim(self%phaseCurrent%ptr%phaseLabel)
 
-            succ=.false.
-            call self%plantstate%state%get("specstage", specificStage, succ)
-            if (succ) then
+            !succ=.false.
+            !call self%plantstate%state%get("specstage", specificStage, succ)
+            !if (succ) then
                 ! zero out stagegdd
-                stagegdd = 0.0_dp
-                call self%phaseCurrent%ptr%phaseState%replace("phase_rel_gdd", stagegdd, succ)
-                call self%phaseCurrent%ptr%phaseState%replace("stagegdd", stagegdd, succ)
-                if (specificStage .eq. 1) then
-                    print *, "regrow phase requested"
-                    self%phaseCurrent%ptr => self%phaseCurrent%ptr%phaseRegrow
-                    call self%phaseCurrent%ptr%doPhase(self%plantstate, env)
-                else
+            !    stagegdd = 0.0_dp
+            !    call self%phaseCurrent%ptr%phaseState%replace("phase_rel_gdd", stagegdd, succ)
+            !    call self%phaseCurrent%ptr%phaseState%replace("stagegdd", stagegdd, succ)
+            !    if (specificStage .eq. 1) then
+            !        print *, "regrow phase requested"
+            !        self%phaseCurrent%ptr => self%phaseCurrent%ptr%phaseRegrow
+            !        call self%phaseCurrent%ptr%doPhase(self%plantstate, env)
+            !    else
                     ! print *, "next phase requested"
                     ! just go to next phase
-                    self%phaseCurrent%ptr => self%phaseCurrent%ptr%phaseChild
-                endif
-            endif
+            !        self%phaseCurrent%ptr => self%phaseCurrent%ptr%phaseChild
+            !    endif
+            !endif
 
 !            if( associated(self%phaseCurrent%ptr) ) then 
 !              ! write info for start of phase
@@ -144,11 +144,11 @@ module plantcycle_mod
 !            end if
 
             ! reset controls
-            nextstage = 0  ! pass this out to calling routine for use, and reset there
-            specificStage = 0
-            call self%plantstate%state%replace("nextstage", nextstage, succ)
-            call self%plantstate%state%replace("specstage", specificStage, succ)
-        endif
+            !nextstage = 0  ! pass this out to calling routine for use, and reset there
+            !specificStage = 0
+            !call self%plantstate%state%replace("nextstage", nextstage, succ)
+            !call self%plantstate%state%replace("specstage", specificStage, succ)
+      !  endif
       endif
     end subroutine growplant
 

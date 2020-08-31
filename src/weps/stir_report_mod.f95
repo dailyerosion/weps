@@ -330,6 +330,17 @@ module stir_report_mod
               else
                 stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
               end if
+            case (100)
+              call getManVal(manFile%proc, 'idc', croptype)
+              call getManVal(manFile%proc, 'plantpop', plantpop)
+              if ( plantpop .gt. 0.0 ) then
+                stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 1
+                stircum(isr)%phop(stircum(isr)%phopidx)%stir_cropname = cropname
+                crop_present_today = .true.
+                stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx)%crop_num + 1
+              else
+                stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
+              end if
             case (61, 62)
               call getManVal(manFile%proc, 'rstore', storef)
               call getManVal(manFile%proc, 'rleaf', leaff)

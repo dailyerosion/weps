@@ -54,7 +54,7 @@ module WEPSwarmdays_mod
       ! get input values
       call plnt%state%get("warmdays", warmdays, succ)
       if( .not. check_return( "warmdays", succ ) ) return
-      call plnt%pars%get("tbas", tbase, succ)
+      call self%processPars%get("tbas", tbase, succ)
       if( .not. check_return( "tbas", succ ) ) return
       call env%state%get("tmax", tmax, succ)
       if( .not. check_return( "tmax", succ ) ) return

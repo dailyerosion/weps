@@ -826,9 +826,9 @@ contains
     ! UPGMinWEPS_init
     param_nt(45)%ogp="P"
     param_nt(45)%id = 100
-    allocate( param_nt(45)%i_name(7), stat=alloc_stat )
+    allocate( param_nt(45)%i_name(5), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(45)%r_name(39), stat=alloc_stat )
+    allocate( param_nt(45)%r_name(36), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(45)%s_name(2), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
@@ -849,37 +849,32 @@ contains
     param_nt(45)%r_name(9)="hmx"
     param_nt(45)%r_name(10)="growdepth"
     param_nt(45)%r_name(11)="rdmx"
-    param_nt(45)%r_name(12)="tbas"
-    param_nt(45)%r_name(13)="topt"
-    param_nt(45)%i_name(5)="thudf"
-    param_nt(45)%i_name(6)="dtm"
-    param_nt(45)%r_name(14)="thum"
-    param_nt(45)%r_name(15)="bceff"
-    param_nt(45)%r_name(16)="ssaa"
-    param_nt(45)%r_name(17)="ssab"
-    param_nt(45)%r_name(18)="sla"
-    param_nt(45)%r_name(19)="diammax"
-    param_nt(45)%r_name(20)="storeinit"
-    param_nt(45)%r_name(21)="mshoot"
-    param_nt(45)%r_name(22)="leafstem"
-    param_nt(45)%r_name(23)="fshoot"
-    param_nt(45)%r_name(24)="leaf2stor"
-    param_nt(45)%r_name(25)="stem2stor"
-    param_nt(45)%r_name(26)="stor2stor"
-    param_nt(45)%i_name(7)="rbc"
-    param_nt(45)%r_name(27)="standdk"
-    param_nt(45)%r_name(28)="surfdk"
-    param_nt(45)%r_name(29)="burieddk"
-    param_nt(45)%r_name(30)="rootdk"
-    param_nt(45)%r_name(31)="stemnodk"
-    param_nt(45)%r_name(32)="stemdia"
-    param_nt(45)%r_name(33)="thrddys"
-    param_nt(45)%r_name(34)="covfact"
-    param_nt(45)%r_name(35)="resevapa"
-    param_nt(45)%r_name(36)="resevapb"
-    param_nt(45)%r_name(37)="yield_coefficient"
-    param_nt(45)%r_name(38)="residue_intercept"
-    param_nt(45)%r_name(39)="regrow_location"
+    param_nt(45)%r_name(12)="bceff"
+    param_nt(45)%r_name(13)="ssaa"
+    param_nt(45)%r_name(14)="ssab"
+    param_nt(45)%r_name(15)="sla"
+    param_nt(45)%r_name(16)="diammax"
+    param_nt(45)%r_name(17)="storeinit"
+    param_nt(45)%r_name(18)="mshoot"
+    param_nt(45)%r_name(19)="leafstem"
+    param_nt(45)%r_name(20)="fshoot"
+    param_nt(45)%r_name(21)="leaf2stor"
+    param_nt(45)%r_name(22)="stem2stor"
+    param_nt(45)%r_name(23)="stor2stor"
+    param_nt(45)%i_name(5)="rbc"
+    param_nt(45)%r_name(24)="standdk"
+    param_nt(45)%r_name(25)="surfdk"
+    param_nt(45)%r_name(26)="burieddk"
+    param_nt(45)%r_name(27)="rootdk"
+    param_nt(45)%r_name(28)="stemnodk"
+    param_nt(45)%r_name(29)="stemdia"
+    param_nt(45)%r_name(30)="thrddys"
+    param_nt(45)%r_name(31)="covfact"
+    param_nt(45)%r_name(32)="resevapa"
+    param_nt(45)%r_name(33)="resevapb"
+    param_nt(45)%r_name(34)="yield_coefficient"
+    param_nt(45)%r_name(35)="residue_intercept"
+    param_nt(45)%r_name(36)="regrow_location"
 
     ! pmms_germination
     param_nt(46)%ogp="P"
@@ -1035,24 +1030,27 @@ contains
     param_nt(51)%id = 200
     allocate( param_nt(51)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(51)%r_name(0), stat=alloc_stat )
+    allocate( param_nt(51)%r_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(51)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(51)%s_name(1)="process_label"
     param_nt(51)%i_name(1)="process_type"
+    param_nt(51)%r_name(1)="tbas"
 
     ! gddweps_method
     param_nt(52)%ogp="P"
     param_nt(52)%id = 201
     allocate( param_nt(52)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(52)%r_name(0), stat=alloc_stat )
+    allocate( param_nt(52)%r_name(2), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(52)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(52)%s_name(1)="process_label"
     param_nt(52)%i_name(1)="process_type"
+    param_nt(52)%r_name(1)="tbas"
+    param_nt(52)%r_name(2)="topt"
 
     ! ritchie_vernalization
     param_nt(53)%ogp="P"
@@ -1083,24 +1081,27 @@ contains
     param_nt(55)%id = 220
     allocate( param_nt(55)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(55)%r_name(0), stat=alloc_stat )
+    allocate( param_nt(55)%r_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(55)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(55)%s_name(1)="process_label"
     param_nt(55)%i_name(1)="process_type"
+    param_nt(55)%r_name(1)="tbas"
 
     ! weps_tempstress
     param_nt(56)%ogp="P"
     param_nt(56)%id = 221
     allocate( param_nt(56)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(56)%r_name(4), stat=alloc_stat )
+    allocate( param_nt(56)%r_name(2), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(56)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(56)%s_name(1)="process_label"
     param_nt(56)%i_name(1)="process_type"
+    param_nt(56)%r_name(1)="tbas"
+    param_nt(56)%r_name(2)="topt"
 
     ! weps_freezedamage
     param_nt(57)%ogp="P"

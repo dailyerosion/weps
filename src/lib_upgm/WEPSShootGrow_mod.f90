@@ -129,7 +129,6 @@ module WEPSShootGrow_mod
 
       integer(int32) :: tmp
       integer(int32), parameter :: winter_ann_root = 1
-      logical :: growing
       logical :: lastday
 
       ! Body of shootgrow
@@ -430,7 +429,6 @@ module WEPSShootGrow_mod
         ! crop growth not yet complete
         ! stem count can be set to zero by harvest, but not reset by
         ! regrowth early in spring, causing divide by zero in shoot_grow
-        growing = .true.
 
         if( hui .ge. 1.0_dp ) then
           lastday = .true.
@@ -455,8 +453,6 @@ module WEPSShootGrow_mod
             shoot_hui = 1.0_dp
             shoot_huiy = 1.0_dp
         end if
-      else
-        growing = .false.
       end if
 
       ! update plant par values
@@ -510,8 +506,6 @@ module WEPSShootGrow_mod
       if( .not. check_return( "hu_delay", succ ) ) return
       call plnt%state%replace("spring_flg", spring_flg, succ)
       if( .not. check_return( "spring_flg", succ ) ) return
-      call plnt%state%replace("growing", growing, succ)
-      if( .not. check_return( "growing", succ ) ) return
       call plnt%state%replace("lastday", lastday, succ)
       if( .not. check_return( "lastday", succ ) ) return
 

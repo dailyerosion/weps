@@ -47,7 +47,6 @@ module mproc_prune_mod
       logical :: stem_flag = .false.
       logical :: sroot_flag = .false.
       logical :: froot_flag = .false.
-      real rem_frac
       type(plant_pointer), pointer :: thisPlant
 
       integer :: cntr

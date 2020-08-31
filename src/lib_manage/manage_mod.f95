@@ -2676,11 +2676,11 @@ module manage_mod
         call getManVal(manFile%proc, 'hmx', plant%database%zmxc)            ! growth
         call getManVal(manFile%proc, 'growdepth', plant%database%growdepth) ! setup
         call getManVal(manFile%proc, 'rdmx', plant%database%zmrt)           ! setup
-        call getManVal(manFile%proc, 'tbas', plant%database%tmin)           ! setup (days to maturity)
-        call getManVal(manFile%proc, 'topt', plant%database%topt)           ! setup (days to maturity)
-        call getManVal(manFile%proc, 'thudf', plant%database%thudf)         ! setup (days to maturity)
-        call getManVal(manFile%proc, 'dtm', plant%database%tdtm)            ! setup (days to maturity)
-        call getManVal(manFile%proc, 'thum', plant%database%thum)           ! setup (days to maturity)
+!        call getManVal(manFile%proc, 'tbas', plant%database%tmin)           ! setup (days to maturity)
+!        call getManVal(manFile%proc, 'topt', plant%database%topt)           ! setup (days to maturity)
+!        call getManVal(manFile%proc, 'thudf', plant%database%thudf)         ! setup (days to maturity)
+!        call getManVal(manFile%proc, 'dtm', plant%database%tdtm)            ! setup (days to maturity)
+!        call getManVal(manFile%proc, 'thum', plant%database%thum)           ! setup (days to maturity)
         call getManVal(manFile%proc, 'bceff', plant%database%bceff)         ! growth
         call getManVal(manFile%proc, 'ssaa', plant%database%ssa)            ! growth, report
         call getManVal(manFile%proc, 'ssab', plant%database%ssb)            ! growth, report
@@ -2796,7 +2796,8 @@ module manage_mod
           ! do process
           ! create all input names
           r_setter = 0.0_dp
-          call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("stagegdd", r_setter, succ)
+          call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("stagegdd", r_setter, succ)
+          call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, succ)
 
           ! soil layer of planting depth
           call plant%upgm_grow%plant%plantstate%state%get("p_layer", i_setter, succ)        
@@ -3208,6 +3209,13 @@ module manage_mod
           ! reading of process parameters complete
 
           ! do process
+          ! create phase state names
+          r_setter = 0.0_dp
+          i_setter = 0
+          l_setter = .false.
+          call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, succ)
+          call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("stagegdd", r_setter, succ)
+
           ! create plant database inputs
           call plant%upgm_grow%plant%plantstate%pars%get("plantpop", r_setter, succ)
           if( .not. succ ) then
@@ -3249,13 +3257,6 @@ module manage_mod
             r_setter = plant%database%dmaxshoot
             call plant%upgm_grow%plant%plantstate%pars%put("dmaxshoot", r_setter, succ)
           end if
-
-          ! create phase state names
-          r_setter = 0.0_dp
-          i_setter = 0
-          l_setter = .false.
-          call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, succ)
-          call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("stagegdd", r_setter, succ)
 
           ! create plant state inputs
           call plant%upgm_grow%plant%plantstate%state%get("stress", r_setter, succ)
@@ -3565,13 +3566,8 @@ module manage_mod
           ! reading of process parameters complete
 
           ! do process
-          ! create plant database inputs
-          ! do not create this input, provided by P 100
-          !call plant%upgm_grow%plant%plantstate%pars%get("tbas", r_setter, succ)
-          !if( .not. succ ) then
-          !  r_setter = plant%database%tmin
-          !  call plant%upgm_grow%plant%plantstate%pars%put("tbas", r_setter, succ)
-          !end if
+          call getManVal(manFile%proc, 'tbas', r_setter)
+          call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("tbas", r_setter, succ)
 
           r_setter = 0.0_dp
           i_setter = 0
@@ -3623,18 +3619,10 @@ module manage_mod
           ! reading of process parameters complete
 
           ! do process
-          ! create plant database inputs
-          ! do not create this input, provided by P 100
-          !call plant%upgm_grow%plant%plantstate%pars%get("tbas", r_setter, succ)
-          !if( .not. succ ) then
-          !  r_setter = plant%database%tmin
-          !  call plant%upgm_grow%plant%plantstate%pars%put("tbas", r_setter, succ)
-          !end if
-          !call plant%upgm_grow%plant%plantstate%pars%get("topt", r_setter, succ)
-          !if( .not. succ ) then
-          !  r_setter = plant%database%tmin
-          !  call plant%upgm_grow%plant%plantstate%pars%put("topt", r_setter, succ)
-          !end if
+          call getManVal(manFile%proc, 'tbas', r_setter)
+          call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("tbas", r_setter, succ)
+          call getManVal(manFile%proc, 'topt', r_setter)
+          call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("topt", r_setter, succ)
 
           r_setter = 0.0_dp
           i_setter = 0
@@ -3796,13 +3784,8 @@ module manage_mod
           ! reading of process parameters complete
 
           ! do process
-          ! create plant database inputs
-          ! do not create this input, provided by P 100
-          !call plant%upgm_grow%plant%plantstate%pars%get("tbas", r_setter, succ)
-          !if( .not. succ ) then
-          !  r_setter = plant%database%tmin
-          !  call plant%upgm_grow%plant%plantstate%pars%put("tbas", r_setter, succ)
-          !end if
+          call getManVal(manFile%proc, 'tbas', r_setter)
+          call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("tbas", r_setter, succ)
 
           r_setter = 0.0_dp
           i_setter = 0
@@ -3854,18 +3837,10 @@ module manage_mod
           ! reading of process parameters complete
 
           ! do process
-          ! create plant database inputs
-          ! do not create this input, provided by P 100
-          !call plant%upgm_grow%plant%plantstate%pars%get("tbas", r_setter, succ)
-          !if( .not. succ ) then
-          !  r_setter = plant%database%tmin
-          !  call plant%upgm_grow%plant%plantstate%pars%put("tbas", r_setter, succ)
-          !end if
-          !call plant%upgm_grow%plant%plantstate%pars%get("topt", r_setter, succ)
-          !if( .not. succ ) then
-          !  r_setter = plant%database%tmin
-          !  call plant%upgm_grow%plant%plantstate%pars%put("topt", r_setter, succ)
-          !end if
+          call getManVal(manFile%proc, 'tbas', r_setter)
+          call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("tbas", r_setter, succ)
+          call getManVal(manFile%proc, 'topt', r_setter)
+          call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("topt", r_setter, succ)
 
           r_setter = 0.0_dp
           i_setter = 0
@@ -3993,42 +3968,42 @@ module manage_mod
           ! create plant database inputs
           call plant%upgm_grow%plant%plantstate%pars%get("plantpop", r_setter, succ)
           if( .not. succ ) then
-            r_setter = plant%database%tmin
+            r_setter = plant%geometry%dpop
             call plant%upgm_grow%plant%plantstate%pars%put("plantpop", r_setter, succ)
           end if
           call plant%upgm_grow%plant%plantstate%pars%get("leafstem", r_setter, succ)
           if( .not. succ ) then
-            r_setter = plant%database%tmin
+            r_setter = plant%database%fleafstem
             call plant%upgm_grow%plant%plantstate%pars%put("leafstem", r_setter, succ)
           end if
           call plant%upgm_grow%plant%plantstate%pars%get("idc", i_setter, succ)
           if( .not. succ ) then
-            r_setter = plant%database%tmin
+            i_setter = plant%database%idc
             call plant%upgm_grow%plant%plantstate%pars%put("idc", i_setter, succ)
           end if
           call plant%upgm_grow%plant%plantstate%pars%get("regrmshoot", r_setter, succ)
           if( .not. succ ) then
-            r_setter = plant%database%tmin
+            r_setter = plant%database%shoot
             call plant%upgm_grow%plant%plantstate%pars%put("regrmshoot", r_setter, succ)
           end if
           call plant%upgm_grow%plant%plantstate%pars%get("dmaxshoot", r_setter, succ)
           if( .not. succ ) then
-            r_setter = plant%database%tmin
+            r_setter = plant%database%dmaxshoot
             call plant%upgm_grow%plant%plantstate%pars%put("dmaxshoot", r_setter, succ)
           end if
           call plant%upgm_grow%plant%plantstate%pars%get("storeinit", r_setter, succ)
           if( .not. succ ) then
-            r_setter = plant%database%tmin
+            r_setter = plant%database%storeinit
             call plant%upgm_grow%plant%plantstate%pars%put("storeinit", r_setter, succ)
           end if
           call plant%upgm_grow%plant%plantstate%pars%get("huie", r_setter, succ)
           if( .not. succ ) then
-            r_setter = plant%database%tmin
+            r_setter = plant%database%hue
             call plant%upgm_grow%plant%plantstate%pars%put("huie", r_setter, succ)
           end if
           call plant%upgm_grow%plant%plantstate%pars%get("zloc_regrow", r_setter, succ)
           if( .not. succ ) then
-            r_setter = plant%database%tmin
+            r_setter = plant%database%zloc_regrow
             call plant%upgm_grow%plant%plantstate%pars%put("zloc_regrow", r_setter, succ)
           end if
 
@@ -4293,6 +4268,7 @@ module manage_mod
       use biomaterial, only: plant_pointer, biototal
       use hydro_data_struct_defs, only: hydro_derived_et, hydro_state
       use manage_data_struct_defs, only: man_file_struct, lastoper
+      use WEPS_UPGM_mod, only: set_start_UPGM
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer :: sr       ! the subregion number
@@ -4394,6 +4370,10 @@ module manage_mod
           exit
         end if
       end do
+
+      ! all management operations complete
+      ! Check for new UPGM plants and set CurrentStage to initial stage
+      call set_start_UPGM( plant )
 
       return
 
@@ -4611,150 +4591,149 @@ module manage_mod
       mn_air_temp(1) = mn_air_temp(13)
       mn_air_temp(14) = mn_air_temp(2)
 
+      ! input is residue yield ratio. internal use is total biomass yield ratio
+      ! all input values are on a dry weight basis.
+      ! plant%database%yld_coef = plant%database%yld_coef + 1.0
 
-        ! input is residue yield ratio. internal use is total biomass yield ratio
-        ! all input values are on a dry weight basis.
-        ! plant%database%yld_coef = plant%database%yld_coef + 1.0
+      ! adjust yield coefficient to generate values on dry weight basis
+      ! from total above ground biomass increments
+      plant%database%yld_coef = (plant%database%yld_coef + 1.0 - plant%database%ywct/100.0) / (1.0-plant%database%ywct/100.0)
 
-        ! adjust yield coefficient to generate values on dry weight basis
-        ! from total above ground biomass increments
-        plant%database%yld_coef = (plant%database%yld_coef + 1.0 - plant%database%ywct/100.0) / (1.0-plant%database%ywct/100.0)
-
-        ! check crop type to see if yield coefficient and grain fraction are used
-        if( cook_yield .eq. 1 ) then
-            if(     (plant%geometry%hyfg .eq. 0) &
-               .or. (plant%geometry%hyfg .eq. 1) &
-               .or. (plant%geometry%hyfg .eq. 5) ) then
-            ! grain fraction is used
-                if(       (plant%database%yld_coef .gt. 1.0 ) &
-                    .and. (plant%database%yld_coef * plant%database%grf .lt. 1.0) ) then
-                    ! these values will physically require the transfer of
-                    ! biomass from stem or leaf pools to meet the incremental
-                    ! need for reproductive mass to meet the residue yield ratio.
-                    ! If acresid_int is not greateer than zero, this will
-                    ! not be possible
-                    write(*,*) 'Error: crop named (', trim(plant%bname), &
-               ') has bad grain fraction and residue yield ratio values'
-                    write(*,*) 'Error: grf*(ryrat+1-mc)/(1-mc) must be > 1',&
-                               ', Value is: ',plant%database%yld_coef*plant%database%grf
-                    stop
-                end if
-            end if
+      ! check crop type to see if yield coefficient and grain fraction are used
+      if( cook_yield .eq. 1 ) then
+        if(     (plant%geometry%hyfg .eq. 0) &
+           .or. (plant%geometry%hyfg .eq. 1) &
+           .or. (plant%geometry%hyfg .eq. 5) ) then
+          ! grain fraction is used
+          if(     (plant%database%yld_coef .gt. 1.0 ) &
+            .and. (plant%database%yld_coef * plant%database%grf .lt. 1.0) ) then
+            ! these values will physically require the transfer of
+            ! biomass from stem or leaf pools to meet the incremental
+            ! need for reproductive mass to meet the residue yield ratio.
+            ! If acresid_int is not greater than zero, this will not be possible
+            write(*,*) 'Error: crop named (', trim(plant%bname), ') has bad grain fraction and residue yield ratio values'
+            write(*,*) 'Error: grf*(ryrat+1-mc)/(1-mc) must be > 1', &
+                       ', Value is: ',plant%database%yld_coef*plant%database%grf
+            stop
+          end if
         end if
+      end if
 
-        ! set planting date vars (day, month, rotation year)
-        plant%database%plant_doy = dayear(lastoper%day, lastoper%mon, lastoper%yr)
-        plant%database%plant_day = lastoper%day
-        plant%database%plant_month = lastoper%mon
-        plant%database%plant_rotyr = lastoper%yr
+      ! set planting date vars (day, month, rotation year)
+      plant%database%plant_doy = dayear(lastoper%day, lastoper%mon, lastoper%yr)
+      plant%database%plant_day = lastoper%day
+      plant%database%plant_month = lastoper%mon
+      plant%database%plant_rotyr = lastoper%yr
 
-        ! initialize transpiration depth parameters
-        plant%geometry%zfurcut = 0.0
-        plant%geometry%ztransprtmin = 0.0
-        plant%geometry%ztransprtmax = 0.0
-        ! set row spacing based on flag
-        select case( plant%geometry%rsfg )
-        case(0) ! Broadcast Planting
+      ! initialize transpiration depth parameters
+      plant%geometry%zfurcut = 0.0
+      plant%geometry%ztransprtmin = 0.0
+      plant%geometry%ztransprtmax = 0.0
+      ! set row spacing based on flag
+      select case( plant%geometry%rsfg )
+      case(0) ! Broadcast Planting
+          plant%geometry%xrow = 0.0
+      case(1) ! Use Implement Ridge Spacing
+         if(imprs.gt.0.001) then
+           plant%geometry%xrow = imprs * mmtom
+           ! check for implement seed placement and ridging
+           if( (plant%geometry%rg .eq. 0) .and. (rdgflag .eq. 1) ) then
+             ! seed placed in furrow bottom and ridge made unconditionally
+             ! set transpiration depth parameters (meters)
+             plant%geometry%zfurcut = mmtom * furrowcut(soil%aszrgh,soil%asxrgw,soil%asxrgs)
+             plant%geometry%ztransprtmin = plant%geometry%zfurcut + plant%database%growdepth
+             plant%geometry%ztransprtmax = plant%database%zmrt
+           end if
+         else  ! no ridges, so this is a broadcast crop
             plant%geometry%xrow = 0.0
-        case(1) ! Use Implement Ridge Spacing
-           if(imprs.gt.0.001) then
-             plant%geometry%xrow = imprs * mmtom
-             ! check for implement seed placement and ridging
-             if( (plant%geometry%rg .eq. 0) .and. (rdgflag .eq. 1) ) then
-               ! seed placed in furrow bottom and ridge made unconditionally
-               ! set transpiration depth parameters (meters)
-               plant%geometry%zfurcut = mmtom * furrowcut(soil%aszrgh,soil%asxrgw,soil%asxrgs)
-               plant%geometry%ztransprtmin = plant%geometry%zfurcut + plant%database%growdepth
-               plant%geometry%ztransprtmax = plant%database%zmrt
-             end if
-           else  ! no ridges, so this is a broadcast crop
-              plant%geometry%xrow = 0.0
-           endif
-        case(2) ! Use Specified Row Spacing
-           ! convert incoming mm to meters used in acxrow
-           plant%geometry%xrow = plant%geometry%xrow*mmtom
-        case default
-           write(*,*) 'Invalid row spacing flag value'
-        end select
+         endif
+      case(2) ! Use Specified Row Spacing
+         ! convert incoming mm to meters used in acxrow
+         plant%geometry%xrow = plant%geometry%xrow*mmtom
+      case default
+         write(*,*) 'Invalid row spacing flag value'
+      end select
 
-!     start calculation of seasonal heat unit requirement
-      sphu = 0.
-      ephu = 0.
-      bphu = 0.
-      mdx = 14
-      yp1 = 1.0e31    ! signals spline to use natural bound (2nd deriv = 0)
-      ypn = 1.0e31    ! signals spline to use natural bound (2nd deriv = 0)
+      if( .not. associated(plant%upgm_grow%plant) ) then
+        ! Calculations required for old WEPS crop model
+        ! start calculation of seasonal heat unit requirement
+        sphu = 0.
+        ephu = 0.
+        bphu = 0.
+        mdx = 14
+        yp1 = 1.0e31    ! signals spline to use natural bound (2nd deriv = 0)
+        ypn = 1.0e31    ! signals spline to use natural bound (2nd deriv = 0)
 
-      ! call cubic spline interpolation routines for air temperature
-      call spline (dy_mon, mx_air_temp, mdx, yp1, ypn, mx_air_temp2)
-      call spline (dy_mon, mn_air_temp, mdx, yp1, ypn, mn_air_temp2)
-      do idx = 1, 365
+        ! call cubic spline interpolation routines for air temperature
+        call spline( dy_mon, mx_air_temp, mdx, yp1, ypn, mx_air_temp2 )
+        call spline( dy_mon, mn_air_temp, mdx, yp1, ypn, mn_air_temp2 )
+        do idx = 1, 365
           jreal = idx
           ! calculate daily temps. and heat units
-          call splint(dy_mon,mx_air_temp,mx_air_temp2,mdx,jreal,max_air)
-          call splint(dy_mon,mn_air_temp,mn_air_temp2,mdx,jreal,min_air)
-          heat_unit = huc1(max_air, min_air, plant%database%topt, plant%database%tmin)
-          d1(idx)%day=idx
-          d1(idx)%heatunits=heat_unit
-          d2(idx)%day=idx
-          d2(idx)%heatunits=heat_unit
-      end do
-!     duplicate the first year into the second year
-      do idx=1,365
-          ydx=idx+365
-          d2(ydx)%day=ydx
-          d2(ydx)%heatunits=d1(idx)%heatunits
-      end do
-!     running sum of heat units
-      do idx=1,730
-          sphu=sphu+d2(idx)%heatunits
-          d2(idx)%cumheatunits=sphu
+          call splint( dy_mon, mx_air_temp, mx_air_temp2, mdx, jreal, max_air )
+          call splint( dy_mon, mn_air_temp, mn_air_temp2, mdx, jreal, min_air )
+          heat_unit = huc1( max_air, min_air, plant%database%topt, plant%database%tmin )
+          d1(idx)%day = idx
+          d1(idx)%heatunits = heat_unit
+          d2(idx)%day = idx
+          d2(idx)%heatunits = heat_unit
+        end do
+        ! duplicate the first year into the second year
+        do idx = 1, 365
+          ydx = idx + 365
+          d2(ydx)%day = ydx
+          d2(ydx)%heatunits = d1(idx)%heatunits
+        end do
+        ! running sum of heat units
+        do idx = 1, 730
+          sphu = sphu + d2(idx)%heatunits
+          d2(idx)%cumheatunits = sphu
 !          if (am0cfl(isr) .gt. 0) then
-!              print for debugging
-!              write(luoinpt(isr),*) d2(idx)%day,d2(idx)%heatunits,d2(idx)%cumheatunits
-!          end if
-      end do
-      sphu=0.
+!            print for debugging
+!            write(luoinpt(isr),*) d2(idx)%day,d2(idx)%heatunits,d2(idx)%cumheatunits
+!         end if
+        end do
+        sphu = 0.
 
-!     find dtm or phu depending on heat unit flag=1
-      do idx=1,730
-            if (d2(idx)%day.eq.plant%database%plant_doy) bphu = d2(idx)%cumheatunits
-      end do
-      if( plant%database%thudf .eq. 1 ) then
-         ! use heat unit calculations to find dtm 
-         phu = plant%database%thum
-         do idx=1,730
-            if (d2(idx)%cumheatunits.le.bphu+phu) dtm = d2(idx)%day - plant%database%plant_doy
-         end do
-         hdate = plant%database%plant_doy + dtm
-      else
-         ! calculate average seasonal heat units
-         dtm=plant%database%tdtm
-         hdate = plant%database%plant_doy + dtm
-         if( hdate.gt.d2(730)%day) then
+        ! find dtm or phu depending on heat unit flag=1
+        do idx = 1, 730
+          if (d2(idx)%day .eq. plant%database%plant_doy) bphu = d2(idx)%cumheatunits
+        end do
+        if( plant%database%thudf .eq. 1 ) then
+          ! use heat unit calculations to find dtm 
+          phu = plant%database%thum
+          do idx = 1, 730
+            if (d2(idx)%cumheatunits .le. bphu+phu) dtm = d2(idx)%day - plant%database%plant_doy
+          end do
+          hdate = plant%database%plant_doy + dtm
+        else
+          ! use dtm to find average seasonal heat units
+          dtm = plant%database%tdtm
+          hdate = plant%database%plant_doy + dtm
+          if( hdate .gt. d2(730)%day) then
             ! this crop grows longer than one year
             ephu = d2(730)%cumheatunits
             phu = ephu - bphu
             ! cap this at two years
-            ydx = min(730,hdate - int(d2(730)%day))
+            ydx = min(730, hdate - int(d2(730)%day))
             phu = phu + d2(ydx)%cumheatunits
-         else
+          else
             do idx=1,730
-               if (d2(idx)%day.eq.hdate) ephu = d2(idx)%cumheatunits
+              if (d2(idx)%day .eq. hdate) ephu = d2(idx)%cumheatunits
             end do
             phu = ephu - bphu
-         end if
-         if (phu .le. 10*(plant%database%topt - plant%database%tmin)) then
-            write(*,"(a,i3,a)") 'Warning: Crop will not grow in the',   &
-                                 dtm, &
-                                 ' days specified. Insufficient heat units accumulate. Check planting date.'
-         end if
-      end if
+          end if
+          if (phu .le. 10*(plant%database%topt - plant%database%tmin)) then
+            write(*,"(a,i3,a)") 'Warning: Crop will not grow in the', dtm, &
+                                ' days specified. Insufficient heat units accumulate. Check planting date.'
+          end if
+        end if
 
-      ! print out heat average heat unit and days to maturity
-      if (am0cfl(isr) .gt. 0) then
-         write(luoinpt(isr), "(i5, i7, i9, i11, i10, 2x, 2f10.1)" ) &
-               plant%database%plant_doy, hdate, plant%database%thudf, dtm, plant%database%tdtm, phu, plant%database%thum
+        ! print out heat average heat unit and days to maturity
+        if (am0cfl(isr) .gt. 0) then
+          write(luoinpt(isr), "(i5, i7, i9, i11, i10, 2x, 2f10.1)" ) &
+            plant%database%plant_doy, hdate, plant%database%thudf, dtm, plant%database%tdtm, phu, plant%database%thum
+        end if
       end if
 
       ! Set the global parameter for maximum heat units to the new calculated value
@@ -4770,23 +4749,23 @@ module manage_mod
       ! units are mg/plant * plant/m^2 / mg/shoot = shoots/m^2
       plant%geometry%dstm = plant%database%storeinit * plant%geometry%dpop / plant%database%shoot
       if( plant%geometry%dstm .lt. plant%geometry%dpop ) then
-          ! adjust count to reflect limit
-          plant%geometry%dstm = plant%geometry%dpop
-          ! not enough mass to make a full shoot
-          ! adjust shoot mass to reflect storage mass for one shoot per plant
-          ! units are mg/plant * kg/mg * plant/m^2 = kg/m^2
-          plant%growth%mtotshoot = plant%database%storeinit * mgtokg * plant%geometry%dpop
+        ! adjust count to reflect limit
+        plant%geometry%dstm = plant%geometry%dpop
+        ! not enough mass to make a full shoot
+        ! adjust shoot mass to reflect storage mass for one shoot per plant
+        ! units are mg/plant * kg/mg * plant/m^2 = kg/m^2
+        plant%growth%mtotshoot = plant%database%storeinit * mgtokg * plant%geometry%dpop
       else if( plant%geometry%dstm .gt. plant%database%dmaxshoot*plant%geometry%dpop ) then
-          ! adjust count to reflect limit
-          plant%geometry%dstm = plant%database%dmaxshoot * plant%geometry%dpop
-          ! more mass than maximum number of shoots
-          ! adjust total shoot mass to reflect maximum number of shoots
-          ! units are shoots/m^2 * mg/shoot * kg/mg = kg/m^2
-          plant%growth%mtotshoot = plant%geometry%dstm * plant%database%shoot * mgtokg
+        ! adjust count to reflect limit
+        plant%geometry%dstm = plant%database%dmaxshoot * plant%geometry%dpop
+        ! more mass than maximum number of shoots
+        ! adjust total shoot mass to reflect maximum number of shoots
+        ! units are shoots/m^2 * mg/shoot * kg/mg = kg/m^2
+        plant%growth%mtotshoot = plant%geometry%dstm * plant%database%shoot * mgtokg
       else
-          ! mass and shoot number correspond
-          ! units are mg/plant * kg/mg * plant/m^2 = kg/m^2
-          plant%growth%mtotshoot = plant%database%storeinit * mgtokg * plant%geometry%dpop
+        ! mass and shoot number correspond
+        ! units are mg/plant * kg/mg * plant/m^2 = kg/m^2
+        plant%growth%mtotshoot = plant%database%storeinit * mgtokg * plant%geometry%dpop
       end if
 
       plant%growth%zgrowpt = plant%database%growdepth
@@ -4796,19 +4775,19 @@ module manage_mod
 
       ! initialize the root storage mass into a single layer
       if( (soil%aszlyd(1)*mmtom .gt. plant%geometry%zrtd) ) then
-          ! mg/plant * #/m^2 * 1kg/1.0e6mg = kg/m^2
-          plant%mass%rootstorez(1) = plant%database%storeinit * plant%geometry%dpop * mgtokg
+        ! mg/plant * #/m^2 * 1kg/1.0e6mg = kg/m^2
+        plant%mass%rootstorez(1) = plant%database%storeinit * plant%geometry%dpop * mgtokg
       else
-          plant%mass%rootstorez(1) = 0.0
+        plant%mass%rootstorez(1) = 0.0
       end if
       do lay = 2, bnslay
-          if( ( (soil%aszlyd(lay-1)*mmtom .le. plant%geometry%zrtd) &
-              .and. (soil%aszlyd(lay)*mmtom .gt. plant%geometry%zrtd) ) ) then
-              ! mg/plant * #/m^2 * 1kg/1.0e6mg = kg/m^2
-              plant%mass%rootstorez(lay) = plant%database%storeinit * plant%geometry%dpop * mgtokg
-          else
-              plant%mass%rootstorez(lay) = 0.0
-          end if
+        if( ( (soil%aszlyd(lay-1)*mmtom .le. plant%geometry%zrtd) &
+          .and. (soil%aszlyd(lay)*mmtom .gt. plant%geometry%zrtd) ) ) then
+          ! mg/plant * #/m^2 * 1kg/1.0e6mg = kg/m^2
+          plant%mass%rootstorez(lay) = plant%database%storeinit * plant%geometry%dpop * mgtokg
+        else
+          plant%mass%rootstorez(lay) = 0.0
+        end if
       end do
 
       ! set previous values to initial values
@@ -4820,9 +4799,9 @@ module manage_mod
       plant%prev%flatstore = plant%mass%flatstore
       plant%prev%mshoot = plant%growth%mshoot
       do lay = 1, bnslay
-         plant%prev%stemz(lay) = plant%mass%stemz(lay)
-         plant%prev%rootstorez(lay) = plant%mass%rootstorez(lay)
-         plant%prev%rootfiberz(lay) = plant%mass%rootfiberz(lay)
+        plant%prev%stemz(lay) = plant%mass%stemz(lay)
+        plant%prev%rootstorez(lay) = plant%mass%rootstorez(lay)
+        plant%prev%rootfiberz(lay) = plant%mass%rootfiberz(lay)
       end do
       plant%prev%ht = plant%geometry%zht
       plant%prev%zshoot = plant%geometry%zshoot

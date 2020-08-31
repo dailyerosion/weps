@@ -611,6 +611,7 @@ contains
      ! plant not growing, just created
      plantNew%growth%am0cif = .false.
      plantNew%growth%growing = .false.
+     plantNew%growth%shoot_growing = .false.
      plantNew%growth%can_regrow = .false.
      plantNew%growth%do_regrow = .false.
      plantNew%growth%thucum = 0.0

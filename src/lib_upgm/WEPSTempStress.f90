@@ -59,10 +59,10 @@ module WEPSTempStress_mod
       if( .not. check_return( "tmax", succ ) ) return
       call env%state%get("tmin", tmin, succ)
       if( .not. check_return( "tmin", succ ) ) return
-      call plnt%pars%get("topt", topt, succ)
-      if( .not. check_return( "topt", succ ) ) return
-      call plnt%pars%get("tbas", tbase, succ)
+      call self%processPars%get("tbas", tbase, succ)
       if( .not. check_return( "tbas", succ ) ) return
+      call self%processPars%get("topt", topt, succ)
+      if( .not. check_return( "topt", succ ) ) return
 
       tstress = temp_stress( tmax, tmin, topt, tbase )
 

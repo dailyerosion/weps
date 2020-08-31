@@ -42,6 +42,8 @@ module PhenologyMMS_mod
         ! phase complete, find daygdd remainder to pass back
         stagegdd = today_required_gdd
         daygdd = (phase_rel_gdd-1.0_dp) * today_required_gdd / vern_delay
+        ! adjust phase_rel_gdd to max value
+        phase_rel_gdd = 1.0_dp
       else
         stagegdd = stagegdd + vern_delay * daygdd
         daygdd = 0.0_dp

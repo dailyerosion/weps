@@ -306,7 +306,7 @@ module WEPSCrop_util_mod
       real(dp) :: dead_leaf
 
       ! reduce green leaf mass in freezing weather
-      if (stsmn1 .lt. -2.0_dp) then
+      if( (bcmstandleaf .gt. 0.0_dp) .and. (stsmn1 .lt. -2.0_dp) ) then
           ! use daily minimum soil temperature of first layer to account for snow cover effects
           xw = abs( stsmn1 )
           ! this was obviously to prevent excessive leaf loss

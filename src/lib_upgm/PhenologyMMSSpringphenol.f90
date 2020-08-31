@@ -124,7 +124,6 @@ module PhenologyMMSSpringphenol_mod
       real(dp) :: pdht ! increment in potential height (m)'
       real(dp) :: pdrd ! potential increment in root length (m)
       real(dp) :: p_lf_rp    ! sum of leaf and reproductive partitioning fractions
-      logical :: growing
 
       ! Body of mms_springphenol
 
@@ -323,7 +322,6 @@ module PhenologyMMSSpringphenol_mod
       end if
 
       hu_delay = 1.0_dp
-      growing = .true.
 
       if (phase_rel_gdd .ge. 1.0_dp) then
         ! update plant stage pointer to next stage.
@@ -392,8 +390,6 @@ module PhenologyMMSSpringphenol_mod
       if( .not. check_return( "hu_delay", succ ) ) return
       call plnt%state%replace("spring_flg", spring_flg, succ)
       if( .not. check_return( "spring_flg", succ ) ) return
-      call plnt%state%replace("growing", growing, succ)
-      if( .not. check_return( "growing", succ ) ) return
 
       return
 

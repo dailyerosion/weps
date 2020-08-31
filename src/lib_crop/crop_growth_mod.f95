@@ -480,8 +480,12 @@ module crop_growth_mod
           ! either of these checks. Doing nothing here prevents
           ! resprouting after defoliation
 
-        else if( (bc0idc.eq.9) .or. (bc0idc.eq.10) ) then
+        else if( (bc0idc.eq.9) .or. (bc0idc.eq.10) .or. (bc0idc.eq.11) .or. (bc0idc.eq.12) ) then
           ! bush/tree crops with annual cycle without replanting
+          ! 9 - Deciduous
+          ! 10 - Conifer
+          ! 11 - mixed Deciduous and Conifer
+          ! 12 - Deciduous with stump regrowth
 
           ! set winter solstice based on latitude
           if( amalat .gt. 0.0d0 ) then
@@ -496,7 +500,77 @@ module crop_growth_mod
             winter_sol = S_winter_sol
           end if
 
-          ! check for spring
+          ! check for regrowth from a stump
+          if( bc0idc.eq.12 ) then
+            regrowth_flg = 0
+            ! Stump regrowth is possible
+            if( bczht .lt. (0.1*bprevht) ) then
+              ! tree has been cut close to the ground
+              regrowth_flg = 1
+              if( bctwarmdays .ge. shoot_delay ) then
+                ! enough warm days to start regrowth
+                regrowth_flg = 2
+                if( bcthucum/bcthum .ge. bc0hue ) then
+                  ! heat units past emergence
+                  regrowth_flg = 3
+                  ! find out how much root store can be released for regrowth
+                  call shootnum(shoot_flg, bnslay, bc0idc, bcdpop, bc0shoot, &
+                     bcdmaxshoot, root_store_rel, bcmrootstorez, pot_stems)
+                  ! reset growth clock 
+                  bcthucum = 0.0d0
+                  bcthu_shoot_beg = 0.0d0
+                  bcthu_shoot_end = dble(bc0hue)
+                  ! reset shoot grow configuration
+                  if ( bczloc_regrow .gt. 0.0 ) then
+                      ! regrows from stem, stem does not become residue
+                      ! note, flat leaves are dead leaves, no storage in shoot.
+
+                      ! testing shows that this is not what is intended
+                      !bcmshoot = bcmstandstem +bcmflatstem +bcmstandleaf
+                      !do lay = 1, bnslay
+                      !    bcmshoot = bcmshoot + bcmbgstemz(lay)
+                      !end do
+                      ! shoot grows from stem regrow location using root reserves
+                      bcmshoot = 0.0
+                  else
+                      ! regrows from crown, stem becomes residue
+                      bgmstandstem = bcmstandstem
+                      bgmstandleaf = bcmstandleaf
+                      bgmstandstore = bcmstandstore
+                      bgmflatstem = bcmflatstem
+                      bgmflatleaf = bcmflatleaf
+                      bgmflatstore = bcmflatstore
+                      do lay = 1, bnslay
+                          bgmbgstemz(lay) = bcmbgstemz(lay)
+                      end do
+                      bggrainf = bcgrainf
+                      bgzht = bczht
+                      bgdstm = u_bcdstm
+                      bgxstmrep = bcxstmrep
+                      ! reset crop values to indicate new growth cycle
+                      bcmshoot = 0.0
+                      bcmstandstem = 0.0
+                      bcmstandleaf = 0.0
+                      bcmstandstore = 0.0
+                      bcmflatstem = 0.0
+                      bcmflatleaf = 0.0
+                      bcmflatstore = 0.0
+                      do lay = 1, bnslay
+                          bcmbgstemz(lay) = 0.0
+                      end do
+                      bcgrainf = 0.0
+                      bczht = 0.0
+                  end if
+                  u_bcmtotshoot = root_store_rel
+                  u_bcdstm = pot_stems
+                end if
+              end if
+            end if
+          end if
+
+          ! check for spring and leaf appearance
+          if( bcthucum/bcthum .ge. bc0hue ) then
+            ! heat units past emergence
             if(     (hrlty .lt. hrlt) &
               ! days lengthening (ie. spring)
               .and. (bcdayspring .eq. 0) ) then
@@ -510,7 +584,7 @@ module crop_growth_mod
                 bcmflatstore = 0.0
                 ! new leaves start to appear
                 bcmtotleaf = total_leaf( bnslay, bcmrootstorez )
-                if( bc0idc .eq. 9 ) then
+                if( (bc0idc .eq. 9) .or. (bc0idc .eq. 11) .or. (bc0idc .eq. 12) ) then
                   ! reset heat units
                   bcthucum = 0.0d0
                 end if
@@ -524,6 +598,7 @@ module crop_growth_mod
                 bcdayfall = 0
               end if
             end if
+          end if
 
           ! check for fall conditions and leaf drop
           if( (hrlty .gt. hrlt) &
@@ -537,7 +612,7 @@ module crop_growth_mod
                 .or. (jd .eq. winter_sol) &         ! always drop leaves by winter solstice
                 ) then
                 ! cold days meet threshold
-                if( bc0idc .eq. 9 ) then
+                if( (bc0idc .eq. 9) .or. (bc0idc .eq. 12) ) then
                   ! Deciduous, drop all leaves
                   ! drop leaves into flat residue pool
                   bgmflatleaf = bcmflatleaf + bcmstandleaf
@@ -549,6 +624,20 @@ module crop_growth_mod
                 else if( bc0idc .eq. 10 ) then
                   ! Evergreen, drop dead leaves
                   ! drop leaves into flat residue pool
+                  bgmflatleaf = bcmflatleaf + bcmstandleaf * (1.0d0 - bcfliveleaf)
+                  ! reset crop values
+                  bcmstandleaf = bcmstandleaf * bcfliveleaf
+                  bcfliveleaf = 1.0d0
+                  bcmflatleaf = 0.0
+                  ! reset heat units (use vernalization delay)
+                  bcthucum = 0.0d0
+                else if( bc0idc .eq. 11 ) then
+                  ! Mixed Deciduous and Evergreen, default 50% tree mix
+                  ! drop 50% leaf mass to simulate Deciduous leaf drop change in cover
+                  bgmflatleaf = bcmflatleaf + bcmstandleaf * 0.5d0
+                  ! reset crop values
+                  bcmstandleaf = bcmstandleaf * 0.5d0
+                  ! drop dead evergreen leaves into flat residue pool
                   bgmflatleaf = bcmflatleaf + bcmstandleaf * (1.0d0 - bcfliveleaf)
                   ! reset crop values
                   bcmstandleaf = bcmstandleaf * bcfliveleaf
@@ -2053,10 +2142,8 @@ module crop_growth_mod
       doy = get_simdate_doy()
 
       ! fraction of leaf growth from stored reserves (today and yesterday)
-      leaf_hui = min( 1.0d0, (hui - bcthu_leaf_beg)                     &
-     &          / (dble(bcthu_leaf_end) - bcthu_leaf_beg) )
-      leaf_huiy = max( 0.0d0, (huiy - bcthu_leaf_beg)                   &
-     &           / (bcthu_leaf_end - bcthu_leaf_beg) )
+      leaf_hui = min( 1.0d0, (hui - bcthu_leaf_beg) / (dble(bcthu_leaf_end) - bcthu_leaf_beg) )
+      leaf_huiy = max( 0.0d0, (huiy - bcthu_leaf_beg) / (bcthu_leaf_end - bcthu_leaf_beg) )
 
       ! total leaf emergence occurs at an exponential rate
       fexp_hui = (exp(leaf_exp*leaf_hui)-1.0) / (exp(leaf_exp)-1)
@@ -2083,8 +2170,7 @@ module crop_growth_mod
       ! check that sufficient storage root mass is available
       ! units: mg/plant = kg/m^2 / (kg/mg * plant/m^2)
       avail_mass = s_root_sum  / (bcdpop * u_mgtokg)
-      if( (d_s_root_mass .gt. avail_mass)                               &
-     &   .and. (d_s_root_mass .gt. 0.0d0) ) then
+      if( (d_s_root_mass .gt. avail_mass) .and. (d_s_root_mass .gt. 0.0d0) ) then
           ! reduce removal to match available storage
           red_mass_rat = avail_mass / d_s_root_mass
           ! adjust leaf increment to match
@@ -2095,7 +2181,7 @@ module crop_growth_mod
 
       ! if no additional mass, no need to go further
       if( d_leaf_mass .le. 0.0d0) return
-!! +++++++++++++ RETURN FROM HERE IF ZERO +++++++++++++++++
+      !! +++++++++++++ RETURN FROM HERE IF ZERO +++++++++++++++++
 
       !convert from mg/plant to kg/m^2
       dlfwt = d_leaf_mass * u_mgtokg * bcdpop
@@ -2103,20 +2189,17 @@ module crop_growth_mod
       ! distribute mass into mass pools
       if( (bcmstandleaf + dlfwt) .gt. 0.0 ) then
           ! added leaf mass adjusts live leaf fraction, otherwise no change
-          bcfliveleaf = (bcfliveleaf*bcmstandleaf+dlfwt)                &
-     &            / (bcmstandleaf + dlfwt)
+          bcfliveleaf = (bcfliveleaf*bcmstandleaf+dlfwt) / (bcmstandleaf + dlfwt)
       end if
       bcmstandleaf = bcmstandleaf + dlfwt
 
       ! remove from storage root mass
       do lay = 1, bnslay
           ! check for sufficient storage in layer to meet demand
-          if(       (bcmrootstorez(lay) .gt. 0.0d0)                       &
-     &        .and. (d_s_root_mass .gt. 0.0d0) ) then
+          if( (bcmrootstorez(lay) .gt. 0.0d0) .and. (d_s_root_mass .gt. 0.0d0) ) then
               ! demand and storage to meet it
               ! units: mg/plant * kg/mg * plants/m^2 = kg/m^2
-              bcmrootstorez(lay) = bcmrootstorez(lay) - d_s_root_mass   &
-     &                           * u_mgtokg * bcdpop
+              bcmrootstorez(lay) = bcmrootstorez(lay) - d_s_root_mass * u_mgtokg * bcdpop
               if( bcmrootstorez(lay) .lt. 0.0d0 ) then
                   ! not enough mass in this layer to meet need. Carry over
                   ! to next layer in d_s_root_mass
