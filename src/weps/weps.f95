@@ -387,6 +387,9 @@
       end if
       if (calibrate_rotcycles .eq. 0) then
          calibrate_rotcycles = run_rot_cycles
+      else
+         ! limit number of rotation cycles to speed up calibration
+         calibrate_rotcycles = min(calibrate_rotcycles, run_rot_cycles)
       endif
 
       ! Everything required for stir_report is available
@@ -490,6 +493,15 @@
       if( beg_init_y .eq. 0 ) beg_init_y = -1
       beg_init_jday = julday(beg_init_d, beg_init_m, beg_init_y)
 
+      ! fix up for -I rotation count .gt. the specified run dates
+      if( beg_init_jday .lt. ijday ) then
+         write(*,*) 'Warning: -I Initialization longer than simulation. Reduced to allowable value.'
+         beg_init_d = id
+         beg_init_m = im
+         beg_init_y = iy
+         beg_init_jday = ijday
+      end if
+
       if (init_cycle > 0) then   ! to avoid printing it when not being done
           write(6,*) "Starting initialization phase"
       else
@@ -571,15 +583,11 @@
          write(6,*) "Starting calibrate phase"
          calib_loop = .true. ! Signifies that we are in the calibration loop
          lcaljday = ljday
-         if (calibrate_rotcycles .ne. max_calib_cycles) then
+         if (calibrate_rotcycles .lt. run_rot_cycles) then
              !calculate last julian date for single calibration cycle
-             lcaljday = julday(31, 12,(maxper*calibrate_rotcycles) )
-
-             write(6,*) "CAL1 ",ljday, lcaljday, calibrate_rotcycles,   &
-     &                         maxper, maxper*calibrate_rotcycles
+             lcaljday = julday(31, 12, iy - 1  + (maxper*calibrate_rotcycles) )
+             lcaljday = min(lcaljday, ljday)
          endif
-             write(6,*) "CAL2 ",ljday, lcaljday, calibrate_rotcycles,   &
-     &                         maxper, maxper*calibrate_rotcycles
 
          do am0jd = ijday,lcaljday
 
