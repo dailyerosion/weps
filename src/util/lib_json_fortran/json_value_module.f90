@@ -2037,7 +2037,7 @@
 
 #ifdef __INTEL_COMPILER
         ! for Intel, we raise a traceback and quit
-        call tracebackqq(string=trim(msg), user_exit_code=0)
+!        call tracebackqq(string=trim(msg), user_exit_code=0)
 #else
         write(error_unit,'(A)') 'JSON-Fortran Exception: '//trim(msg)
         error stop 1
@@ -2053,7 +2053,7 @@
 !#endif
 
 #ifdef __INTEL_COMPILER
-        call tracebackqq(user_exit_code=-1)  ! print a traceback and return
+!        call tracebackqq(user_exit_code=-1)  ! print a traceback and return
 #endif
 
         write(output_unit,'(A)') '***********************'
