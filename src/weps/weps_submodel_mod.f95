@@ -10,7 +10,7 @@ module weps_submodel_mod
     subroutine submodels (isr, soil, plant, plantIndex, restot, croptot, &
                           biotot, decompfac, hstate, h1et, h1bal, wp, manFile)
 
-      use datetime_mod, only: get_simdate_daysim
+      use datetime_mod, only: get_psim_daysim
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: decomp_factors
       use biomaterial, only: plant_pointer, residue_pointer, biototal
@@ -41,39 +41,39 @@ module weps_submodel_mod
       type(wepp_param), intent(inout) :: wp
       type(man_file_struct), intent(inout) :: manFile
 
-      ! write(*,*) "Start manage", get_simdate_daysim()
+      ! write(*,*) "Start manage", get_psim_daysim(isr)
 
       ! MANAGEment (tillage) submodel
-      call manage(isr, iy, soil, plant, plantIndex, biotot, hstate, h1et, manFile)
+      call manage( isr, iy, soil, plant, plantIndex, biotot, hstate, h1et, manFile )
 
-      call plantupdate( soil, plant, croptot, restot, biotot )
+      call plantupdate( isr, soil, plant, croptot, restot, biotot )
 
-      ! write(*,*) "Start callhydr", get_simdate_daysim()
+      ! write(*,*) "Start callhydr", get_psim_daysim(isr)
 
       ! HYDROLOGY submodel. Do not change call order. Hydro may set irrigation
       ! amounts that will affect soil.
-      call callhydr(get_simdate_daysim(), isr, soil, plant, croptot, restot, biotot, hstate, h1et, h1bal, wp)
+      call callhydr( get_psim_daysim(isr), isr, soil, plant, croptot, restot, biotot, hstate, h1et, h1bal, wp )
 
-      ! write(*,*) "Start callsoil", get_simdate_daysim()
+      ! write(*,*) "Start callsoil", get_psim_daysim(isr)
 
       ! SOIL submodel
-      call callsoil(get_simdate_daysim(), isr, soil, croptot, biotot, hstate, h1et)
+      call callsoil( get_psim_daysim(isr), isr, soil, croptot, biotot, hstate, h1et )
 
-      ! write(*,*) "Start callcrop", get_simdate_daysim()
+      ! write(*,*) "Start callcrop", get_psim_daysim(isr)
 
       ! CROP submodel
-      call callcrop(get_simdate_daysim(), isr, soil, plant, croptot, restot, biotot, h1et)
-      call plantupdate( soil, plant, croptot, restot, biotot )
+      call callcrop( get_psim_daysim(isr), isr, soil, plant, restot, h1et )
+      call plantupdate( isr, soil, plant, croptot, restot, biotot )
 
       if( associated(plant) ) then
         ! set prevday derived variable for later reference in end_season
         plant%prev%cancov = plant%deriv%fcancov
       end if
 
-      ! write(*,*) "Start decomp", get_simdate_daysim()
+      ! write(*,*) "Start decomp", get_psim_daysim(isr)
       ! DECOMPosition submodel
-      call decomp(isr, soil, plant, decompfac, hstate, h1et)
-      call plantupdate( soil, plant, croptot, restot, biotot )
+      call decomp( isr, soil, plant, decompfac, hstate, h1et )
+      call plantupdate( isr, soil, plant, croptot, restot, biotot )
 
       return
     end subroutine submodels
@@ -154,6 +154,7 @@ module weps_submodel_mod
           ! this has biodrag, add to subrsurf
           npools = npools + 1
           subrsurf%brcdInput(npools)%bname = thisPlant%bname
+          subrsurf%brcdInput(npools)%residue = .false.
           subrsurf%brcdInput(npools)%rlai = thisPlant%deriv%rlai
           subrsurf%brcdInput(npools)%rsai = thisPlant%deriv%rsai
           subrsurf%brcdInput(npools)%rg = thisPlant%geometry%rg
@@ -169,6 +170,7 @@ module weps_submodel_mod
             ! this has biodrag, add to subrsurf
             npools = npools + 1
             subrsurf%brcdInput(npools)%bname = thisPlant%bname
+            subrsurf%brcdInput(npools)%residue = .true.
             subrsurf%brcdInput(npools)%rlai = thisResidue%deriv%rlai
             subrsurf%brcdInput(npools)%rsai = thisResidue%deriv%rsai
             subrsurf%brcdInput(npools)%rg = thisPlant%geometry%rg
@@ -184,7 +186,7 @@ module weps_submodel_mod
         thisPlant => thisPlant%olderPlant
       end do
 
-      subrsurf%abffcv = biotot%ffcvtot
+      subrsurf%abffcv = biotot%ftcvtot
       subrsurf%asfcr = soil%asfcr
       subrsurf%aszcr = soil%aszcr
       subrsurf%asflos = soil%asflos

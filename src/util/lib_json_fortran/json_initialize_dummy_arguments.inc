@@ -1,3 +1,4 @@
+!/*
 !$Author$
 !$Date$
 !$Revision$
@@ -6,7 +7,7 @@
 !  The dummy argument list for the various `initialize` subroutines.
 !
 !  See also: json_initialize_argument.inc
-
+!*/
 verbose,&
 compact_reals,&
 print_signs,&

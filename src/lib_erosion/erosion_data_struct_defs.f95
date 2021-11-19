@@ -52,14 +52,17 @@ module erosion_data_struct_defs
      real :: qcsi         ! input discharge (creep/saltation) (kg/m/s)
      real :: qssi         ! input discharge (suspension) (kg/m/s)
      real :: q10i         ! input discharge (pm10) (kg/m/s)
+     real :: q2_5i        ! input discharge (pm2.5) (kg/m/s)
      real :: qo           ! output discharge (total) (kg/m/s)
      real :: qcso         ! output discharge (creep/saltation) (kg/m/s)
      real :: qsso         ! output discharge (suspension) (kg/m/s)
      real :: q10o         ! output discharge (pm10) (kg/m/s)
+     real :: q2_5o        ! output discharge (pm2.5) (kg/m/s)
   end type cellsurfacestate
 
   type biodrag_input_array
      character*(80) :: bname  ! the name of the plant or biodrag element
+     logical :: residue  ! .false. =  crop, .true. = residue
      real :: rlai     ! leaf area index (m^2/m^2)
      real :: rsai     ! stem area index (m^2/m^2)
      integer :: rg    ! seed placement (0 - furrow, 1 - ridge)
@@ -76,11 +79,11 @@ module erosion_data_struct_defs
      real :: asfcla    ! asfcla(l,s),R,(s1dbh.inc) Soil layer clay content (Mg/Mg)
      real :: asvroc    ! asvroc(l,s), R, (s1dbh.inc) Soil layer rock volume (m^3/m^3)
      real :: asdagd    ! asdagd(l,s),R, Soil layer agg density (Mg/m^3)
-     real :: aseags    ! aseags(l,s), R, Soil layer agg stability ln(J/kg)
+     real :: as0ags    ! as0ags(l,s), R, Soil layer GSD (mm/mm)
      real :: aslagm    ! aslagm(l,s), R, Soil layer GMD (mm)
      real :: aslagn    ! aslagn(l,s), R, Soil layer minimum agg size (mm)
      real :: aslagx    ! aslagx(l,s), R, Soil layer maximum agg size (mm)
-     real :: as0ags    ! as0ags(l,s), R, Soil layer GSD (mm/mm)
+     real :: aseags    ! aseags(l,s), R, Soil layer agg stability ln(J/kg)
      real :: ahrwcw    ! ahrwcw(l,s), R, (h1db1.inc) Soil layer wilting point water content (Mg/Mg)
      real :: ahrwca    ! ahrwca(l,s), R, (h1db1.inc) Soil layer water content (Mg/Mg)
   end type by_soil_layer
@@ -88,13 +91,12 @@ module erosion_data_struct_defs
   type subregionsurfacestate
      character(len=512) :: tinfil  ! management file name
      character(len=512) :: sinfil  ! soil input file name
-     integer :: cntcells ! count of number of cells assigned to this subregion
      integer :: npools  ! number of brcdInput pools
      type(biodrag_input_array), dimension(:), allocatable :: brcdInput
      ! ERODIN inputs
-     real :: abffcv     ! (b1geom.inc) Flat biomass cover (m^2/m^2)
-     integer :: nslay   ! Number of soil layers
-     type(by_soil_layer), dimension(:), allocatable :: bsl
+     integer :: nswet   ! number of surface wetness values
+     real, dimension(:), allocatable :: ahrwc0  ! subday soil surface water content
+     real :: ahzsnd     ! (h1db1.inc) Snow depth (mm)
      real :: asfcr      ! Surface crust fraction (m^2/m^2)
      real :: aszcr      ! Surface crust thickness (mm)
      real :: asflos     ! Fraction of loose material on surface (m^2/m^2)
@@ -106,30 +108,33 @@ module erosion_data_struct_defs
      real :: asxrgw     ! Ridge width (mm)
      real :: asxrgs     ! Ridge spacing (mm)
      real :: asargo     ! Ridge orientation (deg)
-     real :: asxdks     ! Dike spacing (mm)
      real :: asxdkh     ! Dike Height (mm)
+     real :: asxdks     ! Dike spacing (mm)
      real :: aslrr      ! Allmaras random roughness (mm)
-     real :: ahzsnd     ! (h1db1.inc) Snow depth (mm)
-     integer :: nswet   ! number of surface wetness values
-     real, dimension(:), allocatable :: ahrwc0  ! subday soil surface water content
+     integer :: nslay   ! Number of soil layers
+     type(by_soil_layer), dimension(:), allocatable :: bsl
      ! derived
-     real :: abrsai     ! abrsai - Biomass stem area index (m^2/m^2)
-     real :: abrlai     ! abrlai - Biomass leaf area index (m^2/m^2)
-     real :: abzht      ! abzht  - Composite weighted average biomass height (m)
-     real :: sxprg      ! sxprg  - ridge spacing parallel the wind direction(mm)
-     real :: acanag     ! acanag - coefficient of abrasion for aggregates (1/m)
-     real :: acancr     ! acancr - coefficient of abrasion for crust (1/m)
-     real :: asf10an    ! asf10an - soil fraction pm10 in abraded suspension
-     real :: asf10en    ! asf10en - soil fraction pm10 in emitted suspension
-     real :: asf10bk    ! asf10bk - soil fraction pm10 in saltation breakage suspension
+     real :: sxprg      ! ridge spacing parallel the wind direction(mm)
+     real :: abffcv     ! (b1geom.inc) Flat biomass cover (m^2/m^2) (includes basal stem area)
+     real :: abzht      ! Composite weighted average biomass height (m)
+     real :: abrsai     ! Biomass stem area index (m^2/m^2)
+     real :: abrlai     ! Biomass leaf area index (m^2/m^2)
+     real :: acanag     ! coefficient of abrasion for aggregates (1/m)
+     real :: acancr     ! coefficient of abrasion for crust (1/m)
+     real :: asf10an    ! soil fraction pm10 in abraded suspension
+     real :: asf10en    ! soil fraction pm10 in emitted suspension
+     real :: asf10bk    ! soil fraction pm10 in saltation breakage suspension
+     real :: asf2_5an   ! soil fraction pm2.5 in abraded suspension
+     real :: asf2_5en   ! soil fraction pm2.5 in emitted suspension
+     real :: asf2_5bk   ! soil fraction pm2.5 in saltation breakage suspension
+     real :: sf1ic      ! initial condition (modified) of soil fraction less than 0.01 mm diameter
+     real :: sf10ic     ! initial condition (modified) of soil fraction less than 0.1 mm diameter
+     real :: sf84ic     ! initial condition (modified) of soil fraction less than 0.84 mm diameter
+     real :: sf200ic    ! initial condition (modified) of soil fraction less than 2.0 mm diameter
      real :: sfd1       ! soil fraction less than 0.01 mm diameter
      real :: sfd10      ! soil fraction less than 0.1 mm diameter
      real :: sfd84      ! soil fraction less than 0.84 mm diameter
      real :: sfd200     ! soil fraction less than 2.0 mm diameter
-     real :: sf1ic      ! initial condition (modified) of soil fraction less than 0.1 mm diameter
-     real :: sf10ic     ! initial condition (modified) of soil fraction less than 0.1 mm diameter
-     real :: sf84ic     ! initial condition (modified) of soil fraction less than 0.84 mm diameter
-     real :: sf200ic    ! initial condition (modified) of soil fraction less than 0.84 mm diameter
 
   end type subregionsurfacestate
 
@@ -194,8 +199,8 @@ module erosion_data_struct_defs
                               ! 15 - all bits set, full output enabled
  ! end type simulationregionvalues
 
-     type(subregionsurfacestate), dimension(:), allocatable :: subrsurf   ! subregion surface state needed by erosion
-     type(cellsurfacestate), dimension(:,:), allocatable :: cellstate     ! grid cell state values (allocate in io_xml)
+     type(subregionsurfacestate), dimension(:,:), allocatable :: subrsurf   ! subregion surface state needed by erosion (julday, subregion)
+     type(cellsurfacestate), dimension(:,:), allocatable :: cellstate     ! grid cell state values (allocate in io_xml) (x,y)
 
      ! erosion detailed grid output flags and counter
      integer :: initflag, ipd, npd

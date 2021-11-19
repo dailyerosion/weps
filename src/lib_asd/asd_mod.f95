@@ -78,7 +78,7 @@ module asd_mod
 
     end subroutine asdini
 
-    subroutine asd2m (mnot, minf, gmd, gsd, nlay, mf)
+    pure subroutine asd2m (mnot, minf, gmd, gsd, nlay, mf)
 
 !     + + + PURPOSE + + +
 !     This subroutine  performs the inverse of subroutine m2asd.
@@ -97,10 +97,10 @@ module asd_mod
 !     aggregate size distribution, asd, sieves, mass fractions
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      real    mnot(*), minf(*)
-      real    gmd(*), gsd(*)
-      integer nlay
-      real, dimension(msieve+1,*) :: mf
+      real, intent(in) :: mnot(*), minf(*)
+      real, intent(in) :: gmd(*), gsd(*)
+      integer, intent(in) :: nlay
+      real, dimension(msieve+1,*), intent(out) :: mf
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     mnot   - minimum size aggregate (assumed value is known)
@@ -136,36 +136,35 @@ module asd_mod
 !
 !     + + + END SPECIFICATIONS + + +
 
-      do 20 j = 1, nlay
+      do j = 1, nlay
 !         compute transformed sieve dia. sizes
           if (logcas .eq. 3) then
-              do 1 i = 1, nsieve
+              do i = 1, nsieve
                   if(sdia(i).lt.minf(j)) then
-                      d(i) = (sdia(i)-mnot(j))*(minf(j)-mnot(j))/       &
-     &                       (minf(j)-sdia(i))
+                      d(i) = (sdia(i)-mnot(j)) * (minf(j)-mnot(j)) / (minf(j)-sdia(i))
                   end if
-   1          continue
+              end do
           elseif (logcas .eq. 2) then
-              do 2 i = 1, nsieve
+              do i = 1, nsieve
                   if(sdia(i).lt.minf(j)) then
                       d(i) = sdia(i)*minf(j)/(minf(j)-sdia(i))
                   end if
-   2          continue
+              end do
           elseif (logcas .eq. 1) then
-              do 3 i = 1, nsieve
+              do i = 1, nsieve
                    d(i) = sdia(i)-mnot(j)
-   3          continue
+              end do
           elseif (logcas .eq. 0) then
-              do 4 i = 1, nsieve
+              do i = 1, nsieve
                    d(i) = sdia(i)
-   4          continue
+              end do
           endif
           lngmd= log(gmd(j))
           lngsd= sqrt(2.0) * log(max(mingsd,gsd(j)))
           prev= 1.0
 
-!         compute each dia. cumulative probability
-          do 10 i = 1, nsieve
+          ! compute each dia. cumulative probability
+          do i = 1, nsieve
               if (sdia(i) .le. mnot(j)) then
                  this = 1.0
               else if (sdia(i) .lt. minf(j)) then
@@ -173,35 +172,35 @@ module asd_mod
               else
                  this = 0.0
               end if
-!             compute mass fraction between prev and this dia
+              ! compute mass fraction between prev and this dia
               mf(i,j) = prev - this
               prev = this
-!              write(*,*) 'asd2m:',i,sdia(i),this,mf(i,j)
+              ! write(*,*) 'asd2m:',i,sdia(i),this,mf(i,j)
 
-!             if roundoff errors or otherwise results in negative
-!             mass fraction then set to zero mass
+              ! if roundoff errors or otherwise results in negative
+              ! mass fraction then set to zero mass
               if (mf(i,j) .lt. 0.0) then
                   mf(i,j) = 0.0
               else
                   prev = this
               endif
-!              if(j.eq.4) write(*,*) 'asd2m: mf(',i,j,')',mf(i,j)
-  10      continue
+              ! if(j.eq.4) write(*,*) 'asd2m: mf(',i,j,')',mf(i,j)
+          end do
 
-!         get mass fraction for upper-most sieve cut
+          ! get mass fraction for upper-most sieve cut
           mf(nsieve+1,j) = prev
-!        if( j.eq.1 )write(*,*)'asd2m: mf(',nsieve+1,j,')',mf(nsieve+1,j)
+          ! if( j.eq.1 )write(*,*)'asd2m: mf(',nsieve+1,j,')',mf(nsieve+1,j)
 
-!         zero out the rest of the array which is used every where else
+          ! zero out the rest of the array which is used every where else
           do i=nsieve+2, msieve+1
               mf(i,j) = 0.0
           end do
 
-  20  continue
+      end do
       return
     end subroutine asd2m
 
-    subroutine m2asd (mf, nlay, mnot, minf, gmd, gsd)
+    pure subroutine m2asd (mf, nlay, mnot, minf, gmd, gsd)
 
 !     + + + PURPOSE + + +
 !     This subroutine  performs the inverse of subroutine asd2m.
@@ -221,10 +220,10 @@ module asd_mod
 !     aggregate size distribution, asd, sieves, mass fractions
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      real, dimension(msieve+1,*) :: mf
-      integer nlay
-      real    mnot(*), minf(*)
-      real    gmd(*), gsd(*)
+      real, dimension(msieve+1,*), intent(in) :: mf
+      integer, intent(in) :: nlay
+      real, intent(in) :: mnot(*), minf(*)
+      real, intent(out) :: gmd(*), gsd(*)
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     mf     - mass fractions of aggregates within sieve cuts
@@ -257,39 +256,39 @@ module asd_mod
 
 !     + + + END SPECIFICATIONS + + +
 
-!     for each soil layer
-      do 200 j=1,nlay
-!          initialize accumulators
+      ! for each soil layer
+      do j = 1, nlay
+           ! initialize accumulators
            alpha = 0.0
            beta = 0.0
            istart = 1
            istop = nsieve + 1
 
-!          check if sieve cut fractions are between mnot and minf
-!          adjust lower and upper mean diameters if mnot or minf
-!          fall within the bin range
+           ! check if sieve cut fractions are between mnot and minf
+           ! adjust lower and upper mean diameters if mnot or minf
+           ! fall within the bin range
            if (logcas .eq. 1 .or. logcas .eq. 3) then
               do i=nsieve, 1, -1
                  if (sdia(i) .gt. mnot(j)) then
                     istart = i
                  end if
               end do
-!             save value to be restored before exit
-              mdia_istart = mdia(istart)
-!             set size of lower sieve in bottom bin
+              ! save value to be restored before exit
+              ! mdia_istart = mdia(istart)
+              ! set size of lower sieve in bottom bin
               if( istart.eq.1 ) then
                   sdia_temp = mnsize
               else
                   sdia_temp = sdia(istart-1)
               end if
-!             check if mnot falls within lower sieve bin
+              ! check if mnot falls within lower sieve bin
               if( (mnot(j).gt.sdia_temp).or.(mnot(j).lt.mnsize) ) then
-!                 recalculate lower bin mean diameter
-                  mdia(istart) = sqrt(sdia(istart)*mnot(j))
+                  ! recalculate lower bin mean diameter
+                  mdia_istart = sqrt(sdia(istart)*mnot(j))
                   if (logcas .eq. 3) then
                       ! check that mdia is greater than mnot, or method fails
-                      if( mdia(istart) .lt. mnot(j) * 1.00001 ) then
-                          mdia(istart) = mnot(j) * 1.00001
+                      if( mdia_istart .lt. mnot(j) * 1.00001 ) then
+                          mdia_istart = mnot(j) * 1.00001
                       end if
                   end if
               end if
@@ -306,16 +305,16 @@ module asd_mod
               else
                   sdia_temp = sdia(istop)
               end if
-!             save value to be restored before exit
-              mdia_istop = mdia(istop)
-!             check if minf falls within upper sieve bin or outside mxsize
+              ! save value to be restored before exit
+              ! mdia_istop = mdia(istop)
+              ! check if minf falls within upper sieve bin or outside mxsize
               if( (minf(j).lt.sdia_temp).or.(minf(j).gt.mxsize) ) then
-!                 recalculate upper bin mean diameter
-                  mdia(istop) = sqrt(sdia(istop-1)*minf(j))
+                  ! recalculate upper bin mean diameter
+                  mdia_istop = sqrt(sdia(istop-1)*minf(j))
                   if (logcas .ge. 2) then
                       ! check that mdia is less than minf, or method fails
-                      if( mdia(istop) .gt. minf(j) * 0.99999 ) then
-                          mdia(istop) = minf(j) * 0.99999
+                      if( mdia_istop .gt. minf(j) * 0.99999 ) then
+                          mdia_istop = minf(j) * 0.99999
                       end if
                   end if
               end if
@@ -323,28 +322,41 @@ module asd_mod
               istop = nsieve + 1
            end if
 
-!     do transformations for "modified" log-normal cases
+           ! do transformations for "modified" log-normal cases
            do i= istart, istop
               if (logcas .eq. 3) then
-                 tmd(i) = (mdia(i)-mnot(j))*(minf(j)-mnot(j))/          &
-     &                    (minf(j)-mdia(i))
+                 if( i .eq. istart) then
+                    tmd(i) = (mdia_istart-mnot(j)) * (minf(j)-mnot(j)) / (minf(j)-mdia_istart)
+                 else if( i .eq. istop ) then
+                    tmd(i) = (mdia_istop-mnot(j)) * (minf(j)-mnot(j)) / (minf(j)-mdia_istop)
+                 else
+                    tmd(i) = (mdia(i)-mnot(j)) * (minf(j)-mnot(j)) / (minf(j)-mdia(i))
+                 end if
               else if (logcas .eq. 2) then
-                 tmd(i) = mdia(i)*minf(j)/(minf(j)-mdia(i))
+                 if( i .eq. istop ) then
+                    tmd(i) = mdia_istop * minf(j) / (minf(j)-mdia_istop)
+                 else
+                    tmd(i) = mdia(i) * minf(j) / (minf(j)-mdia(i))
+                 end if
               else if (logcas .eq. 1) then
-                 tmd(i) = mdia(i)-mnot(j)
+                 if( i .eq. istart) then
+                    tmd(i) = mdia_istart - mnot(j)
+                 else
+                    tmd(i) = mdia(i) - mnot(j)
+                 end if
               else
                  tmd(i) = mdia(i)
               end if
 
-!             now compute the log of the gmd dia
+              ! now compute the log of the gmd dia
               tmd(i) = log(tmd(i))
 
-!             sum diameters  & their squares, over all aggregate sizes
+              ! sum diameters  & their squares, over all aggregate sizes
               alpha = alpha + (mf(i,j)*tmd(i))
               beta = beta + (mf(i,j)*tmd(i)*tmd(i))
            end do
 
-!          compute geometric mean and standard deviation
+           ! compute geometric mean and standard deviation
            gmd(j) = exp(alpha)
            if( beta-alpha*alpha.le.0.0 ) then
                gsd(j) = mingsd
@@ -352,15 +364,15 @@ module asd_mod
                gsd(j) = max(mingsd,exp(sqrt(beta-alpha*alpha)))
            end if
 
-!          restore modified geometric mean bin diameters
-           if (logcas .eq. 1 .or. logcas .eq. 3) then
-               mdia(istart) = mdia_istart
-           end if
-           if (logcas .ge. 2) then
-               mdia(istop) = mdia_istop
-           end if
+           ! restore modified geometric mean bin diameters
+!           if (logcas .eq. 1 .or. logcas .eq. 3) then
+!               mdia(istart) = mdia_istart
+!           end if
+!           if (logcas .ge. 2) then
+!               mdia(istop) = mdia_istop
+!           end if
 
-200   continue
+      end do
       return
     end subroutine m2asd
 

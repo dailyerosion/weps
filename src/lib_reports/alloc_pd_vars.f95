@@ -10,12 +10,16 @@ contains
   FUNCTION alloc_pd_vars (nperiods, nrot_yrs, ncycles, rep_report, rep_update, rep_dates)
 
     use weps_cmdline_parms, only: report_debug
-    USE pd_var_type_def
-    USE pd_dates_vars
-    USE pd_update_vars
-    USE pd_report_vars
+    USE pd_dates_vars, only: reporting_dates
+    USE pd_update_vars, only: reporting_update
+    USE pd_report_vars, only: reporting_report
 
-    USE pd_var_tables
+    USE pd_var_tables, only: Min_yrly_vars, Max_yrly_vars
+    USE pd_var_tables, only: Min_monthly_vars, Max_monthly_vars
+    USE pd_var_tables, only: Min_hmonth_vars, Max_hmonth_vars
+    USE pd_var_tables, only: Min_period_vars, Max_period_vars
+    USE pd_var_tables, only: n_cli_vars, n_eop_vars
+    USE pd_var_tables, only: n_dave_vars, n_eave_vars, n_lave_vars, n_mave_vars, n_tave_vars
 
     IMPLICIT NONE
 

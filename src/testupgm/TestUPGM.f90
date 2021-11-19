@@ -24,7 +24,7 @@
     type(environment_state) :: env
 
     real(dp) :: r_setter
-    real(dp), dimension(12) :: ra_setter
+    !real(dp), dimension(12) :: ra_setter
     integer(int32) :: i_setter
     logical :: l_setter
     real(dp) :: remgdd, daygdd
@@ -58,12 +58,12 @@
 
     ! add process
     ! create gddWEPS method
-    call theModel%plant%add_process("gddweps_method", "WEPS GDD", 0)
+    call theModel%plant%add_process("gddWEPS_method", "WEPS GDD", 0)
     ! create input names
     r_setter = 10.0_dp
-    call theModel%plant%plantstate%pars%put("tbas", r_setter, success)
+    call theModel%plant%processCurrent%ptr%processPars%put("tbas", r_setter, success)
     r_setter = 30.0_dp
-    call theModel%plant%plantstate%pars%put("topt", r_setter, success)
+    call theModel%plant%processCurrent%ptr%processPars%put("topt", r_setter, success)
     r_setter = 0.0_dp
     call theModel%plant%plantstate%state%put("daygdd", r_setter, success)
 
@@ -96,7 +96,7 @@
     ! call theModel%plant%add_process("apple_pie", "Apple Pie", 0)
 
     ! add phase
-    call theModel%plant%add_phase("pmms_germination", "Germination", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Germination", "Germination", 0)
     ! phase state parameter
     call theModel%plant%phaseCurrent%ptr%phaseState%put("stagegdd", r_setter, success)
     ! phase specific parameters for this instance
@@ -109,10 +109,12 @@
     call env%state%put("swc", soil_moisture, success)
     i_setter = 2   ! planting in layer 2
     call theModel%plant%plantstate%state%put("p_layer", i_setter, success)
+    i_setter = 0
+    call theModel%plant%plantstate%state%put("specstage", i_setter, success)
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "Emergence", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "Emergence", 0)
     ! create all input names
 
     ! plant state
@@ -180,7 +182,7 @@
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "V4", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "V4", 0)
     ! create all input names
     ! use from above
     ! daygdd
@@ -241,7 +243,7 @@
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "Begin Internode Elongation", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "Begin Internode Elongation", 0)
     ! create all input names
     r_setter = 0.0_dp
     call theModel%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, success)
@@ -278,7 +280,7 @@
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "V8", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "V4", 0)
     ! create all input names
     r_setter = 0.0_dp
     call theModel%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, success)
@@ -315,7 +317,7 @@
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "V8", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "V8", 0)
     ! create all input names
     r_setter = 0.0_dp
     call theModel%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, success)
@@ -352,7 +354,7 @@
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "V12", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "V12", 0)
     ! create all input names
     r_setter = 0.0_dp
     call theModel%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, success)
@@ -389,7 +391,7 @@
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "Last Leaf, Tassel", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "Last Leaf, Tassel", 0)
     ! create all input names
     r_setter = 0.0_dp
     call theModel%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, success)
@@ -426,7 +428,7 @@
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "Silk", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "Silk", 0)
     ! create all input names
     r_setter = 0.0_dp
     call theModel%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, success)
@@ -463,7 +465,7 @@
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "Blister", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "Blister", 0)
     ! create all input names
     r_setter = 0.0_dp
     call theModel%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, success)
@@ -500,7 +502,7 @@
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "Milk", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "Milk", 0)
     ! create all input names
     r_setter = 0.0_dp
     call theModel%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, success)
@@ -537,7 +539,7 @@
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "Dough", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "Dough", 0)
     ! create all input names
     r_setter = 0.0_dp
     call theModel%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, success)
@@ -574,7 +576,7 @@
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "Dent", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "Dent", 0)
     ! create all input names
     r_setter = 0.0_dp
     call theModel%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, success)
@@ -611,7 +613,7 @@
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "Mature", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "Mature", 0)
     ! create all input names
     r_setter = 0.0_dp
     call theModel%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, success)
@@ -648,7 +650,7 @@
 
 !--------------
     ! add phase
-    call theModel%plant%add_phase("pmms_basephenol", "Harvest Ready", 0)
+    call theModel%plant%add_phase("PhenologyMMS_Basephenol", "Harvest Ready", 0)
     ! create all input names
     r_setter = 0.0_dp
     call theModel%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, success)
@@ -824,11 +826,11 @@
 
       ! update daily inputs
       select case(theModel%plant%phaseCurrent%ptr%phaseName)
-      case ("pmms_germination")
+      case ("PhenologyMMS_Germination")
         soil_moisture = [0.45, 0.35, 0.30, 0.35, 0.32]
         call env%state%replace("swc", soil_moisture, success)
 
-      case ("pmms_basephenol")
+      case ("PhenologyMMS_Basephenol")
         r_setter = 0.7_dp
         call theModel%plant%plantstate%state%replace("stress", r_setter, success)
 
@@ -849,6 +851,12 @@
 
       ! run current phase
       call theModel%grow(env)
+
+      call theModel%plant%plantstate%state%get("nextstage", nextstage, success)
+      
+      if( nextstage .eq. 1 ) then
+        exit
+      end if
 
     end do
 

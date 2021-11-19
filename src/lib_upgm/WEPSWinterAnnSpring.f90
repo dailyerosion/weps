@@ -8,7 +8,6 @@ module WEPSwinterAnnSpring_mod
   use constants, only: dp, check_return, u_mgtokg
   use plant_mod
   use WEPSCrop_util_mod, only: chilluv, shootnum, shoot_delay, shoot_flg, per_release, stage_release, verndelmax, hard_spring
-  use datetime_mod, only: get_simdate_doy
   implicit none
 
   type, extends(preprocess) :: WEPSwinterAnnSpring
@@ -123,7 +122,8 @@ module WEPSwinterAnnSpring_mod
                 ! vernalized and ready to grow in spring
                 if( dayspring .eq. 0 ) then
                   ! value is not set, so set it
-                  dayspring = get_simdate_doy()
+                  call env%state%get("day_of_year", dayspring, succ)
+                  if( .not. check_return( trim(self%processName) , "day_of_year", succ ) ) return
                   ! should only be triggered once
                   do_spring = .true.
 

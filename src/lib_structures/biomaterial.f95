@@ -1133,10 +1133,11 @@ contains
         
   end subroutine plantPrintAll
 
-  subroutine plantSumAll(plantPntr, nsoillay)
+  subroutine plantSumAll(isr, plantPntr, nsoillay)
 
-     use datetime_mod, only: get_simdate_doy, get_simdate_daysim
+     use datetime_mod, only: get_psim_doy, get_psim_daysim
 
+     integer, intent(in) :: isr
      type(plant_pointer), pointer :: plantPntr
      integer, intent(in) :: nsoillay
 
@@ -1244,14 +1245,14 @@ contains
              + flatstem + flatleaf + flatstore + flatrootstore + flatrootfiber &
              + rootstorez + rootfiberz + stemz
 
-     doy = get_simdate_doy()
+     doy = get_psim_doy(isr)
 
      if( doy .eq. 1 ) then
        write(*,*) 'SUMALL: '
        write(*,*) 'SUMALL: '
      end if
 
-!     write(*,*) 'SUMALL: ', get_simdate_daysim(), doy, resstandmass, resflatmass, resburied, resburiedroot &
+!     write(*,*) 'SUMALL: ', get_psime_daysim(isr), doy, resstandmass, resflatmass, resburied, resburiedroot &
 !                          , standstem, standleaf, 0.2*standstore, 0.8*standstore &
 !                          , flatstem, flatleaf, flatstore, flatrootstore, flatrootfiber &
 !                          , rootstorez, rootfiberz, stemz, totmass
@@ -1259,7 +1260,7 @@ contains
      ! stacked in order of columns 3 4 5 6 16 18 7 8 17 9 10 19
      convert = 1.0       ! output kg/m^2
      ! convert = 8921.79 ! output lbs/acre
-!     write(*,*) 'SUMALL: ', get_simdate_daysim(), doy, convert * (resstandmass) & ! 3
+!     write(*,*) 'SUMALL: ', get_psim_daysim(isr), doy, convert * (resstandmass) & ! 3
 !                , convert * (resstandmass + resflatmass) & ! 4
 !                , convert * ( resstandmass + resflatmass + resburied) & ! 5
 !                , convert * ( resstandmass + resflatmass + resburied + resburiedroot) & ! 6
@@ -1280,7 +1281,7 @@ contains
 !                , convert * ( resstandmass + resflatmass + resburied + resburiedroot +rootstorez + stemz) & ! 18
 !                , convert * ( totmass) ! 19
 
-     write(*,*) 'SUMALL: ', get_simdate_daysim(), doy, convert * (resstandmass) & ! 3
+     write(*,*) 'SUMALL: ', get_psim_daysim(isr), doy, convert * (resstandmass) & ! 3
                 , convert * (resflatmass) & ! 4
                 , convert * (resburied) & ! 5
                 , convert * (resburiedroot) & ! 6
@@ -1302,10 +1303,11 @@ contains
         
   end subroutine plantSumAll
 
-  subroutine plantSumPool(plantPntr, nsoillay, label)
+  subroutine plantSumPool(isr, plantPntr, nsoillay, label)
 
-     use datetime_mod, only: get_simdate_daysim
+     use datetime_mod, only: get_psim_daysim
 
+     integer, intent(in) :: isr
      type(plant_pointer), pointer :: plantPntr
      integer, intent(in) :: nsoillay
      character(*) :: label
@@ -1346,7 +1348,7 @@ contains
 
          poolsum = resstandmass + resstandmass + layersumburied + layersumroot
 
-         write(*,*) label, get_simdate_daysim(), poolcount, poolsum, trim(thisPlant%bname)
+         write(*,*) label, get_psim_daysim(isr), poolcount, poolsum, trim(thisPlant%bname)
 
          thisResidue => thisResidue%olderResidue
        end do

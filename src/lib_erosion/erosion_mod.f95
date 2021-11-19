@@ -7,7 +7,7 @@ module erosion_mod
 
   contains
 
-    subroutine erosion( min_erosion_awu, SURF_UPD_FLG, subrsurf, noerod, cellstate )
+    subroutine erosion( min_erosion_awu, SURF_UPD_FLG, julday, noerod, cellstate )
 
 !     +++ PURPOSE +++
 !     subroutine erosion is the control subroutine and calls other
@@ -19,13 +19,12 @@ module erosion_mod
 !     - updates soil  variables changed by erosion.
 
       use file_io_mod, only: fopenk, makenamnum, luo_erod, luo_egrd, luo_emit, luo_sgrd
-      use erosion_data_struct_defs, only: in_sweep, subregionsurfacestate, cellsurfacestate, threshold, &
+      use erosion_data_struct_defs, only: in_sweep, cellsurfacestate, threshold, &
                                           ntstep, erod_interval, anemht, awzzo, &
-                                          wzoflg, awadir, awudmx, subday, am0efl
+                                          wzoflg, awadir, awudmx, subday, am0efl, subrsurf
       use erosion_data_struct_defs, only: initflag
       use sae_in_out_mod, only: mksaeinp, mksaeout, daily_erodout, sb1out, sb2out, sbemit, saeinp, sweepfile, polyfile
       use p1unconv_mod, only: SEC_PER_DAY, degtorad
-      use timer_mod, only: timer, TIMEROS, TIMSBEROD, TIMSBWIND, TIMSTART, TIMSTOP
       use barriers_mod, only: sbbr
       use grid_mod, only: sbdirini, gridfile
       use wind_mod, only: sbzo, sbwus, biodrag
@@ -33,9 +32,9 @@ module erosion_mod
       use process_mod, only: sbwust, sbsfdi
 
 !     +++ ARGUMENT DECLARATIONS +++
-      real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
+      real min_erosion_awu       ! Minimum erosive wind speed (m/s) to evaluate for erosion loss
       integer :: SURF_UPD_FLG    ! erosion surface updating (0 - disabled, 1 - enabled)
-      type(subregionsurfacestate), dimension(0:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      integer, intent (in) :: julday ! current julian day (index into subrsurf array)
       type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
@@ -43,12 +42,13 @@ module erosion_mod
       real SNODEP                !Minimum snow depth to prevent erosion
       parameter (SNODEP = 20.0)  !No erosion when snow depth >= 20mm
 
-!     +++ LOCAL VARIABLES +++
+      ! +++ LOCAL VARIABLES +++
+      integer :: nsubr    ! number of subregions
       logical :: first_emit  ! pass to sbemit on first entry to zero out daily accumulators
       integer :: idx      ! time step loop index    
       integer :: ndx      ! sub_ntstep loop index
       integer :: wustfl   ! flag to update threshold friction velocity
-      integer :: icsr     ! index of current subregion (now only one)
+      integer :: icsr     ! index of current subregion
       integer :: ipool    ! index of brcdInput pool
 !      integer :: nhill    ! number of hills
       integer :: ntsub     ! number of steps within a single "ntstep" to obtain the desired update interval
@@ -86,23 +86,21 @@ module erosion_mod
       real :: wucwts     ! surface wetness addition to bare soil threshold friction velocity
       real :: wucdts     ! aggregate density addition to bare soil threshold friction velocity
       real :: sfcv       ! soil fraction clod & crust cover
+      character*512 :: daypath  ! the root path plus subdirectory plus specific day directory for sweep output files
 
-!     +++ END SPECIFICATIONS +++
-
-      ! start general erosion timer
-      call timer(TIMEROS,TIMSTART)
+      ! +++ END SPECIFICATIONS +++
 
       first_emit = .true.
       hr = 0.0
       sub_ntstep = 0.0
       hrs = 0.0
 
-   ! We need to ensure that sbemit only gets called once here to write the header
-   ! multiple days in WEPS will mess this up.
-  !    if (btest(am0efl,2)) then
-  !       write(0,*) 'i is:', i, 'hr is:',hr,'should be header only here'
-  !       call sbemit (luo_emit, subday(i)%awu, hr)  !Should only write the header one time
-  !    endif
+      ! We need to ensure that sbemit only gets called once here to write the header
+      ! multiple days in WEPS will mess this up.
+      ! if (btest(am0efl,2)) then
+      !   write(0,*) 'i is:', i, 'hr is:',hr,'should be header only here'
+      !   call sbemit (luo_emit, subday(i)%awu, hr)  !Should only write the header one time
+      ! endif
 
       ! initialize wind direction array for subhourly values
       ! presently, there is only one direction for each day
@@ -116,13 +114,16 @@ module erosion_mod
       ! set ratio: defined as the ratio wus/wust
       rusust_max = 0.0
 
+      ! set number of suberegions
+      nsubr = size(noerod)
+      
       ! for subhourly, surface water content values should be interpolated. see hidx calculation
-      do icsr = 1, size(subrsurf)-1
+      do icsr = 1, nsubr
        ! initialize the subregion ratio
        rusust_sub = 0.0
 
        ! If snow depth > 20 mm in all subregions, then no erosion
-       if (subrsurf(icsr)%ahzsnd .le. SNODEP) then
+       if (subrsurf(julday,icsr)%ahzsnd .le. SNODEP) then
         ! Have insufficient snow depth
         noerod(icsr)%snowdepth = 0
 
@@ -131,39 +132,41 @@ module erosion_mod
 
         ! Calculate soil clod fraction less than 0.84 mm diameter
         ! calc soil mass < 0.84 mm
-        call sbsfdi( subrsurf(icsr)%bsl(1)%aslagm, subrsurf(icsr)%bsl(1)%as0ags, subrsurf(icsr)%bsl(1)%aslagn, &
-             subrsurf(icsr)%bsl(1)%aslagx, 0.84, subrsurf(icsr)%sfd84 )
+        call sbsfdi( subrsurf(julday,icsr)%bsl(1)%aslagm, subrsurf(julday,icsr)%bsl(1)%as0ags, &
+                     subrsurf(julday,icsr)%bsl(1)%aslagn, &
+                     subrsurf(julday,icsr)%bsl(1)%aslagx, 0.84, subrsurf(julday,icsr)%sfd84 )
 
         ! save the initial sf84 value
-        subrsurf(icsr)%sf84ic = subrsurf(icsr)%sfd84
-        subrsurf(icsr)%sf84ic = min (0.9999, max(subrsurf(icsr)%sf84ic,0.0001))    ! edit ljh 1-23-05
+        subrsurf(julday,icsr)%sf84ic = subrsurf(julday,icsr)%sfd84
+        subrsurf(julday,icsr)%sf84ic = min (0.9999, max(subrsurf(julday,icsr)%sf84ic,0.0001))    ! edit ljh 1-23-05
      
         do idx = 1, ntstep
 
           ! calc. ridge spacing parallel the wind
-          if (subrsurf(icsr)%aszrgh > 5.0) then
-            sina = abs(sin(degtorad*abs(subday(idx)%awdir - subrsurf(icsr)%asargo)))
+          if (subrsurf(julday,icsr)%aszrgh > 5.0) then
+            sina = abs(sin(degtorad*abs(subday(idx)%awdir - subrsurf(julday,icsr)%asargo)))
             sina = max(0.10, sina)
-            subrsurf(icsr)%sxprg = subrsurf(icsr)%asxrgs/sina
-              if (subrsurf(icsr)%asxdks > subrsurf(icsr)%asxrgs/3.) then
-                subrsurf(icsr)%sxprg = min(subrsurf(icsr)%sxprg, subrsurf(icsr)%asxdks)
+            subrsurf(julday,icsr)%sxprg = subrsurf(julday,icsr)%asxrgs/sina
+              if (subrsurf(julday,icsr)%asxdks > subrsurf(julday,icsr)%asxrgs/3.) then
+                subrsurf(julday,icsr)%sxprg = min(subrsurf(julday,icsr)%sxprg, subrsurf(julday,icsr)%asxdks)
               endif
           else
-              subrsurf(icsr)%sxprg = 1000
+              subrsurf(julday,icsr)%sxprg = 1000
           endif
 
           ! accumulate biodrag components
           brcd = 0.0
-          do ipool = 1, subrsurf(icsr)%npools
+          do ipool = 1, subrsurf(julday,icsr)%npools
             ! calculate "effective" biomass drag coefficient
-            brcd = brcd + biodrag( 0.0, 0.0, subrsurf(icsr)%brcdInput(ipool)%rlai, subrsurf(icsr)%brcdInput(ipool)%rsai, &
-                                   subrsurf(icsr)%brcdInput(ipool)%rg, subrsurf(icsr)%brcdInput(ipool)%xrow, &
-                                   subrsurf(icsr)%brcdInput(ipool)%zht, subrsurf(icsr)%aszrgh )
+            brcd = brcd + biodrag( 0.0, 0.0, subrsurf(julday,icsr)%brcdInput(ipool)%rlai, &
+                                   subrsurf(julday,icsr)%brcdInput(ipool)%rsai, &
+                                   subrsurf(julday,icsr)%brcdInput(ipool)%rg, subrsurf(julday,icsr)%brcdInput(ipool)%xrow, &
+                                   subrsurf(julday,icsr)%brcdInput(ipool)%zht, subrsurf(julday,icsr)%aszrgh )
           end do
 
           ! Compute Zo (wzzo) of surface
-          call sbzo( subrsurf(icsr)%sxprg, subrsurf(icsr)%aszrgh, subrsurf(icsr)%aslrr, subrsurf(icsr)%abzht, brcd, &
-                     wzoflg, wzorg, wzorr, wzzo, wzzov, awzzo )
+          call sbzo( subrsurf(julday,icsr)%sxprg, subrsurf(julday,icsr)%aszrgh, subrsurf(julday,icsr)%aslrr, &
+                     subrsurf(julday,icsr)%abzht, brcd, wzoflg, wzorg, wzorr, wzzo, wzzov, awzzo )
 
           ! find hour index (1-24)
           hidx = int(idx*23.75/ntstep) + 1
@@ -185,10 +188,10 @@ module erosion_mod
 
           ! Compute friction velocity threshold for entrainment (wust) and
           ! transport friction velocity threshold (wusp)
-          call sbwust( subrsurf(icsr)%sfd84, subrsurf(icsr)%bsl(1)%asdagd, subrsurf(icsr)%asfcr, &
-                       subrsurf(icsr)%bsl(1)%asvroc, subrsurf(icsr)%asflos, subrsurf(icsr)%abffcv, wzzo, &
-                       subrsurf(icsr)%ahrwc0(hidx), subrsurf(icsr)%bsl(1)%ahrwcw, subrsurf(icsr)%sf84ic,  &
-                       subrsurf(icsr)%bsl(1)%asvroc, wust, wusp, wusto, wubsts, wucsts, wucwts, wucdts, sfcv)
+          call sbwust( subrsurf(julday,icsr)%sfd84, subrsurf(julday,icsr)%bsl(1)%asdagd, subrsurf(julday,icsr)%asfcr, &
+                       subrsurf(julday,icsr)%bsl(1)%asvroc, subrsurf(julday,icsr)%asflos, subrsurf(julday,icsr)%abffcv, wzzo, &
+                       subrsurf(julday,icsr)%ahrwc0(hidx), subrsurf(julday,icsr)%bsl(1)%ahrwcw, subrsurf(julday,icsr)%sf84ic,  &
+                       subrsurf(julday,icsr)%bsl(1)%asvroc, wust, wusp, wusto, wubsts, wucsts, wucwts, wucdts, sfcv)
 
           ! Checks to find maximum ratio between surface friction velocity
           ! and friction velocity threshold among all time steps and subregion surfaces.
@@ -209,8 +212,8 @@ module erosion_mod
              noerod(icsr)%surf_wet = wucwts
              noerod(icsr)%ag_den = wucdts
              noerod(icsr)%wust = wust
-             noerod(icsr)%sfd84 = subrsurf(icsr)%sfd84
-             noerod(icsr)%asvroc = subrsurf(icsr)%bsl(1)%asvroc
+             noerod(icsr)%sfd84 = subrsurf(julday,icsr)%sfd84
+             noerod(icsr)%asvroc = subrsurf(julday,icsr)%bsl(1)%asvroc
              noerod(icsr)%wzzo = wzzo
              noerod(icsr)%sfcv = sfcv
           end if
@@ -263,8 +266,6 @@ module erosion_mod
       ! Check wind ratio
       if( .not. in_sweep ) then
         if (rusust_max .le. wr) then
-          ! exit out of erosion submodel
-          call timer(TIMEROS,TIMSTOP)
           return
         endif
       end if
@@ -277,25 +278,27 @@ module erosion_mod
           sweepfile = 'erod.sweep'
           gridfile = '../../erod.grdx'
           polyfile = '../../erod.poly'
-          call saeinp( subrsurf )    ! output daily erosion stuff
+          call saeinp( julday, nsubr )    ! output daily erosion stuff
       end if
 
       if (btest(am0efl,2)) then
-         if( luo_emit .lt. 0 ) then
-            call fopenk(luo_emit, trim(mksaeout%fullpath) // makenamnum('saeros',mksaeout%simday,mksaeout%maxday,'.emit'),'unknown')
+         if( luo_emit .eq. 0 ) then
+            daypath = trim(mksaeout%fullpath) // makenamnum('saeros', mksaeout%simday, mksaeout%maxday,'/')
+            call fopenk(luo_emit, trim(daypath) // 'erod.emit','unknown')
          end if
       end if
 
       if (btest(am0efl,3)) then
-         if( luo_sgrd .lt. 0 ) then
-            call fopenk(luo_sgrd, trim(mksaeout%fullpath) // makenamnum('saeros',mksaeout%simday,mksaeout%maxday,'.sgrd'),'unknown')
+         if( luo_sgrd .eq. 0 ) then
+            daypath = trim(mksaeout%fullpath) // makenamnum('saeros', mksaeout%simday, mksaeout%maxday,'/')
+            call fopenk(luo_sgrd, trim(daypath) // 'erod.sgrd','unknown')
          end if
       end if
 
       ! sbinit calls sbsdfi to get sf< 0.01,0.1,0.84,2.0 mm
       ! and writes to grid, writes other var. to grid and
       ! zeros eros output arrays.
-      call sbinit( subrsurf, cellstate )
+      call sbinit( julday, nsubr, cellstate )
 
       ! calc. sweep direction based on wind direction for sberod
       prev_dir = subday(1)%awdir+ 1.0   !make different to force calculation
@@ -438,36 +441,21 @@ module erosion_mod
                ! note: when rusust= <0.1, sbaglos does not calculate.
                rusust_max = 0.2
 
-               ! stop general timer and start sbwind timer
-               call timer(TIMEROS,TIMSTOP)
-               call timer(TIMSBWIND,TIMSTART)
-
                ! updates the fric. vel and threshold fric. vel on grid
                ! and calc. max. for  rusust = wus/wust
                ! this subroutine calls sbzo and sbwus
-               call sbwind( wustfl, subday(idx)%awu, ntstep, idx, rusust_max, subrsurf, cellstate )
+               call sbwind( julday, wustfl, subday(idx)%awu, ntstep, idx, rusust_max, cellstate )
                wuref = subday(idx)%awu
                wr = 1
-
-               ! stop sbwind timer and start general timer
-               call timer(TIMSBWIND,TIMSTOP)
-               call timer(TIMEROS,TIMSTART)
 
                if (rusust_max .gt. wr) then
                   ! erosion will occur this time step
                   ! wustfl = 1
                   if (btest(am0efl,3)) then
-                     call sb1out (ndx, ntsub, hrs, subday(idx)%awu, subday(idx)%awdir, luo_sgrd, subrsurf(1), cellstate)
+                     call sb1out (ndx, ntsub, hrs, subday(idx)%awu, subday(idx)%awdir, luo_sgrd, subrsurf(julday, 1), cellstate)
                   endif
 
-                  ! stop general timer and start sberod timer
-                  call timer(TIMEROS,TIMSTOP)
-                  call timer(TIMSBEROD,TIMSTART)
-
-                  call sberod (time, SURF_UPD_FLG, subrsurf, cellstate)
-
-                  call timer(TIMSBEROD,TIMSTOP)
-                  call timer(TIMEROS,TIMSTART)
+                  call sberod (julday, time, SURF_UPD_FLG, cellstate)
 
                   ! Compute end-of-period time in fraction of hours
                   hrs = hrs + sub_ntstep
@@ -480,9 +468,9 @@ module erosion_mod
                else
                   ! print out initial state, even if we never call sberode()
                   if (btest(am0efl,3).and.(ndx .eq. 1).and.(idx .eq. 1)) then
-                     call sbwind( wustfl, subday(idx)%awu, ntstep, idx, rusust_max, subrsurf, cellstate )
+                     call sbwind( julday, wustfl, subday(idx)%awu, ntstep, idx, rusust_max, cellstate )
                      wuref = subday(idx)%awu
-                     call sb1out (ndx, ntsub, hrs, subday(idx)%awu, subday(idx)%awdir, luo_sgrd, subrsurf(1), cellstate)
+                     call sb1out (ndx, ntsub, hrs, subday(idx)%awu, subday(idx)%awdir, luo_sgrd, subrsurf(julday, 1), cellstate)
                   endif
 
                   ! set to get out of inner loop and go to next wind speed - wustfl = 0
@@ -512,62 +500,40 @@ module erosion_mod
       ! not implemented partly because windgen does not correlate days.
 
       if (btest(am0efl,2)) then
-         if( luo_emit .ge. 0 ) then
-            close(luo_emit)
-         end if
+         close(luo_emit)
       end if
 
       ! output end of day erosion results
       call daily_erodout(luo_egrd, luo_erod, luo_sgrd, mksaeout%fullpath, cellstate )
 
-      call timer(TIMEROS,TIMSTOP)
+      if (btest(am0efl,3)) then
+         close(luo_sgrd)
+      end if
 
     end subroutine erosion
 
-    subroutine erodinit( noerod, subrsurf )
+    subroutine erodinit( noerod )
+      ! Controls calls to subroutines that:
+      ! initialize Erosion submodel output array to zero (sbigrd).
+      ! calculate normalized effect of hills on friction velocity 
+      ! on grid for each wind direction (not activated)
+      ! initialize reporting variables that need to have a value even
+      ! when erosion is not being called.
 
-!     +++ PURPOSE +++
-!
-!     Controls calls to subroutines that:
-!       initialize Erosion submodel output array to zero (sbigrd).
-!       calculate normalized effect of hills on friction velocity 
-!        on grid for each wind direction (not activated)
-!       initialize reporting variables that need to have a value even
-!        when erosion is not being called.
-
-!     + + + Modules Used + + +
+      ! + + + Modules Used + + +
       use grid_mod, only: sbigrd
-      use erosion_data_struct_defs, only: threshold, cellsurfacestate, am0eif
-      use erosion_data_struct_defs, only: subregionsurfacestate
+      use erosion_data_struct_defs, only: threshold, cellsurfacestate
 
-!     +++ ARGUMENT DECLARATIONS +++
+      ! +++ ARGUMENT DECLARATIONS +++
       type(threshold), dimension(:), intent(inout) :: noerod                 ! report values to show which factors prevented erosion
-      type(subregionsurfacestate), dimension(0:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
 
-!     +++ LOCAL VARIABLES +++
+      ! +++ LOCAL VARIABLES +++
       integer :: sr    ! subregion do loop index
       integer :: nsubr ! total number of subregions
 
-!     +++ END SPECIFICATIONS +++
+      ! +++ END SPECIFICATIONS +++
 
       nsubr = size(noerod)
-
-      ! Grid is created at least once.
-      if (am0eif .eqv. .true.) then
-         ! set grid cell output arrays to zero
-         ! set subrsurf cell counts for each subregion (total in 0)
-         call sbigrd( subrsurf )
-
-         ! check for hills - sbhill not implemented
-         !if (nhill .gt. 0) then
-         !call sbhill
-         !endif
-
-         ! check for barriers - moved to erosion to use actual wind angles
-
-         ! Turn off grid creation flag
-         am0eif = .false.
-      endif
 
       do sr = 1, nsubr
            ! initalize erosion threshold trigger variables

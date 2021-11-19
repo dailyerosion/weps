@@ -9,13 +9,12 @@ module crop_mod
 
   contains
 
-    subroutine callcrop(daysim, sr, soil, plant, croptot, restot, biotot, h1et)
+    subroutine callcrop(daysim, sr, soil, plant, restot, h1et)
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residue_pointer, biototal, residueAdd
-      use timer_mod, only: timer, TIMCROP, TIMSTART, TIMSTOP
       use crop_data_struct_defs, only: am0cdb, crop_residue, create_crop_residue, destroy_crop_residue
       use hydro_data_struct_defs, only: hydro_derived_et
       use crop_growth_mod, only: cropgrow
@@ -27,25 +26,20 @@ module crop_mod
       integer sr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
-      type(biototal), intent(inout) :: croptot
       type(biototal), intent(inout) :: restot
-      type(biototal), intent(inout) :: biotot  ! structure array containing summary amounts for all biomass
       type(hydro_derived_et), intent(in) :: h1et
 
-! Local Variables
+      ! Local Variables
       integer lay
       type(crop_residue) :: cropres
       type(plant_pointer), pointer :: thisPlant       ! pointer used to interate plant pointer chain
 
       ! + + + END OF SPECIFICATIONS + + +
 
-      call timer(TIMCROP,TIMSTART)
-
-! Note that crop "may" really require (admbgz + admrtz) in place of admbgz
-! because crop wants to know the amount of biomass in each soil layer
-! for nutrient cycling.  However, since the nutrient cycling is supposed
-! to be disabled, we won't worry about it right now.  LEW - 04/23/99
-
+      ! Note that crop "may" really require (admbgz + admrtz) in place of admbgz
+      ! because crop wants to know the amount of biomass in each soil layer
+      ! for nutrient cycling.  However, since the nutrient cycling is supposed
+      ! to be disabled, we won't worry about it right now.  LEW - 04/23/99
 
       thisPlant => plant
       do while ( associated(thisPlant) )
@@ -67,7 +61,7 @@ module crop_mod
 
             cropres = create_crop_residue(soil%nslay)
 
-            if (am0cdb(sr).eq.1) call cdbug(sr, soil, thisPlant, restot, h1et)
+            if (am0cdb(sr).eq.1) call cdbug(.false., sr, soil, thisPlant, restot, h1et)
 
             call cropgrow(sr, soil%nslay, soil%aszlyd, &
               thisPlant%database%ck, thisPlant%database%grf, thisPlant%database%ehu0, thisPlant%database%zmxc, &
@@ -144,7 +138,7 @@ module crop_mod
 
            end if
 
-           if (am0cdb(sr).eq.1) call cdbug(sr, soil, thisPlant, restot, h1et)
+           if (am0cdb(sr).eq.1) call cdbug(.true., sr, soil, thisPlant, restot, h1et)
 
          end if
 
@@ -154,8 +148,6 @@ module crop_mod
          !end if
 
       end do
-
-      call timer(TIMCROP,TIMSTOP)
 
     end subroutine callcrop
 
@@ -170,7 +162,7 @@ module crop_mod
 
       use weps_cmdline_parms, only: report_info
       use weps_main_mod, only: init_loop, calib_loop
-      use datetime_mod, only: get_simdate, julday
+      use datetime_mod, only: julday, get_psim_day, get_psim_mon, get_psim_year
       use file_io_mod, only: luoseason
       use manage_data_struct_defs, only: lastoper
       use biomaterial, only: plant_pointer
@@ -189,7 +181,7 @@ module crop_mod
       type(plant_pointer), pointer :: plant   ! pointer to youngest plant data, which chains to older plant data
 
       ! + + + LOCAL VARIABLES + + +
-      integer lay, dd, mm, yy
+      integer lay
       real :: hui
       real bg_stem_sum, root_store_sum, root_fiber_sum
       integer adj_plant_yr
@@ -197,7 +189,6 @@ module crop_mod
 
       ! + + + LOCAL VARIABLE DEFINITIONS + + +
       ! lay - index used to loop through layers
-      ! dd,mm,yy - the current day, month, and year
       ! hui - heat unit index
       ! bg_stem_sum - sum of below ground stem
       ! root_store_sum - sum of root storage
@@ -213,7 +204,7 @@ module crop_mod
 
       ! + + + END OF SPECIFICATIONS + + +
 
-      if( init_loop .or. calib_loop ) then  !initilizing or calibrating cycle
+      if( init_loop(isr) .or. calib_loop(isr) ) then  !initializing or calibrating cycle
 
         ! set to the beginning of simulation
         ! to eliminate newline at beginning of file
@@ -225,9 +216,6 @@ module crop_mod
           ! write newline
           write(unit=luoseason(isr),fmt="(a)") ''
         end if
-
-        ! day of year
-        call get_simdate(dd, mm, yy)
 
         ! end of season print statements when crop submodel output flag set
         ! added initialization flag to prevent printing if crop not yet initialized
@@ -296,7 +284,7 @@ module crop_mod
                  'Warning: ', &
                  thisPlant%bname(1:len_trim(thisPlant%bname)), &
                  ' harvested ', &
-                 dd, mm, yy, &
+                 get_psim_day(isr), get_psim_mon(isr), get_psim_year(isr), &
                  ' only reached ', hui*100.0, '% of maturity', &
                  ' (Check crop selection, planting, harvest dates)'
               end if
@@ -424,7 +412,7 @@ module crop_mod
       return
     end subroutine cpout
 
-    subroutine cdbug(isr, soil, plant, restot, h1et)
+    subroutine cdbug(aflg, isr, soil, plant, restot, h1et)
 
       ! + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -438,16 +426,15 @@ module crop_mod
       ! wind, erosion, hydrology, tillage, soil, crop, decomposition
       ! management
 
-      use datetime_mod, only: get_simdate
       use file_io_mod, only: luocdb
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, biototal
-      use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use hydro_data_struct_defs, only: hydro_derived_et
-      use crop_data_struct_defs, only: tisr, tday, tmo, tyr
-      use climate_input_mod, only: cli_today
+      use climate_input_mod, only: cli_day, wind_day
+      use datetime_mod, only: get_psim_juld, get_psim_doy, get_psim_year
 
       ! + + +   ARGUMENT DECLARATIONS + + +
+      logical, intent(in) :: aflg   ! False, before call to crop, True, after call to crop
       integer, intent(in) :: isr    ! subregion index
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
@@ -455,109 +442,73 @@ module crop_mod
       type(hydro_derived_et), intent(in) :: h1et
 
       ! + + + LOCAL VARIABLES + + +
-      integer cd, cm, cy
-      integer        l
-
-      ! + + + LOCAL DEFINITIONS + + +
-
-!   cd        - The current day of simulation month.
-!   cm        - The current month of simulation year.
-!   cy        - The current year of simulation run.
-!   l         - This variable is an index on soil layers.
-
-      ! + + + SUBROUTINES CALLED + + +
-
-      ! + + + FUNCTIONS CALLED + + +
-
-      ! + + + UNIT NUMBERS FOR INPUT/OUTPUT DEVICES + + +
-      ! * = screen and keyboard
-!    27 = debug CROP
+      integer :: l      ! loop index soil layers
+      integer :: pjuld  ! present julian day
 
       ! + + + DATA INITIALIZATIONS + + +
 
-      if (plant%growth%am0cif .eqv. .true.) then
-          tday = -1
-          tmo = -1
-          tyr = -1
-          tisr = -1
-      end if
-      call get_simdate (cd, cm, cy)
+      pjuld = get_psim_juld(isr)
 
       ! + + + INPUT FORMATS + + +
 
       ! + + + OUTPUT FORMATS + + +
- 2030 format ('**',1x,2(i2,'/'),i4,'    After  call to CROP         Subr&
-     &egion No. ',i3)
- 2031 format ('**',1x,2(i2,'/'),i4,'    Before call to CROP         Subr&
-     &egion No. ',i3)
- 2032 format (' awzdpt  awtdmx  awtdmn  aweirr  awudmx  awudmn ',       &
-     &        ' awtdpt  awadir  awhrmx')
+ 2030 format ('**',1x,'Day ',i2,'of Year ',i4,'    After  call to CROP         Subregion No. ',i3)
+ 2031 format ('**',1x,'Day ',i2,'of Year ',i4,'    Before call to CROP         Subregion No. ',i3)
+ 2032 format (' awzdpt  awtdmx  awtdmn  aweirr  awudmx  awudmn ',' awtdpt  awadir  awhrmx')
  2038 format (f7.2,9f8.2)
 ! 2045 format ('Subregion Number',i3)
- 2050 format ('amrslp(',i2,') acftcv(',i2,') acrlai(',i2,')',           &
-     &        ' aczrtd(',i2,') admftot(',i2,') fwsf(',i2,')',         &
-     &        ' ac0nam(',i2,')')
+ 2050 format ('amrslp(',i2,') acftcv(',i2,') acrlai(',i2,')',' aczrtd(',i2,') admftot(',i2,') fwsf(',i2,')',' ac0nam(',i2,')')
  2051 format (2f10.2,2f10.5,2x,f10.2,f10.2,3x,a12)
- 2052 format ('actdtm(',i2,') sum-phu(',i2,') acmst(',i2,')',  &
-              '  acmrt(',i2,')  h1et%zeta h1et%zetp', &
-              ' h1et%zpta ')
+ 2052 format ('actdtm(',i2,') sum-phu(',i2,') acmst(',i2,')','  acmrt(',i2,')  h1et%zeta h1et%zetp',' h1et%zpta ')
  2053 format (i10, 4f10.2,2f12.2)
- 2054 format (' h1et%zea  h1et%zep h1et%zptp ', &
-              ' actmin(',i2,') actopt(',i2,') aslrr(',i2,')')
+ 2054 format (' h1et%zea  h1et%zep h1et%zptp ',' actmin(',i2,') actopt(',i2,') aslrr(',i2,')')
  2055 format (2f10.2,2f10.3,3f12.2)
- 2056 format('layer aszlyt  ahrsk ahrwc ahrwcs ahrwca',                 &
-     &       ' ahrwcf ahrwcw ah0cb aheaep ahtsmx ahtsmn')
+ 2056 format('layer aszlyt  ahrsk ahrwc ahrwcs ahrwca',' ahrwcf ahrwcw ah0cb aheaep ahtsmx ahtsmn')
  2060 format (i4,1x,f7.2,1x,e7.1,f6.2,4f7.2,f6.2,3f7.2)
- 2065 format(' layer  asfsan asfsil asfcla asfom asdblk aslagm  as0ags',&
-     &       ' aslagn  aslagx  aseags')
+ 2065 format(' layer  asfsan asfsil asfcla asfom asdblk aslagm  as0ags',' aslagn  aslagx  aseags')
  2070 format (i4,2x,3f7.2,f7.3,2f7.2,f8.2,f7.3,2f8.2)
 
       ! + + + END SPECIFICATIONS + + +
 
       ! write weather cligen and windgen variables
-      if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and.  &
-     &   (isr .eq. tisr)) then
-         write(luocdb(isr),2030) cd,cm,cy,isr
+      if( aflg ) then
+         write(luocdb(isr),2030) get_psim_doy(isr),get_psim_year(isr),isr
       else
-         write(luocdb(isr),2031) cd,cm,cy,isr
+         write(luocdb(isr),2031) get_psim_doy(isr),get_psim_year(isr),isr
       end if
       write(luocdb(isr),2032)
-      write(luocdb(isr),2038) cli_today%zdpt, cli_today%tdmx, cli_today%tdmn, cli_today%eirr, awudmx, &
-     &                        awudmn, cli_today%tdpt, awadir, awhrmx
+      write(luocdb(isr),2038) cli_day(pjuld)%zdpt, cli_day(pjuld)%tdmx, cli_day(pjuld)%tdmn, &
+                              cli_day(pjuld)%eirr, wind_day(pjuld)%wwudmx, wind_day(pjuld)%wwudmn, cli_day(pjuld)%tdpt, &
+                              wind_day(pjuld)%wwadir, wind_day(pjuld)%wwhrmx
 
       ! write(luocdb(isr),2045) isr
 
       write(luocdb(isr),2050) isr, isr, isr, isr, isr, isr, isr
       write(luocdb(isr),2051) soil%amrslp, plant%deriv%ftcv, plant%deriv%rlai,    &
-     &               plant%geometry%zrtd, restot%mftot, plant%growth%fwsf, plant%bname
+                     plant%geometry%zrtd, restot%mftot, plant%growth%fwsf, plant%bname
       write(luocdb(isr),2052) isr, isr, isr, isr
       write(luocdb(isr),2053)                                           &
-     &               plant%database%tdtm, plant%growth%thucum, plant%deriv%mst, plant%deriv%mrt, &
-     &               h1et%zeta, h1et%zetp, h1et%zpta
+                     plant%database%tdtm, plant%growth%thucum, plant%deriv%mst, plant%deriv%mrt, &
+                     h1et%zeta, h1et%zetp, h1et%zpta
       write(luocdb(isr),2054) isr, isr, isr, isr
       write(luocdb(isr),2055) h1et%zea, h1et%zep, h1et%zptp, plant%database%tmin, &
-     &               plant%database%topt, soil%aslrr
+                     plant%database%topt, soil%aslrr
       write(luocdb(isr),2056)
 
       do 200 l = 1,soil%nslay
          write(luocdb(isr),2060) l,soil%aszlyt(l), soil%ahrsk(l), soil%ahrwc(l), &
-     &                  soil%ahrwcs(l), soil%ahrwca(l), soil%ahrwcf(l), &
-     &                  soil%ahrwcw(l), soil%ah0cb(l), soil%aheaep(l), &
-     &                  soil%tsmx(l), soil%tsmn(l)
+                        soil%ahrwcs(l), soil%ahrwca(l), soil%ahrwcf(l), &
+                        soil%ahrwcw(l), soil%ah0cb(l), soil%aheaep(l), &
+                        soil%tsmx(l), soil%tsmn(l)
   200 continue
          write(luocdb(isr),2065)
 
       do 300 l=1,soil%nslay
          write(luocdb(isr),2070) l,soil%asfsan(l),soil%asfsil(l), &
-     &                  soil%asfcla(l), soil%asfom(l), soil%asdblk(l), &
-     &                  soil%aslagm(l), soil%as0ags(l), soil%aslagn(l), &
-     &                  soil%aslagx(l), soil%aseags(l)
+                        soil%asfcla(l), soil%asfom(l), soil%asdblk(l), &
+                        soil%aslagm(l), soil%as0ags(l), soil%aslagn(l), &
+                        soil%aslagx(l), soil%aseags(l)
   300 continue
-
-      tisr = isr
-      tday = cd
-      tmo = cm
-      tyr = cy
 
       return
     end subroutine cdbug

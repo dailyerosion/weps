@@ -5,17 +5,11 @@
 
 module hydro_mod
 
-    ! used in hdbug
-    integer :: tday      ! The last accessed day of simulation month.
-    integer :: tmo       ! The last accessed month of simulation year.
-    integer :: tyr       ! The last accessed year of simulation run.
-    integer :: tisr      ! The last accessed subregion index.
-
   contains
 
     subroutine hydrinit(isr, soil, hstate, h1et, h1bal, wp)
 
-     use datetime_mod, only: get_simdate_daysim
+      use datetime_mod, only: get_psim_daysim
       use hydro_wepp_util_mod, only: saxpar
       use soil_data_struct_defs, only: soil_def
       use hydro_data_struct_defs, only: hydro_derived_et, hydro_state, hhrs
@@ -59,7 +53,7 @@ module hydro_mod
       h1bal%initswc = dot_product(ltheta(1:soil%nslay),                 &
      &                            soil%aszlyt(1:soil%nslay))
       h1bal%initsnow = hstate%zsno
-      h1bal%initday = get_simdate_daysim()
+      h1bal%initday = get_psim_daysim(isr)
 
       h1bal%presswc = h1bal%initswc
       h1bal%pressnow = h1bal%initsnow
@@ -142,8 +136,6 @@ module hydro_mod
       use hydro_main_mod, only: hydro
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residue_pointer, biototal
-      use timer_mod, only: timer, TIMHYDR, TIMSTART, TIMSTOP
-      use erosion_data_struct_defs, only: awudav
       use hydro_data_struct_defs, only: am0hdb, hydro_derived_et, hydro_state
       use report_hydrobal_mod, only: hydro_balance
       use wepp_param_mod, only: wepp_param
@@ -165,10 +157,8 @@ module hydro_mod
       !  + + + ARGUMENT DEFINITIONS + + +
       !  restot          - structure array containing summary residue pool amounts for all subregions
 
-      call timer(TIMHYDR,TIMSTART)
-
       if (am0hdb(isr) .eq. 1) then
-         call hdbug(isr, soil, croptot, restot, hstate, h1et)
+         call hdbug(.false., isr, soil, croptot, restot, hstate, h1et)
       end if
 
       call hydro( isr, biotot%rcdtot, biotot%zht_ave, &
@@ -184,33 +174,31 @@ module hydro_mod
                  hstate%zsno, hstate%tsno, hstate%fsnfrz, &
                  hstate%zsmt, &
                  hstate%rwc0, daysim, &
-                 awudav, hstate%zwid, &
+                 hstate%zwid, &
                  hstate%zeasurf, &
                  soil, plant, h1et, h1bal, wp )
 
       if (am0hdb(isr) .eq. 1) then
-         call hdbug(isr, soil, croptot, restot, hstate, h1et)
+         call hdbug(.true., isr, soil, croptot, restot, hstate, h1et)
       end if
-      call timer(TIMHYDR,TIMSTOP)      
 
     end subroutine callhydr
 
-    subroutine  hdbug(isr, soil, croptot, restot, hstate, h1et)
+    subroutine  hdbug(aflg, isr, soil, croptot, restot, hstate, h1et)
 
       ! This program prints out many of the global variables before
       ! and after the call to HYDROLOGY provide a comparison of values
       ! which may be changed by HYDDROLOGY
 
-      use weps_main_mod, only: am0ifl
-      use datetime_mod, only: get_simdate
+      use datetime_mod, only: get_psim_doy, get_psim_year, get_psim_juld
       use file_io_mod, only: luohdb
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biototal
-      use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use hydro_data_struct_defs, only: hydro_derived_et, hydro_state
-      use climate_input_mod, only: cli_today
+      use climate_input_mod, only: cli_day, wind_day
 
       !  + + + ARGUMENT DECLARATIONS + + +
+      logical, intent(in) :: aflg   ! False, before call to hydro, True, after call to hydro
       integer :: isr  ! subregion index.
       type(soil_def), intent(in) :: soil     ! soil for this subregion
       type(biototal), intent(in) :: croptot  ! structure containing summary crop pool amounts
@@ -219,26 +207,18 @@ module hydro_mod
       type(hydro_derived_et), intent(in) :: h1et
 
       !  + + + LOCAL VARIABLES + + +
-      integer :: cd  ! The current day of simulation month.
-      integer :: cm  ! The current month of simulation year.
-      integer :: cy  ! The current year of simulation run.
       integer :: l   ! index on soil layers
+      integer :: pjuld  ! present julian day
 
       !  + + + DATA INITIALIZATIONS + + +
-      call get_simdate (cd, cm, cy)
 
-      if (am0ifl  .eqv. .true.) then
-          tday = -1
-          tmo = -1
-          tyr = -1
-          tisr = -1
-      end if
-
-     !  + + + OUTPUT FORMATS + + +
- 2030 format ('**',1x,2(i2,'/'),i4,'    After  call to HYDRO          Subregion No. ',i3)
- 2031 format ('**',1x,2(i2,'/'),i4,'    Before call to HYDRO          Subregion No. ',i3)
- 2032 format (' cli_today%zdpt  cli_today%tdmx  cli_today%tdmn  cli_today%eirr  awudmx  awudmn ', &
-              ' cli_today%tdpt  awadir  awhrmx ')
+      pjuld = get_psim_juld(isr)
+      
+      !  + + + OUTPUT FORMATS + + +
+ 2030 format ('**',1x,'Day ',i2,'of Year ',i4,'    After  call to HYDRO          Subregion No. ',i3)
+ 2031 format ('**',1x,'Day ',i2,'of Year ',i4,'    Before call to HYDRO          Subregion No. ',i3)
+ 2032 format (' cli_day%zdpt  cli_day%tdmx  cli_day%tdmn  cli_day%eirr  awudmx  awudmn ', &
+              ' cli_day%tdpt  awadir  awhrmx ')
  2038 format (f7.2,9f8.2)
 ! 2045 format ('Subregion Number',i3)
  2050 format ('amrslp(',i2,') crop%ftcvtot(',i2,') croptot%rlaitot(',i2,')', &
@@ -261,15 +241,15 @@ module hydro_mod
       !  + + + END SPECIFICATIONS + + +
 
       !  write weather cligen and windgen variables
-      if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and. &
-         (isr .eq. tisr)) then
-         write(luohdb(isr),2030) cd,cm,cy,isr
+      if( aflg ) then
+         write(luohdb(isr),2030) get_psim_doy(isr),get_psim_year(isr),isr
       else
-         write(luohdb(isr),2031) cd,cm,cy,isr
+         write(luohdb(isr),2031) get_psim_doy(isr),get_psim_year(isr),isr
       end if
       write(luohdb(isr),2032)
-      write(luohdb(isr),2038) cli_today%zdpt, cli_today%tdmx, cli_today%tdmn, cli_today%eirr, awudmx, &
-                    awudmn, cli_today%tdpt, awadir, awhrmx
+      write(luohdb(isr),2038) cli_day(pjuld)%zdpt, cli_day(pjuld)%tdmx, cli_day(pjuld)%tdmn, cli_day(pjuld)%eirr, &
+                              wind_day(pjuld)%wwudmx, wind_day(pjuld)%wwudmn, cli_day(pjuld)%tdpt, &
+                              wind_day(pjuld)%wwadir, wind_day(pjuld)%wwhrmx
 
       !   write(luohdb(isr),2045) isr
 
@@ -297,12 +277,6 @@ module hydro_mod
                        soil%aslagm(l), soil%as0ags(l), soil%aslagn(l), &
                        soil%aslagx(l), soil%aseags(l)
       end do
-
-
-      tisr = isr
-      tday = cd
-      tmo = cm
-      tyr = cy
 
       return
     end subroutine  hdbug

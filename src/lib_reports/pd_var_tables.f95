@@ -163,6 +163,8 @@ MODULE pd_var_tables
     INTEGER, PARAMETER :: Min_eop_vars     = Max_mave_vars + 1
     INTEGER, PARAMETER :: Max_eop_vars     = Min_eop_vars + N_eop_vars - 1
 
+    ! total number of report variables
+    integer, parameter :: n_rep_vars       = Max_eop_vars
 
 ! Index values for these parameters when used in DO loops
 

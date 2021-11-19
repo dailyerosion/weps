@@ -147,7 +147,7 @@ module mproc_thin_mod
       ! the subroutine to allow the flat mass pool for a living crop to be
       ! handled the same as a standing pool for thinning purposes.
 
-    subroutine thin_pool_stand_plant ( thinval, grainf, cropf, &
+    pure subroutine thin_pool_stand_plant ( thinval, grainf, cropf, &
                 poolmstandstem, poolmstandleaflive, poolmstandleafdead, poolmstandstore, &
                 poolmflatstem, poolmflatleaf, poolmflatstore, &
                 poolgrainf, poolhyfg, tot_mass_rem, sel_mass_left)
@@ -246,7 +246,7 @@ module mproc_thin_mod
       return
     end subroutine thin_pool_stand_plant
 
-    subroutine thin_pool_residue ( thinval, grainf, cropf, &
+    pure subroutine thin_pool_residue ( thinval, grainf, cropf, &
                 poolmstandstem, poolmstandleaf, poolmstandstore, &
                 poolmflatstem, poolmflatleaf, poolmflatstore, &
                 poolgrainf, poolhyfg, tot_mass_rem, sel_mass_left)

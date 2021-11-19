@@ -28,7 +28,7 @@ module report_hydrobal_mod
     subroutine report_hydrobal( isr, bmrotation, bmperod )
 
       use weps_main_mod, only: report_loop
-      use datetime_mod, only: get_simdate, julday, caldat
+      use datetime_mod, only: get_psimdate, julday, caldat
       use file_io_mod, only: luohydrobal
       use manage_data_struct_defs, only: lastoper
 
@@ -53,7 +53,7 @@ module report_hydrobal_mod
 !     water_use_eff - computed water use efficiency from period rain and soil water content values
 !     water use - The total water that was used during period
 
-      if( .not. report_loop ) then  ! initilizing cycle
+      if( .not. report_loop(isr) ) then  ! initilizing cycle
 
         ! set to the beginning of simulation
         ! to eliminate newline at beginning of file
@@ -70,7 +70,7 @@ module report_hydrobal_mod
         ! daysim counting is restarted when initialization complete
         if( h1bal(isr)%initday .gt. h1bal(isr)%presday ) then
             ! initial day greater than present day, correct using date math
-            call get_simdate(presdy, presmon, presyr)
+            call get_psimdate(isr, presdy, presmon, presyr)
             presjday = julday(presdy, presmon, presyr)
             initjday = presjday + (h1bal(isr)%initday - h1bal(isr)%presday)
             call caldat(initjday, initdy, initmon, inityr)

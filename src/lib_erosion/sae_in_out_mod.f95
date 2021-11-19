@@ -36,7 +36,7 @@ module sae_in_out_mod
 
   contains
 
-      subroutine saeinp( subrsurf )
+      subroutine saeinp( julday, nsubr )
 
 !     +++ PURPOSE +++
 !     print out input file for stand alone erosion
@@ -47,17 +47,18 @@ module sae_in_out_mod
       use grid_mod, only: amxsim, amasim, gridfile, write_grid
       use subregions_mod
       use barriers_mod, only: barrier
-      use erosion_data_struct_defs, only: subregionsurfacestate, awzypt, awdair, anemht, awzzo, wzoflg, &
-                                          awadir, subday, ntstep, cellsurfacestate
+      use erosion_data_struct_defs, only: awzypt, awdair, anemht, awzzo, wzoflg, &
+                                          awadir, subday, ntstep, cellsurfacestate, subrsurf
       use sweep_io_xml_defs
       use read_write_xml_mod, only: w_begin_tag, w_end_tag, w_whole_tag
 
 !     +++ ARGUMENT DECLARATIONS +++
-      type(subregionsurfacestate), dimension(0:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
-
+      integer, intent(in) :: julday ! current julian day (index into subrsurf array)
+      integer, intent(in) :: nsubr   ! number of subregions
+      
 !     +++ LOCAL VARIABLES +++
       integer k,l, sr, ip
-      integer b, nbr, nsubr
+      integer b, nbr
       integer day, mon, yr
       integer :: alloc_stat, dealloc_stat
       integer :: ipool   ! index of biomass pool tag being written
@@ -84,8 +85,6 @@ module sae_in_out_mod
       end if
       call makedir(daypath)
 
-      nsubr = size(subrsurf) - 1  ! NOTE: subrsurf array dimensioned from 0 to nsubr
-
       allocate( subr_text(nsubr) )
 
       ! write main sweep file
@@ -103,14 +102,14 @@ module sae_in_out_mod
          ! create directory with that name
          call makedir( trim(daypath)//trim(subr_text(sr)) )
         ! must trim tinfil to just the file name, not path prefix, when not running in run directory
-        filename = trim(subrsurf(sr)%tinfil)
+        filename = trim(subrsurf(julday,sr)%tinfil)
         if( index(filename,'\') .gt. 0 ) then
           filename = trim(filename((index(filename,'\',back=.true.)+1):))
         else if( index(filename,'/') .gt. 0 ) then
           filename = trim(filename((index(filename,"/",back=.true.)+1):))
         end if
         subrfiles(sr)%treatfil = trim(filename) // '.treat'
-        filename = trim(subrsurf(sr)%sinfil)
+        filename = trim(subrsurf(julday,sr)%sinfil)
         if( index(filename,'\') .gt. 0 ) then
           filename = trim(filename((index(filename,'\',back=.true.)+1):))
         else if( index(filename,'/') .gt. 0 ) then
@@ -152,7 +151,7 @@ module sae_in_out_mod
                                         input_tag(SCI_index)%name, sr-1)
             call w_whole_tag( luo_saeinp, input_tag(SCI_treat)%name, trim(subr_text(sr))//subrfiles(sr)%treatfil )
             call w_whole_tag( luo_saeinp, input_tag(SCI_soilsurf)%name, trim(subr_text(sr))//subrfiles(sr)%slstfil )
-            call w_whole_tag( luo_saeinp, input_tag(GUI_soilifc)%name, '../../' // subrsurf(sr)%sinfil )
+            call w_whole_tag( luo_saeinp, input_tag(GUI_soilifc)%name, '../../' // subrsurf(julday,sr)%sinfil )
           call w_end_tag( luo_saeinp, input_tag(SCI_Subregion)%name )
         end do
         call w_end_tag( luo_saeinp, input_tag(SCI_Subregions)%name )
@@ -222,39 +221,39 @@ module sae_in_out_mod
         call w_begin_tag( luo_saeinp, input_tag(TreatmentData)%name )
           ! brcd Inputs (biomass by pool)
           call w_begin_tag( luo_saeinp, input_tag(SCI_BrcdInputs)%name, &
-                                        input_tag(SCI_number)%name, subrsurf(sr)%npools)
-          do ipool = 1, subrsurf(sr)%npools
+                                        input_tag(SCI_number)%name, subrsurf(julday,sr)%npools)
+          do ipool = 1, subrsurf(julday,sr)%npools
             call w_begin_tag( luo_saeinp, input_tag(SCI_brcdInput)%name, &
                                           input_tag(SCI_index)%name, ipool-1)
-              call w_whole_tag( luo_saeinp, input_tag(SCI_brcdBname)%name, subrsurf(sr)%brcdInput(ipool)%bname )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRlai)%name, subrsurf(sr)%brcdInput(ipool)%rlai )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRsai)%name, subrsurf(sr)%brcdInput(ipool)%rsai )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRg)%name, subrsurf(sr)%brcdInput(ipool)%rg )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_brcdXrow)%name, subrsurf(sr)%brcdInput(ipool)%xrow )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_brcdZht)%name, subrsurf(sr)%brcdInput(ipool)%zht )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_brcdBname)%name, subrsurf(julday,sr)%brcdInput(ipool)%bname )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRlai)%name, subrsurf(julday,sr)%brcdInput(ipool)%rlai )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRsai)%name, subrsurf(julday,sr)%brcdInput(ipool)%rsai )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRg)%name, subrsurf(julday,sr)%brcdInput(ipool)%rg )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_brcdXrow)%name, subrsurf(julday,sr)%brcdInput(ipool)%xrow )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_brcdZht)%name, subrsurf(julday,sr)%brcdInput(ipool)%zht )
             call w_end_tag( luo_saeinp, input_tag(SCI_brcdInput)%name )
           end do
           call w_end_tag( luo_saeinp, input_tag(SCI_BrcdInputs)%name )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_BiomassFlatCover)%name, subrsurf(sr)%abffcv )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_CrustThick)%name, subrsurf(sr)%aszcr )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_CrustDensity)%name, subrsurf(sr)%asdcr )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_CrustStability)%name, subrsurf(sr)%asecr )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_CrustCover)%name, subrsurf(sr)%asfcr )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_CrustMassCoverLoose)%name, subrsurf(sr)%asmlos )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_CrustFracCoverLoose)%name, subrsurf(sr)%asflos )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_RandomRoughness)%name, subrsurf(sr)%aslrr )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_RidgeOrientation)%name, subrsurf(sr)%asargo )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_RidgeHeight)%name, subrsurf(sr)%aszrgh )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_RidgeSpacing)%name, subrsurf(sr)%asxrgs )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_RidgeWidth)%name, subrsurf(sr)%asxrgw )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_DikeSpacing)%name, subrsurf(sr)%asxdks )
-          call w_whole_tag( luo_saeinp, input_tag(SCI_SnowDepth)%name, subrsurf(sr)%ahzsnd )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_BiomassFlatCover)%name, subrsurf(julday,sr)%abffcv )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_CrustThick)%name, subrsurf(julday,sr)%aszcr )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_CrustDensity)%name, subrsurf(julday,sr)%asdcr )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_CrustStability)%name, subrsurf(julday,sr)%asecr )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_CrustCover)%name, subrsurf(julday,sr)%asfcr )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_CrustMassCoverLoose)%name, subrsurf(julday,sr)%asmlos )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_CrustFracCoverLoose)%name, subrsurf(julday,sr)%asflos )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_RandomRoughness)%name, subrsurf(julday,sr)%aslrr )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_RidgeOrientation)%name, subrsurf(julday,sr)%asargo )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_RidgeHeight)%name, subrsurf(julday,sr)%aszrgh )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_RidgeSpacing)%name, subrsurf(julday,sr)%asxrgs )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_RidgeWidth)%name, subrsurf(julday,sr)%asxrgw )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_DikeSpacing)%name, subrsurf(julday,sr)%asxdks )
+          call w_whole_tag( luo_saeinp, input_tag(SCI_SnowDepth)%name, subrsurf(julday,sr)%ahzsnd )
           call w_begin_tag( luo_saeinp, input_tag(SCI_SurfaceSubDayWaters)%name, &
-                                        input_tag(SCI_number)%name, subrsurf(sr)%nswet)
-          do l = 1, subrsurf(sr)%nswet    ! NOTE: index adjusted to zero based
+                                        input_tag(SCI_number)%name, subrsurf(julday,sr)%nswet)
+          do l = 1, subrsurf(julday,sr)%nswet    ! NOTE: index adjusted to zero based
             call w_whole_tag( luo_saeinp, input_tag(SCI_SurfaceSubDayWater)%name, &
                                           input_tag(SCI_index)%name, l-1, &
-                                          subrsurf(sr)%ahrwc0(l) )
+                                          subrsurf(julday,sr)%ahrwc0(l) )
           end do
           call w_end_tag( luo_saeinp, input_tag(SCI_SurfaceSubDayWaters)%name )
         call w_end_tag( luo_saeinp, input_tag(TreatmentData)%name )
@@ -271,30 +270,33 @@ module sae_in_out_mod
         call w_begin_tag( luo_saeinp, input_tag(SoilState)%name )
           ! soil
           call w_begin_tag( luo_saeinp, input_tag(SCI_SoilLays)%name, &
-                                        input_tag(SCI_number)%name, subrsurf(sr)%nslay)
+                                        input_tag(SCI_number)%name, subrsurf(julday,sr)%nslay)
           ! the coordinate pairs
-          do l = 1, subrsurf(sr)%nslay    ! NOTE: index adjusted to zero based
+          do l = 1, subrsurf(julday,sr)%nslay    ! NOTE: index adjusted to zero based
             call w_begin_tag( luo_saeinp, input_tag(SCI_SoilLay)%name, &
                                           input_tag(SCI_index)%name, l-1)
-              call w_whole_tag( luo_saeinp, input_tag(SCI_LayerThickness)%name, subrsurf(sr)%bsl(l)%aszlyt )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_BulkDensity)%name, subrsurf(sr)%bsl(l)%asdblk )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_Sand)%name, subrsurf(sr)%bsl(l)%asfsan )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_VeryFineSand)%name, subrsurf(sr)%bsl(l)%asfvfs )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_Silt)%name, subrsurf(sr)%bsl(l)%asfsil )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_Clay)%name, subrsurf(sr)%bsl(l)%asfcla )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_RockVolume)%name, subrsurf(sr)%bsl(l)%asvroc )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateDensity)%name, subrsurf(sr)%bsl(l)%asdagd )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateStability)%name, subrsurf(sr)%bsl(l)%aseags )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateGMD)%name, subrsurf(sr)%bsl(l)%aslagm )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateGSD)%name, subrsurf(sr)%bsl(l)%as0ags )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateMIN)%name, subrsurf(sr)%bsl(l)%aslagn )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateMAX)%name, subrsurf(sr)%bsl(l)%aslagx )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_WiltingPoint)%name, subrsurf(sr)%bsl(l)%ahrwcw )
-              call w_whole_tag( luo_saeinp, input_tag(SCI_WaterContent)%name, subrsurf(sr)%bsl(l)%ahrwca )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_LayerThickness)%name, subrsurf(julday,sr)%bsl(l)%aszlyt )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_BulkDensity)%name, subrsurf(julday,sr)%bsl(l)%asdblk )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_Sand)%name, subrsurf(julday,sr)%bsl(l)%asfsan )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_VeryFineSand)%name, subrsurf(julday,sr)%bsl(l)%asfvfs )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_Silt)%name, subrsurf(julday,sr)%bsl(l)%asfsil )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_Clay)%name, subrsurf(julday,sr)%bsl(l)%asfcla )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_RockVolume)%name, subrsurf(julday,sr)%bsl(l)%asvroc )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateDensity)%name, subrsurf(julday,sr)%bsl(l)%asdagd )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateStability)%name, subrsurf(julday,sr)%bsl(l)%aseags )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateGMD)%name, subrsurf(julday,sr)%bsl(l)%aslagm )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateGSD)%name, subrsurf(julday,sr)%bsl(l)%as0ags )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateMIN)%name, subrsurf(julday,sr)%bsl(l)%aslagn )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateMAX)%name, subrsurf(julday,sr)%bsl(l)%aslagx )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_WiltingPoint)%name, subrsurf(julday,sr)%bsl(l)%ahrwcw )
+              call w_whole_tag( luo_saeinp, input_tag(SCI_WaterContent)%name, subrsurf(julday,sr)%bsl(l)%ahrwca )
             call w_end_tag( luo_saeinp, input_tag(SCI_SoilLay)%name )
           end do
           call w_end_tag( luo_saeinp, input_tag(SCI_SoilLays)%name )
         call w_end_tag( luo_saeinp, input_tag(SoilState)%name )
+
+        close(luo_saeinp)
+
       end do
 
       ! deallocate Tag array
@@ -337,6 +339,7 @@ module sae_in_out_mod
       real topt, topcs, topss, top10, top2_5, bott, botcs, botss, bot10, bot2_5
       real ritt, ritcs, ritss, rit10, rit2_5, lftt, lftcs, lftss, lft10, lft2_5
       real tot, totbnd
+      character*512 :: daypath  ! the root path plus subdirectory plus specific day directory for sweep output files
 
       integer yr, mon, day
 
@@ -457,8 +460,9 @@ module sae_in_out_mod
 
       if (btest(am0efl,1)) then
 
-      if( o_unit .lt. 0 ) then
-        call fopenk (o_unit, trim(mksaeout%fullpath) // makenamnum('saeros', mksaeout%simday, mksaeout%maxday, '.egrd'),'unknown')
+      if( o_unit .eq. 0 ) then
+        daypath = trim(mksaeout%fullpath) // makenamnum('saeros', mksaeout%simday, mksaeout%maxday,'/')
+        call fopenk (o_unit, trim(daypath) // 'erod.egrd','unknown')
         call caldat (mksaeout%jday,day,mon,yr)
         write(*,'(4(a,i0))') 'Made Daily Erosion grid file for: ', day,'/', mon,'/', yr,' simulation day: ', mksaeout%simday
         write(o_unit, "('# WEPS erosion day mon yr',2(1x,i2),2x,i4)") day, mon, yr

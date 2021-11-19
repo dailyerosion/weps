@@ -63,14 +63,15 @@ fc_compile_flag		= "-c ";
 fc_out_flag		= "-o ";
 
 fc_fixed		= "-ffixed-form";
-fc_free			= "-ffree-form";
+fc_free		= "-ffree-form";
 
 /* default mode flags */
 fc_default		=;
 
 /* debug flags */
-fc_debug		= "-O0 -g -Wall -Wextra -fimplicit-none -fcheck=all -fbacktrace -ffpe-trap=invalid,zero,overflow";
+fc_debug		= "-O0 -g -Wall -Wextra -fimplicit-none -fcheck=all,no-recursion -fbacktrace -ffpe-trap=invalid,zero,overflow";
 fc_debug		+= "-fno-unsafe-math-optimizations -frounding-math -fsignaling-nans -Wno-missing-include-dirs";
+/*fc_debug		+= "-fopenmp";*/
 /*fc_debug		= "-Og -g -Wall -Wextra -fimplicit-none -fcheck=all -fbacktrace -ffpe-trap=zero,overflow -fdefault-real-8";*/
 
 /* optimization flags */
@@ -117,7 +118,7 @@ else {
 /* #endif							*/
 /* works fine in TDM-GCC-64 version of gcc/gfortran (it is not a cygwin install) */
 ld_flags		+= "-static";
-
+/*ld_flags		+= "-fopenmp";*/
 
 ld_out_flag		= "-o ";
 

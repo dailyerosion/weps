@@ -416,28 +416,17 @@ module grid_mod
 
     end subroutine sbgrid
 
-    subroutine sbigrd( subrsurf )
+    subroutine sbigrd( )
       use erosion_data_struct_defs, only: subregionsurfacestate
 
       ! + + + PURPOSE + + +
       ! To set the grid output arrays to zero
-      ! To set subregion cell counts
-
-!     +++ ARGUMENT DECLARATIONS +++
-      type(subregionsurfacestate), dimension(0:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
 
       ! + + + LOCAL VARIABLES + + +
-      integer :: nsubr
-      integer :: isr
       integer :: idx
       integer :: jdx
 
       ! + + + END SPECIFICATIONS + + +
-
-      nsubr = size(subrsurf) - 1
-      do isr = 0, nsubr
-        subrsurf(isr)%cntcells = 0
-      end do
 
       ! Set the grid output arrays to zero
       do jdx = 0, jmax
@@ -450,22 +439,6 @@ module grid_mod
          end do
       end do
 
-      ! To set subregion cell counts
-      do jdx = 1, jmax-1
-         do idx = 1, imax-1
-           ! count cells in each subregion and put into subrsurf
-           ! also sum subrsurf(0) for total area
-           subrsurf(0)%cntcells = subrsurf(0)%cntcells + 1
-           if( (cellstate(idx,jdx)%csr .ge. 1) .and. (cellstate(idx,jdx)%csr .le. nsubr) ) then
-             subrsurf(cellstate(idx,jdx)%csr)%cntcells = subrsurf(cellstate(idx,jdx)%csr)%cntcells + 1
-           else
-             write(*,*) 'Grid contains invalid subregion index'
-             write(*,"(3(a,i0))") 'cellstate(', idx, ',', jdx, ')%csr = ', cellstate(idx,jdx)%csr
-             stop
-           end if
-         end do
-      end do
-      
     end subroutine sbigrd     
 
     subroutine init_regions_grid( )

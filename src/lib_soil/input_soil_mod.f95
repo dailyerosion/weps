@@ -35,9 +35,10 @@ module input_soil_mod
       type(hydro_state), intent(inout) :: hstate
 
 !     + + + LOCAL VARIABLES + + +
-      integer       lay
-      character     line*512
-      integer       lui1
+      integer :: lay
+      character :: line*512
+      integer :: lui1
+      integer :: resflg  ! result flag from param_pot_bc
 
 !     + + + LOCAL DEFINITIONS + + +
 !     lay - soil layer counter
@@ -153,10 +154,18 @@ module input_soil_mod
 !         end do
       else
           ! set matrix potential parameters to match 1/3 bar and 15 bar water contents
-          call param_pot_bc( soil%nslay, soil%asdblk, soil%asdpart, &
-     &                     soil%ahrwcf, soil%ahrwcw,                &
-     &                     soil%asfcla, soil%asfom,                 &
-     &                     soil%ah0cb, soil%aheaep )
+          call param_pot_bc( resflg, soil%nslay, soil%asdblk, soil%asdpart, soil%ahrwcf, soil%ahrwcw, &
+                             soil%asfcla, soil%asfom, soil%ah0cb, soil%aheaep )
+          if( resflg .eq. 1 ) then
+              write(0,*) 'Error: saturation less than field capacity'
+              call exit(1)
+          else if( resflg .eq. 2 ) then
+              write(0,*) 'field capacity less than wilting point'
+              call exit(1)
+          else if(resflg .eq. 3 ) then
+              write(0,*) 'Derived Brooks and Corey b too large'
+              call exit(1)
+          end if
       end if
 
       ! Check if override of rock fragments are specified
@@ -707,6 +716,7 @@ module input_soil_mod
       integer       max_typidx  !Maximum number of lines to read in
       real          temp   ! temporary variable, throw away value
       integer       lui1   ! input file unit number
+      integer :: resflg  ! result flag from param_pot_bc
 
 !     + + + Initializations + + +
       linnum = 0
@@ -1015,10 +1025,18 @@ module input_soil_mod
           end do
       else
           ! set matrix potential parameters to match 1/3 bar and 15 bar water contents
-          call param_pot_bc( soil%nslay, soil%asdblk, soil%asdpart, &
-     &                     soil%ahrwcf, soil%ahrwcw,                &
-     &                     soil%asfcla, soil%asfom,                 &
-     &                     soil%ah0cb, soil%aheaep )
+          call param_pot_bc( resflg, soil%nslay, soil%asdblk, soil%asdpart, soil%ahrwcf, soil%ahrwcw, &
+                             soil%asfcla, soil%asfom, soil%ah0cb, soil%aheaep )
+          if( resflg .eq. 1 ) then
+              write(0,*) 'Error: saturation less than field capacity'
+              call exit(1)
+          else if( resflg .eq. 2 ) then
+              write(0,*) 'field capacity less than wilting point'
+              call exit(1)
+          else if(resflg .eq. 3 ) then
+              write(0,*) 'Derived Brooks and Corey b too large'
+              call exit(1)
+          end if
       end if
 
       close (lui1)
@@ -1109,64 +1127,42 @@ module input_soil_mod
       return
     end subroutine propsaxt
 
-    subroutine proptext( nlay, clayf, sandf, organf,                  &
-     &                     bulkden, settled_bulkden, proctor_bulkden,   &
-     &                     wet_bulkden, wet_set_rat, partden )
-
-!     + + + PURPOSE + + +
-!     
-!     This subroutine updates the properties that depend on soil texture 
-!     (texture can change in the model due to mixing and removal by wind)
-
-!     + + + KEYWORDS + + +
-!     texture properties 
+    subroutine proptext( nlay, clayf, sandf, organf, &
+                         bulkden, settled_bulkden, proctor_bulkden, &
+                         wet_bulkden, wet_set_rat, partden )
+      ! Updates the properties that depend on soil texture 
+      ! (texture can change in the model due to mixing and removal by wind)
 
       use weps_cmdline_parms, only: report_info
       use soilden_mod, only: setpartden, setbds, setbdproc
 
-!     + + + ARGUMENT DECLARATIONS + + +
-      integer nlay
-      real sandf(*)
-      real clayf(*)
-      real organf(*)
-      real bulkden(*)
-      real settled_bulkden(*)
-      real proctor_bulkden(*)
-      real wet_bulkden(*)
-      real wet_set_rat(*)
-      real partden(*)
+      ! + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: nlay           ! number of soil layers to be updated
+      real, intent(in) :: sandf(*)          ! fraction of soil mineral portion which is sand
+      real, intent(in) :: clayf(*)          ! fraction of soil mineral portion which is clay
+      real, intent(in) :: organf(*)         ! fraction of total soil mass which is organic matter
+      real, intent(inout) :: bulkden(*)     ! bulk density state of the soil
+      real, intent(out) :: settled_bulkden(*) ! settled bulk density (Mg/m^3)
+      real, intent(out) :: proctor_bulkden(*) ! proctor bulk density (Mg/m^3)
+      real, intent(inout) :: wet_bulkden(*) ! 1/3 bar bulk density (Mg/m^3)
+      real, intent(inout) :: wet_set_rat(*) ! Nondimensional ratio of wet to settled bulk density
+      real, intent(out) :: partden(*)     ! particle density (Mg/m^3)
 
-!     + + + ARGUMENT DEFINITIONS + + +
-!     nlay     - number of soil layers to be updated
-!     clayf    - fraction of soil mineral portion which is clay
-!     sandf    - fraction of soil mineral portion which is sand
-!     organf   - fraction of total soil mass which is organic matter
-!     bulkden  - bulk density state of the soil.
-!     settled_bulkden - settled bulk density (Mg/m^3)
-!     proctor_bulkden - proctor bulk density (Mg/m^3)
-!     wet_bulkden - 1/3 bar bulk density (Mg/m^3)
-!     wet_sat_rat - Nondimensional ratio of wet to settled bulk density
-!     partden  - particle density (Mg/m^3)
+      ! + + + LOCAL VARIABLES + + +
+      integer lay   ! index for soil layer loop
 
-!     + + + LOCAL VARIABLES + + +
-      integer lay
-
-!     + + + LOCAL VARIABLE DEFINITIONS + + +
-
-!     + + + END SPECIFICATIONS + + + 
+      ! + + + END SPECIFICATIONS + + + 
 
       do lay=1,nlay
 
           ! settled bulk density
-          settled_bulkden(lay) = setbds( clayf(lay), sandf(lay),        &
-     &                                   organf(lay))
+          settled_bulkden(lay) = setbds( clayf(lay), sandf(lay), organf(lay))
 
           ! calculate an average soil particle density
           partden(lay) = setpartden( organf(lay) )
 
           ! reference bulk density
-          proctor_bulkden(lay) = setbdproc( clayf(lay), sandf(lay),     &
-     &                                      organf(lay), partden(lay))
+          proctor_bulkden(lay) = setbdproc( clayf(lay), sandf(lay), organf(lay), partden(lay))
 
           ! make sure particle density is significantly greater than settled bulk density
           if( partden(lay).lt.(1.2*settled_bulkden(lay)) ) then
@@ -1174,16 +1170,13 @@ module input_soil_mod
           endif
           if( wet_set_rat(lay) .lt. 0.0 ) then
               ! ratio wet_set_rat is negative, so initialize it
-              wet_set_rat(lay) = (partden(lay) - settled_bulkden(lay))  &
-     &                         / (partden(lay) - wet_bulkden(lay))
+              wet_set_rat(lay) = (partden(lay) - settled_bulkden(lay)) / (partden(lay) - wet_bulkden(lay))
               if( wet_set_rat(lay) .gt. 1.0 ) then
                 ! wet bulk density is greater than settled bulk density, adjust
                 if (report_info >= 1) then
-                  write(*,"(a,f9.7,a,f9.7,a)") 'WARNING: settled bd(',  &
-     &                                          settled_bulkden(lay),   & !NOTE:  Changed to "WARNING" so message
-     &                                         ') < wet bd (',          &
-     &                                          bulkden(lay),           &
-     &                                         '), wbd = sbd'             !wouldn't display in GUI popup Warning dialog box
+                  ! NOTE:  Changed to "WARNING" so message wouldn't display in GUI popup Warning dialog box
+                  write(*,"(a,f9.7,a,f9.7,a)") 'WARNING: settled bd(', settled_bulkden(lay), &
+                                               ') < wet bd (', bulkden(lay), '), wbd = sbd'
                 end if
                 wet_set_rat(lay) = 1.0
                 wet_bulkden(lay) = settled_bulkden(lay)
@@ -1191,19 +1184,16 @@ module input_soil_mod
               if( bulkden(lay) .gt. settled_bulkden(lay) ) then
                 ! do not start simulation in compacted state
                 if (report_info >= 1) then
-                  write(*,"(a,f9.7,a,f9.7,a)") 'WARNING: settled bd(',  &
-     &                                          settled_bulkden(lay),   & !NOTE:  Changed to "WARNING" so message
-     &                                         ') < initial bd(',       &
-     &                                          bulkden(lay),           &
-     &                                         '), bd = sbd'              !wouldn't display in GUI popup Warning dialog box
+                  ! NOTE:  Changed to "WARNING" so message wouldn't display in GUI popup Warning dialog box
+                  write(*,"(a,f9.7,a,f9.7,a)") 'WARNING: settled bd(', settled_bulkden(lay), &
+                                               ') < initial bd(', bulkden(lay), '), bd = sbd'
                 end if
                 bulkden(lay) = settled_bulkden(lay)
               end if
 
           else
               ! ratio wet_set_rat is positive, so use it to adjust wet_bulkden
-              wet_bulkden(lay) = partden(lay)                           &
-     &        - (partden(lay) - settled_bulkden(lay)) / wet_set_rat(lay)
+              wet_bulkden(lay) = partden(lay) - (partden(lay) - settled_bulkden(lay)) / wet_set_rat(lay)
 
           end if
 

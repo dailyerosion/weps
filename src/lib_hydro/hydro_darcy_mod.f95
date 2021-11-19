@@ -428,10 +428,10 @@ module hydro_darcy_mod
       use weps_main_mod, only: am0ifl
       use soillay_mod, only: distriblay, intersect
       use file_io_mod, only: luowater
-      use datetime_mod, only: get_simdate_doy, get_simdate_year
+      use datetime_mod, only: get_psim_doy, get_psim_year
       use p1unconv_mod, only: pi, hrtosec, mtomm, mmtom
       use hydro_data_struct_defs, only: am0hfl, gravconst
-      use air_water_mod, only: vaporden
+      ! use air_water_mod, only: vaporden
       use hydro_data_struct_defs, only: claygrav80rh, orggrav80rh
       use hydro_util_mod, only: matricpot_bc, volwatadsorb, depstore
 
@@ -631,7 +631,7 @@ module hydro_darcy_mod
 
 ! ***      write(*,*) 'in darcy'
 
-      if( (am0ifl .eqv. .true.) .and. ((am0hfl(isr) .eq. 2)             &
+      if( (am0ifl(isr) .eqv. .true.) .and. ((am0hfl(isr) .eq. 2)             &
      & .or. (am0hfl(isr) .eq. 3) .or. (am0hfl(isr) .eq. 6)              &
      & .or. (am0hfl(isr) .eq. 7)) ) then
           ! write header information to hourly (or sub-hourly output file
@@ -847,8 +847,8 @@ module hydro_darcy_mod
 !  print out zero hour initialization values
       if ((am0hfl(isr) .eq. 2) .or. (am0hfl(isr) .eq. 3) .or.           &
      &    (am0hfl(isr) .eq. 6) .or. (am0hfl(isr) .eq. 7)) then
-         yr = get_simdate_year()
-         idoy = get_simdate_doy()
+         yr = get_psim_year(isr)
+         idoy = get_psim_doy(isr)
          if( idoy .eq. 1 ) then
              write(luowater(isr),*)
              write(luowater(isr),*)
@@ -883,7 +883,7 @@ module hydro_darcy_mod
          write(luowater(isr),3010) dvwp(isr)%t, daysim, idoy, yr, kindex,         &
      &       0.0, volw(kindex), netflux(kindex), 0.0, 0.0, 0.0, 0.0, 0.0
 
-!         if (am0ifl .eqv. .true.) then
+!         if (am0ifl(isr) .eqv. .true.) then
 !           ! write out main soil properties
 !           write(*,*)'darcyprop: thetas thetaf thetaw bulkden bh0cb ',  &
 !     &             'bheaep bhrsk'

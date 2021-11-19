@@ -88,8 +88,8 @@ contains
         character*(*), intent(in) :: filstatus
         integer           ios
 
-        open(newunit(filnumber), FILE=trim(filname), STATUS=filstatus, POSITION='REWIND', ERR=100, IOSTAT=ios)
-        write(*,FMT="(' Opened file: ',a,' on unit ',i3,' with status ',a)") trim(filname), filnumber, filstatus
+        open(newunit=filnumber, FILE=trim(filname), STATUS=filstatus, POSITION='REWIND', ERR=100, IOSTAT=ios)
+        write(*,FMT="(' Opened file: ',a,' on unit ',i0,' with status ',a)") trim(filname), filnumber, filstatus
         return
 
 100     write(0,FMT="(' Cannot open file: ',a,' on unit ',i3,' with status ',a, ' and I/O status ', i5)") &
@@ -104,23 +104,23 @@ contains
     ! argument. This allows the function to be used directly in an OPEN
     ! statement, and optionally save the result in a local variable.
     ! If no units are available, -1 is returned.
-    integer function newunit(unit)
-        integer, intent(out), optional :: unit
-        ! local
-        integer, parameter :: LUN_MIN=10, LUN_MAX=1000
-        logical :: opened
-        integer :: lun
-        ! begin
-        newunit=-1
-        do lun=LUN_MIN,LUN_MAX
-            inquire(unit=lun,opened=opened)
-            if (.not. opened) then
-                newunit=lun
-                exit
-            end if
-        end do
-        if (present(unit)) unit=newunit
-    end function newunit
+!    integer function newunit(unit)
+!        integer, intent(out), optional :: unit
+!        ! local
+!        integer, parameter :: LUN_MIN=10, LUN_MAX=1000
+!        logical :: opened
+!        integer :: lun
+!        ! begin
+!        newunit=-1
+!        do lun=LUN_MIN,LUN_MAX
+!            inquire(unit=lun,opened=opened)
+!            if (.not. opened) then
+!                newunit=lun
+!                exit
+!            end if
+!        end do
+!        if (present(unit)) unit=newunit
+!    end function newunit
 
     subroutine makedir(pathplusdirname)
         character(LEN = *), intent(in) :: pathplusdirname
@@ -137,7 +137,7 @@ contains
 
         ! check for existence of subdirectory
 !  10    open(newunit(filnumber), FILE=trim(pathplusdirname)//'exist.txt', STATUS='UNKNOWN', ERR=100)
-        open(newunit(filnumber), FILE=trim(pathplusdirname)//'exist.txt', STATUS='UNKNOWN', ERR=100)
+        open(newunit=filnumber, FILE=trim(pathplusdirname)//'exist.txt', STATUS='UNKNOWN', ERR=100)
         ! no error, subdirectory exists
         close( filnumber, STATUS='DELETE')
         return

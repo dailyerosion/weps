@@ -214,7 +214,8 @@ MODULE calib_plant_mod
 
   SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, plant)
 
-    use weps_main_mod, only: init_loop, report_loop, max_calib_cycles, calib_cycle, calib_done
+    use weps_cmdline_parms, only: calibrate_crops
+    use weps_main_mod, only: init_loop, report_loop, calib_cycle, calib_done
     USE generic_list , ONLY : LI_Init_List, LI_Add_To_Head
     USE generic_list , ONLY : LI_Get_Head, LI_Remove_Head
     USE generic_list , ONLY : LI_Get_Next, LI_Associated
@@ -272,7 +273,7 @@ MODULE calib_plant_mod
 !!! TYPE (calib_crop_type) :: var
 
     IF (plant%database%baflg == 0) RETURN           ! crop not flagged for calibration
-    IF (init_loop .or. report_loop) RETURN ! not a calibrating cycle
+    IF (init_loop(sr) .or. report_loop(sr)) RETURN ! not a calibrating cycle
 
     no_get_calib_yield_call = no_get_calib_yield_call + 1
 
@@ -327,7 +328,7 @@ MODULE calib_plant_mod
 
        ! Get space for estimated yields
        IF (.not. ALLOCATED (est_yield)) THEN
-           ALLOCATE (est_yield(calib_crop_cnt,max_calib_cycles), stat=status)
+           ALLOCATE (est_yield(calib_crop_cnt,calibrate_crops), stat=status)
            IF (status /= 0) THEN
               print *, "Can't allocate est_yield", " Status: ", status
               call exit(-1)
@@ -335,7 +336,7 @@ MODULE calib_plant_mod
        END IF
        ! Get space for estimated adj values
        IF (.not. ALLOCATED (est_adj)) THEN
-           ALLOCATE (est_adj(calib_crop_cnt,max_calib_cycles), stat=status)
+           ALLOCATE (est_adj(calib_crop_cnt,calibrate_crops), stat=status)
            IF (status /= 0) THEN
               print *, "Can't allocate est_adj", " Status: ", status
               call exit(-1)
@@ -412,7 +413,7 @@ MODULE calib_plant_mod
     ALLOCATE (Calib_Yield%YP); ALLOCATE (Calib_Yield%YP%YData)
     Calib_Yield%YP%YData%Index = calib_yield_cnt
     Calib_Yield%YP%YData%calib_yield_info%rot_no = rotation_no
-    Calib_Yield%YP%YData%calib_yield_info%cycle_no = calib_cycle
+    Calib_Yield%YP%YData%calib_yield_info%cycle_no = calib_cycle(sr)
     Calib_Yield%YP%YData%calib_yield_info%bio_adj_val = plant%database%baf
     Calib_Yield%YP%YData%calib_yield_info%harv_yield = mass_removed
 
@@ -454,7 +455,7 @@ MODULE calib_plant_mod
         DO WHILE(LI_Associated(YLink))
            Calib_Yield = TRANSFER(YLink, Calib_Yield)
            IF ((Calib_Yield%YP%YData%calib_yield_info%crop_ptr%idx == c_no) .and.    &
-               (Calib_Yield%YP%YData%calib_yield_info%cycle_no == calib_cycle)) THEN 
+               (Calib_Yield%YP%YData%calib_yield_info%cycle_no == calib_cycle(sr))) THEN 
               ALLOCATE(Sub_Calib_Yield%YP)
               Sub_Calib_Yield%YP%YData => Calib_Yield%YP%YData
               Sub_YLink = TRANSFER(Sub_Calib_Yield, Sub_YLink)
@@ -504,27 +505,27 @@ MODULE calib_plant_mod
 
        ! Compute average yield
        n = 0
-       est_adj(c_no,calib_cycle) = 0.0
-       est_yield(c_no,calib_cycle) = 0.0
+       est_adj(c_no,calib_cycle(sr)) = 0.0
+       est_yield(c_no,calib_cycle(sr)) = 0.0
        Sub_YLink = LI_Get_Head(Sub_Calib_Yield_List)
        DO WHILE (LI_Associated(Sub_YLink))
           Sub_Calib_Yield = TRANSFER(Sub_YLink, Sub_Calib_Yield)
           IF (Sub_Calib_Yield%YP%YData%calib_yield_info%bio_adj_val > 0.0) THEN  ! Don't include uninitialized values
               n = n + 1
-              est_adj(c_no,calib_cycle) = est_adj(c_no,calib_cycle) +         &
+              est_adj(c_no,calib_cycle(sr)) = est_adj(c_no,calib_cycle(sr)) +         &
                       Sub_Calib_Yield%YP%YData%calib_yield_info%bio_adj_val
-              est_yield(c_no,calib_cycle) = est_yield(c_no,calib_cycle) +     &
+              est_yield(c_no,calib_cycle(sr)) = est_yield(c_no,calib_cycle(sr)) +     &
                         Sub_Calib_Yield%YP%YData%calib_yield_info%harv_yield
           END IF
           Sub_YLink = LI_Get_Next(Sub_YLink)
        END DO
-       est_adj(c_no,calib_cycle) = est_adj(c_no,calib_cycle)/n
-       est_yield(c_no,calib_cycle) = est_yield(c_no,calib_cycle)/n
-       PRINT *, "estimated adj and yield", est_adj(c_no,calib_cycle),est_yield(c_no,calib_cycle)
+       est_adj(c_no,calib_cycle(sr)) = est_adj(c_no,calib_cycle(sr))/n
+       est_yield(c_no,calib_cycle(sr)) = est_yield(c_no,calib_cycle(sr))/n
+       PRINT *, "estimated adj and yield", est_adj(c_no,calib_cycle(sr)),est_yield(c_no,calib_cycle(sr))
 
        ! Quit playing around if we are within tolerance
-       IF (abs(est_yield(c_no,calib_cycle) - t_yld) <= (t_yld * 0.05)) THEN
-          new_adj(c_no) = est_adj(c_no,calib_cycle)
+       IF (abs(est_yield(c_no,calib_cycle(sr)) - t_yld) <= (t_yld * 0.05)) THEN
+          new_adj(c_no) = est_adj(c_no,calib_cycle(sr))
           print *, "Done calibrating Crop no: ", c_no
           crop_calib_done(c_no) = .TRUE.
           ! Check to see if all crops have been calibrated yet.  If so, set global "calib_done" flag
@@ -536,26 +537,26 @@ MODULE calib_plant_mod
                  calib_done = .FALSE.
              END IF
           END DO
-          IF (calib_done) write(6,*) "Done calibrating all crops!"
+          IF (calib_done(sr)) write(6,*) "Done calibrating all crops!"
           RETURN 
        END IF
 
 
        ! Check to see if we have done 2 cycles (bracketed desired answer) yet
-       IF (calib_cycle < 2) THEN
-          IF ( (est_yield(c_no,calib_cycle) < t_yld) ) THEN
-             new_adj(c_no) = est_adj(c_no,calib_cycle) * FACTOR      ! Initial guess for 2nd calibration cycle run
-             print *, "Cycle 1: Crop no: ",c_no,"Est. Yield ", est_yield(c_no,calib_cycle), &
+       IF (calib_cycle(sr) < 2) THEN
+          IF ( (est_yield(c_no,calib_cycle(sr)) < t_yld) ) THEN
+             new_adj(c_no) = est_adj(c_no,calib_cycle(sr)) * FACTOR      ! Initial guess for 2nd calibration cycle run
+             print *, "Cycle 1: Crop no: ",c_no,"Est. Yield ", est_yield(c_no,calib_cycle(sr)), &
                       "is low (",t_yld,"), reset acbaf from: ", plant%database%baf,"to: ", new_adj(c_no)
           ELSE
-             new_adj(c_no) = est_adj(c_no,calib_cycle) / FACTOR      ! Initial guess for 2nd calibration cycle run
-             print *, "Cycle 1: Crop no: ",c_no,"Est. Yield ", est_yield(c_no,calib_cycle), &
+             new_adj(c_no) = est_adj(c_no,calib_cycle(sr)) / FACTOR      ! Initial guess for 2nd calibration cycle run
+             print *, "Cycle 1: Crop no: ",c_no,"Est. Yield ", est_yield(c_no,calib_cycle(sr)), &
                       "is high (",t_yld,"), reset acbaf from: ", plant%database%baf,"to: ", new_adj(c_no)
           END IF
 
        ELSE IF (.not. yield_bracketed(c_no)) THEN
 
-          IF (abs(est_yield(c_no,calib_cycle) - t_yld) <= (t_yld * 0.05)) THEN
+          IF (abs(est_yield(c_no,calib_cycle(sr)) - t_yld) <= (t_yld * 0.05)) THEN
              crop_calib_done(c_no) = .TRUE.
              print *, "Already or still 'calibrated'!"
              goto 90 !already_calibrated
@@ -563,42 +564,42 @@ MODULE calib_plant_mod
              crop_calib_done(c_no) = .FALSE.
           END IF
 
-          IF ( ( (est_yield(c_no,calib_cycle-1) > t_yld) .and. (est_yield(c_no,calib_cycle) < t_yld) ) .or.   &
-               ( (est_yield(c_no,calib_cycle-1) < t_yld) .and. (est_yield(c_no,calib_cycle) > t_yld) ) ) THEN
+          IF ( ( (est_yield(c_no,calib_cycle(sr)-1) > t_yld) .and. (est_yield(c_no,calib_cycle(sr)) < t_yld) ) .or.   &
+               ( (est_yield(c_no,calib_cycle(sr)-1) < t_yld) .and. (est_yield(c_no,calib_cycle(sr)) > t_yld) ) ) THEN
              yield_bracketed(c_no) = .TRUE.
              first_bisection(c_no) = .TRUE.
-             print *, "Cycle ", calib_cycle,": Crop no: ", c_no, ": Yield has now been bracketed!", &
-                      "[",est_yield(c_no,calib_cycle), t_yld, est_yield(c_no,calib_cycle-1),"]" 
+             print *, "Cycle ", calib_cycle(sr),": Crop no: ", c_no, ": Yield has now been bracketed!", &
+                      "[",est_yield(c_no,calib_cycle(sr)), t_yld, est_yield(c_no,calib_cycle(sr)-1),"]" 
 
-          ELSE IF ( (est_yield(c_no,calib_cycle) < t_yld) .and. (est_yield(c_no,calib_cycle-1) < t_yld) ) THEN
-             print *, "est_adj(c_no,calib_cycle) and est_adj(c_no,calib_cycle-1) are: ", &
-                      est_adj(c_no,calib_cycle), est_adj(c_no,calib_cycle-1)
-             IF ( est_yield(c_no,calib_cycle) > est_yield(c_no,calib_cycle-1) ) THEN
-                new_adj(c_no) = est_adj(c_no,calib_cycle) * FACTOR
-                print *, "Cycle ",calib_cycle,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
-                         est_yield(c_no,calib_cycle), "and ", &
-                         est_yield(c_no,calib_cycle-1), "are low (",t_yld,"), ", &
+          ELSE IF ( (est_yield(c_no,calib_cycle(sr)) < t_yld) .and. (est_yield(c_no,calib_cycle(sr)-1) < t_yld) ) THEN
+             print *, "est_adj(c_no,calib_cycle(sr)) and est_adj(c_no,calib_cycle(sr)-1) are: ", &
+                      est_adj(c_no,calib_cycle(sr)), est_adj(c_no,calib_cycle(sr)-1)
+             IF ( est_yield(c_no,calib_cycle(sr)) > est_yield(c_no,calib_cycle(sr)-1) ) THEN
+                new_adj(c_no) = est_adj(c_no,calib_cycle(sr)) * FACTOR
+                print *, "Cycle ",calib_cycle(sr),": Crop no: ", c_no,"Est. Yield (not bracketed)", &
+                         est_yield(c_no,calib_cycle(sr)), "and ", &
+                         est_yield(c_no,calib_cycle(sr)-1), "are low (",t_yld,"), ", &
                          "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
              ELSE
-                new_adj(c_no) = est_adj(c_no,calib_cycle-1) * FACTOR
-                print *, "Cycle ",calib_cycle-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
-                         est_yield(c_no,calib_cycle), "and ", &
-                         est_yield(c_no,calib_cycle-1), "are low (",t_yld,"), ", &
+                new_adj(c_no) = est_adj(c_no,calib_cycle(sr)-1) * FACTOR
+                print *, "Cycle ",calib_cycle(sr)-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
+                         est_yield(c_no,calib_cycle(sr)), "and ", &
+                         est_yield(c_no,calib_cycle(sr)-1), "are low (",t_yld,"), ", &
                          "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
              END IF
 
-          ELSE IF ( (est_yield(c_no,calib_cycle) > t_yld) .and. (est_yield(c_no,calib_cycle-1) > t_yld) ) THEN
-             IF ( est_yield(c_no,calib_cycle) < est_yield(c_no,calib_cycle-1) ) THEN
-                new_adj(c_no) = est_adj(c_no,calib_cycle) / FACTOR
-                print *, "Cycle ",calib_cycle,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
-                         est_yield(c_no,calib_cycle), "and ", &
-                         est_yield(c_no,calib_cycle-1), "are high (",t_yld,"), ", &
+          ELSE IF ( (est_yield(c_no,calib_cycle(sr)) > t_yld) .and. (est_yield(c_no,calib_cycle(sr)-1) > t_yld) ) THEN
+             IF ( est_yield(c_no,calib_cycle(sr)) < est_yield(c_no,calib_cycle(sr)-1) ) THEN
+                new_adj(c_no) = est_adj(c_no,calib_cycle(sr)) / FACTOR
+                print *, "Cycle ",calib_cycle(sr),": Crop no: ", c_no,"Est. Yield (not bracketed)", &
+                         est_yield(c_no,calib_cycle(sr)), "and ", &
+                         est_yield(c_no,calib_cycle(sr)-1), "are high (",t_yld,"), ", &
                          "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
              ELSE
-                new_adj(c_no) = est_adj(c_no,calib_cycle-1) / FACTOR
-                print *, "Cycle ",calib_cycle-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
-                         est_yield(c_no,calib_cycle), "and ", &
-                         est_yield(c_no,calib_cycle-1), "are high (",t_yld,"), ", &
+                new_adj(c_no) = est_adj(c_no,calib_cycle(sr)-1) / FACTOR
+                print *, "Cycle ",calib_cycle(sr)-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
+                         est_yield(c_no,calib_cycle(sr)), "and ", &
+                         est_yield(c_no,calib_cycle(sr)-1), "are high (",t_yld,"), ", &
                          "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
              END IF
           END IF
@@ -610,9 +611,9 @@ MODULE calib_plant_mod
           !"yield_bracketed(c_no)" flag back to false and do whatever is required to re-bracket
           !the yield again for this crop.
 
-          print *, "Cycle ", calib_cycle,": Yield has previously been bracketed (checking to ensure it still is)"
+          print *, "Cycle ", calib_cycle(sr),": Yield has previously been bracketed (checking to ensure it still is)"
 
-          IF (abs(est_yield(c_no,calib_cycle) - t_yld) <= (t_yld * 0.05)) THEN
+          IF (abs(est_yield(c_no,calib_cycle(sr)) - t_yld) <= (t_yld * 0.05)) THEN
              crop_calib_done(c_no) = .TRUE.
              print *, "Already or still 'calibrated'!"
              goto 90 !already_calibrated
@@ -621,60 +622,61 @@ MODULE calib_plant_mod
           END IF
 
 ! Bad test here - we should be looking at more "est_yields", e.g. the current high and low values, not just the new and previous values!!!
-!          IF ( ( (est_yield(c_no,calib_cycle-1) > t_yld) .and. (est_yield(c_no,calib_cycle) < t_yld) ) .or.   &
-!               ( (est_yield(c_no,calib_cycle-1) < t_yld) .and. (est_yield(c_no,calib_cycle) > t_yld) ) ) THEN
-!             print *, "Cycle ", calib_cycle,": Crop no: ", c_no, ": Yield is still bracketed!", &
-!                      "[",est_yield(c_no,calib_cycle), t_yld, est_yield(c_no,calib_cycle-1),"]" 
+!          IF ( ( (est_yield(c_no,calib_cycle(sr)-1) > t_yld) .and. (est_yield(c_no,calib_cycle(sr)) < t_yld) ) .or.   &
+!               ( (est_yield(c_no,calib_cycle(sr)-1) < t_yld) .and. (est_yield(c_no,calib_cycle(sr)) > t_yld) ) ) THEN
+!             print *, "Cycle ", calib_cycle(sr),": Crop no: ", c_no, ": Yield is still bracketed!", &
+!                      "[",est_yield(c_no,calib_cycle(sr)), t_yld, est_yield(c_no,calib_cycle(sr)-1),"]" 
 
 
           ! We are no longer bracketed?
-          IF ( ( (est_yield(c_no,calib_cycle) > t_yld) .and. &
+          IF ( ( (est_yield(c_no,calib_cycle(sr)) > t_yld) .and. &
                  (bracket_yield(c_no)%low_ptr > t_yld) .and. &
                  (bracket_yield(c_no)%high_ptr > t_yld) ) .or. &
-               ( (est_yield(c_no,calib_cycle) < t_yld) .and. &
+               ( (est_yield(c_no,calib_cycle(sr)) < t_yld) .and. &
                  (bracket_yield(c_no)%low_ptr < t_yld) .and. &
                  (bracket_yield(c_no)%high_ptr < t_yld) ) ) THEN
 
 !          ELSE
              yield_bracketed(c_no) = .FALSE.
              first_bisection(c_no) = .TRUE.
-             print *, "Cycle ", calib_cycle,": Crop no: ", c_no, ": Yield is is no longer bracketed! ", &
-                      "[",est_yield(c_no,calib_cycle), t_yld, est_yield(c_no,calib_cycle-1),"]" 
+             print *, "Cycle ", calib_cycle(sr),": Crop no: ", c_no, ": Yield is is no longer bracketed! ", &
+                      "[",est_yield(c_no,calib_cycle(sr)), t_yld, est_yield(c_no,calib_cycle(sr)-1),"]" 
 
-             IF ( (est_yield(c_no,calib_cycle) < t_yld) .and. (est_yield(c_no,calib_cycle-1) < t_yld) ) THEN
-                print *, "est_adj(c_no,calib_cycle) and est_adj(c_no,calib_cycle-1) are: ", &
-                         est_adj(c_no,calib_cycle), est_adj(c_no,calib_cycle-1)
-                IF ( est_yield(c_no,calib_cycle) > est_yield(c_no,calib_cycle-1) ) THEN
-                   new_adj(c_no) = est_adj(c_no,calib_cycle) * (FACTOR-0.55)
-                   print *, "Cycle ",calib_cycle,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
-                         est_yield(c_no,calib_cycle), "and ", &
-                         est_yield(c_no,calib_cycle-1), "are low (",t_yld,"), ", &
+             IF ( (est_yield(c_no,calib_cycle(sr)) < t_yld) .and. (est_yield(c_no,calib_cycle(sr)-1) < t_yld) ) THEN
+                print *, "est_adj(c_no,calib_cycle(sr)) and est_adj(c_no,calib_cycle(sr)-1) are: ", &
+                         est_adj(c_no,calib_cycle(sr)), est_adj(c_no,calib_cycle(sr)-1)
+                IF ( est_yield(c_no,calib_cycle(sr)) > est_yield(c_no,calib_cycle(sr)-1) ) THEN
+                   new_adj(c_no) = est_adj(c_no,calib_cycle(sr)) * (FACTOR-0.55)
+                   print *, "Cycle ",calib_cycle(sr),": Crop no: ", c_no,"Est. Yield (not bracketed)", &
+                         est_yield(c_no,calib_cycle(sr)), "and ", &
+                         est_yield(c_no,calib_cycle(sr)-1), "are low (",t_yld,"), ", &
                          "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
                 ELSE
-                   new_adj(c_no) = est_adj(c_no,calib_cycle-1) * (FACTOR-0.55)
-                   print *, "Cycle ",calib_cycle-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
-                         est_yield(c_no,calib_cycle), "and ", &
-                         est_yield(c_no,calib_cycle-1), "are low (",t_yld,"), ", &
+                   new_adj(c_no) = est_adj(c_no,calib_cycle(sr)-1) * (FACTOR-0.55)
+                   print *, "Cycle ",calib_cycle(sr)-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
+                         est_yield(c_no,calib_cycle(sr)), "and ", &
+                         est_yield(c_no,calib_cycle(sr)-1), "are low (",t_yld,"), ", &
                          "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
                 END IF
 
-             ELSE IF ( (est_yield(c_no,calib_cycle) > t_yld) .and. (est_yield(c_no,calib_cycle-1) > t_yld) ) THEN
-                IF ( est_yield(c_no,calib_cycle) < est_yield(c_no,calib_cycle-1) ) THEN
-                   new_adj(c_no) = est_adj(c_no,calib_cycle) / (FACTOR-0.55)
-                   print *, "Cycle ",calib_cycle,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
-                         est_yield(c_no,calib_cycle), "and ", &
-                         est_yield(c_no,calib_cycle-1), "are high (",t_yld,"), ", &
+             ELSE IF ( (est_yield(c_no,calib_cycle(sr)) > t_yld) .and. (est_yield(c_no,calib_cycle(sr)-1) > t_yld) ) THEN
+                IF ( est_yield(c_no,calib_cycle(sr)) < est_yield(c_no,calib_cycle(sr)-1) ) THEN
+                   new_adj(c_no) = est_adj(c_no,calib_cycle(sr)) / (FACTOR-0.55)
+                   print *, "Cycle ",calib_cycle(sr),": Crop no: ", c_no,"Est. Yield (not bracketed)", &
+                         est_yield(c_no,calib_cycle(sr)), "and ", &
+                         est_yield(c_no,calib_cycle(sr)-1), "are high (",t_yld,"), ", &
                          "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
                 ELSE
-                   new_adj(c_no) = est_adj(c_no,calib_cycle-1) / (FACTOR-0.55)
-                   print *, "Cycle ",calib_cycle-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
-                         est_yield(c_no,calib_cycle), "and ", &
-                         est_yield(c_no,calib_cycle-1), "are high (",t_yld,"), ", &
+                   new_adj(c_no) = est_adj(c_no,calib_cycle(sr)-1) / (FACTOR-0.55)
+                   print *, "Cycle ",calib_cycle(sr)-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
+                         est_yield(c_no,calib_cycle(sr)), "and ", &
+                         est_yield(c_no,calib_cycle(sr)-1), "are high (",t_yld,"), ", &
                          "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
                 END IF
              END IF
-             print *, "Cycle ", calib_cycle,": Crop no: ", c_no, ": Yield is still bracketed! [low, target, high, new] yields:", &
-                      "[",bracket_yield(c_no)%low_ptr, t_yld, bracket_yield(c_no)%high_ptr, est_yield(c_no,calib_cycle),"]" 
+             print *, "Cycle ", calib_cycle(sr),": Crop no: ", c_no, &
+                      ": Yield is still bracketed! [low, target, high, new] yields:", &
+                      "[",bracket_yield(c_no)%low_ptr, t_yld, bracket_yield(c_no)%high_ptr, est_yield(c_no,calib_cycle(sr)),"]" 
           END IF
            continue ! we "may" have been "bracketed" 
        END IF
@@ -683,31 +685,31 @@ MODULE calib_plant_mod
            print *, "In bracketing code"
            IF (first_bisection(c_no)) THEN
              print *, "In first_bisection"
-             IF (est_yield(c_no,calib_cycle) < t_yld) THEN
+             IF (est_yield(c_no,calib_cycle(sr)) < t_yld) THEN
                  print *, "Case A"
-                 bracket_adj(c_no)%low_ptr => est_adj(c_no,calib_cycle)
-                 bracket_adj(c_no)%high_ptr => est_adj(c_no,calib_cycle-1)
-                 bracket_yield(c_no)%low_ptr => est_yield(c_no,calib_cycle)
-                 bracket_yield(c_no)%high_ptr => est_yield(c_no,calib_cycle-1)
+                 bracket_adj(c_no)%low_ptr => est_adj(c_no,calib_cycle(sr))
+                 bracket_adj(c_no)%high_ptr => est_adj(c_no,calib_cycle(sr)-1)
+                 bracket_yield(c_no)%low_ptr => est_yield(c_no,calib_cycle(sr))
+                 bracket_yield(c_no)%high_ptr => est_yield(c_no,calib_cycle(sr)-1)
              ELSE
                  print *, "Case B"
-                 bracket_adj(c_no)%high_ptr => est_adj(c_no,calib_cycle)
-                 bracket_adj(c_no)%low_ptr => est_adj(c_no,calib_cycle-1)
-                 bracket_yield(c_no)%high_ptr => est_yield(c_no,calib_cycle)
-                 bracket_yield(c_no)%low_ptr => est_yield(c_no,calib_cycle-1)
+                 bracket_adj(c_no)%high_ptr => est_adj(c_no,calib_cycle(sr))
+                 bracket_adj(c_no)%low_ptr => est_adj(c_no,calib_cycle(sr)-1)
+                 bracket_yield(c_no)%high_ptr => est_yield(c_no,calib_cycle(sr))
+                 bracket_yield(c_no)%low_ptr => est_yield(c_no,calib_cycle(sr)-1)
              END IF
              first_bisection(c_no) = .FALSE.
            ELSE
              print *, "Not in first_bisection"
                 ! Check to see if 
-             IF (est_yield(c_no,calib_cycle) < t_yld) THEN !(est_yield(c_no,calib_cycle) > bracket(c_no)%low_ptr)
+             IF (est_yield(c_no,calib_cycle(sr)) < t_yld) THEN !(est_yield(c_no,calib_cycle(sr)) > bracket(c_no)%low_ptr)
                  print *, "Case C"
-                 bracket_adj(c_no)%low_ptr => est_adj(c_no,calib_cycle)
-                 bracket_yield(c_no)%low_ptr => est_yield(c_no,calib_cycle)
-             ELSE IF (est_yield(c_no,calib_cycle) > t_yld) THEN !(est_yield(c_no,calib_cycle) < bracket(c_no)%high_ptr) 
+                 bracket_adj(c_no)%low_ptr => est_adj(c_no,calib_cycle(sr))
+                 bracket_yield(c_no)%low_ptr => est_yield(c_no,calib_cycle(sr))
+             ELSE IF (est_yield(c_no,calib_cycle(sr)) > t_yld) THEN !(est_yield(c_no,calib_cycle(sr)) < bracket(c_no)%high_ptr) 
                  print *, "Case D"
-                 bracket_adj(c_no)%high_ptr => est_adj(c_no,calib_cycle)
-                 bracket_yield(c_no)%high_ptr => est_yield(c_no,calib_cycle)
+                 bracket_adj(c_no)%high_ptr => est_adj(c_no,calib_cycle(sr))
+                 bracket_yield(c_no)%high_ptr => est_yield(c_no,calib_cycle(sr))
              END IF
            END IF
            dx = bracket_adj(c_no)%high_ptr - bracket_adj(c_no)%low_ptr 

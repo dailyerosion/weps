@@ -12,6 +12,7 @@
       program sweep
 
       use sweep_io_mod, only: erodin, erodout
+      use sweep_io_xml_mod, only: nsubr
       use datetime_mod, only: update_system_time, get_systime_string, julday
       use file_io_mod, only: fopenk, luo_erod, luo_egrd, luo_emit, luo_sgrd
       use f2kcli, only: COMMAND_ARGUMENT_COUNT, GET_COMMAND_ARGUMENT
@@ -41,7 +42,6 @@
 
 !     ++++ LOCAL VARIABLES +++
       character(len=21) :: rundatetime
-      integer :: nsubr       ! number of subregions (found from size of subrsurf)
       type(threshold), dimension(:), allocatable :: noerod                 ! report values to show which factors prevented erosion
 
       integer :: alloc_stat
@@ -76,11 +76,6 @@
       character*80   o_sgrd_ext    !grid subdaily erosion file extension
       character*80   o_erod_ext    !total erosion summary file extension
       character*80   o_emit_ext    !detail grid erosion file extension
-
-      character*1024 o_egrd_file   !grid summary erosion file name
-      character*1024 o_sgrd_file   !grid subdaily erosion file name
-      character*1024 o_erod_file   !total erosion summary file name
-      character*1024 o_emit_file   !detail grid erosion file name
 
       character*1024 o_egrd_fpath  !grid summary erosion file/path name
       character*1024 o_sgrd_fpath  !grid subdaily erosion file/path name
@@ -259,7 +254,7 @@
              endif
 
            else if (argv(2:2) == 'i') then
-		     !check if arg option is missing
+             ! check if arg option is missing
              if (len_trim(argv(3:)) == 0) then
                    write(0,*) 'missing -i filename option'
                    call exit(61)
@@ -303,7 +298,6 @@
              endif
 
              !create new erosion summary output filename from input filename
-             o_erod_file = trim(file_bname) //  trim(o_erod_ext)
              o_erod_fpath = trim(fpath_bname) // trim(o_erod_ext)
 
              call fopenk(o_erod_unit, o_erod_fpath, 'unknown')
@@ -318,7 +312,6 @@
                 call exit(91)
              endif
              !create new grid erosion summary output filename from input filename
-             o_egrd_file = trim(file_bname) //  trim(o_egrd_ext)
              o_egrd_fpath = trim(fpath_bname)//trim(o_egrd_ext)
 
              call fopenk(o_egrd_unit, o_egrd_fpath, 'unknown')
@@ -335,7 +328,6 @@
                 call exit(111)
              endif
              !create new grid erosion summary output filename from input filename
-             o_emit_file = trim(file_bname) //  trim(o_emit_ext)
              o_emit_fpath = trim(fpath_bname)//trim(o_emit_ext)
 
              call fopenk(o_emit_unit, o_emit_fpath, 'unknown')
@@ -350,7 +342,6 @@
                 call exit(101)
              endif
              !create new grid erosion summary output filename from input filename
-             o_sgrd_file = trim(file_bname) //  trim(o_sgrd_ext)
              o_sgrd_fpath = trim(fpath_bname)//trim(o_sgrd_ext)
 
              call fopenk(o_sgrd_unit, o_sgrd_fpath, 'unknown')
@@ -393,9 +384,6 @@
         input_to_new_format = .false.
       end if
  
-      ! Set based on allocated size of subrsurf (accounting for 0 based index)
-      nsubr = size(subrsurf) - 1
-
       ! Check for invalid commandline input values which are dependent
       ! upon erodin input values.
 
@@ -424,31 +412,31 @@
             Write(*,*) 'ERROR: unable to allocate enough memory for noerod data array'
          end if
 
-         call erodinit( noerod, subrsurf )
+         call erodinit( noerod )
 
          ! read in old single subregion file. Write updated input files
          if( input_to_new_format ) then
            infilebase = trim(file_bname)
            sweepfile = 'erod.sweep' 
            gridfile = 'erod.grdx'
-           subrsurf(1)%tinfil = trim(file_bname)
-           subrsurf(1)%sinfil = trim(file_bname)
+           subrsurf(1,1)%tinfil = trim(file_bname)
+           subrsurf(1,1)%sinfil = trim(file_bname)
            polyfile = 'erod.poly'
-           call saeinp( subrsurf )
+           call saeinp( 1, nsubr )
          end if
 
       endif
 
 !     write (*,*) 'call to erosion '
 !     start erosion
-      call erosion( min_erosion_awu, SURF_UPD_FLG, subrsurf, noerod, cellstate )
+      call erosion( min_erosion_awu, SURF_UPD_FLG, 1, noerod, cellstate )
 
       ! configured summary info
       call erodout (hagen_plot_flag)
 
-      if (i_unit .ne. 5) then
-        close(i_unit)
-      endif
+      ! if (i_unit .ne. 5) then
+      !   close(i_unit)
+      ! endif
       if (o_unit .ne. 6) then
         close(o_unit)
       endif

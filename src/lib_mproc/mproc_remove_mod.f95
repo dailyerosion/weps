@@ -46,7 +46,7 @@ module mproc_remove_mod
       use biomaterial, only: plant_pointer, residue_pointer, residueAdd
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      integer :: sel_position ! position to which percentages will be applied
+      integer, intent(in) :: sel_position ! position to which percentages will be applied
                               ! 0 - don't apply to anything
                               ! 1 - apply to standing (and attached roots)
                               ! 2 - apply to flat
@@ -57,7 +57,7 @@ module mproc_remove_mod
                               ! 7 - apply to standing (and attached roots), flat and buried
                               ! this corresponds to the bit pattern:
                               ! msb(buried, flat, standing)lsb
-      integer :: sel_pool  ! pool to which percentages will be applied
+      integer, intent(in) :: sel_pool  ! pool to which percentages will be applied
                            ! 0 - don't apply to anything
                            ! 1 - apply to crop pool
                            ! 2 - apply to temporary pool
@@ -68,7 +68,7 @@ module mproc_remove_mod
                            ! 7 - apply to crop, temporary and residue pools
                            !     this corresponds to the bit pattern:
                            !     msb(residue, temporary, crop)lsb
-      integer :: bflg   ! flag values (binary #'s actually)
+      integer, intent(in) :: bflg   ! flag values (binary #'s actually)
                         ! bit no.                                    decimal value
                         ! x  - remove standing material in all pools      (0)
                         ! 0  - remove first plant (crop and residue)      (1)
@@ -78,15 +78,15 @@ module mproc_remove_mod
                         ! ....
                         ! n-1 - remove (n-1)th plant (crop and residue)  (2**n)
 
-      real :: stemf       ! fraction of plant stems removed (kg/kg)
-      real :: leaff       ! fraction of plant leaves removed (kg/kg)
-      real :: storef      ! fraction of storage (reproductive components) removed (kg/kg)
-      real :: rootstoref  ! fraction of plant storage root removed (kg/kg)
-      real :: rootfiberf  ! fraction of plant fibrous root removed (kg/kg)
-      integer :: nslay    ! number of soil layers
+      real, intent(in) :: stemf       ! fraction of plant stems removed (kg/kg)
+      real, intent(in) :: leaff       ! fraction of plant leaves removed (kg/kg)
+      real, intent(in) :: storef      ! fraction of storage (reproductive components) removed (kg/kg)
+      real, intent(in) :: rootstoref  ! fraction of plant storage root removed (kg/kg)
+      real, intent(in) :: rootfiberf  ! fraction of plant fibrous root removed (kg/kg)
+      integer, intent(in) :: nslay    ! number of soil layers
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
-      real :: tot_mass_rem   ! mass of material removed by this harvest operation (kg/m^2)
-      real :: sel_mass_left  ! mass of material left in pools from which mass is removed
+      real, intent(out) :: tot_mass_rem   ! mass of material removed by this harvest operation (kg/m^2)
+      real, intent(out) :: sel_mass_left  ! mass of material left in pools from which mass is removed
                              ! by this harvest operation (kg/m^2)
 
       ! + + + LOCAL VARIABLES + + +
@@ -318,7 +318,7 @@ module mproc_remove_mod
       real, intent(inout) :: sel_mass_left
 
       ! + + + LOCAL VARIABLES + + +
-      integer idx        ! loop variable for soil layers
+      integer :: idx        ! loop variable for soil layers
       logical :: store_flag = .false.
       logical :: leaf_flag = .false.
       logical :: stem_flag = .false.
@@ -628,7 +628,7 @@ module mproc_remove_mod
       return
     end subroutine rem_bg_pool
 
-    subroutine rem_pool(pool_mass, pool_frac, pool_flag, tot_mass_rem)
+    pure subroutine rem_pool(pool_mass, pool_frac, pool_flag, tot_mass_rem)
 
       ! + + + ARGUMENT DECLARATIONS + + +
       real, intent(inout) :: pool_mass
@@ -649,7 +649,7 @@ module mproc_remove_mod
       return
     end subroutine rem_pool
 
-    subroutine adj_stand_pool_plant( &
+    pure subroutine adj_stand_pool_plant( &
            start_standstem, start_standleaflive, start_standleafdead, start_standstore, &
            start_rootstore, start_rootfiber, &
            pool_standstem, pool_standleaflive, pool_standleafdead, pool_standstore, &
@@ -775,7 +775,7 @@ module mproc_remove_mod
 
     end subroutine adj_stand_pool_plant
 
-    subroutine adj_stand_pool_residue( &
+    pure subroutine adj_stand_pool_residue( &
            start_standstem, start_standleaf, start_standstore, &
            start_rootstore, start_rootfiber, &
            pool_standstem, pool_standleaf, pool_standstore, &

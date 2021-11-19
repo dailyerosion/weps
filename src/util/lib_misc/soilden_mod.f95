@@ -33,7 +33,7 @@ module soilden_mod
 
   contains
 
-    function setpartden ( organf ) result( partden )
+    pure function setpartden ( organf ) result( partden )
 
       ! + + + PURPOSE + + +
       ! Estimates an average particle density assuming the mineral portion
@@ -88,7 +88,7 @@ module soilden_mod
 
     end function setbdref
 
-    function optimalwat( clay, sand, om ) result( owc )
+    pure function optimalwat( clay, sand, om ) result( owc )
 
       ! + + + PURPOSE + + +
       ! Calculation to test proctor density calculation
@@ -109,7 +109,7 @@ module soilden_mod
 
     end function optimalwat
 
-    function setbdproc ( clay, sand, om, pden ) result( bdproc )
+    pure function setbdproc ( clay, sand, om, pden ) result( bdproc )
 
       ! + + + PURPOSE + + +
       ! The following function estimates the proctor soil bulk density from
@@ -283,7 +283,7 @@ module soilden_mod
       return
     end function setbds
 
-    function get_layer_mass_ssc ( fssc, laythk, vfrock, bulkden, fom ) result (mass_ssc)
+    pure function get_layer_mass_ssc ( fssc, laythk, vfrock, bulkden, fom ) result (mass_ssc)
       ! Returns the mass of sand, silt or clay in a soil layer
       ! Units: kg/m^2 = (mm/m^2)(m/1000mm)(Mg/m^3)(1000kg/Mg)(m^3/m^3)(Mg/Mg)
       real, intent(in) :: fssc       ! mass fraction of fine soil sand, silt or clay (Mg/Mg) (mineral fraction)
@@ -298,7 +298,7 @@ module soilden_mod
       return
     end function get_layer_mass_ssc 
 
-    function set_mass_fraction_ssc ( mass_ssc, laythk, vfrock, bulkden, fom ) result (fssc)
+    pure function set_mass_fraction_ssc ( mass_ssc, laythk, vfrock, bulkden, fom ) result (fssc)
       ! Returns the mass fraction of sand, silt or clay in fine soil of a layer
       real, intent(in) :: mass_ssc   ! mass of fine soil sand, silt or clay (kg/m^2)
       real, intent(in) :: laythk     ! thickness of soil layer (mm)
@@ -312,7 +312,7 @@ module soilden_mod
       return
     end function set_mass_fraction_ssc 
 
-    function get_layer_mass_om ( fom, laythk, vfrock, bulkden ) result (mass_om)
+    pure function get_layer_mass_om ( fom, laythk, vfrock, bulkden ) result (mass_om)
       ! Returns the mass of organic matter in fine soil of a layer
       real, intent(in) :: fom        ! mass fraction of fine soil organic matter (Mg/Mg)
       real, intent(in) :: laythk     ! thickness of soil layer (mm)
@@ -325,7 +325,7 @@ module soilden_mod
       return
     end function get_layer_mass_om 
 
-    function set_mass_fraction_om ( mass_om, laythk, vfrock, bulkden) result (fom)
+    pure function set_mass_fraction_om ( mass_om, laythk, vfrock, bulkden) result (fom)
       ! Returns the mass fraction of organic matter in fine soil of a layer
       real, intent(in) :: mass_om    ! mass of fine soil organic matter (kg/m^2)
       real, intent(in) :: laythk     ! thickness of soil layer (mm)
@@ -338,7 +338,7 @@ module soilden_mod
       return
     end function set_mass_fraction_om
 
-    function get_layer_mass_roc ( vfrock, laythk, bulkden ) result (mass_roc)
+    pure function get_layer_mass_roc ( vfrock, laythk, bulkden ) result (mass_roc)
       ! Returns the mass of rock fragments in a soil layer
       real, intent(in) :: vfrock     ! volume fraction of soil rock fragments (m^3/m^3)
       real, intent(in) :: laythk     ! thickness of soil layer (mm)
@@ -350,7 +350,7 @@ module soilden_mod
       return
     end function get_layer_mass_roc 
 
-    function set_volume_fraction_roc ( mass_roc, laythk, bulkden) result (vfrock)
+    pure function set_volume_fraction_roc ( mass_roc, laythk, bulkden) result (vfrock)
       ! Returns the volume fraction of rock fragments in a soil layer
       real, intent(in) :: mass_roc   ! mass of rock fragments (kg/m^2)
       real, intent(in) :: laythk     ! thickness of soil layer (mm)
@@ -362,7 +362,7 @@ module soilden_mod
       return
     end function set_volume_fraction_roc
 
-    subroutine setLayThick( laythk, vfrock, oldbulkden, newbulkden)
+    pure subroutine setLayThick( laythk, vfrock, oldbulkden, newbulkden)
       ! based on change in fine soil bulk density, changes layer thickness rock volume fraction
       real, intent(inout) :: laythk  ! thickness of soil layer (mm)
       real, intent(inout) :: vfrock  ! volume fraction of soil rock fragments (m^3/m^3)

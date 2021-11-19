@@ -18,61 +18,49 @@ module solar_mod
     integer, parameter :: S_fall_eqx = 79 ! day of year for fall equinox in Southern Hemishpere (non leap year)
     integer, parameter :: S_winter_sol = 172 ! day of year for winter solstice in Southern Hemishpere (non leap year)
 
+    real :: amalat  ! site latitude (degrees)
+    real :: amalon  ! site longitude (degrees)
+
   contains
 
-    real function declination(idoy)
-
-!     + + + PURPOSE + + +
-!     This function calculates the declination of the earth with respect
-!     the sun based on the day of the year
-
-!     + + + KEYWORDS + + +
-!     solar declination
+    pure function declination(idoy) result(declin)
+      ! This function calculates the declination of the earth with respect
+      ! the sun based on the day of the year
 
       use p1unconv_mod, only: degtorad
 
-!     + + + ARGUMENT DECLARATIONS + + +
-      integer :: idoy  ! Day of year
+      integer, intent(in) :: idoy  ! Day of year
 
-!     + + + LOCAL VARAIBLES + + +
+      real :: declin
+
       real :: b  ! sub calculation (time of year, radians)
 
-!     + + + END SPECIFICATIONS + + +
-
 !     Calculate declination angle (dec)
-      b = (360.0/365.0)*(idoy-81.25) * degtorad            !h-55
-      declination = 23.45*sin(b)                           !h-58
+      b = (360.0/365.0)*(idoy-81.25) * degtorad       !h-55
+      declin = 23.45*sin(b)                           !h-58
 
-      return
     end function declination
 
-    real function hourangle(dlat, dec, riseangle)
-
-!     + + + PURPOSE + + +
-!     This function calculates the hour angle (degrees)
-!     of sunrise (-), sunset (+) based on the declination of the earth
-
-!     + + + KEYWORDS + + +
-!     sunrise sunset hourangle
+    pure function hourangle(dlat, dec, riseangle) result(hangle)
+      ! This function calculates the hour angle (degrees)
+      ! of sunrise (-), sunset (+) based on the declination of the earth
 
       use p1unconv_mod, only: degtorad, radtodeg
 
-!     + + + ARGUMENT DECLARATIONS + + +
-      real dlat      ! Latitude of the site, degrees (north > 0, south < 0)
-      real dec       ! declination of earth with respect to the sun (degrees)
-      real riseangle ! angle of earths rotation where sunrise occurs
-                     ! this varies depending on whether you are calculating
-                     ! direct beam, civil twilight, nautical twilight or
-                     ! astronomical twilight hourangle
+      real, intent(in) :: dlat      ! Latitude of the site, degrees (north > 0, south < 0)
+      real, intent(in) :: dec       ! declination of earth with respect to the sun (degrees)
+      real, intent(in) :: riseangle ! angle of earths rotation where sunrise occurs
+                                    ! this varies depending on whether you are calculating
+                                    ! direct beam, civil twilight, nautical twilight or
+                                    ! astronomical twilight hourangle
 
-!     + + + LOCAL VARIABLES + + +
-      real coshr        ! Cosine of hour angle at sunrise
-      real dlat_rad     ! latitude of site, converted to radians
-      real dec_rad      ! declination of earth wrt the sun (radians)
+      real :: hangle
+
+      real :: coshr        ! Cosine of hour angle at sunrise
+      real :: dlat_rad     ! latitude of site, converted to radians
+      real :: dec_rad      ! declination of earth wrt the sun (radians)
 
       real, parameter :: dlat_rad_lim  = 1.57079 !  pi/2 minus a small bit
-
-!     + + + END SPECIFICATIONS + + +
 
 !     convert to radians
       dlat_rad = dlat * degtorad
@@ -95,32 +83,26 @@ module solar_mod
 
 !     check for artic circle conditions
       if( coshr.ge.1.0) then
-          hourangle = 0.0          !sunrise occurs at solar noon
+          hangle = 0.0          !sunrise occurs at solar noon
       else if( coshr.le.-1.0) then
-          hourangle = 180.0        !the sun is always above the horizon
+          hangle = 180.0        !the sun is always above the horizon
       else
-          hourangle = acos(coshr) * radtodeg
+          hangle = acos(coshr) * radtodeg
       end if
 
-      return
     end function hourangle
 
-    real function radext(idoy, bmalat)
-
-!     + + + purpose + + +
-!     this subroutine estimates the incoming extraterrestial radiation
-!     for a given location (Mj/m^2/day)
-
-!     + + + key words + + +
-!     radiation, solar, extraterrestrial
+    pure function radext(idoy, bmalat) result(extrad)
+      ! this subroutine estimates the incoming extraterrestial radiation
+      ! for a given location (Mj/m^2/day)
 
       use p1unconv_mod, only: pi, degtorad
 
-!     + + + argument declarations + + +
-      integer :: idoy  ! julian day of year, 1-366
-      real :: bmalat   ! latitude of the site, degrees
+      integer, intent(in) :: idoy  ! julian day of year, 1-366
+      real, intent(in) :: bmalat   ! latitude of the site, degrees
 
-!     + + + local variables + + +
+      real :: extrad
+
       real :: rlat  ! latitude (radians)
       real :: dec   ! declination of the earth with respect to the sun (degrees)
       real :: rdec  ! declination (radians)
@@ -145,61 +127,45 @@ module solar_mod
       ws = hourangle(bmalat, dec, beamrise ) * degtorad
       ra1 = ((24.0*60.0)/pi)*gsc*dr                                    !h-20(a)
       ra2 = (ws*sin(rlat)*sin(rdec))+(cos(rlat)*cos(rdec)*sin(ws))     !h-20(b)
-      radext = ra1*ra2                                                 !h-20
+      extrad = ra1*ra2                                                 !h-20
 
-      return
     end function radext
 
-    real function equa_time(idoy)
-
-!     + + + PURPOSE + + +
-!     This function calculates the declination of the earth with respect
-!     the sun based on the day of the year
-
-!     + + + KEYWORDS + + +
-!     solar equation of time
+    pure function equa_time(idoy) result(equa)
+      ! This function calculates the declination of the earth with respect
+      ! the sun based on the day of the year
 
       use p1unconv_mod, only: degtorad
 
-!     + + + ARGUMENT DECLARATIONS + + +
-      integer idoy  ! Day of year
+      integer, intent(in) :: idoy  ! Day of year
 
-!     + + + LOCAL VARIABLES + + +
-      real b  ! sub calculation (time of year, radians)
+      real :: equa
 
-!     + + + END SPECIFICATIONS + + +
+      real :: b  ! sub calculation (time of year, radians)
 
-!     Calculate time of year (b)
-      b = (360.0/365.0)*(idoy-81.25) * degtorad                 !h-55
-      equa_time = 9.87*sin(2*b)-7.53*cos(b)-1.5*sin(b)          !h-54
+      ! Calculate time of year (b)
+      b = (360.0/365.0)*(idoy-81.25) * degtorad            !h-55
+      equa = 9.87*sin(2*b)-7.53*cos(b)-1.5*sin(b)          !h-54
 
-      return
     end function equa_time
 
-    real function daylen(dlat,idoy,riseangle)
+    pure function daylen( dlat, idoy, riseangle ) result(lenday)
+      ! This function calculates the daylength (hours) for any simulation
+      ! site based on the global position of the site, and day of the
+      ! year.  The inputs for the function are day of the year, and latitude
+      ! of the site.
 
-!     + + + PURPOSE + + +
-!     This function calculates the daylength (hours) for any simulation
-!     site based on the global position of the site, and day of the
-!     year.  The inputs for the function are day of the year, and latitude
-!     of the site.
+      integer, intent(in) :: idoy   ! Day of year
+      real, intent(in) :: dlat      ! Latitude of the site, degrees (north > 0, south < 0)
+      real, intent(in) :: riseangle ! angle of earths rotation where sunrise occurs
+                                    ! this varies depending on whether you are calculating
+                                    ! direct beam, civil twilight, nautical twilight or
+                                    ! astronomical twilight daylength
 
-!     + + + KEYWORDS + + +
-!     day length
+      real :: lenday
 
-!     + + + ARGUMENT DECLARATIONS + + +
-      integer idoy   ! Day of year
-      real dlat      ! Latitude of the site, degrees (north > 0, south < 0)
-      real riseangle ! angle of earths rotation where sunrise occurs
-                     ! this varies depending on whether you are calculating
-                     ! direct beam, civil twilight, nautical twilight or
-                     ! astronomical twilight daylength
-
-!     + + + LOCAL VARIABLES + + +
-      real dec  ! declination of earth with respect to the sun (degrees)
-      real h    ! Hour angle (degrees)
-
-!     + + + END SPECIFICATIONS + + +
+      real :: dec  ! declination of earth with respect to the sun (degrees)
+      real :: h    ! Hour angle (degrees)
 
 !     declination angle (dec)
       dec = declination(idoy)
@@ -208,32 +174,26 @@ module solar_mod
       h = hourangle(dlat, dec, riseangle)
 
 !     Calculate the length of the day
-      daylen= 2.0*h/15.0
+      lenday = 2.0*h/15.0
 
-      return
     end function daylen
 
-    real function dawn(dlat,dlong,idoy,riseangle)
+    pure function dawn( dlat, dlong, idoy, riseangle ) result(dawn_res)
+      ! calculates the time of sunrise (hours) for any simulation
+      ! site based on the global position of the site, and day of the
+      ! year.  The inputs for the function are day of the year, latitude
+      ! of the site, and longitude of the site.
 
-!     + + + PURPOSE + + +
-!     This function calculates the time of sunrise (hours) for any simulation
-!     site based on the global position of the site, and day of the
-!     year.  The inputs for the function are day of the year, latitude
-!     of the site, and longitude of the site.
+      integer, intent(in) :: idoy   ! Day of year
+      real, intent(in) :: dlat      ! Latitude of the site, degrees (north > 0, south < 0)
+      real, intent(in) :: dlong     ! Longitude of the site, degrees (east > 0, west < 0)
+      real, intent(in) :: riseangle ! angle of earths rotation where sunrise occurs
+                                    ! this varies depending on whether you are calculating
+                                    ! direct beam, civil twilight, nautical twilight or
+                                    ! astronomical twilight hourangle
 
-!     + + + KEYWORDS + + +
-!     sunrise
+      real :: dawn_res
 
-!     + + + ARGUMENT DECLARATIONS + + +
-      integer idoy   ! Day of year
-      real dlat      ! Latitude of the site, degrees (north > 0, south < 0)
-      real dlong     ! Longitude of the site, degrees (east > 0, west < 0)
-      real riseangle ! angle of earths rotation where sunrise occurs
-                     ! this varies depending on whether you are calculating
-                     ! direct beam, civil twilight, nautical twilight or
-                     ! astronomical twilight hourangle
-
-!     + + + LOCAL VARIABLES + + +
       real dec  ! declination of earth with respect to the sun (degrees)
       real e    ! Equation of time (minutes)
       real h    ! Hour angle (degrees)
@@ -254,13 +214,12 @@ module solar_mod
       sn = 12.0-e/60.0-4.0*(15*nint(-dlong/15.0)+dlong)/60.0 !h-53
 
 !     Calculate the time of sunrise (rise)
-      dawn = sn - h/15.0                                   !h-52
+      dawn_res = sn - h/15.0                                   !h-52
 
 !     to prevent errors of bleed over into previous day where
 !     where daylength is 24 hours, limit time of sunrise
-      dawn = max(0.0, dawn)
+      dawn_res = max(0.0, dawn_res)
 
-      return
     end function dawn
 
 end module solar_mod

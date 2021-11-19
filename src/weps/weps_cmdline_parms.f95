@@ -42,8 +42,8 @@ module weps_cmdline_parms
                               ! 1   !run erosion submodel (default)
     integer :: calibrate_crops ! Specifies whether to do crop calibration or not
                                ! 0   !do not run in crop calibration mode (default)
-                               ! 1   !run in crop calibration mode
-    integer :: calibrate_rotcycles ! Specifies maximum number of cycles to run while calibrating
+                               ! 3-n !run in crop calibration mode for 3 or more cycles
+    integer :: calibrate_rotcycles ! Specifies maximum number of management rotation cycles to run while calibrating
     integer :: cook_yield     ! flag setting which uses input from crop record to 
                               ! guarantee a fixed yield/redsidue ratio at harvest
                               ! (this is cooking the books :-(

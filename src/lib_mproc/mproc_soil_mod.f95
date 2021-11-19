@@ -7,8 +7,8 @@ module mproc_soil_mod
 
   contains
 
-    subroutine mix (u,tillf,nlay,bulkden,laythk, &
-                    sand,silt,clay, vfrock, &
+    pure subroutine mix (u, tillf, nlay, bulkden, laythk, &
+                    sand, silt, clay, vfrock, &
                     vc_sand, c_sand, m_sand, f_sand, vf_sand, &
                     w_bd, &
                     organic, ph, calcarb, cation, &
@@ -17,7 +17,7 @@ module mproc_soil_mod
                     soilwatr, &
                     satwatr, thrdbar, ftnbar, &
                     avawatr, &
-                    soilcb,soilair,satcond, &
+                    soilcb, soilair, satcond, &
                     plant, massf)
 
       ! This subroutine reads in the array(s) containing the components 
@@ -33,63 +33,38 @@ module mproc_soil_mod
       use soilden_mod, only: den_rock, getLayMass, setVolFrac, setLayThick
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      integer nlay
-      real u,tillf,bulkden(*),laythk(*)
-      real sand(*),silt(*),clay(*), vfrock(*)
-      real vc_sand(*), c_sand(*), m_sand(*), f_sand(*), vf_sand(*)
-      real w_bd(*)
-      real organic(*), ph(*), calcarb(*), cation(*)
-      real lin_ext(*)
-      real aggden(*), drystab(*)
-      real soilwatr(*)
-      real satwatr(*), thrdbar(*), ftnbar(*)
-      real avawatr(*)
-      real soilcb(*), soilair(*), satcond(*)
-      type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
-      real, dimension(msieve+1,*) :: massf
-
-      ! + + + ARGUMENT DEFINITIONS + + +
-      ! u           - mixing coefficient
-      ! tillf       - fraction of the soil area tilled by the machine
-      ! bulkden     - fine soil bulk density 
-      ! laythk      - layer thickness
-
-      ! sand        - fraction of sand
-      ! silt        - fraction of silt
-      ! clay        - fraction of clay
-      ! vfrock    - volume fraction of rock
-      ! vc_sand     - fraction of very course sand
-      ! c_sand      - fraction of course sand
-      ! m_sand      - fraction of medium sand
-      ! f_sand      - fraction of fine sand
-      ! vf_sand     - fraction of very fine sand
-
-      ! w_bd        - wet (1/3 bar) fine soil density 
-
-      ! organic     - fraction of organic matter
-      ! ph          - soil Ph
-      ! calcarb     - fraction of calcium carbonate
-      ! cation      - cation exchange capcity
-
-      ! lin_ext     - linear extensibility
-
-      ! aggden      - aggregrate density
-      ! drystab     - dry aggregrate stability
-
-      ! soilwatr    - soil water content (mass bases)
-      ! satwatr     - saturation soil water content
-      ! thrdbar     - 1/3 bar soil water content
-      ! ftnbar      - 15 bar soil water content
-      ! avawatr     - available soil water content
-
-      ! soilcbr     - soil CB value
-      ! soilair     - soil air entery potential
-      ! satcond     - saturated hydraulic conductivity
-
-      ! residue     - structure containing residue by soil layer
-      ! massf       - mass fractions for sieve cuts
-
-      ! nlay        - number of soil layers used
+      integer, intent(in) :: nlay       ! number of soil layers used
+      real, intent(in) :: u             ! mixing coefficient
+      real, intent(in) :: tillf         ! fraction of the soil area tilled by the machine
+      real, intent(inout) :: bulkden(*) ! fine soil bulk density
+      real, intent(inout) :: laythk(*)  ! layer thickness
+      real, intent(inout) :: sand(*)    ! fraction of sand
+      real, intent(inout) :: silt(*)    ! fraction of silt
+      real, intent(inout) :: clay(*)    ! fraction of clay
+      real, intent(inout) :: vfrock(*)  ! volume fraction of rock
+      real, intent(inout) :: vc_sand(*) ! fraction of very course sand
+      real, intent(inout) :: c_sand(*)  ! fraction of course sand
+      real, intent(inout) :: m_sand(*)  ! fraction of medium sand
+      real, intent(inout) :: f_sand(*)  ! fraction of fine sand
+      real, intent(inout) :: vf_sand(*) ! fraction of very fine sand
+      real, intent(inout) :: w_bd(*)    ! wet (1/3 bar) fine soil density
+      real, intent(inout) :: organic(*) ! fraction of organic matter
+      real, intent(inout) :: ph(*)      ! soil Ph
+      real, intent(inout) :: calcarb(*) ! fraction of calcium carbonate
+      real, intent(inout) :: cation(*)  ! cation exchange capcity
+      real, intent(inout) :: lin_ext(*) ! linear extensibility
+      real, intent(inout) :: aggden(*)  ! aggregrate density
+      real, intent(inout) :: drystab(*) ! dry aggregrate stability
+      real, intent(inout) :: soilwatr(*) ! soil water content (mass bases)
+      real, intent(inout) :: satwatr(*) ! saturation soil water content
+      real, intent(inout) :: thrdbar(*) ! 1/3 bar soil water content
+      real, intent(inout) :: ftnbar(*)  ! 15 bar soil water content
+      real, intent(inout) :: avawatr(*) ! available soil water content
+      real, intent(inout) :: soilcb(*)  ! soil CB value
+      real, intent(inout) :: soilair(*) ! soil air entery potential
+      real, intent(inout) :: satcond(*) ! saturated hydraulic conductivity
+      type(plant_pointer), pointer :: plant ! pointer to youngest plant data, which chains to older plant data
+      real, dimension(msieve+1,*), intent(inout) :: massf ! mass fractions for sieve cuts
 
       ! + + + LOCAL VARIABLES + + +
       real :: tillmix                   ! combination of mixing coefficient and tilled area fraction
@@ -563,37 +538,25 @@ module mproc_soil_mod
 
     end subroutine mix
 
-    subroutine mixproc(u, nlay, xcomp, cmass, lmass, mass) 
+    pure subroutine mixproc(u, nlay, xcomp, cmass, lmass, mass) 
 
       ! This subroutine perfoms the actual mixing process.
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real, intent(in) :: u
-      integer, intent(in) :: nlay  
-      real, intent(inout) :: xcomp(*)
-      real, intent(in) :: cmass
-      real, intent(in) :: lmass(*)
-      real, intent(in) :: mass
-
-      ! + + + ARGUMENT DEFINITIONS + + +
-      ! cmass	- total mass of a component contained in a subregion 
-      ! mass	- total mass in a subregion 
-      ! nlay	- number of layers to be mixed
-      ! u		- mixing coefficient
-      ! xcomp	- component value that is mixed
+      real, intent(in) :: u           ! mixing coefficient
+      integer, intent(in) :: nlay     ! number of layers to be mixed
+      real, intent(inout) :: xcomp(*) ! component value that is mixed
+      real, intent(in) :: cmass       ! total mass of a component contained in a subregion
+      real, intent(in) :: lmass(*)    ! total mass in soil layer
+      real, intent(in) :: mass        ! total mass in a subregion
 
       ! + + + LOCAL VARIABLES + + +
-      integer i  
-      real mixed(nlay) 
-
-      ! + + + LOCAL VARIABLE DEFINITIONS + + +
-      ! i - index for layers in a subregion
-      !  mixed - temperory variable containing the mixed component 
+      integer i        ! index for layers in a subregion
+      real mixed(nlay) ! temporary variable containing the mixed component
 
       ! + + + END SPECIFICATIONS + + + 
 
       ! Do the mixing process. 
-	  
       do i = 1, nlay
          mixed(i) = (1-u)*xcomp(i) + (lmass(i)/mass)*u*cmass
          xcomp(i) = mixed(i) 
@@ -601,17 +564,14 @@ module mproc_soil_mod
 	  
     end subroutine mixproc
 
-    subroutine invert (nlay,bulkden,laythk, &
-                     sand,silt,clay, vfrock, &
+    subroutine invert (nlay, bulkden, laythk, &
+                     sand, silt, clay, vfrock, &
                      vc_sand, c_sand, m_sand, f_sand, vf_sand, &
-                     w_bd, &
-                     organic, ph, calcarb, cation, &
-                     lin_ext, &
-                     aggden, drystab, &
-                     soilwatr, &
-                     satwatr, thrdbar, ftnbar, &
-                     avawatr, &
-                     soilcb,soilair,satcond, &
+                     w_bd, organic, ph, calcarb, cation, &
+                     lin_ext, aggden, drystab, &
+                     soilwatr, satwatr, thrdbar, ftnbar, &
+                     reswatr, avawatr, &
+                     soilcb, soilair, satcond, rstwatr, &
                      plant, massf)
 
 
@@ -624,74 +584,45 @@ module mproc_soil_mod
       use soilden_mod, only: setLayThick
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      integer nlay
-      real bulkden(*),laythk(*)
-      real sand(*),silt(*),clay(*), vfrock(*)
-      real vc_sand(*), c_sand(*), m_sand(*), f_sand(*), vf_sand(*)
-      real w_bd(*)
-      real organic(*), ph(*), calcarb(*), cation(*)
-      real lin_ext(*)
-      real aggden(*), drystab(*)
-      real soilwatr(*)
-      real satwatr(*), thrdbar(*), ftnbar(*)
-      real avawatr(*)
-      real soilcb(*), soilair(*), satcond(*)
+      integer, intent(in) :: nlay       ! number of soil layers used
+      real, intent(inout) :: bulkden(*) ! fine soil bulk density 
+      real, intent(inout) :: laythk(*)  ! layer thickness
+      real, intent(inout) :: sand(*)    ! fraction of sand
+      real, intent(inout) :: silt(*)    ! fraction of silt
+      real, intent(inout) :: clay(*)    ! fraction of clay
+      real, intent(inout) :: vfrock(*)  ! volume fraction of rock
+      real, intent(inout) :: vc_sand(*) ! fraction of very course sand
+      real, intent(inout) :: c_sand(*)  ! fraction of course sand
+      real, intent(inout) :: m_sand(*)  ! fraction of medium sand
+      real, intent(inout) :: f_sand(*)  ! fraction of fine sand
+      real, intent(inout) :: vf_sand(*) ! fraction of very fine sand
+      real, intent(inout) :: w_bd(*)    ! wet (1/3 bar) fine soil density
+      real, intent(inout) :: organic(*) ! fraction of organic matter
+      real, intent(inout) :: ph(*)      ! soil Ph
+      real, intent(inout) :: calcarb(*) ! fraction of calcium carbonate
+      real, intent(inout) :: cation(*)  ! cation exchange capcity
+      real, intent(inout) :: lin_ext(*) ! linear extensibility
+      real, intent(inout) :: aggden(*)  ! aggregrate density
+      real, intent(inout) :: drystab(*) ! dry aggregrate stability
+      real, intent(inout) :: soilwatr(*) ! soil water content (mass bases)
+      real, intent(inout) :: satwatr(*) ! saturation soil water content
+      real, intent(inout) :: thrdbar(*) ! 1/3 bar soil water content
+      real, intent(inout) :: ftnbar(*)  ! 15 bar soil water content
+      real, intent(inout) :: reswatr(*) ! residual water content
+      real, intent(inout) :: avawatr(*) ! available soil water content
+      real, intent(inout) :: soilcb(*)  ! soil CB value
+      real, intent(inout) :: soilair(*) ! soil air entery potential
+      real, intent(inout) :: satcond(*) ! saturated hydraulic conductivity
+      real, intent(inout) :: rstwatr(*) ! reduced saturation water content
       type(plant_pointer), pointer :: plant ! pointer to youngest plant data, which chains to older plant data
-      real, dimension(msieve+1,*) :: massf
-
-      ! + + + ARGUMENT DEFINITIONS + + +
-
-      ! bulkden     - fine soil bulk density 
-      ! laythk      - layer thickness
-
-      ! sand        - fraction of sand
-      ! silt        - fraction of silt
-      ! clay        - fraction of clay
-      ! vfrock    - volume fraction of rock
-      ! vc_sand     - fraction of very course sand
-      ! c_sand      - fraction of course sand
-      ! m_sand      - fraction of medium sand
-      ! f_sand      - fraction of fine sand
-      ! vf_sand     - fraction of very fine sand
-
-      ! w_bd        - wet (1/3 bar) soil density 
-
-      ! organic     - fraction of organic matter
-      ! ph          - soil Ph
-      ! calcarb     - fraction of calcium carbonate
-      ! cation      - cation exchange capcity
-
-      ! lin_ext     - linear extensibility
-
-      ! aggden      - aggregrate density
-      ! drystab     - dry aggregrate stability
-
-      ! soilwatr    - soil water content (mass bases)
-      ! satwatr     - saturation soil water content
-      ! thrdbar     - 1/3 bar soil water content
-      ! ftnbar      - 15 bar soil water content
-      ! avawatr     - available soil water content
-
-      ! soilcbr     - soil CB value
-      ! soilair     - soil air entery potential
-      ! satcond     - saturated hydraulic conductivity
-
-      ! plant       - pointer to plant with residue by soil layer (kg/m^2)
-      ! massf       - mass fractions for sieve cuts
-
-      ! nlay        - number of soil layers used
+      real, dimension(msieve+1,*), intent(inout) :: massf ! mass fractions for sieve cuts
 
       ! + + + LOCAL VARIABLES + + +
-      integer i, j, k
-      real dum(nlay)
+      integer :: j  ! loop variable on asd sieves 
+      integer :: k  ! loop variable on the number of layers
+      real :: dum(nlay) ! dummy variable containing a variable array to be passed to the inversion process routine
       type(plant_pointer), pointer :: thisPlant
       type(residue_pointer), pointer :: thisResidue
-
-      ! + + + LOCAL VARIABLE DEFINITIONS + + +
-      ! dum    - dummy variable containing a variable array to
-      !           be passed to the inversion process routine
-      ! j       - loop variable on asd sieves 
-      ! k       - loop variable on the number of layers 
 
       ! + + + END SPECIFICATIONS + + + 
 
@@ -727,11 +658,13 @@ module mproc_soil_mod
       call invproc(nlay,laythk,satwatr)
       call invproc(nlay,laythk,thrdbar)
       call invproc(nlay,laythk,ftnbar)
+      call invproc(nlay,laythk,reswatr)
       call invproc(nlay,laythk,avawatr)
 
       call invproc(nlay,laythk,soilcb)
       call invproc(nlay,laythk,soilair)
       call invproc(nlay,laythk,satcond)
+      call invproc(nlay,laythk,rstwatr)
       !******************HYDROLOGY VARIABLES********************	
 
       !******************ASD MASS FRACTIONS********************	
@@ -809,15 +742,15 @@ module mproc_soil_mod
       end do
       !******************RESIDUE MASS VARIABLES********************
 		  
-      do i = 1, nlay
-         dum(i) = bulkden(i)
+      do k = 1, nlay
+         dum(k) = bulkden(k)
       end do
       call invproc(nlay,laythk,dum)
-      do i = 1, nlay
+      do k = 1, nlay
          ! adjust layer thickness
-         call setLayThick( laythk(i), vfrock(i), bulkden(i), dum(i))
+         call setLayThick( laythk(k), vfrock(k), bulkden(k), dum(k))
          ! set to new value
-         bulkden(i) = dum(i)
+         bulkden(k) = dum(k)
       end do
 
     end subroutine invert

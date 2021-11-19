@@ -11,7 +11,7 @@ module decomp_out_mod
 
       ! This subroutine writes decomposition output
 
-      use datetime_mod, only: get_simdate
+      use datetime_mod, only: get_psimdate
       use file_io_mod, only: luod_above, luod_below
       use biomaterial, only: plant_pointer, residue_pointer
       use decomp_data_struct_defs, only: am0dfl
@@ -43,7 +43,7 @@ module decomp_out_mod
 
       ! + + + END SPECIFICATIONS + + +
 
-      call get_simdate(cd, cm, cy)
+      call get_psimdate(isr, cd, cm, cy)
 
       if ((am0dfl(isr) .eq. 1) .or. (am0dfl(isr) .eq. 3)) then
         write (luod_above(isr), FMT="(4x,i2,'/',i2,'/',i4)", ADVANCE="NO") cd, cm, cy
@@ -176,7 +176,7 @@ module decomp_out_mod
       ! which may be changed by DECOMP
 
       use weps_main_mod, only: am0ifl
-      use datetime_mod, only: get_simdate
+      use datetime_mod, only: get_psimdate
       use file_io_mod, only: luoddb
       use biomaterial, only: plant_pointer, residue_pointer
       use debug_mod, only: tddbug
@@ -200,12 +200,12 @@ module decomp_out_mod
       integer :: iallres ! all residue pools index
 
      !  + + + DATA INITIALIZATIONS + + +
-      if (am0ifl  .eqv. .true.) then
+      if (am0ifl(isr)  .eqv. .true.) then
           tddbug(isr)%tday = -1
           tddbug(isr)%tmo = -1
           tddbug(isr)%tyr = -1
       end if
-      call get_simdate (cd, cm, cy)
+      call get_psimdate (isr, cd, cm, cy)
 
       !  + + + END SPECIFICATIONS + + +
       iplt = 0

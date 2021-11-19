@@ -9,17 +9,18 @@ module WEPS_UPGM_mod
 
   contains
 
-    subroutine init_WEPS_UPGM( soil, plant )
+    subroutine init_WEPS_UPGM( isr, soil, plant )
       use upgm_mod
       use constants, only : dp, int32, precision_init
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer
-      use climate_input_mod, only: amalat, cli_today
-      use solar_mod, only: civilrise, daylen
-      use datetime_mod, only: get_simdate_doy, get_simdate
+      use climate_input_mod, only: cli_day
+      use solar_mod, only: amalat, civilrise, daylen
+      use datetime_mod, only: get_psim_doy, get_psim_juld
       use environment_state_mod
       use WEPSCrop_util_mod, only: hu_leaf_days
 
+      integer, intent(in) :: isr  ! subregion index number
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older 
 
@@ -31,6 +32,10 @@ module WEPS_UPGM_mod
       integer :: nelem
       integer :: alloc_stat
       integer(int32) :: jd ! day of year
+      integer :: pjuld  ! present simulation julian day
+
+      ! present julian day
+      pjuld = get_psim_juld(isr)
 
       ! init precision values
       call precision_init()
@@ -40,7 +45,7 @@ module WEPS_UPGM_mod
       call plant%upgm_grow%plant%plantstate%init()
 
       ! iniitalize environmental conditions
-      jd = get_simdate_doy()
+      jd = get_psim_doy(isr)
       plant%env = environment_state()
       call plant%env%init()
 
@@ -48,9 +53,9 @@ module WEPS_UPGM_mod
       ! create gddWEPS method
       call plant%upgm_grow%plant%add_process("gddWEPS_method", "WEPS GDD", 0)
       ! create input names
-      r_setter = cli_today%tdmn
+      r_setter = cli_day(pjuld)%tdmn
       call plant%env%state%put("tmin", r_setter, success)
-      r_setter = cli_today%tdmx
+      r_setter = cli_day(pjuld)%tdmx
       call plant%env%state%put("tmax", r_setter, success)
       r_setter = plant%database%tmin
       call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("tbas", r_setter, success)
@@ -245,6 +250,9 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%add_process("WEPSwinterAnnSpring", "Check for spring growth of winter annuals", 0)
 
           ! create input names
+          i_setter = 0
+          call plant%env%state%put("day_of_year", i_setter, success)
+
           ! plant database
           ! tverndel (created below)
 
@@ -587,6 +595,8 @@ module WEPS_UPGM_mod
         end if
         call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("dropfrac", r_setter, success)
         ! plant state
+        i_setter = 0
+        call plant%env%state%put("day_of_year", i_setter, success)
         ! can_regrow (created below)
         i_setter = plant%growth%dayleafoff
         call plant%upgm_grow%plant%plantstate%state%put("dayleafoff", i_setter, success)
@@ -611,6 +621,7 @@ module WEPS_UPGM_mod
 
         ! create input names
         ! plant state
+        ! day_of_year (created above)
         ! can_regrow (created below)
         ! shoot_growing (created below)
         ! dayleafon (created above)
@@ -940,36 +951,33 @@ module WEPS_UPGM_mod
       call plant%upgm_grow%plant%plantstate%state%put("pdrd", r_setter, success)
 
       ! all phases added, set phases to beginning
-      call set_start_UPGM( plant )
+      call set_start_UPGM( isr, plant )
 
       return
 
     end subroutine init_WEPS_UPGM
 
-    subroutine set_start_UPGM( plant )
+    subroutine set_start_UPGM( isr, plant )
       use biomaterial, only: plant_pointer
-      use datetime_mod, only: difdat, get_simdate
+      use datetime_mod, only: difdat
+      use datetime_mod, only: get_psim_day, get_psim_mon, get_psim_year
       use constants, only : dp, int32
 
       ! + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr  ! subregion index number
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older 
 
       ! + + + LOCAL VARIABLES + + +
-      integer :: simdd    ! current simulation day
-      integer :: simmm    ! current simulation month
-      integer :: simyr    ! current simulation year
       type(plant_pointer), pointer :: thisPlant     ! pointer for looping through plants
       integer(int32) :: nextstage
       real(dp) :: r_setter
       logical :: success = .false.
 
-      ! get current simulation day, month, year
-      call get_simdate( simdd, simmm, simyr )
-
       ! expecting pointer to the newest plant in existence
       thisPlant => plant
       do while( associated(thisPlant) )
-        if (difdat (simdd,simmm,simyr,thisPlant%pday,thisPlant%pmon,thisPlant%psimyr).eq.0) then
+        if( difdat (get_psim_day(isr), get_psim_mon(isr), get_psim_year(isr), &
+                    thisPlant%pday, thisPlant%pmon, thisPlant%psimyr) .eq. 0 ) then
           ! this crop was planted today
           if( associated(thisPlant%upgm_grow%plant) ) then
             ! This is an UPGM crop
@@ -992,7 +1000,7 @@ module WEPS_UPGM_mod
 
       return
 
-    end subroutine
+    end subroutine set_start_UPGM
 
     subroutine run_UPGM( isr, soil, plant )
       use upgm_mod
@@ -1001,11 +1009,11 @@ module WEPS_UPGM_mod
       use biomaterial, only: plant_pointer, residueAdd
       use crop_data_struct_defs, only: crop_residue, am0cfl
       use crop_data_struct_defs, only: create_crop_residue, destroy_crop_residue
-      use climate_input_mod, only: amalat, cli_today
-      use datetime_mod, only: get_simdate_daysim, get_simdate_doy, get_simdate_year
+      use climate_input_mod, only: cli_day
+      use datetime_mod, only: get_psim_daysim, get_psim_doy, get_psim_year, get_psim_juld
       use file_io_mod, only: luocrop, luoshoot
       use WEPSCrop_mod, only: shoot_grow, leaf_emerge, growth
-      use solar_mod, only: civilrise, daylen
+      use solar_mod, only: amalat, civilrise, daylen
 
       integer(int32) :: isr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
@@ -1075,12 +1083,14 @@ module WEPS_UPGM_mod
       integer(int32) :: nextstage
       integer(int32) :: specificStage
       real(dp) :: stagegdd
+      integer :: pjuld  ! present simulation julian day
 
-      real(dp) :: tmax, tmin
+      ! present julian day
+      pjuld = get_psim_juld(isr)
 
       regrowth_flg = -2
       spring_flg = -2
-      jd = get_simdate_doy()
+      jd = get_psim_doy(isr)
 
       if(    (plant%database%fleaf2stor .gt. 0.0_dp) &
         .or. (plant%database%fstem2stor .gt. 0.0_dp) &
@@ -1099,14 +1109,14 @@ module WEPS_UPGM_mod
         select case(plant%upgm_grow%plant%processCurrent%ptr%processName)
 
         case ("gdd1_method")
-          r_setter = cli_today%tdmn
+          r_setter = cli_day(pjuld)%tdmn
           call plant%env%state%replace("tmin", r_setter, success)
-          r_setter = cli_today%tdmx
+          r_setter = cli_day(pjuld)%tdmx
           call plant%env%state%replace("tmax", r_setter, success)
         case ("gddWEPS_method")
-          r_setter = cli_today%tdmn
+          r_setter = cli_day(pjuld)%tdmn
           call plant%env%state%replace("tmin", r_setter, success)
-          r_setter = cli_today%tdmx
+          r_setter = cli_day(pjuld)%tdmx
           call plant%env%state%replace("tmax", r_setter, success)
         case ("ritchieHardening")
           r_setter = plant%growth%thardnx
@@ -1120,16 +1130,16 @@ module WEPS_UPGM_mod
         case ("ritchieVernalization")
           r_setter = plant%growth%tchillucum
           call plant%upgm_grow%plant%plantstate%state%replace("chill_unit_cum", r_setter, success)
-          r_setter = cli_today%tdmn
+          r_setter = cli_day(pjuld)%tdmn
           call plant%env%state%replace("tmin", r_setter, success)
-          r_setter = cli_today%tdmx
+          r_setter = cli_day(pjuld)%tdmx
           call plant%env%state%replace("tmax", r_setter, success)
         case ("WEPScolddays")
           r_setter = plant%growth%tcolddays
           call plant%upgm_grow%plant%plantstate%state%replace("colddays", r_setter, success)
-          r_setter = cli_today%tdmn
+          r_setter = cli_day(pjuld)%tdmn
           call plant%env%state%replace("tmin", r_setter, success)
-          r_setter = cli_today%tdmx
+          r_setter = cli_day(pjuld)%tdmx
           call plant%env%state%replace("tmax", r_setter, success)
         case ("WEPSFreezeDamage")
           r_setter = plant%mass%standleaflive
@@ -1144,6 +1154,8 @@ module WEPS_UPGM_mod
           call plant%env%state%replace("hrlty", r_setter, success)
           r_setter = daylen(amalat, jd, civilrise)
           call plant%env%state%replace("hrlt", r_setter, success)
+          i_setter = jd
+          call plant%env%state%replace("day_of_year", i_setter, success)
           ! plant state
           l_setter = plant%growth%can_regrow
           call plant%upgm_grow%plant%plantstate%state%replace("can_regrow", l_setter, success)
@@ -1163,6 +1175,8 @@ module WEPS_UPGM_mod
           call plant%env%state%replace("hrlty", r_setter, success)
           r_setter = daylen(amalat, jd, civilrise)
           call plant%env%state%replace("hrlt", r_setter, success)
+          i_setter = jd
+          call plant%env%state%replace("day_of_year", i_setter, success)
           ! plant state
           l_setter = plant%growth%can_regrow
           call plant%upgm_grow%plant%plantstate%state%replace("can_regrow", l_setter, success)
@@ -1414,9 +1428,9 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%replace("dstm", r_setter, success)
         case ("WEPSTempStress")
           ! environmental variables
-          r_setter = cli_today%tdmn
+          r_setter = cli_day(pjuld)%tdmn
           call plant%env%state%replace("tmin", r_setter, success)
-          r_setter = cli_today%tdmx
+          r_setter = cli_day(pjuld)%tdmx
           call plant%env%state%replace("tmax", r_setter, success)
         case ("WEPStrendleafexternal")
           r_setter = plant%mass%standleaflive
@@ -1435,15 +1449,17 @@ module WEPS_UPGM_mod
         case ("WEPSwarmdays")
           r_setter = plant%growth%twarmdays
           call plant%upgm_grow%plant%plantstate%state%replace("warmdays", r_setter, success)
-          r_setter = cli_today%tdmn
+          r_setter = cli_day(pjuld)%tdmn
           call plant%env%state%replace("tmin", r_setter, success)
-          r_setter = cli_today%tdmx
+          r_setter = cli_day(pjuld)%tdmx
           call plant%env%state%replace("tmax", r_setter, success)
         case ("WEPSwinterAnnSpring")
           ! plant database
           ! tverndel
 
           ! plant state
+          i_setter = jd
+          call plant%env%state%replace("day_of_year", i_setter, success)
           l_setter = plant%growth%can_regrow
           call plant%upgm_grow%plant%plantstate%state%replace("can_regrow", l_setter, success)
           r_setter = plant%growth%zgrowpt
@@ -2570,7 +2586,7 @@ module WEPS_UPGM_mod
                 ! before shoot_growing set to false
                 write(luoshoot(isr), &
                   "(1x,i5,1x,i3,1x,i4,1x,i4,1x,f6.3,2(1x,f10.4),2(1x,f12.4),4(1x,f12.4),4(1x,f12.4),(1x,f8.4),(1x,f8.3),1x,a)") &
-                  get_simdate_daysim(), jd, get_simdate_year(), plant%growth%dayap+1, shoot_hui, &
+                  get_psim_daysim(isr), jd, get_psim_year(isr), plant%growth%dayap+1, shoot_hui, &
                   s_root_sum, f_root_sum, tot_mass_req, end_shoot_mass, &
                   end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass, &
                   end_stem_mass, end_stem_area, end_shoot_len, plant%geometry%zshoot, &
@@ -2627,7 +2643,7 @@ module WEPS_UPGM_mod
           end if
 
           call growth( soil, plant, &
-                   dble(cli_today%eirr), &
+                   dble(cli_day(pjuld)%eirr), &
                    eff_lai, trad_lai, tstress, p_rw, p_st, p_lf, p_rp, &
                    pdht, pdrd, &
                    ffa, ffw, ffr, gif, par, apar, pddm, &
@@ -2720,8 +2736,8 @@ module WEPS_UPGM_mod
             end if
 
             write(luocrop(isr), "(1x,i6,1x,i3,1x,i4,1x,i5,1x,f6.3,12(1x,f7.4),1x,f7.2, &
-              3(1x,f7.4),8(1x,f6.3),1x,e12.3, 11(1x,f6.3),2(1x,f8.5),1x,i2,1x,f6.3,1x,a,1x,a)") &
-            get_simdate_daysim(), jd, get_simdate_year(), plant%growth%dayap, &
+     &         3(1x,f7.4),8(1x,f6.3),1x,e12.3, 11(1x,f6.3),2(1x,f8.5),1x,i2,1x,f6.3,1x,a,1x,a)") &
+            get_psim_daysim(isr), jd, get_psim_year(isr), plant%growth%dayap, &
             hui, &
             plant%mass%standstem, plant%mass%standleaflive + plant%mass%standleafdead, plant%mass%standstore, &
             plant%mass%flatstem, plant%mass%flatleaf, plant%mass%flatstore, &

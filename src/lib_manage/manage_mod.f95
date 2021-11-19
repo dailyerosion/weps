@@ -7,32 +7,42 @@ module manage_mod
 
     use crop_data_struct_defs, only: crop_residue, create_crop_residue, destroy_crop_residue
 
-    type(crop_residue) :: cropres  ! structure for temporary crop
+    type(crop_residue), dimension(:), allocatable :: cropres  ! structure for temporary crop
 
-    character(len=80), private :: cropname
-    character(len=80), private :: amdname
-    real, private :: fracarea  ! fraction of the surface affected by the process
-    real, private :: imprs     ! implement ridge spacing (can be used to set row spacing)
-    real, private :: ospeed    ! operation speed (m/s)
-    real, private :: odir      ! operation direction (degrees from NORTH)
-    real, private :: ostdspeed
-    real, private :: ominspeed
-    real, private :: omaxspeed
-    real, private :: tdepth
-    real, private :: ti
-    real, private :: tstddepth
-    real, private :: tmindepth
-    real, private :: tmaxdepth
-    integer, private :: tlayer
-    integer, private :: rdgflag
+    type, private :: operation_state
+      character(len=80) :: cropname
+      character(len=80) :: amdname
+      real :: fracarea  ! fraction of the surface affected by the process
+      real :: imprs     ! implement ridge spacing (can be used to set row spacing)
+      real :: ospeed    ! operation speed (m/s)
+      real :: odir      ! operation direction (degrees from NORTH)
+      real :: ostdspeed
+      real :: ominspeed
+      real :: omaxspeed
+      real :: tdepth
+      real :: ti
+      real :: tstddepth
+      real :: tmindepth
+      real :: tmaxdepth
+      integer :: tlayer
+      integer :: rdgflag
+    end type operation_state
 
-    logical :: am0til  ! flag to determine if surfce has been updated by management
+    type(operation_state), dimension(:), allocatable :: opstate
+
+    logical, dimension(:), allocatable :: am0til  ! flag to determine if surfce has been updated by management
                        ! .true. - tillage has occurred
                        ! .false. - not
 
+    interface tdbug
+      module procedure tdbug_soil
+      module procedure tdbug_soil_biotot
+      module procedure tdbug_soil_plant
+    end interface tdbug
+
   contains
 
-    subroutine mfinit (manFile)
+    subroutine mfinit (sr, manFile)
 !
 !     + + + PURPOSE + + +
 !     Mfinit should be called during the initialization stage of the the
@@ -59,6 +69,7 @@ module manage_mod
       use update_mod, only: am0cropupfl
 
 !     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: sr       ! the subregion number
       type(man_file_struct), intent(inout) :: manFile  ! management file data structure
 
 !     + + + LOCAL VARIABLES + + +
@@ -71,7 +82,7 @@ module manage_mod
 !     + + + DATA INITIALIZATIONS + + +
 
       ! initialize value for crop effect flags
-      am0cropupfl = .false.
+      am0cropupfl(sr) = .false.
 
       manFile%rpt_season_flg = .true.
 
@@ -118,7 +129,154 @@ module manage_mod
 
     end subroutine mfinit
 
-    subroutine tdbug(sr, output, soil, plant)
+    subroutine tdbug_soil(sr, output, soil)
+
+!     + + + PURPOSE + + +
+!    This program prints out many of the global variables before
+!    and after the call to various MANAGEMENT practices
+
+!     + + + KEY WORDS + + +
+!     wind, erosion, tillage, soil, plant, decomposition
+!     management
+
+      use file_io_mod, only: luotdb
+      use soil_data_struct_defs, only: soil_def
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: sr     ! subregion number
+      integer, intent(in) :: output ! process number for debugging output
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
+
+      ! + + + LOCAL VARIABLES + + +
+      integer :: idx  ! loop counter for printing output
+      integer :: jdx  ! loop counter for printing output
+
+!     + + + END SPECIFICATIONS + + +
+
+      select case (output)
+      case (1) ! crust breakdown process (process code 01)
+          write(luotdb(sr),*) 'CRUST: opstate(sr)%fracarea soil%asfcr soil%asflos soil%asmlos'
+          write(luotdb(sr),*) opstate(sr)%fracarea,soil%asfcr,soil%asflos,soil%asmlos
+
+      case (5) ! oriented roughness process (process code 05)
+          write(luotdb(sr),*) 'RANDOM: soil%aszrgh soil%asxrgw  soil%asxrgs  soil%asargo', &
+                    ' soil%asxdkh, soil%asxdks', &
+                    ' opstate(sr)%imprs opstate(sr)%odir ', &
+                    ' opstate(sr)%tdepth, opstate(sr)%rdgflag'
+          write(luotdb(sr),*) soil%aszrgh, soil%asxrgw, soil%asxrgs, soil%asargo, &
+                    soil%asxdkh, soil%asxdks, &
+                    opstate(sr)%imprs, opstate(sr)%odir, &
+                    opstate(sr)%tdepth, opstate(sr)%rdgflag
+
+      case (11) ! crushing process (process code 11)
+          write(luotdb(sr),*) 'CRUSH: lay soil%aslagn soil%aslagx soil%aslagm soil%as0ags'
+          do idx = 1,soil%nslay
+            write(luotdb(sr),*) soil%aslagn(idx),  soil%aslagx(idx), soil%aslagm(idx),  soil%as0ags(idx)
+          end do
+
+      case (12) ! loosening process (process code 12)
+          write(luotdb(sr),*) 'LOOSEN: opstate(sr)%fracarea opstate(sr)%tlayer'
+          write(luotdb(sr),*) opstate(sr)%fracarea, opstate(sr)%tlayer
+          write(luotdb(sr),*) 'LOOSEN: lay soil%asdblk soil%asdsblk soil%aszlyt soil%asvroc'
+          do idx = 1,soil%nslay
+            write(luotdb(sr),*) idx, soil%asdblk(idx), soil%asdsblk(idx), soil%aszlyt(idx), soil%asvroc(idx)
+          end do 
+
+      case (21) ! below layer compaction (process code 21)
+
+      case (32) ! cutting to height process (process code 32)
+
+      case (33) ! cutting by fraction process (process code 33)
+
+      case (37) ! thinning to population process (process code 37)
+
+      case (38) ! thinning by fraction process (process code 38)
+
+      case (40) ! crop to biomass transfer process (process code 40)
+
+      case (50) ! residue initialization process (process code 50)
+
+      case (51) ! planting process (process code 51)
+
+      case (65) ! add residue process (process code 65)
+
+      case (71) ! irrigate process (process code 71) (OBSOLETE)
+
+      case (72) ! irrigation monitoring process (process code 72)
+
+      case (73) ! single event irrigation process (process code 73)
+
+      case default
+      end select
+
+    end subroutine tdbug_soil
+
+    subroutine tdbug_soil_biotot(sr, output, soil, biotot)
+
+!     + + + PURPOSE + + +
+!    This program prints out many of the global variables before
+!    and after the call to various MANAGEMENT practices
+
+!     + + + KEY WORDS + + +
+!     wind, erosion, tillage, soil, plant, decomposition
+!     management
+
+      use file_io_mod, only: luotdb
+      use soil_data_struct_defs, only: soil_def
+      use biomaterial, only: biototal
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: sr     ! subregion number
+      integer, intent(in) :: output ! process number for debugging output
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
+      type(biototal), intent(in) :: biotot ! biomass totals
+
+      ! + + + LOCAL VARIABLES + + +
+      integer :: idx  ! loop counter for printing output
+      integer :: jdx  ! loop counter for printing output
+
+!     + + + END SPECIFICATIONS + + +
+
+      select case (output)
+      case (2) ! random roughness process (process code 02)
+          write(luotdb(sr),*) 'RANDOM: opstate(sr)%ti opstate(sr)%fracarea soil%aslrr', &
+                              ' opstate(sr)%tlayer soil%asfcla soil%asfsil', &
+                              ' biotot%mrtz biotot%mbgz soil%aszlyd'
+          write(luotdb(sr),*) opstate(sr)%ti, opstate(sr)%fracarea, soil%aslrr, opstate(sr)%tlayer
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'RANDOM: lay soil%asfcla soil%asfsil biotot%mrtz biotot%mbgz soil%aszlyd'
+          do idx = 1,soil%nslay
+            write(luotdb(sr),*) idx, soil%asfcla(idx), soil%asfsil(idx), biotot%mrtz(idx), biotot%mbgz(idx), soil%aszlyd(idx)
+          end do
+
+      case (32) ! cutting to height process (process code 32)
+
+      case (33) ! cutting by fraction process (process code 33)
+
+      case (37) ! thinning to population process (process code 37)
+
+      case (38) ! thinning by fraction process (process code 38)
+
+      case (40) ! crop to biomass transfer process (process code 40)
+
+      case (50) ! residue initialization process (process code 50)
+
+      case (51) ! planting process (process code 51)
+
+      case (65) ! add residue process (process code 65)
+
+      case (71) ! irrigate process (process code 71) (OBSOLETE)
+
+      case (72) ! irrigation monitoring process (process code 72)
+
+      case (73) ! single event irrigation process (process code 73)
+
+      case default
+      end select
+
+    end subroutine tdbug_soil_biotot
+
+    subroutine tdbug_soil_plant(sr, output, soil, plant)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -133,15 +291,12 @@ module manage_mod
       use biomaterial, only: plant_pointer, residue_pointer
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer sr, output
+      integer, intent(in) :: sr     ! subregion number
+      integer, intent(in) :: output ! process number for debugging output
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant ! pointer to youngest plant data, which chains to older plant data
 
-!     + + + ARGUMENT DEFINITIONS + + +
-!     sr      - subregion number
-!     output  - process number for debugging output
-
-!     + + + LOCAL VARIABLES + + +
+      ! + + + LOCAL VARIABLES + + +
       integer :: idx  ! loop counter for printing output
       integer :: jdx  ! loop counter for printing output
       real :: total   ! summation variable
@@ -151,169 +306,284 @@ module manage_mod
 !     + + + END SPECIFICATIONS + + +
 
       select case (output)
-      case (1) ! crust breakdown process (process code 01)
+      case (13) ! mixing process (process code 13)
+          write(luotdb(sr),*) 'MIX: opstate(sr)%fracarea opstate(sr)%tlayer'
+          write(luotdb(sr),*) opstate(sr)%fracarea, opstate(sr)%tlayer
 
-      case (2) ! random roughness process (process code 02)
- 2067     format('aslrr') 
- 2062     format (f7.2)
-          write(luotdb(sr),2067)
-          write(luotdb(sr),2062) soil%aslrr
-
-      case (3) ! oriented roughness ridge only process (process code 03)
- 2070     format(3x,'aszrgh asxrgw asxrgs asargo asxdks asxdkh')
- 2071     format (4x,6(2x,f7.3))
-          write(luotdb(sr),2070)
-          write(luotdb(sr),2071) soil%aszrgh, soil%asxrgw, soil%asxrgs, &
-            soil%asargo, soil%asxdks, soil%asxdkh
-
-      case (4) ! oriented roughness process dike only (process code 04)
-          write(luotdb(sr),2070)
-          write(luotdb(sr),2071) soil%aszrgh, soil%asxrgw, soil%asxrgs, &
-            soil%asargo, soil%asxdks, soil%asxdkh
-
-      case (5) ! oriented roughness process (process code 05)
- 2072     format(3x,'asfcr  asflos')
- 2073     format (1x,2f7.3)
-          write(luotdb(sr),2072)
-          write(luotdb(sr),2073) soil%asfcr, soil%asflos
-          write(luotdb(sr),2070)
-          write(luotdb(sr),2071) soil%aszrgh, soil%asxrgw, soil%asxrgs, &
-            soil%asargo, soil%asxdks, soil%asxdkh
-
-      case (11) ! crushing process (process code 11)
- 2040     format(3x,'aslagn aslagx aslagm as0ags') 
- 2050     format (1x,4f7.2)
-          write(luotdb(sr),2040) 
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'MIX: lay soil%asdblk soil%aszlyt soil%sfsan soil%asfsil soil%asfcla'
           do idx = 1,soil%nslay
-            write(luotdb(sr),2050) soil%aslagn(idx),  soil%aslagx(idx), &
-               soil%aslagm(idx),  soil%as0ags(idx) 
+            write(luotdb(sr),*) idx, soil%asdblk(idx), soil%aszlyt(idx), soil%asfsan(idx), soil%asfsil(idx), soil%asfcla(idx)
+          end do 
+
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'MIX: lay soil%asvroc soil%asfvcs soil%asfcs soil%asfms soil%asffs'
+          do idx = 1,soil%nslay
+            write(luotdb(sr),*) idx, soil%asvroc(idx), soil%asfvcs(idx), soil%asfcs(idx), soil%asfms(idx), soil%asffs(idx)
           end do
 
-      case (12) ! loosening process (process code 12)
- 2041     format(3x,'asdblk  asdsblk   aszlyt') 
- 2051     format (1x,f7.2,2x,f7.2,2x,f7.2)
-          write(luotdb(sr),2041) 
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'MIX: lay soil%asfvfs, soil%asdwblk, soil%asfom, soil%as0ph, soil%asfcce'
           do idx = 1,soil%nslay
-            write(luotdb(sr),2051) &
-            soil%asdblk(idx), soil%asdsblk(idx), soil%aszlyt(idx)
-          end do 
+            write(luotdb(sr),*) idx, soil%asfvfs(idx), soil%asdwblk(idx), soil%asfom(idx), soil%as0ph(idx), soil%asfcce(idx)
+          end do
 
-      case (13) ! mixing process (process code 13)
-          write(luotdb(sr),*) '   layer asdblk aszlyt sfsan asfsil asfcla as0ph  ascmg ascna asfcce asfcec asfesp'
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'MIX: lay soil%asfcec, soil%asfcle, soil%asdagd, soil%aseags, soil%ahrwc'
           do idx = 1,soil%nslay
-            write(luotdb(sr),'(1x,i4,1x,f7.2,1x,f7.2,f6.2,5f7.2)') idx, soil%asdblk(idx), soil%aszlyt(idx), &
-              soil%asfsan(idx), soil%asfsil(idx), soil%asfcla(idx), &
-              soil%as0ph(idx), soil%asfcce(idx), soil%asfcec(idx)
-          end do 
-          write(luotdb(sr),*) '   asfom asfnoh asfpoh asfpsp asfsmb asdagd aseags ahrwc aheaep ahrwcw ahrwcf ahrwca ahrwcs'
-          do idx = 1,soil%nslay
-            write(luotdb(sr),'(4x,i1,6(1x,f8.4))') soil%asfom(idx), &
-              soil%asdagd(idx), soil%aseags(idx), soil%ahrwc(idx), &
-              soil%aheaep(idx), soil%ahrwcw(idx), soil%ahrwcf(idx), &
-              soil%ahrwca(idx), soil%ahrwcs(idx)
-          end do 
+            write(luotdb(sr),*) idx, soil%asfcec(idx), soil%asfcle(idx), soil%asdagd(idx), soil%aseags(idx), soil%ahrwc(idx)
+          end do
 
-          if( associated(plant%residue) ) then
-            write(luotdb(sr),*) '   layer plant%residue%deriv%mrtz(s)  plant%residue%deriv%mbgz(s)'
-            do idx = 1,soil%nslay
-              write(luotdb(sr),'(4x,i1,6(1x,f8.4))') idx, plant%residue%deriv%mrtz(idx), plant%residue%deriv%mbgz(idx)
-            end do 
-          else
-            write(luotdb(sr),*) 'No residue'
-          end if
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'MIX: lay soil%ahrwcs, soil%ahrwcf, soil%ahrwcw, soil%ahrwcr, soil%ahrwca'
+          do idx = 1,soil%nslay
+            write(luotdb(sr),*) idx, soil%ahrwcs(idx), soil%ahrwcf(idx), soil%ahrwcw(idx), soil%ahrwcr(idx), soil%ahrwca(idx)
+          end do
+
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'MIX: lay soil%ah0cb, soil%aheaep, soil%ahrsk, soil%ahfredsat'
+          do idx = 1,soil%nslay
+            write(luotdb(sr),*) idx, soil%ah0cb(idx), soil%aheaep(idx), soil%ahrsk(idx), soil%ahfredsat(idx)
+          end do
+
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'MIX: lay soil%aslagn soil%aslagx soil%aslagm soil%as0ags'
+          do idx = 1,soil%nslay
+            write(luotdb(sr),*) idx, soil%aslagn(idx),  soil%aslagx(idx), soil%aslagm(idx),  soil%as0ags(idx)
+          end do
+
+          thisPlant => plant
+          do while( associated(thisPlant) )
+
+            thisResidue => thisPlant%residue
+            do while( associated(thisResidue) )
+              write(luotdb(sr),*)
+              write(luotdb(sr),*) 'MIX: lay Residue%stemz Residue%leafz Residue%storez Residue%rootstorez Residue%rootfiberz'
+              do idx = 1,soil%nslay
+                write(luotdb(sr),*) idx, thisResidue%stemz(idx), thisResidue%leafz(idx), thisResidue%storez(idx), &
+                                         thisResidue%rootstorez(idx), thisResidue%rootfiberz(idx)
+              end do 
+              thisResidue => thisResidue%olderResidue
+            end do
+            thisPlant => thisPlant%olderPlant
+          end do
 
       case (14) ! inversion process (process code 14)
+          write(luotdb(sr),*) 'INVERT: opstate(sr)%tlayer'
+          write(luotdb(sr),*) opstate(sr)%tlayer
+
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'INVERT: lay soil%asdblk soil%aszlyt soil%sfsan soil%asfsil soil%asfcla'
           do idx = 1,soil%nslay
-            write(luotdb(sr),'(1x,i4,1x,f7.2,1x,f7.2,f6.2,5f7.2)') idx, soil%asdblk(idx), soil%aszlyt(idx), &
-              soil%asfsan(idx), soil%asfsil(idx), soil%asfcla(idx), &
-              soil%as0ph(idx), soil%asfcce(idx), soil%asfcec(idx)
+            write(luotdb(sr),*) idx, soil%asdblk(idx), soil%aszlyt(idx), soil%asfsan(idx), soil%asfsil(idx), soil%asfcla(idx)
           end do 
-          write(luotdb(sr),*) '   asfom asfnoh asfpoh asfpsp asfsmb asdagd aseags ahrwc aheaep ahrwcw ahrwcf ahrwca ahrwcs'
+
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'INVERT: lay soil%asvroc soil%asfvcs soil%asfcs soil%asfms soil%asffs'
           do idx = 1,soil%nslay
-            write(luotdb(sr),'(4x,i1,6(1x,f8.4))') soil%asfom(idx), &
-              soil%asdagd(idx), soil%aseags(idx), soil%ahrwc(idx), &
-              soil%aheaep(idx), soil%ahrwcw(idx), soil%ahrwcf(idx), &
-              soil%ahrwca(idx), soil%ahrwcs(idx)
-          end do 
+            write(luotdb(sr),*) idx, soil%asvroc(idx), soil%asfvcs(idx), soil%asfcs(idx), soil%asfms(idx), soil%asffs(idx)
+          end do
+
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'INVERT: lay soil%asfvfs, soil%asdwblk, soil%asfom, soil%as0ph, soil%asfcce'
+          do idx = 1,soil%nslay
+            write(luotdb(sr),*) idx, soil%asfvfs(idx), soil%asdwblk(idx), soil%asfom(idx), soil%as0ph(idx), soil%asfcce(idx)
+          end do
+
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'INVERT: lay soil%asfcec, soil%asfcle, soil%asdagd, soil%aseags, soil%ahrwc'
+          do idx = 1,soil%nslay
+            write(luotdb(sr),*) idx, soil%asfcec(idx), soil%asfcle(idx), soil%asdagd(idx), soil%aseags(idx), soil%ahrwc(idx)
+          end do
+
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'INVERT: lay soil%ahrwcs, soil%ahrwcf, soil%ahrwcw, soil%ahrwcr, soil%ahrwca'
+          do idx = 1,soil%nslay
+            write(luotdb(sr),*) idx, soil%ahrwcs(idx), soil%ahrwcf(idx), soil%ahrwcw(idx), soil%ahrwcr(idx), soil%ahrwca(idx)
+          end do
+
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'INVERT: lay soil%ah0cb, soil%aheaep, soil%ahrsk, soil%ahfredsat'
+          do idx = 1,soil%nslay
+            write(luotdb(sr),*) idx, soil%ah0cb(idx), soil%aheaep(idx), soil%ahrsk(idx), soil%ahfredsat(idx)
+          end do
+
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'INVERT: lay soil%aslagn soil%aslagx soil%aslagm soil%as0ags'
+          do idx = 1,soil%nslay
+            write(luotdb(sr),*) soil%aslagn(idx),  soil%aslagx(idx), soil%aslagm(idx),  soil%as0ags(idx)
+          end do
+
+          thisPlant => plant
+          do while( associated(thisPlant) )
+
+            thisResidue => thisPlant%residue
+            do while( associated(thisResidue) )
+              write(luotdb(sr),*) 'INVERT: lay Residue%stemz Residue%leafz Residue%storez Residue%rootstorez Residue%rootfiberz'
+              do idx = 1,soil%nslay
+                write(luotdb(sr),*) idx, thisResidue%stemz(idx), thisResidue%leafz(idx), thisResidue%storez(idx), &
+                                         thisResidue%rootstorez(idx), thisResidue%rootfiberz(idx)
+              end do 
+              thisResidue => thisResidue%olderResidue
+            end do
+            thisPlant => thisPlant%olderPlant
+          end do
 
       case (21) ! below layer compaction (process code 21)
 
       case (24) ! flatten process variable toughness (process code 24)
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'FLAT: opstate(sr)%fracarea'
+          write(luotdb(sr),*) opstate(sr)%fracarea
+
+          thisPlant => plant
+          do while( associated(thisPlant) )
+            write(luotdb(sr),*)
+            write(luotdb(sr),*) 'FLAT: Plant%mass%flatstem Plant%mass%flatleaf Plant%mass%flatstore', &
+                                ' Plant%mass%flatrootstore Plant%mass%flatrootfiber'
+            write(luotdb(sr),*) thisPlant%mass%flatstem, thisPlant%mass%flatleaf, thisPlant%mass%flatstore, &
+                                thisPlant%mass%flatrootstore, thisPlant%mass%flatrootfiber
+            write(luotdb(sr),*) 'FLAT: Plant%mass%standstem Plant%mass%standleaflive Plant%mass%standleafdead', &
+                                ' Plant%mass%standstore Plant%geometry%dstm'
+            write(luotdb(sr),*) thisPlant%mass%standstem, thisPlant%mass%standleaflive, thisPlant%mass%standleafdead, &
+                                thisPlant%mass%standstore, thisPlant%geometry%dstm
+
+            thisResidue => thisPlant%residue
+            do while( associated(thisResidue) )
+            write(luotdb(sr),*)
+              write(luotdb(sr),*) 'FLAT: Residue%flatstem Residue%flatleaf Residue%flatstore', &
+                                  ' Residue%flatrootstore Residue%flatrootfiber'
+              write(luotdb(sr),*) thisResidue%flatstem, thisResidue%flatleaf, thisResidue%flatstore, &
+                                   thisResidue%flatrootstore, thisResidue%flatrootfiber
+              write(luotdb(sr),*) 'FLAT: Residue%standstem Residue%standleaf Residue%standstore Residue%dstm'
+              write(luotdb(sr),*) thisResidue%standstem, thisResidue%standleaf, thisResidue%standstore, thisResidue%dstm
+
+              ! go to next older residue in thisPlant
+              thisResidue => thisResidue%olderResidue
+            end do
+
+            thisPlant => thisPlant%olderPlant
+          end do
+
 
       case (25) ! mass bury process variable toughness (process code 25)
- 2500     format ('pool stem leaf store rootstore rootfiber (all flat)')
- 2501     format ( i2, 5(1x, f7.4) )
- 2502     format ( 2(1x,i2), 5(1x, f7.4) )
-          ! sum pools to get total flat mass
-          total = cropres%flatstem + cropres%flatleaf + cropres%flatstore &
-                + cropres%flatrootstore + cropres%flatrootfiber
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'BURY: opstate(sr)%fracarea opstate(sr)%tlayer'
+          write(luotdb(sr),*) opstate(sr)%fracarea, opstate(sr)%tlayer
+
           thisPlant => plant
           do while( associated(thisPlant) )
+            write(luotdb(sr),*)
+            write(luotdb(sr),*) 'BURY: Plant%mass%flatstem Plant%mass%flatleaf Plant%mass%flatstore', &
+                                ' Plant%mass%flatrootstore Plant%mass%flatrootfiber'
+            write(luotdb(sr),*) thisPlant%mass%flatstem, thisPlant%mass%flatleaf, thisPlant%mass%flatstore, &
+                                thisPlant%mass%flatrootstore, thisPlant%mass%flatrootfiber
+            write(luotdb(sr),*) 'BURY: Plant%mass%standstem Plant%mass%standleaflive Plant%mass%standleafdead', &
+                                ' Plant%mass%standstore Plant%geometry%dstm'
+            write(luotdb(sr),*) thisPlant%mass%standstem, thisPlant%mass%standleaflive, thisPlant%mass%standleafdead, &
+                                thisPlant%mass%standstore, thisPlant%geometry%dstm
+
             thisResidue => thisPlant%residue
             do while( associated(thisResidue) )
-              total = total + thisResidue%flatstem + thisResidue%flatleaf &
-                    + thisResidue%flatstore + thisResidue%flatrootstore &
-                    + thisResidue%flatrootfiber
+            write(luotdb(sr),*)
+              write(luotdb(sr),*) 'BURY: Residue%flatstem Residue%flatleaf Residue%flatstore', &
+                                  ' Residue%flatrootstore Residue%flatrootfiber'
+              write(luotdb(sr),*) thisResidue%flatstem, thisResidue%flatleaf, thisResidue%flatstore, &
+                                   thisResidue%flatrootstore, thisResidue%flatrootfiber
+              write(luotdb(sr),*) 'BURY: Residue%standstem Residue%standleaf Residue%standstore Residue%dstm'
+              write(luotdb(sr),*) thisResidue%standstem, thisResidue%standleaf, thisResidue%standstore, thisResidue%dstm
+
+              write(luotdb(sr),*)
+              write(luotdb(sr),*) 'BURY: lay Residue%stemz Residue%leafz Residue%storez Residue%rootstorez Residue%rootfiberz'
+              do idx = 1,soil%nslay
+                write(luotdb(sr),*) idx, thisResidue%stemz(idx), thisResidue%leafz(idx), thisResidue%storez(idx), &
+                                         thisResidue%rootstorez(idx), thisResidue%rootfiberz(idx)
+              end do 
+
+              ! go to next older residue in thisPlant
               thisResidue => thisResidue%olderResidue
             end do
+
             thisPlant => thisPlant%olderPlant
-          end do 
-          write(luotdb(sr),*) total, ' total flat mass'
-          write(luotdb(sr),2500)
-          write(luotdb(sr),2501) 0, cropres%flatstem, cropres%flatleaf, &
-            cropres%flatstore, cropres%flatrootstore, cropres%flatrootfiber
-          idx = 0
-          thisPlant => plant
-          do while( associated(thisPlant) )
-            idx = idx + 1
-            jdx = 0
-            thisResidue => thisPlant%residue
-            do while( associated(thisResidue) )
-              jdx = jdx + 1
-              write(luotdb(sr),2502) idx, jdx, thisResidue%flatstem, &
-              thisResidue%flatleaf, thisResidue%flatstore, &
-              thisResidue%flatrootstore, thisResidue%flatrootfiber
-              thisResidue => thisResidue%olderResidue
-            end do
-            thisPlant => thisPlant%olderPlant
-          end do 
+          end do
 
       case (26) ! re-surface process variable toughness (process code 26)
-          ! sum pools to get total flat mass
-          total = cropres%flatstem + cropres%flatleaf + cropres%flatstore &
-                + cropres%flatrootstore + cropres%flatrootfiber
+          write(luotdb(sr),*)
+          write(luotdb(sr),*) 'RESURF: opstate(sr)%fracarea opstate(sr)%tlayer'
+          write(luotdb(sr),*) opstate(sr)%fracarea, opstate(sr)%tlayer
+
           thisPlant => plant
           do while( associated(thisPlant) )
+            write(luotdb(sr),*)
+            write(luotdb(sr),*) 'RESURF: Plant%mass%flatstem Plant%mass%flatleaf Plant%mass%flatstore', &
+                                ' Plant%mass%flatrootstore Plant%mass%flatrootfiber'
+            write(luotdb(sr),*) thisPlant%mass%flatstem, thisPlant%mass%flatleaf, thisPlant%mass%flatstore, &
+                                thisPlant%mass%flatrootstore, thisPlant%mass%flatrootfiber
+            write(luotdb(sr),*) 'RESURF: Plant%mass%standstem Plant%mass%standleaflive Plant%mass%standleafdead', &
+                                ' Plant%mass%standstore Plant%geometry%dstm'
+            write(luotdb(sr),*) thisPlant%mass%standstem, thisPlant%mass%standleaflive, thisPlant%mass%standleafdead, &
+                                thisPlant%mass%standstore, thisPlant%geometry%dstm
+
             thisResidue => thisPlant%residue
             do while( associated(thisResidue) )
-              total = total + thisResidue%flatstem + thisResidue%flatleaf &
-                    + thisResidue%flatstore + thisResidue%flatrootstore &
-                    + thisResidue%flatrootfiber
+            write(luotdb(sr),*)
+              write(luotdb(sr),*) 'RESURF: Residue%flatstem Residue%flatleaf Residue%flatstore', &
+                                  ' Residue%flatrootstore Residue%flatrootfiber'
+              write(luotdb(sr),*) thisResidue%flatstem, thisResidue%flatleaf, thisResidue%flatstore, &
+                                   thisResidue%flatrootstore, thisResidue%flatrootfiber
+              write(luotdb(sr),*) 'RESURF: Residue%standstem Residue%standleaf Residue%standstore Residue%dstm'
+              write(luotdb(sr),*) thisResidue%standstem, thisResidue%standleaf, thisResidue%standstore, thisResidue%dstm
+
+              write(luotdb(sr),*)
+              write(luotdb(sr),*) 'RESURF: lay Residue%stemz Residue%leafz Residue%storez Residue%rootstorez Residue%rootfiberz'
+              do idx = 1,soil%nslay
+                write(luotdb(sr),*) idx, thisResidue%stemz(idx), thisResidue%leafz(idx), thisResidue%storez(idx), &
+                                         thisResidue%rootstorez(idx), thisResidue%rootfiberz(idx)
+              end do 
+
+              ! go to next older residue in thisPlant
               thisResidue => thisResidue%olderResidue
             end do
+
             thisPlant => thisPlant%olderPlant
-          end do 
-          write(luotdb(sr),*) total, ' total flat mass'
-          write(luotdb(sr),2500)
-          write(luotdb(sr),2501) 0, cropres%flatstem, cropres%flatleaf, &
-            cropres%flatstore, cropres%flatrootstore, cropres%flatrootfiber
-          idx = 0
-          thisPlant => plant
-          do while( associated(thisPlant) )
-            idx = idx + 1
-            jdx = 0
-            thisResidue => thisPlant%residue
-            do while( associated(thisResidue) )
-              jdx = jdx + 1
-              write(luotdb(sr),2502) idx, jdx, thisResidue%flatstem, &
-              thisResidue%flatleaf, thisResidue%flatstore, &
-              thisResidue%flatrootstore, thisResidue%flatrootfiber
-              thisResidue => thisResidue%olderResidue
-            end do
-            thisPlant => thisPlant%olderPlant
-          end do 
+          end do
 
       case (31) ! killing process (process code 31)
+          thisPlant => plant
+          do while( associated(thisPlant) )
+            write(luotdb(sr),*)
+            write(luotdb(sr),*) 'KILL: Plant%mass%flatstem Plant%mass%flatleaf Plant%mass%flatstore', &
+                                ' Plant%mass%flatrootstore Plant%mass%flatrootfiber'
+            write(luotdb(sr),*) thisPlant%mass%flatstem, thisPlant%mass%flatleaf, thisPlant%mass%flatstore, &
+                                thisPlant%mass%flatrootstore, thisPlant%mass%flatrootfiber
+            write(luotdb(sr),*) 'KILL: Plant%mass%standstem Plant%mass%standleaflive Plant%mass%standleafdead', &
+                                ' Plant%mass%standstore Plant%geometry%dstm'
+            write(luotdb(sr),*) thisPlant%mass%standstem, thisPlant%mass%standleaflive, thisPlant%mass%standleafdead, &
+                                thisPlant%mass%standstore, thisPlant%geometry%dstm
+
+            thisResidue => thisPlant%residue
+            do while( associated(thisResidue) )
+            write(luotdb(sr),*)
+              write(luotdb(sr),*) 'KILL: Residue%flatstem Residue%flatleaf Residue%flatstore', &
+                                  ' Residue%flatrootstore Residue%flatrootfiber'
+              write(luotdb(sr),*) thisResidue%flatstem, thisResidue%flatleaf, thisResidue%flatstore, &
+                                   thisResidue%flatrootstore, thisResidue%flatrootfiber
+              write(luotdb(sr),*) 'KILL: Residue%standstem Residue%standleaf Residue%standstore Residue%dstm'
+              write(luotdb(sr),*) thisResidue%standstem, thisResidue%standleaf, thisResidue%standstore, thisResidue%dstm
+
+              write(luotdb(sr),*)
+              write(luotdb(sr),*) 'KILL: lay Residue%stemz Residue%leafz Residue%storez Residue%rootstorez Residue%rootfiberz'
+              do idx = 1,soil%nslay
+                write(luotdb(sr),*) idx, thisResidue%stemz(idx), thisResidue%leafz(idx), thisResidue%storez(idx), &
+                                         thisResidue%rootstorez(idx), thisResidue%rootfiberz(idx)
+              end do 
+
+              ! go to next older residue in thisPlant
+              thisResidue => thisResidue%olderResidue
+            end do
+
+            thisPlant => thisPlant%olderPlant
+          end do
 
       case (32) ! cutting to height process (process code 32)
 
@@ -321,6 +591,7 @@ module manage_mod
 
       case (34) ! modify standing fall rate process variable toughness (process code 34)
 
+        if( associated(plant) ) then
           if( associated(plant%residue) ) then
             write(luotdb(sr),*) '   layer plant%residue%deriv%mrtz(s)  plant%residue%deriv%mbgz(s)'
             do idx = 1,soil%nslay
@@ -331,6 +602,7 @@ module manage_mod
           else
             write(luotdb(sr),*) 'No residue'
           end if
+        end if
 
       case (37) ! thinning to population process (process code 37)
 
@@ -351,7 +623,7 @@ module manage_mod
           write(luotdb(sr),2269)
 
           if( associated(plant%residue) ) then
-            write(luotdb(sr),2073) plant%residue%deriv%fscv, plant%residue%deriv%ffcv
+            write(luotdb(sr),*) plant%residue%deriv%fscv, plant%residue%deriv%ffcv
           else
             write(luotdb(sr),*) 'No residue'
           end if 
@@ -361,11 +633,11 @@ module manage_mod
  6201     format ( i2, 9(1x, f7.4) )
           write(luotdb(sr),*) 'pool stand(height stem leaf store)', &
                       'flat(stem leaf store rootstore rootfiber)' 
-          write(luotdb(sr),6200) 'T', cropres%zht, cropres%standstem, &
-              cropres%standleaf, cropres%standstore, &
-              cropres%flatstem, cropres%flatleaf, &
-            cropres%flatstore, cropres%flatrootstore, cropres%flatrootfiber
-
+          write(luotdb(sr),6200) 'T', cropres(sr)%zht, cropres(sr)%standstem, &
+              cropres(sr)%standleaf, cropres(sr)%standstore, &
+              cropres(sr)%flatstem, cropres(sr)%flatleaf, &
+            cropres(sr)%flatstore, cropres(sr)%flatrootstore, cropres(sr)%flatrootfiber
+          idx = 0
           if( associated(plant%residue) ) then
             write(luotdb(sr),6201) idx, plant%residue%zht, plant%residue%standstem,&
               plant%residue%standleaf, plant%residue%standstore, &
@@ -387,9 +659,7 @@ module manage_mod
       case default
       end select
 
-      return
-
-    end subroutine tdbug
+    end subroutine tdbug_soil_plant
 
     subroutine dooper (manFile)
 
@@ -428,7 +698,7 @@ module manage_mod
 
       ! set value of tlayer to zero before operation begins. Compaction occurs from tlayer
       ! downward, so operations without tillage need this set to zero to model surface compaction.
-      tlayer = 0
+      opstate(sr)%tlayer = 0
 
       ! assign default fuel as blank.  Treated as default in reports
       lastoper(sr)%fuel = ''
@@ -440,13 +710,13 @@ module manage_mod
           lastoper(sr)%energyarea = -1
           lastoper(sr)%stir = -1
           ! read tillage speed and direction
-          call getManVal(manFile%oper, 'ospeed', ospeed)
-          call getManVal(manFile%oper, 'odirect', odir)
-          call getManVal(manFile%oper, 'ostdspeed', ostdspeed)
-          call getManVal(manFile%oper, 'ominspeed', ominspeed)
-          call getManVal(manFile%oper, 'omaxspeed', omaxspeed)
+          call getManVal(manFile%oper, 'ospeed', opstate(sr)%ospeed)
+          call getManVal(manFile%oper, 'odirect', opstate(sr)%odir)
+          call getManVal(manFile%oper, 'ostdspeed', opstate(sr)%ostdspeed)
+          call getManVal(manFile%oper, 'ominspeed', opstate(sr)%ominspeed)
+          call getManVal(manFile%oper, 'omaxspeed', opstate(sr)%omaxspeed)
 
-          if( ominspeed .gt. omaxspeed ) then
+          if( opstate(sr)%ominspeed .gt. opstate(sr)%omaxspeed ) then
             write(*,*) 'Warning: O1, Minimum operation speed greater than Maximum operation speed'
           end if
 
@@ -454,13 +724,13 @@ module manage_mod
           ! read tillage speed and direction
           call getManVal(manFile%oper, 'oenergyarea', lastoper(sr)%energyarea)
           call getManVal(manFile%oper, 'ostir', lastoper(sr)%stir)
-          call getManVal(manFile%oper, 'ospeed', ospeed)
-          call getManVal(manFile%oper, 'odirect', odir)
-          call getManVal(manFile%oper, 'ostdspeed', ostdspeed)
-          call getManVal(manFile%oper, 'ominspeed', ominspeed)
-          call getManVal(manFile%oper, 'omaxspeed', omaxspeed)
+          call getManVal(manFile%oper, 'ospeed', opstate(sr)%ospeed)
+          call getManVal(manFile%oper, 'odirect', opstate(sr)%odir)
+          call getManVal(manFile%oper, 'ostdspeed', opstate(sr)%ostdspeed)
+          call getManVal(manFile%oper, 'ominspeed', opstate(sr)%ominspeed)
+          call getManVal(manFile%oper, 'omaxspeed', opstate(sr)%omaxspeed)
 
-          if( ominspeed .gt. omaxspeed ) then
+          if( opstate(sr)%ominspeed .gt. opstate(sr)%omaxspeed ) then
             write(*,*) 'Warning: O3, Minimum operation speed greater than Maximum operation speed'
           end if
 
@@ -490,8 +760,8 @@ module manage_mod
 
       ! initialize row spacing and ridge flag to zero. They are needed
       ! by P51, (set in P3 or P5) but may be set and not cleared by a previous operation.
-      imprs = 0.0
-      rdgflag = 0
+      opstate(sr)%imprs = 0.0
+      opstate(sr)%rdgflag = 0
 
       return
 
@@ -510,7 +780,7 @@ module manage_mod
       use soil_data_struct_defs, only: soil_def
       use manage_data_struct_mod, only: getManVal
       use biomaterial, only: plant_pointer, plantAdd
-      use datetime_mod, only: get_simdate
+      use datetime_mod, only: get_psimdate
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), intent(in) :: soil  ! soil for this subregion
@@ -535,36 +805,36 @@ module manage_mod
 
       case (1)  ! tillage group
         ! read tillage depth, intensity and area
-        call getManVal(manFile%grp, 'gtdepth', tdepth)
-        call getManVal(manFile%grp, 'gtilint', ti)
-        call getManVal(manFile%grp, 'gtilArea', fracarea)
-        call getManVal(manFile%grp, 'gtstddepth', tstddepth)
-        call getManVal(manFile%grp, 'gtmindepth', tmindepth)
-        call getManVal(manFile%grp, 'gtmaxdepth', tmaxdepth)
+        call getManVal(manFile%grp, 'gtdepth', opstate(sr)%tdepth)
+        call getManVal(manFile%grp, 'gtilint', opstate(sr)%ti)
+        call getManVal(manFile%grp, 'gtilArea', opstate(sr)%fracarea)
+        call getManVal(manFile%grp, 'gtstddepth', opstate(sr)%tstddepth)
+        call getManVal(manFile%grp, 'gtmindepth', opstate(sr)%tmindepth)
+        call getManVal(manFile%grp, 'gtmaxdepth', opstate(sr)%tmaxdepth)
 
-        if( tmindepth .gt. tmaxdepth ) then
+        if( opstate(sr)%tmindepth .gt. opstate(sr)%tmaxdepth ) then
           write(*,*) 'Warning: G1, Minimum tillage depth greater than Maximum tillage depth'
         end if
 
-        tlayer = tillay(tdepth, soil%aszlyt, soil%nslay)
+        opstate(sr)%tlayer = tillay(opstate(sr)%tdepth, soil%aszlyt, soil%nslay)
 
       case (2)  ! biomass manipulation group
         ! read biomass area affected
-        call getManVal(manFile%grp, 'gbioarea', fracarea)
+        call getManVal(manFile%grp, 'gbioarea', opstate(sr)%fracarea)
 
       case (3) ! grow group
         ! create plant
         plant => plantAdd(plant, plantIndex, soil%nslay)
 
         ! read crop name
-        call getManVal(manFile%grp, 'gcropname', cropname)
+        call getManVal(manFile%grp, 'gcropname', opstate(sr)%cropname)
 
-        plant%bname = cropname
-        call get_simdate( plant%pday, plant%pmon, plant%psimyr )
+        plant%bname = opstate(sr)%cropname
+        call get_psimdate( sr, plant%pday, plant%pmon, plant%psimyr )
 
       case (4) ! ammend group
         ! read amendment name
-        call getManVal(manFile%grp, 'gamdname', amdname)
+        call getManVal(manFile%grp, 'gamdname', opstate(sr)%amdname)
 
       case default
         write(0, *) 'Invalid Group: ', lastoper(sr)%grcode, &
@@ -605,7 +875,7 @@ module manage_mod
       use crop_mod, only: plant_endseason
       use report_harvest_mod, only: report_harvest, report_calib_harvest
       use report_hydrobal_mod, only: report_hydrobal
-      use datetime_mod, only: get_simdate, get_simdate_jday, get_simdate_doy
+      use datetime_mod, only: get_psimdate, get_psim_juld, get_psim_doy
       use manage_data_struct_mod, only: getManVal
       use asd_mod, only: msieve, nsieve, sdia, mdia, asd2m, m2asd
       use mproc_bio_mod, only: mnrbc, flatvt, fall_mod_vt, liftvt, mburyvt, kill_plant, defoliate, buryadj, resinit
@@ -622,10 +892,11 @@ module manage_mod
       use constants, only : dp, int32
       use environment_state_mod
       use p1unconv_mod, only: mtomm
+      use datetime_mod, only: get_psim_daysim, get_psim_doy
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      type(soil_def), intent(inout) :: soil  ! soil for this subregion
-      type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
+      type(soil_def), intent(inout) :: soil ! soil for this subregion
+      type(plant_pointer), pointer :: plant ! pointer to youngest plant data, which chains to older plant data
       type(biototal), intent(in) :: biotot
       type(hydro_state), intent(inout) :: hstate
       type(hydro_derived_et), intent(inout) :: h1et
@@ -671,6 +942,7 @@ module manage_mod
 
 !     + + + LOCAL VARIABLES + + +
       integer :: sr  ! the subregion being processed
+      integer :: daysim  ! simulation day
       integer cutflg
       real    alpha, beta, mu, rho
       integer roughflg
@@ -740,6 +1012,7 @@ module manage_mod
       logical :: l_setter ! used to transfer value from plant data element to UPGM JSON element
       character(80) :: phaseLabel, processLabel
       integer :: phaseType, processType
+      integer :: resflg  ! result flag from param_pot_bc
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 
@@ -842,6 +1115,10 @@ module manage_mod
 !     + + + DATA INITIALIZATIONS + + +
       sr = manFile%isub
 
+      if (manFile%am0tdb .ge. 1) then
+        daysim = get_psim_daysim(sr)
+      end if
+
 !     + + + OUTPUT FORMATS + + +
 2015  format (' Process code ',i2,1x,'Process ',1x,a20 )
 
@@ -887,27 +1164,27 @@ module manage_mod
 
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before crust breakdown process//'
-          call tdbug(sr, prcode, soil, plant)
+          write (luotdb(sr),*) daysim, '//Before crust breakdown process//'
+          call tdbug(sr, prcode, soil)
         end if
 
-        am0til = .true.  !set flag for surface modification
+        am0til(sr) = .true.  !set flag for surface modification
 
         ! do process
-        call crust(kappa,fracarea,soil%asfcr,soil%asflos,soil%asmlos)
+        call crust(kappa,opstate(sr)%fracarea,soil%asfcr,soil%asflos,soil%asmlos)
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After crust breakdown process//'
-          call tdbug(sr, prcode, soil, plant)
+          write (luotdb(sr),*) daysim, '//After crust breakdown process//'
+          call tdbug(sr, prcode, soil)
         end if
 
       case (2)  ! random roughness process
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before random roughness process//'
-          call tdbug(sr, prcode, soil, plant)
+          write (luotdb(sr),*) daysim, '//Before random roughness process//'
+          call tdbug(sr, prcode, soil, biotot)
         end if
 
         ! read the random roughness for the implement. tillage intensity
@@ -915,63 +1192,59 @@ module manage_mod
         call getManVal(manFile%proc, 'rroughflag', roughflg)
         call getManVal(manFile%proc, 'rrough', rrimpl)
 
-        am0til = .true.  !set flag for surface modification
+        am0til(sr) = .true.  !set flag for surface modification
 
         ! do process
         ! the biomass in the soil affects this calculation. Since it is 
         ! the integrated soil biomass, not fresh biomass that causes this,
         ! the best estimate is the number from sumbio from the previous day.
-        call rough(roughflg,rrimpl,ti,fracarea,soil%aslrr, &
-                   tlayer, soil%asfcla, soil%asfsil, &
+        call rough(roughflg, rrimpl, opstate(sr)%ti, opstate(sr)%fracarea, soil%aslrr, &
+                   opstate(sr)%tlayer, soil%asfcla, soil%asfsil, &
                    biotot%mrtz, biotot%mbgz, &
                    soil%aszlyd)
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After random roughness process//'
-          call tdbug(sr, prcode, soil, plant)
+          write (luotdb(sr),*) daysim, '//After random roughness process//'
+          call tdbug(sr, prcode, soil, biotot)
         end if
 
       case (5)  ! oriented roughness process
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before oriented roughness process//'
-          call tdbug(sr, prcode, soil, plant)
+          write (luotdb(sr),*) daysim, '//Before oriented roughness process//'
+          call tdbug(sr, prcode, soil)
         end if
 
         ! read the oriented roughness parameters for the implement
-        call getManVal(manFile%proc, 'rdgflag', rdgflag)
+        call getManVal(manFile%proc, 'rdgflag', opstate(sr)%rdgflag)
         call getManVal(manFile%proc, 'rdghit', rdght)
-        call getManVal(manFile%proc, 'rdgspac', imprs)
+        call getManVal(manFile%proc, 'rdgspac', opstate(sr)%imprs)
         call getManVal(manFile%proc, 'rdgwidth', rdgwt)
         call getManVal(manFile%proc, 'dkhit', dikeht)
         call getManVal(manFile%proc, 'dkspac', dikespac)
 
-        am0til = .true.  !set flag for surface modification
+        am0til(sr) = .true.  !set flag for surface modification
 
         ! do process
-        call orient(soil%aszrgh,soil%asxrgw,soil%asxrgs,soil%asargo, &
-                    soil%asxdkh,soil%asxdks, &
-                    rdght,rdgwt,imprs,odir,dikeht,dikespac, &
-                    tdepth,rdgflag)
+        call orient(soil%aszrgh, soil%asxrgw, soil%asxrgs, soil%asargo, &
+                    soil%asxdkh, soil%asxdks, &
+                    rdght, rdgwt, opstate(sr)%imprs, opstate(sr)%odir, dikeht, dikespac, &
+                    opstate(sr)%tdepth, opstate(sr)%rdgflag)
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After oriented roughness process//'
-          call tdbug(sr, prcode, soil, plant)
+          write (luotdb(sr),*) daysim, '//After oriented roughness process//'
+          call tdbug(sr, prcode, soil)
         end if
 
       case (11)  ! crushing process
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before crushing process//'
-          call tdbug(sr, prcode, soil, plant)
-        end if
-
-        if( soil%aslagm(5).gt.soil%aslagx(5) ) then
-            write (*,*) 'before crush:',soil%aslagm(5),soil%aslagx(5)
+          write (luotdb(sr),*) daysim, '//Before crushing process//'
+          call tdbug(sr, prcode, soil)
         end if
 
         ! Convert ASD from modified log-normal to sieve classes
@@ -992,39 +1265,32 @@ module manage_mod
         ! adjust parameters based on soil aggregate stability?
 
         ! do process
-        call crush(alpha, beta, tlayer, massf)
+        call crush(alpha, beta, opstate(sr)%tlayer, massf)
 
         ! post-process stuff
         ! Convert ASD back from sieve classes to modified log-normal
         call m2asd(massf, soil%nslay, &
           soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags)
 
-        if( soil%aslagm(5).gt.soil%aslagx(5) ) then
-            write (*,*) 'after crush:',soil%aslagm(5),soil%aslagx(5)
-        end if
-
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After crushing process//'
-          call tdbug(sr, prcode, soil, plant)
+          write (luotdb(sr),*) daysim, '//After crushing process//'
+          call tdbug(sr, prcode, soil)
         end if
 
       case (12)  ! loosening process
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before loosening process//'
-          call tdbug(sr, prcode, soil, plant)
-        end if
-        if( soil%aslagm(5).gt.soil%aslagx(5) ) then
-            write (*,*) 'before loose:',soil%aslagm(5),soil%aslagx(5)
+          write (luotdb(sr),*) daysim, '//Before loosening process//'
+          call tdbug(sr, prcode, soil)
         end if
 
         ! read the loosening parameter for the implement
         call getManVal(manFile%proc, 'soilos', mu)
 
         ! do process
-        call loosn(mu,fracarea,tlayer, &
-          soil%asdblk,soil%asdsblk,soil%aszlyt, soil%asvroc)
+        call loosn(mu, opstate(sr)%fracarea, opstate(sr)%tlayer, &
+          soil%asdblk, soil%asdsblk, soil%aszlyt, soil%asvroc)
 
         ! post-process stuff
         ! recalculate  depth to bottom of soil layer
@@ -1041,28 +1307,23 @@ module manage_mod
               soil%ahfredsat )
         else
           ! adjust soil hydraulic properties for change in density
-          call param_blkden_adj( tlayer, soil%asdblk, soil%asdblk0, &
+          call param_blkden_adj( opstate(sr)%tlayer, soil%asdblk, soil%asdblk0, &
              soil%asdpart, soil%ahrwcf, soil%ahrwcw, soil%ahrwca, &
              soil%asfcla, soil%asfom, &
              soil%ah0cb, soil%aheaep, soil%ahrsk )
         end if
 
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After loosening process//'
-          call tdbug(sr, prcode, soil, plant)
+          write (luotdb(sr),*) daysim, '//After loosening process//'
+          call tdbug(sr, prcode, soil)
         end if
 
       case (13)  ! mixing process
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before mixing process//'
-          write (luotdb(sr),*) 'Tillage layer depth is', tlayer
+          write (luotdb(sr),*) daysim, '//Before mixing process//'
           call tdbug(sr, prcode, soil, plant)
-        end if
-
-        if( soil%aslagm(5).gt.soil%aslagx(5) ) then
-            write (*,*) 'before mix:',soil%aslagm(5),soil%aslagx(5)
         end if
 
         ! read the mixing coefficient from the data file
@@ -1072,15 +1333,15 @@ module manage_mod
         call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
 
         ! do process
-        call mix(rho,fracarea,tlayer,soil%asdblk,soil%aszlyt, &
+        call mix(rho, opstate(sr)%fracarea, opstate(sr)%tlayer, soil%asdblk, soil%aszlyt, &
           soil%asfsan, soil%asfsil,soil%asfcla, soil%asvroc, &
           soil%asfvcs, soil%asfcs, soil%asfms, soil%asffs, soil%asfvfs, &
           soil%asdwblk, &
           soil%asfom, soil%as0ph, soil%asfcce, soil%asfcec, &
           soil%asfcle, &
-          soil%asdagd,soil%aseags, &
+          soil%asdagd, soil%aseags, &
           soil%ahrwc, &
-          soil%ahrwcs,soil%ahrwcf, soil%ahrwcw, &
+          soil%ahrwcs, soil%ahrwcf, soil%ahrwcw, &
           soil%ahrwca, &
           soil%ah0cb, soil%aheaep, soil%ahrsk, &
           plant, &
@@ -1089,7 +1350,7 @@ module manage_mod
         ! post-process stuff
         ! With the change in composition of the layers, it is necessary
         ! to update soil properties that are a function of texture
-        call proptext( tlayer, soil%asfcla, soil%asfsan, soil%asfom, &
+        call proptext( opstate(sr)%tlayer, soil%asfcla, soil%asfsan, soil%asfom, &
                        soil%asdblk, soil%asdsblk, soil%asdprocblk, &
                        soil%asdwblk, soil%asdwsrat, soil%asdpart )
 
@@ -1097,28 +1358,36 @@ module manage_mod
           ! use texture based calculations from Rawls to set all soil
           ! water properties.
           call param_prop_bc( &
-              tlayer, soil%aszlyd, soil%asdblk, soil%asdpart, &
+              opstate(sr)%tlayer, soil%aszlyd, soil%asdblk, soil%asdpart, &
               soil%asfcla, soil%asfsan, soil%asfom, soil%asfcec, &
-              soil%ahrwcs, soil%ahrwcf, soil%ahrwcw,soil%ahrwcr, &
+              soil%ahrwcs, soil%ahrwcf, soil%ahrwcw, soil%ahrwcr, &
               soil%ahrwca, soil%ah0cb, soil%aheaep, soil%ahrsk, &
               soil%ahfredsat )
         else
           ! set matrix potential parameters to match 1/3 bar and 15 bar water contents
-          call param_pot_bc( tlayer, soil%asdblk, soil%asdpart, &
-                           soil%ahrwcf, soil%ahrwcw, &
-                           soil%asfcla, soil%asfom, &
-                           soil%ah0cb, soil%aheaep )
+          call param_pot_bc( resflg, opstate(sr)%tlayer, soil%asdblk, soil%asdpart, soil%ahrwcf, soil%ahrwcw, &
+                             soil%asfcla, soil%asfom, soil%ah0cb, soil%aheaep )
+          if( resflg .eq. 1 ) then
+              write(0,*) 'Error: saturation less than field capacity'
+              call exit(1)
+          else if( resflg .eq. 2 ) then
+              write(0,*) 'field capacity less than wilting point'
+              call exit(1)
+          else if(resflg .eq. 3 ) then
+              write(0,*) 'Derived Brooks and Corey b too large'
+              call exit(1)
+          end if
         end if
 
         ! set previous day bulk density for the changed layers since
         ! this is a change in composition not in bulk density per se
-        call set_prevday_blk( tlayer, soil%asdblk, soil%asdblk0 )
+        call set_prevday_blk( opstate(sr)%tlayer, soil%asdblk, soil%asdblk0 )
 
         ! Convert ASD back from sieve classes to modified log-normal
         call m2asd(massf, soil%nslay, soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags)
 
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After mixing process//'
+          write (luotdb(sr),*) daysim, '//After mixing process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1126,7 +1395,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before inversion process//'
+          write (luotdb(sr),*) daysim, '//Before inversion process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1134,17 +1403,14 @@ module manage_mod
         call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
 
         ! do process
-        call invert(tlayer,soil%asdblk,soil%aszlyt, &
+        call invert(opstate(sr)%tlayer,soil%asdblk,soil%aszlyt, &
           soil%asfsan, soil%asfsil,soil%asfcla, soil%asvroc, &
           soil%asfvcs, soil%asfcs, soil%asfms, soil%asffs, soil%asfvfs, &
-          soil%asdwblk, &
-          soil%asfom, soil%as0ph, soil%asfcce, soil%asfcec, &
-          soil%asfcle, &
-          soil%asdagd, soil%aseags, &
-          soil%ahrwc, &
-          soil%ahrwcs,soil%ahrwcf, soil%ahrwcw, &
-          soil%ahrwca, &
-          soil%ah0cb, soil%aheaep, soil%ahrsk, &
+          soil%asdwblk, soil%asfom, soil%as0ph, soil%asfcce, soil%asfcec, &
+          soil%asfcle, soil%asdagd, soil%aseags, &
+          soil%ahrwc, soil%ahrwcs,soil%ahrwcf, soil%ahrwcw, &
+          soil%ahrwcr, soil%ahrwca, &
+          soil%ah0cb, soil%aheaep, soil%ahrsk, soil%ahfredsat, &
           plant, &
           massf)
 
@@ -1154,7 +1420,7 @@ module manage_mod
         call m2asd(massf, soil%nslay, soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags)
 
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After inversion process//'
+          write (luotdb(sr),*) daysim, '//After inversion process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1162,7 +1428,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before compaction process//'
+          write (luotdb(sr),*) daysim, '//Before compaction process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         if( soil%aslagm(5).gt.soil%aslagx(5) ) then
@@ -1181,7 +1447,7 @@ module manage_mod
         do idx=1,soil%nslay
           procbdadj(idx) = setbdproc_wc( soil%asfcla(idx), soil%asfsan(idx), soil%asfom(idx), soil%asdpart(idx), soil%ahrwc(idx) )
         end do
-        call compact( mu, compact_load, fracarea, tlayer+1, soil%nslay, soil%asdblk, soil%asdsblk, &
+        call compact( mu, compact_load, opstate(sr)%fracarea, opstate(sr)%tlayer+1, soil%nslay, soil%asdblk, soil%asdsblk, &
                       procbdadj, soil%asdprocblk, soil%aszlyt, soil%asvroc )
         deallocate( procbdadj )
         ! post-process stuff
@@ -1207,7 +1473,7 @@ module manage_mod
         end if
 
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After compaction process//'
+          write (luotdb(sr),*) daysim, '//After compaction process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1215,7 +1481,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before flatten variable toughness proc.//'
+          write (luotdb(sr),*) daysim, '//Before flatten variable toughness proc.//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1227,14 +1493,14 @@ module manage_mod
         call getManVal(manFile%proc, 'massflatvt5', afvt(5))
 
         ! do process
-        call flatvt(afvt, fracarea, plant, bioflg)
+        call flatvt(afvt, opstate(sr)%fracarea, plant, bioflg)
 
         ! post-process stuff
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
 
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After flatten variable toughness proc.//'
+          write (luotdb(sr),*) daysim, '//After flatten variable toughness proc.//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1242,7 +1508,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before mass bury variable toughness pr.//'
+          write (luotdb(sr),*) daysim, '//Before mass bury variable toughness pr.//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1257,18 +1523,18 @@ module manage_mod
         bioflg = 0
 
         ! adjust all burial coefficients for speed and depth
-        call buryadj(mfvt,mnrbc, &
-                   ospeed,ostdspeed,ominspeed,omaxspeed, &
-                   tdepth,tstddepth,tmindepth,tmaxdepth)
+        call buryadj(mfvt, mnrbc, &
+                   opstate(sr)%ospeed, opstate(sr)%ostdspeed, opstate(sr)%ominspeed, opstate(sr)%omaxspeed, &
+                   opstate(sr)%tdepth, opstate(sr)%tstddepth, opstate(sr)%tmindepth, opstate(sr)%tmaxdepth)
 
         ! do process
-        if( tlayer .gt. 0 ) then
-          call mburyvt(mfvt,fracarea, burydistflg, tlayer, soil, plant, bioflg)
+        if( opstate(sr)%tlayer .gt. 0 ) then
+          call mburyvt(mfvt,opstate(sr)%fracarea, burydistflg, opstate(sr)%tlayer, soil, plant, bioflg)
         end if 
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After mass bury variable toughness pr.//'
+          write (luotdb(sr),*) daysim, '//After mass bury variable toughness pr.//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1276,7 +1542,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before re-surface vari. toughness proc.//'
+          write (luotdb(sr),*) daysim, '//Before re-surface vari. toughness proc.//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1290,13 +1556,13 @@ module manage_mod
         bioflg = 0
 
         ! do process
-        if( tlayer .gt. 0 ) then
-          call liftvt(mfvt, fracarea, tlayer, soil%nslay, plant, resurf_roots, bioflg)
+        if( opstate(sr)%tlayer .gt. 0 ) then
+          call liftvt(mfvt, opstate(sr)%fracarea, opstate(sr)%tlayer, soil%nslay, plant, resurf_roots, bioflg)
         end if
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After re-surface vari. toughness proc.//'
+          write (luotdb(sr),*) daysim, '//After re-surface vari. toughness proc.//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1311,7 +1577,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before kill process//'
+          write (luotdb(sr),*) daysim, '//Before kill process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1342,17 +1608,17 @@ module manage_mod
             manFile%rpt_season_flg = .false.
           end if
           ! crop pool state has been changed, force dependent variable update  
-          am0cropupfl = .true.
+          am0cropupfl(sr) = .true.
         end if
         ! defoliate by moving all living leaf mass to flat residue
         if( defoliate( am0kilfl, soil%nslay, plant ) ) then
           ! crop pool state has been changed, force dependent variable update  
-          am0cropupfl = .true.
+          am0cropupfl(sr) = .true.
         end if
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After kill process//'
+          write (luotdb(sr),*) daysim, '//After kill process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1360,7 +1626,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before cutting to height process//'
+          write (luotdb(sr),*) daysim, '//Before cutting to height process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1377,11 +1643,11 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After cutting to height process//'
+          write (luotdb(sr),*) daysim, '//After cutting to height process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
         mature_warn_flg = 1
         ! no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
@@ -1406,7 +1672,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before cutting by fraction process//'
+          write (luotdb(sr),*) daysim, '//Before cutting by fraction process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1422,11 +1688,11 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After cutting by fraction process//'
+          write (luotdb(sr),*) daysim, '//After cutting by fraction process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
         mature_warn_flg = 1
         ! no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
@@ -1451,7 +1717,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before modify standing fall rate proc.//'
+          write (luotdb(sr),*) daysim, '//Before modify standing fall rate proc.//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1468,11 +1734,11 @@ module manage_mod
         call getManVal(manFile%proc, 'threshmultvt5', thresh_mult_vt(5))
 
         ! do process
-        call fall_mod_vt( rate_mult_vt, thresh_mult_vt, sel_pool, fracarea, plant )
+        call fall_mod_vt( rate_mult_vt, thresh_mult_vt, sel_pool, opstate(sr)%fracarea, plant )
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After modify standing fall rate proc.//'
+          write (luotdb(sr),*) daysim, '//After modify standing fall rate proc.//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1480,7 +1746,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before biomass prune pool process//'
+          write (luotdb(sr),*) daysim, '//Before biomass prune pool process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1496,17 +1762,17 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After biomass remove pool process//'
+          write (luotdb(sr),*) daysim, '//After biomass remove pool process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
 
       case (37)  ! thinning to population process
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before thinning to population process//'
+          write (luotdb(sr),*) daysim, '//Before thinning to population process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1522,11 +1788,11 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After thinning to population process//'
+          write (luotdb(sr),*) daysim, '//After thinning to population process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
         mature_warn_flg = 1
         ! no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
@@ -1551,7 +1817,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before thinning by fraction process//'
+          write (luotdb(sr),*) daysim, '//Before thinning by fraction process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1567,11 +1833,11 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After thinning by fraction process//'
+          write (luotdb(sr),*) daysim, '//After thinning by fraction process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
         mature_warn_flg = 1
         ! no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
@@ -1593,7 +1859,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before biomass transfer process//'
+          write (luotdb(sr),*) daysim, '//Before biomass transfer process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1601,7 +1867,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After biomass transfer process//'
+          write (luotdb(sr),*) daysim, '//After biomass transfer process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1609,7 +1875,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before flagged cutting to height proc.//'
+          write (luotdb(sr),*) daysim, '//Before flagged cutting to height proc.//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1630,11 +1896,11 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After flagged cutting to height proc.//'
+          write (luotdb(sr),*) daysim, '//After flagged cutting to height proc.//'
           call tdbug(sr, prcode, soil, plant)
         end if
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
         ! no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
           if(      (harv_calib_flg .gt. 0) &
@@ -1660,7 +1926,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before flagged cutting by fraction pr.//'
+          write (luotdb(sr),*) daysim, '//Before flagged cutting by fraction pr.//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1680,11 +1946,11 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After flagged cutting by fraction pr.//'
+          write (luotdb(sr),*) daysim, '//After flagged cutting by fraction pr.//'
           call tdbug(sr, prcode, soil, plant)
         end if
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
         ! no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
           if(      (harv_calib_flg .gt. 0) &
@@ -1710,7 +1976,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write(luotdb(sr),*)'//Before flagged thinning to population pr.//'
+          write(luotdb(sr),*)daysim, '//Before flagged thinning to population pr.//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1730,11 +1996,11 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write(luotdb(sr),*) '//After flagged thinning to population pr.//'
+          write(luotdb(sr),*) daysim, '//After flagged thinning to population pr.//'
           call tdbug(sr, prcode, soil, plant)
         end if
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
         ! no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
           if(      (harv_calib_flg .gt. 0) &
@@ -1760,7 +2026,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before flagged thinning by fraction pr.//'
+          write (luotdb(sr),*) daysim, '//Before flagged thinning by fraction pr.//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1780,11 +2046,11 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After flagged thinning by fraction pr.//'
+          write (luotdb(sr),*) daysim, '//After flagged thinning by fraction pr.//'
           call tdbug(sr, prcode, soil, plant)
         end if
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
         ! no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
           if(      (harv_calib_flg .gt. 0) &
@@ -1810,7 +2076,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before residue initialization process//'
+          write (luotdb(sr),*) daysim, '//Before residue initialization process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1876,7 +2142,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After residue initialization process//'
+          write (luotdb(sr),*) daysim, '//After residue initialization process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1884,7 +2150,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before planting process//'
+          write (luotdb(sr),*) daysim, '//Before planting process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -1904,7 +2170,7 @@ module manage_mod
         end if
 
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
 
         ! read population, spacing and yield flags
         call getManVal(manFile%proc, 'rowflag', plant%geometry%rsfg)
@@ -1981,7 +2247,7 @@ module manage_mod
 
         ! reading of process parameters complete
 
-        call plant_setup( sr, plant, soil, lastoper(sr), imprs, rdgflag )
+        call plant_setup( sr, plant, soil, lastoper(sr), opstate(sr)%imprs, opstate(sr)%rdgflag )
 
         ! set initial emergence (shoot growth) values
         plant%growth%thu_shoot_end = plant%database%hue
@@ -1999,12 +2265,12 @@ module manage_mod
 
           if( upgm_growth .eq. 1 ) then
             ! grow WEPS crop using upgm
-            call init_WEPS_UPGM( soil, plant )
+            call init_WEPS_UPGM( sr, soil, plant )
           end if
         endif
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After planting process//'
+          write (luotdb(sr),*) daysim, '//After planting process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -2017,7 +2283,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before biomass remove process//'
+          write (luotdb(sr),*) daysim, '//Before biomass remove process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2039,11 +2305,11 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After biomass remove process//'
+          write (luotdb(sr),*) daysim, '//After biomass remove process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
         mature_warn_flg = 1
         ! no harvest report if nothing removed or no crop present
         if( (storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0) &
@@ -2069,7 +2335,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before biomass remove pool process//'
+          write (luotdb(sr),*) daysim, '//Before biomass remove pool process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2093,11 +2359,11 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After biomass remove pool process//'
+          write (luotdb(sr),*) daysim, '//After biomass remove pool process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
         ! no harvest report if nothing removed
         if( (storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0) &
             .and. (crop_present.gt.0) ) then
@@ -2133,7 +2399,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before add residue process//'
+          write (luotdb(sr),*) daysim, '//Before add residue process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2171,7 +2437,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After add residue process//'
+          write (luotdb(sr),*) daysim, '//After add residue process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2194,7 +2460,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before add manure process//'
+          write (luotdb(sr),*) daysim, '//Before add manure process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2242,7 +2508,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After add manure process//'
+          write (luotdb(sr),*) daysim, '//After add manure process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2250,7 +2516,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before irrigation process//'
+          write (luotdb(sr),*) daysim, '//Before irrigation process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2272,7 +2538,7 @@ module manage_mod
         call ratedura(h1et%zirr, hstate%ratirr, hstate%durirr)
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After irrigate process//'
+          write (luotdb(sr),*) daysim, '//After irrigate process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2280,7 +2546,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before irrigation monitoring process//'
+          write (luotdb(sr),*) daysim, '//Before irrigation monitoring process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2300,7 +2566,7 @@ module manage_mod
         call ratedura(hstate%zdmaxirr, hstate%ratirr, hstate%durirr)
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After irrigation monitoring process//'
+          write (luotdb(sr),*) daysim, '//After irrigation monitoring process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2308,7 +2574,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before single event irrigation process//'
+          write (luotdb(sr),*) daysim, '//Before single event irrigation process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2323,12 +2589,12 @@ module manage_mod
         ! use inputs to set the irrigation rate, if 
         call ratedura(h1et%zirr, hstate%ratirr, hstate%durirr)
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After single event irrigation process//'
+          write (luotdb(sr),*) daysim, '//After single event irrigation process//'
           !call tdbug(sr, prcode, soil, plant)
         end if
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After single event irrigation process//'
+          write (luotdb(sr),*) daysim, '//After single event irrigation process//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2336,7 +2602,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before terminate irrigation monitoring//'
+          write (luotdb(sr),*) daysim, '//Before terminate irrigation monitoring//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2344,7 +2610,7 @@ module manage_mod
         hstate%monirr = 0
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After terminate irrigation monitoring//'
+          write (luotdb(sr),*) daysim, '//After terminate irrigation monitoring//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2352,7 +2618,7 @@ module manage_mod
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before initialize soil layer asd conditions//'
+          write (luotdb(sr),*) daysim, '//Before initialize soil layer asd conditions//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2405,7 +2671,7 @@ module manage_mod
           manFile%asdhflag = 1
         end if
         if (BTEST(manFile%am0tfl,0)) then
-          call get_simdate(cd, cm, cy)
+          call get_psimdate(sr, cd, cm, cy)
           ! write(luoasd(sr),"(3(i5))",ADVANCE='NO') lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr
           write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
           write(luoasd(sr),"(i10,5(f10.4),A)",ADVANCE='YES') asdlayer, asddepth, &
@@ -2421,7 +2687,7 @@ module manage_mod
         end if
 
         if (manFile%am0tdb .eq. 2) then  !Debug info printouts
-          write (UNIT=0,FMT="(A)",ADVANCE="NO") '//Before set_asd process// '
+          write (UNIT=0,FMT="(A)",ADVANCE="NO") daysim, '//Before set_asd process// '
           write(0,*) 'No. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, asddepth
           write(UNIT=0,FMT="(A3,5(A10))") 'lay', 'depth', 'GMDx', 'GSDx', 'm_not', 'm_inf'
           do i=1, asdlayer
@@ -2465,7 +2731,7 @@ module manage_mod
         ! do process
         call set_asd(gmdx, gsdx, mnot, minf, asdlayer, soil)
 
-        !write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_asd process// '
+        !write (UNIT=0,FMT="(A)",ADVANCE="NO") daysim, '//After set_asd process// '
         !write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, asddepth
         !write(UNIT=0,FMT="(A3,5(A10))") 'lay', 'depth', 'GMDx', 'GSDx', 'm_not', 'm_inf'
         !do i=1, asdlayer
@@ -2537,7 +2803,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After initialize soil layer asd conditions//'
+          write (luotdb(sr),*) daysim, '//After initialize soil layer asd conditions//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2546,14 +2812,14 @@ module manage_mod
           write(luoasd(sr),"(i10,5(f10.4),A)",ADVANCE="YES") 1, soil%aszlyt(1), &
              soil%aslagm(1), soil%as0ags(1), soil%aslagn(1), soil%aslagx(1), &
              ' New values - After initialized soil layer asd conditions'
-          ! write(luoasd(sr),"(i10,4(i5))",ADVANCE="YES") get_simdate_jday(), cd, cm, cy, get_simdate_doy()
+          ! write(luoasd(sr),"(i10,4(i5))",ADVANCE="YES") get_psim_juld(sr), cd, cm, cy, get_psim_doy()
         end if
 
       case (92)  ! initialize (set) soil layer water content value
         ! pre-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before initialize soil layer water content conditions//'
+          write (luotdb(sr),*) daysim, '//Before initialize soil layer water content conditions//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2577,7 +2843,7 @@ module manage_mod
           manFile%wchflag = 1
         end if
         if (BTEST(manFile%am0tfl,1)) then
-          call get_simdate(cd, cm, cy)
+          call get_psimdate(sr, cd, cm, cy)
           ! write(luowc(sr),"(3(i5))",ADVANCE='NO') lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr
           write(luowc(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
           write(luowc(sr),"(i10,2(f10.4),A)",ADVANCE='YES') wclayer, wcdepth, wc, &
@@ -2593,7 +2859,7 @@ module manage_mod
         end if
 
         if (manFile%am0tdb .eq. 2) then  !Debug info printouts
-          write (UNIT=0,FMT="(A)",ADVANCE="NO") '//Before set_asd process// '
+          write (UNIT=0,FMT="(A)",ADVANCE="NO") daysim, '//Before set_asd process// '
           write(0,*) 'No. of soil layers to modify/total and depth are: ', wclayer, soil%nslay, wcdepth
           write(UNIT=0,FMT="(A3,1(A10))") 'lay', 'depth'
           do i=1, asdlayer
@@ -2610,7 +2876,7 @@ module manage_mod
         ! do process
         call set_wc(wc, wclayer, soil)
 
-        !write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_wc process// '
+        !write (UNIT=0,FMT="(A)",ADVANCE="NO") daysim, '//After set_wc process// '
         !write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, wcdepth
         !write(UNIT=0,FMT="(A3,2(A10))") 'lay', 'depth', 'wc'
         !do i=1, wclayer
@@ -2625,7 +2891,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After initialize soil layer wc conditions//'
+          write (luotdb(sr),*) daysim, '//After initialize soil layer wc conditions//'
           call tdbug(sr, prcode, soil, plant)
         end if
 
@@ -2634,7 +2900,7 @@ module manage_mod
           write(luowc(sr),"(i10,2(f10.4),A)",ADVANCE="YES") 1, soil%aszlyt(1), &
              soil%ahrwc(1), &
             ' New values - After initialized soil layer water content conditions'
-          ! write(luowc(sr),"(i10,4(i5))",ADVANCE="YES") get_simdate_jday(), cd, cm, cy, get_simdate_doy()
+          ! write(luowc(sr),"(i10,4(i5))",ADVANCE="YES") get_psim_juld(sr), cd, cm, cy, get_psim_doy()
         end if
 
       case(101)  ! planting location
@@ -2656,7 +2922,7 @@ module manage_mod
         end if
 
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
 
         ! read spacing flags
         call getManVal(manFile%proc, 'rowflag', plant%geometry%rsfg)        ! setup
@@ -2668,7 +2934,7 @@ module manage_mod
         ! new plant created by biomass group (G 03)
 
         ! crop pool state has been changed, force dependent variable update  
-        am0cropupfl = .true.
+        am0cropupfl(sr) = .true.
 
         ! read population and yield flags
         call getManVal(manFile%proc, 'plantpop', plant%geometry%dpop)       ! setup
@@ -2721,7 +2987,7 @@ module manage_mod
 
         ! reading of process parameters complete
 
-        call plant_setup( sr, plant, soil, lastoper(sr), imprs, rdgflag )
+        call plant_setup( sr, plant, soil, lastoper(sr), opstate(sr)%imprs, opstate(sr)%rdgflag )
 
         ! set initial emergence (shoot growth) values
         plant%growth%thu_shoot_end = 1.0_dp
@@ -2754,7 +3020,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After UPGMinWEPS_init process//'
+          write (luotdb(sr),*) daysim, '//After UPGMinWEPS_init process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -2836,7 +3102,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After PhenologyMMS_Germination process//'
+          write (luotdb(sr),*) daysim, '//After PhenologyMMS_Germination process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -2984,7 +3250,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After PhenologyMMS_ShootGRG process//'
+          write (luotdb(sr),*) daysim, '//After PhenologyMMS_ShootGRG process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3128,7 +3394,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After PhenologyMMS_Basephenol process//'
+          write (luotdb(sr),*) daysim, '//After PhenologyMMS_Basephenol process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3354,7 +3620,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After PhenologyMMS_Springphenol process//'
+          write (luotdb(sr),*) daysim, '//After PhenologyMMS_Springphenol process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3498,7 +3764,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After PhenologyMMS_Fallphenol process//'
+          write (luotdb(sr),*) daysim, '//After PhenologyMMS_Fallphenol process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3555,7 +3821,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After gddmethod1 process//'
+          write (luotdb(sr),*) daysim, '//After gddmethod1 process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3610,7 +3876,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After gddweps_method process//'
+          write (luotdb(sr),*) daysim, '//After gddweps_method process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3663,7 +3929,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After ritchieVernalization process//'
+          write (luotdb(sr),*) daysim, '//After ritchieVernalization process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3720,7 +3986,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After "ritchieHardening" process//'
+          write (luotdb(sr),*) daysim, '//After "ritchieHardening" process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3773,7 +4039,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After gddmethod1 process//'
+          write (luotdb(sr),*) daysim, '//After gddmethod1 process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3826,7 +4092,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After WEPSTempStress process//'
+          write (luotdb(sr),*) daysim, '//After WEPSTempStress process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3904,7 +4170,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After WEPSFreezeDamage process//'
+          write (luotdb(sr),*) daysim, '//After WEPSFreezeDamage process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3944,6 +4210,10 @@ module manage_mod
           call plant%env%state%get("hrlt", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("hrlt", r_setter, succ)
+          end if
+          call plant%env%state%get("day_of_year", i_getter, succ)
+          if( .not. succ ) then
+            call plant%env%state%put("day_of_year", i_setter, succ)
           end if
 
           ! create plant state inputs
@@ -3988,7 +4258,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After WEPSleafoff//'
+          write (luotdb(sr),*) daysim, '//After WEPSleafoff//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3998,6 +4268,11 @@ module manage_mod
         end if
 
       case(225)  !  WEPSleafon
+
+          call plant%env%state%get("day_of_year", i_getter, succ)
+          if( .not. succ ) then
+            call plant%env%state%put("day_of_year", i_setter, succ)
+          end if
 
       case(230)  !  WEPSregrowthannual
 
@@ -4222,7 +4497,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After WEPSregrowthannual process//'
+          write (luotdb(sr),*) daysim, '//After WEPSregrowthannual process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -4243,6 +4518,11 @@ module manage_mod
 
       case(250)  !  WEPSwinterAnnSpring
 
+          call plant%env%state%get("day_of_year", i_getter, succ)
+          if( .not. succ ) then
+            call plant%env%state%put("day_of_year", i_setter, succ)
+          end if
+
       case default
         write(0,*) 'Invalid process: ', prname, ' ', prcode
         call exit (1)
@@ -4260,7 +4540,7 @@ module manage_mod
 
     end subroutine doproc
 
-    subroutine mgdreset (bhzirr)
+    subroutine mgdreset (sr, bhzirr)
 
 !     + + + PURPOSE + + +
 !     mgdreset is called before any management operations for the day are 
@@ -4270,11 +4550,12 @@ module manage_mod
 !     them for exactly one day.
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      real :: bhzirr   ! daily irrigation amount
+      integer, intent(in) :: sr       ! the subregion number
+      real, intent(out) :: bhzirr   ! daily irrigation amount
 
 !     + + + END SPECIFICATIONS + + +
 
-      am0til = .false.
+      am0til(sr) = .false.
       bhzirr = 0.0   ! zero out irrig amount from previous day
 
       return
@@ -4296,7 +4577,7 @@ module manage_mod
 !     + + + KEYWORDS + + +
 !     tillage, management
 
-      use datetime_mod, only: difdat, get_simdate
+      use datetime_mod, only: difdat, get_psimdate
       use file_io_mod, only: luomanage
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, biototal
@@ -4305,7 +4586,7 @@ module manage_mod
       use WEPS_UPGM_mod, only: set_start_UPGM
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer :: sr       ! the subregion number
+      integer, intent(in) :: sr       ! the subregion number
       integer :: startyr  ! starting year of the simulation run
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
@@ -4333,11 +4614,11 @@ module manage_mod
 !     + + + END SPECIFICATIONS + + +
 
       ! get current simulation day, month, year
-      call get_simdate( simdd, simmm, simyr )
+      call get_psimdate( sr, simdd, simmm, simyr )
 
       ! reset any global variables whose setting should only be valid
       ! for one day
-      call mgdreset(h1et%zirr)
+      call mgdreset(sr, h1et%zirr)
 
       ! find simulation year to which management year corresponds
       mansimyr = simyr - mod (simyr-startyr, manFile%mperod) + manFile%oper%operDate%year - 1
@@ -4362,7 +4643,7 @@ module manage_mod
       ! perform all operations that occur on this date
       do while ( associated(manFile%oper) )
         lastoper(sr)%skip = 0
-        cropres = create_crop_residue(soil%nslay)
+        cropres(sr) = create_crop_residue(soil%nslay)
         call dooper(manFile)
         if(lastoper(sr)%skip.eq.0) then
           ! do groups
@@ -4382,7 +4663,7 @@ module manage_mod
         end if
         ! operation complete
         ! deallocate temporary crop residue structure
-        call destroy_crop_residue(cropres)
+        call destroy_crop_residue(cropres(sr))
         ! next operation
         manFile%oper => manFile%oper%operNext
         if( associated(manFile%oper) ) then
@@ -4407,7 +4688,7 @@ module manage_mod
 
       ! all management operations complete
       ! Check for new UPGM plants and set CurrentStage to initial stage
-      call set_start_UPGM( plant )
+      call set_start_UPGM( sr, plant )
 
       return
 

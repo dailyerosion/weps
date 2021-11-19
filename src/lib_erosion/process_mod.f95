@@ -10,8 +10,9 @@ module process_mod
     subroutine sbqout (SURF_UPD_FLG, wus, wust, wusp, sf10, sf84, sf200, &
                        szcr, sfcr, sflos, smlos, szrgh, sxrgs, sxprg, slrr, &
                        sfcla, sfsan, sfvfs, svroc, brsai, bzht, bffcv, time, &
-                       canag, cancr, sf10an, sf10en, sf10bk, lx, qi, qssi, q10i, &
-                       dmlos, sf84mn, sf84ic, sf10ic, asvroc, smaglosmx, qo, qsso, q10o )
+                       canag, cancr, sf10an, sf10en, sf10bk, sf2_5an, sf2_5en, sf2_5bk, &
+                       lx, qi, qssi, q10i, q2_5i, &
+                       dmlos, sf84mn, sf84ic, sf10ic, asvroc, smaglosmx, qo, qsso, q10o, q2_5o )
 
 !     +++ PURPOSE +++
 !     calculate the saltation/creep, suspension, and PM-10 discharge
@@ -19,46 +20,51 @@ module process_mod
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer, intent(in) :: SURF_UPD_FLG    !Surface update flag (1=on, 0=off)
-      real, intent(in) :: wus          ! friction velocity (m/s)
-      real, intent(in) :: wust         ! friction velocity threhold at emission (m/s)
-      real, intent(in) :: wusp         ! friction velocity threshold at transport cap.(m/s)
-      real, intent(inout) :: sf10         ! soil fraction less than 0.010 mm (PM10)
-      real, intent(inout) :: sf84         ! soil fraction less than 0.84 mm
-      real, intent(inout) :: sf200        ! soil fractions less than 2.0 mm
-      real, intent(inout) :: szcr         ! soil crust thickness
-      real, intent(inout) :: sfcr         ! soil fraction  area crusted
-      real, intent(inout) :: sflos        ! soil fraction area of loose soil (only on crust)
-      real, intent(inout) :: smlos        ! soil mass of loose soil (only on crust)
-      real, intent(inout) :: szrgh        ! soil ridge height (mm)
-      real, intent(in) :: sxrgs        ! plant stem row spacing (mm)
-      real, intent(in) :: sxprg        ! soil ridge spacing parallel wind direction (mm)
-      real, intent(inout) :: slrr         ! soil random roughness (mm)
-      real, intent(in) :: sfcla        ! soil fraction clay by mass
-      real, intent(in) :: sfsan        ! soil fraction sand by mass
-      real, intent(in) :: sfvfs        ! soil fraction very fine sand by mass (0.05-0.1 mm)
-      real, intent(inout) :: svroc        ! soil fraction rock >2.0 mm by volume
-      real, intent(in) :: brsai        ! biomass stem area index
-      real, intent(in) :: bzht         ! biomass height (m)
-      real, intent(in) :: bffcv        ! biomass fraction flat cover
-      real, intent(in) :: time         ! time step (seconds)
-      real, intent(in) :: canag        ! coeficient of aggregate abrasion (1/m)
-      real, intent(in) :: cancr        ! coefficient of crust abrasion (1/m)
-      real, intent(in) :: sf10an       ! soil fraction of pm10 in abraded suspension size
-      real, intent(in) :: sf10en       ! soil fraction of pm10 in emitted suspension size
-      real, intent(in) :: sf10bk       ! soil fraction of pm10 in saltion/creep breakage
-      real, intent(in) :: lx           ! "effective" length of erosion cell (m)
-      real, intent(in) :: qi           ! input to C.V. of saltation, creep (kg/m*s)
-      real, intent(in) :: qssi         ! input to C.V. of suspension (kg/m*2)
-      real, intent(in) :: q10i         ! input to C.V. of pm-10 (kg/m*2)
-      real, intent(inout) :: dmlos        ! change in loose mass on aggregated sfc. (kg/m^2) (from the beginning of the erosion event)
-      real, intent(in) :: sf84mn       ! soil surface fraction less than 0.84 below which no emission occurs
-      real, intent(in) :: sf84ic       ! soil surface fraction less than 0.84 initially
-      real, intent(in) :: sf10ic       ! soil surface fraction less than 0.10 initially
-      real, intent(in) :: asvroc       ! soil surface volume rock at start of event
-      real, intent(in) :: smaglosmx    ! max mobile soil reservoir of aggregated sfc.(kg/m^2)
-      real, intent(out) :: qo           ! output from C.V. of saltation, creep (kg/m*s)
-      real, intent(out) :: qsso         ! output from C.V. of suspension (kg/m*s)
-      real, intent(out) :: q10o         ! output from C.V. of pm-10 (kg/m*s)
+      real, intent(in) :: wus         ! friction velocity (m/s)
+      real, intent(in) :: wust        ! friction velocity threhold at emission (m/s)
+      real, intent(in) :: wusp        ! friction velocity threshold at transport cap.(m/s)
+      real, intent(inout) :: sf10     ! soil fraction less than 0.010 mm (PM10)
+      real, intent(inout) :: sf84     ! soil fraction less than 0.84 mm
+      real, intent(inout) :: sf200    ! soil fractions less than 2.0 mm
+      real, intent(inout) :: szcr     ! soil crust thickness
+      real, intent(inout) :: sfcr     ! soil fraction  area crusted
+      real, intent(inout) :: sflos    ! soil fraction area of loose soil (only on crust)
+      real, intent(inout) :: smlos    ! soil mass of loose soil (only on crust)
+      real, intent(inout) :: szrgh    ! soil ridge height (mm)
+      real, intent(in) :: sxrgs       ! plant stem row spacing (mm)
+      real, intent(in) :: sxprg       ! soil ridge spacing parallel wind direction (mm)
+      real, intent(inout) :: slrr     ! soil random roughness (mm)
+      real, intent(in) :: sfcla       ! soil fraction clay by mass
+      real, intent(in) :: sfsan       ! soil fraction sand by mass
+      real, intent(in) :: sfvfs       ! soil fraction very fine sand by mass (0.05-0.1 mm)
+      real, intent(inout) :: svroc    ! soil fraction rock >2.0 mm by volume
+      real, intent(in) :: brsai       ! biomass stem area index
+      real, intent(in) :: bzht        ! biomass height (m)
+      real, intent(in) :: bffcv       ! biomass fraction flat cover
+      real, intent(in) :: time        ! time step (seconds)
+      real, intent(in) :: canag       ! coeficient of aggregate abrasion (1/m)
+      real, intent(in) :: cancr       ! coefficient of crust abrasion (1/m)
+      real, intent(in) :: sf10an      ! soil fraction of pm10 in abraded suspension size
+      real, intent(in) :: sf10en      ! soil fraction of pm10 in emitted suspension size
+      real, intent(in) :: sf10bk      ! soil fraction of pm10 in saltion/creep breakage
+      real, intent(in) :: sf2_5an     ! soil fraction of pm2.5 in abraded suspension size
+      real, intent(in) :: sf2_5en     ! soil fraction of pm2.5 in emitted suspension size
+      real, intent(in) :: sf2_5bk     ! soil fraction of pm2.5 in saltion/creep breakage
+      real, intent(in) :: lx          ! "effective" length of erosion cell (m)
+      real, intent(in) :: qi          ! input to C.V. of saltation, creep (kg/m*s)
+      real, intent(in) :: qssi        ! input to C.V. of suspension (kg/m*2)
+      real, intent(in) :: q10i        ! input to C.V. of pm-10 (kg/m*2)
+      real, intent(in) :: q2_5i       ! input to C.V. of pm-2.5 (kg/m*2)
+      real, intent(inout) :: dmlos    ! change in loose mass on aggregated sfc. (kg/m^2) (from the beginning of the erosion event)
+      real, intent(in) :: sf84mn      ! soil surface fraction less than 0.84 below which no emission occurs
+      real, intent(in) :: sf84ic      ! soil surface fraction less than 0.84 initially
+      real, intent(in) :: sf10ic      ! soil surface fraction less than 0.10 initially
+      real, intent(in) :: asvroc      ! soil surface volume rock at start of event
+      real, intent(in) :: smaglosmx   ! max mobile soil reservoir of aggregated sfc.(kg/m^2)
+      real, intent(out) :: qo         ! output from C.V. of saltation, creep (kg/m*s)
+      real, intent(out) :: qsso       ! output from C.V. of suspension (kg/m*s)
+      real, intent(out) :: q10o       ! output from C.V. of pm-10 (kg/m*s)
+      real, intent(out) :: q2_5o      ! output from C.V. of pm-2.5 (kg/m*s)
 
 !     +++ PARAMETERS +++
       real, parameter :: cmp = 0.0001  ! mixing parameter coef.
@@ -244,9 +250,16 @@ module process_mod
       ! solve for PM-10 out (similar to suspension out)
       q10o=q10i+(1./(2.*c))*((-k*s+k*b+2.*h*c)*lx+2.*k*(-alog(2.0)+t2))
 
+      ! assemble composite params. for PM-2.5
+      h = sf2_5en*f
+      k = sf2_5an*sfssan*fancan - sf2_5en*sfssen*cen + sf2_5bk*cbk + sf2_5en*cm
+
+      ! solve for PM-2.5 out (similar to suspension out)
+      q2_5o=q2_5i+(1./(2.*c))*((-k*s+k*b+2.*h*c)*lx+2.*k*(-alog(2.0)+t2))
+
       ! SURFACE UPDATE EQUATIONS
 
-      ! now added as a commandline argument to tsterode - LEW
+      ! commandline argument to sweep
       ! execute this section if flag is set
    90 if (SURF_UPD_FLG .eq. 1) then
 
@@ -360,13 +373,10 @@ module process_mod
 
     end subroutine sbwust
 
-    subroutine sbpm10 (seags, secr, sfcla, sfsan, awzypt, canag, cancr, sf10an, sf10en, sf10bk)
+    pure subroutine sbpm10 (seags, secr, sfcla, sfsan, awzypt, canag, cancr, &
+                       sf10an, sf10en, sf10bk, sf2_5an, sf2_5en, sf2_5bk)
+      ! Calculates abrasion coefficients and PM10 fractions in sources of suspended soil
 
-!     + + + PURPOSE + + +
-!     Calculates abrasion coefficients and PM10 fractions in
-!       sources of suspended soil
-
-!     + + + ARGUMENTS + + +   
       real, intent(in) :: seags  ! aggreg. stability [Ln(J/Kg)]
       real, intent(in) :: secr   ! crust stabitlity [Ln(J/Kg)]
       real, intent(in) :: sfcla  ! soil surface fraction clay
@@ -377,53 +387,63 @@ module process_mod
       real, intent(out) :: sf10an ! fraction pm10 in abraded supension size soil
       real, intent(out) :: sf10en ! fraction pm10 in emitted suspension size soil
       real, intent(out) :: sf10bk ! fraction pm10 in breakage from saltion size soil
+      real, intent(out) :: sf2_5an ! fraction pm2.5 in abraded supension size soil
+      real, intent(out) :: sf2_5en ! fraction pm2.5 in emitted suspension size soil
+      real, intent(out) :: sf2_5bk ! fraction pm2.5 in breakage from saltion size soil
 
-!     + + + LOCAL VARIABLES + + +
       real :: ratio ! silt/clay^2
       real :: cla   ! fraction clay with restricted range
       real :: lnc   ! alog (cla)
       real :: sfsil ! soil fraction silt
       real :: ppt   ! annual average precip restricted to 100-800 mm
 
-!     + + +  END SPECIFICATIONS + + +
+      ! + + +  END SPECIFICATIONS + + +
 
-!       calc. abrasion coefficients
-        canag = coef_abrasion(seags)
-        if (secr .eq. 0.0) then  ! No crust stability value specified
-          cancr = 0.0
-          write(0,*) "Warning:  Crust stability value is set to zero"
-        else
-          cancr = coef_abrasion(secr)
-        end if
+      ! calc. abrasion coefficients
+      canag = coef_abrasion(seags)
+      if (secr .eq. 0.0) then  ! No crust stability value specified
+        cancr = 0.0
+      else
+        cancr = coef_abrasion(secr)
+      end if
 
-!       calc. pm10 fractions in suspended soil
-        sf10an = 0.0116 + 0.00025/(canag+0.001)
+      ! calc. pm10 fractions in suspended soil
+      sf10an = 0.0116 + 0.00025/(canag+0.001)
 
-        sfsil = 1 - sfsan - sfcla
-        ratio = sfsil/(sfcla + 0.0001)**2
-        ratio = min(300.0, ratio)
-        sf10en = 0.0067 + 0.0000487*ratio - 0.0000044*awzypt
+      sfsil = 1 - sfsan - sfcla
+      ratio = sfsil/(sfcla + 0.0001)**2
+      ratio = min(300.0, ratio)
+      sf10en = 0.0067 + 0.0000487*ratio - 0.0000044*awzypt
 
-        cla = min(0.42,max(0.017,sfcla))  !restrict clay range
-        lnc = alog(cla)
-        ppt = min(800.0,max(100.0,awzypt))    !restrict precip range
-        sf10bk = -0.201-(0.52+(0.422+(0.1395+0.0156*lnc)*lnc)*lnc)*lnc + 0.131*exp(-ppt/175.6)
+      cla = min(0.42,max(0.017,sfcla))  !restrict clay range
+      lnc = alog(cla)
+      ppt = min(800.0,max(100.0,awzypt))    !restrict precip range
+      sf10bk = -0.201-(0.52+(0.422+(0.1395+0.0156*lnc)*lnc)*lnc)*lnc + 0.131*exp(-ppt/175.6)
+
+      ! Tatarko, J., Kucharski, M., Li, H., Li, H., 2020. PM2.5 and PM10 emissions by abrasion of
+      ! agricultural soils. Soil Tillage Res. 200, 104601
+      sf2_5an = 0.1693 * sf10an
+
+      ! Li, H., Tatarko, J., Kucharski, M., Dong, Z., 2015. PM2.5 and PM10 emission from
+      ! agricultural soils by wind erosion. Aeolian Res. 19, 171–182.
+      sf2_5en = 0.1998 * sf10en
+
+      ! Tatarko, J., Kucharski, M., Li, H., Li, H., 2021. PM2.5 and PM10 emissions by breakage during
+      ! saltation of agricultural soils. oil Tillage Res. 208, 104902
+      sf2_5bk = 0.2648 * sf10bk
 
     end subroutine sbpm10
 
-    function coef_abrasion (stability) result (coef_abr)
+    pure function coef_abrasion (stability) result (coef_abr)
+      ! Calculates abrasion coefficients in sources of suspended soil
 
-!     + + + PURPOSE + + +
-!     Calculates abrasion coefficients in sources of suspended soil
-
-!     + + + ARGUMENTS + + +   
       real, intent(in) :: stability  ! soil component stability [Ln(J/Kg)]
       real :: coef_abr               ! coefficent of abrasion (1/m)
 
-!     + + +  END SPECIFICATIONS + + +
+      ! + + +  END SPECIFICATIONS + + +
 
-!       calc. abrasion coefficients
-        coef_abr = exp(-2.07-0.077*stability**2.5-0.119*alog(stability))
+      ! calc. abrasion coefficients
+      coef_abr = exp(-2.07-0.077*stability**2.5-0.119*alog(stability))
 
     end function coef_abrasion
 
@@ -476,7 +496,7 @@ module process_mod
 
     end subroutine sbaglos
 
-    subroutine sbsfdi (slagm, s0ags, slagn, slagx, sldi, sfdi)
+    pure subroutine sbsfdi (slagm, s0ags, slagn, slagx, sldi, sfdi)
 
 !     +++ PURPOSE +++
 !     calc soil mass fraction (sfdi) < diameter (sldi)

@@ -42,15 +42,13 @@ module report_harvest_mod
 
       ! + + + LOCAL DECLARATIONS + + +
       real tot_mass, harvest_index
-      logical match
-      integer i
 
  1000 format(1x,i2,'/',i2,'/',i2,'|',i2,'|',a,'|', &
              f12.3,'|',a,'|',f12.3,'|',a,'|', &
              f6.3,'|',a,'|',f12.3,'|',a,'|',f5.1,'|',a,'|')
  1001 format(a)
 
-      if( init_loop .or. calib_loop ) then  !initializing or calibrating cycle
+      if( init_loop(sr) .or. calib_loop(sr) ) then  !initializing or calibrating cycle
 
         ! set to the beginning of simulation
         ! to eliminate newline at beginning of file
@@ -117,7 +115,7 @@ module report_harvest_mod
 
     subroutine report_calib_harvest(sr,bmrotation,mass_rem, mass_left, thisPlant)
 
-      use weps_main_mod, only: init_loop, report_loop, calib_cycle
+      use weps_main_mod, only: init_loop, report_loop, calib_cycle, prev_calib_cycle
       use file_io_mod, only: luoharvest_calib, luoharvest_calib_parm
       use biomaterial, only: plant_pointer
       use manage_data_struct_defs, only: lastoper
@@ -140,8 +138,6 @@ module report_harvest_mod
       ! + + + LOCAL DECLARATIONS + + +
       real tot_mass, harvest_index
 
-      integer, save :: prev_calib_cycle = -1
-
  1000 format(1x,i4,1x,i4,1x,'|')
  1001 format(1x,i4,'|')
  1015 format(1x,i2,'/',i2,'/',i2,'|',i2,'/',i2,'/',i2,'|',a,'|')
@@ -151,7 +147,7 @@ module report_harvest_mod
  1041 format(g10.4,'|')
  1050 format(f12.3,'|',a,'|',f12.3,'|',a,'|')
 
-      if (init_loop .or. report_loop) then  ! not a calibrating cycle
+      if (init_loop(sr) .or. report_loop(sr)) then  ! not a calibrating cycle
           ! set to the beginning of simulation
           ! to eliminate newline at beginning of file
           cprevcalibrotation(sr) = 1
@@ -172,12 +168,12 @@ module report_harvest_mod
 
         !Start a new line if this is the next calib_cycle
         if ((bmrotation .eq. cprevcalibrotation(sr)) &
-          .and. (prev_calib_cycle .ne. calib_cycle) ) then
-          if (prev_calib_cycle .ne. -1) then             ! planting operation
+          .and. (prev_calib_cycle(sr) .ne. calib_cycle(sr)) ) then
+          if (prev_calib_cycle(sr) .ne. -1) then             ! planting operation
             write(unit=luoharvest_calib(sr),fmt="(a)") ''        ! write newline
             write(unit=luoharvest_calib_parm(sr),fmt="(a)") ''   ! write newline
           end if
-          prev_calib_cycle = calib_cycle                 ! keep prev cycle
+          prev_calib_cycle(sr) = calib_cycle(sr)                 ! keep prev cycle
         end if
 
         ! Update every time we have a crop flagged to get newline in the right place (hopefully)
@@ -187,9 +183,9 @@ module report_harvest_mod
 
         ! Print out the "calibration cycle" and "rotation year within cycle"
         write(unit=luoharvest_calib(sr), fmt=1000,advance='NO') &
-          calib_cycle, bmrotation
+          calib_cycle(sr), bmrotation
         write(unit=luoharvest_calib_parm(sr), fmt=1001,advance='NO') &
-          calib_cycle
+          calib_cycle(sr)
 
         ! Print out the "planting" and "harvest" dates and "crop name"
         write(unit=luoharvest_calib(sr),fmt=1015,advance='NO') &

@@ -3,9 +3,10 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine getfromweps(sand,silt,clay,orgmat,                     &
-     & thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh,                        &
-     & frctrl, frcsol, precip, soil)
+      subroutine getfromweps(sr, sand, silt, clay, orgmat,              &
+     &                       thetdr, rrc, dg, st, thdp, frdp,           &
+     &                       thetfc, por, rh,                           &
+     &                       frctrl, frcsol, precip, soil)
      
 !-------------------------------------------------------------------------------------
 !     getfromweps()
@@ -28,6 +29,7 @@
 
       include 'wepp_erosion.inc'
 
+      integer, intent(in) :: sr
       real, intent(out):: sand(mxnsl), silt(mxnsl), clay(mxnsl)
       real, intent(out):: orgmat(mxnsl)
       real, intent(out):: thetdr(mxnsl), rrc
@@ -76,7 +78,7 @@
       frctrl = 1
 
 !     True if surface has tillage has occurred
-      if (am0til .eqv. .true.) then
+      if (am0til(sr) .eqv. .true.) then
          wp_daydis = 0
       else
         wp_daydis = wp_daydis + 1

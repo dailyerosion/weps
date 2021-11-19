@@ -15,7 +15,8 @@ module input_run_xml_mod
   use Polygons_Mod, only: polygon, create_polygon, destroy_polygon, set_area_polygon
   use file_io_mod, only: fopenk, luicli, luiwin, luolog
   use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag
-  use climate_input_mod, only: amalat, amalon, amzele
+  use climate_input_mod, only: amzele
+  use solar_mod, only: amalat, amalon
   use erosion_data_struct_defs, only: subday, ntstep, am0efl
   use hydro_data_struct_defs, only: am0hfl, am0hdb
   use soil_data_struct_defs, only: am0sfl, am0sdb
@@ -814,11 +815,11 @@ contains
           ! deallocate _complete arrays
           sum_stat = 0
           deallocate(season_complete, stat=dealloc_stat)
-          sum_stat = sum_stat + alloc_stat
+          sum_stat = sum_stat + dealloc_stat
           deallocate(coord_complete, stat=dealloc_stat)
-          sum_stat = sum_stat + alloc_stat
+          sum_stat = sum_stat + dealloc_stat
           deallocate(clipar_complete, stat=dealloc_stat)
-          sum_stat = sum_stat + alloc_stat
+          sum_stat = sum_stat + dealloc_stat
           if( sum_stat .gt. 0 ) then
             ! deallocation failed
             write(*,*) "ERROR: unable to deallocate memory for _complete arrays"

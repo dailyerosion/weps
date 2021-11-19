@@ -53,40 +53,75 @@ module weps_main_mod
                        ! years.  Note that each of the individual subregion rotation periods can
                        ! divide evenly into the "maxper" value.
     integer :: longest_mgt_rotation ! longest mgt rotation file in all subregions
-    integer :: ncycles ! a count of the number of maxper cycles that have been completed in the simulation run.
 
-    logical :: init_loop    ! .true. indicates the simulation is in the initialization loop
-    logical :: calib_loop   ! .true. indicates the simulation is in the calibration loop
-    logical :: report_loop  ! .true. indicates the simulation is in the report loop
+    ! all values below are subregion specific (dimensioned accordingly)
+    logical, dimension(:), allocatable :: am0ifl  ! flag to run initialization of submodels
+                                                  ! .true. means initialization will be run
+    logical, dimension(:), allocatable :: init_loop    ! .true. indicates the simulation is in the initialization loop
+    logical, dimension(:), allocatable :: calib_loop   ! .true. indicates the simulation is in the calibration loop
+    logical, dimension(:), allocatable :: report_loop  ! .true. indicates the simulation is in the report loop
 
-    integer :: max_calib_cycles ! Maximum number of calibration cycles to run either specified
-                                ! as a commandline parameter value or a default value set in "weps.for".
-    integer :: calib_cycle  ! identify the calibration "cycle" we are in
-                            ! currently set and updated in "main/weps.for"
-    logical :: calib_done   ! flag to identify when we are "done" with calibration
-                            ! .true. then we are done with calibration
-    logical :: am0ifl  ! flag to run initialization of submodels
-                       ! .true. means initialization will be run
+    integer, dimension(:), allocatable :: calib_cycle  ! identify the calibration "cycle" we are in
+                                                       ! currently set and updated in "main/weps.f95"
+    integer, dimension(:), allocatable :: prev_calib_cycle
+    logical, dimension(:), allocatable :: calib_done   ! flag to identify when we are "done" with calibration
+                                                       ! .true. then we are done with calibration
 
   contains
 
-    subroutine wepsinit
+    subroutine wepsinit( nsubr )
 
       ! Initializes variables in common blocks
 
-      use erosion_data_struct_defs, only: am0eif
+      use erosion_data_struct_defs, only: in_sweep, erod_interval, am0eif
+      use datetime_mod, only: psim_date
 
+      ! + + + ARGUMENT DECLARATIONS + + +
+      integer :: nsubr  ! number of subregions in simulation
+
+      ! + + + LOCAL VARIABLES + + +
+      integer :: sum_stat   ! error return value from allocation
+      integer :: alloc_stat ! summation of error return values from allocations
+      integer :: isr        ! loop index
+
+      in_sweep = .false. ! indicates not running stand alone erosion
+      erod_interval = 0  ! default value for updating eroding soil surface
+                         ! (currently only used in standalone erosion submodel)
       maxper = 1
       longest_mgt_rotation = 1
 
       ! set initialization flags
       am0eif = .true.
-      am0ifl = .true.
 
-      ! set initialization, calibration, and report loop flags
-      init_loop = .false.
-      calib_loop = .false.
-      report_loop = .false.
+      ! allocate subregion variables
+      sum_stat = 0
+      allocate(psim_date(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(am0ifl(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(init_loop(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(calib_loop(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(report_loop(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(calib_cycle(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(prev_calib_cycle(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(calib_done(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+
+      ! initialize subregion variables
+      do isr = 1, nsubr
+          am0ifl(isr) = .true.
+          init_loop(isr) = .false.
+          calib_loop(isr) = .false.
+          report_loop(isr) = .false.
+          calib_cycle(isr) = 0
+          prev_calib_cycle(isr) = -1
+          calib_done(isr) = .false.
+      end do
 
       return
     end subroutine wepsinit
@@ -174,7 +209,7 @@ module weps_main_mod
       init_cycle = 1      !default is to do one initialization cycle before reporting
       run_erosion = 1     !default is to run erosion submodel (0=no_erosion_submodel,1=WEPS,2=WEPP,3=WEPS+WEPP)
       calibrate_crops = 0 !default is to NOT run in crop calibration mode
-      calibrate_rotcycles = 0 ! default is to run specified number of rotation cycles during calibration
+      calibrate_rotcycles = 0 ! default is to run full number of rotation cycles during calibration
       cook_yield = 1      !default is to use partitioned Yield/Residue ratio
 !      cook_yield = 0      !default is to grow using full partitioning
       growth_stress = 3   !default is to turn on all stress values
@@ -519,7 +554,7 @@ module weps_main_mod
           else if(argv(2:2) .eq. 'C') then
             if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
-            if( (cmd_iarg .lt. 0) ) then
+            if( (cmd_iarg .lt. 3) .and. (cmd_iarg .ne. 0) ) then
               write(*,*)                                                &
      &           'Warning: Ignored invalid calibrate_crops option: ', trim(argv)
             else

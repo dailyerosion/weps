@@ -55,7 +55,7 @@ module hydro_heat_mod
 
       use weps_main_mod, only: am0ifl
       use file_io_mod, only: luotempsoil
-      use datetime_mod, only: get_simdate
+      use datetime_mod, only: get_psimdate
       use p1unconv_mod, only: mmtom, pi, SEC_PER_DAY
       use hydro_data_struct_defs, only: am0hfl
 
@@ -168,7 +168,7 @@ module hydro_heat_mod
 
       ! + + + END SPECIFICATIONS + + +
 
-      if( (am0ifl .eqv. .true.) .and. ((am0hfl(isr) .eq. 4) &
+      if( (am0ifl(isr) .eqv. .true.) .and. ((am0hfl(isr) .eq. 4) &
         .or. (am0hfl(isr) .eq. 5) .or. (am0hfl(isr) .eq. 6) &
         .or. (am0hfl(isr) .eq. 7)) ) then
          write(luotempsoil(isr),2009) layrsn
@@ -377,7 +377,7 @@ module hydro_heat_mod
 
       if( (am0hfl(isr) .eq. 4) .or. (am0hfl(isr) .eq. 5) &
          .or. (am0hfl(isr) .eq. 6) .or. (am0hfl(isr) .eq. 7)) then
-         call get_simdate (day,mo,yr)
+         call get_psimdate (isr, day, mo, yr)
          write(luotempsoil(isr),2040) day, mo, yr, &
               (bhtsmn(lay), bhtsmx(lay), lay=1,layrsn)
       end if

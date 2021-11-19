@@ -581,8 +581,9 @@ module stir_report_mod
 
       ! initialize sci accumulator values
       scisum(isr)%allbiomass = 0.0
+      scisum(isr)%bdays = 0
       scisum(isr)%allerosion = 0.0
-      scisum(isr)%days = 0
+      scisum(isr)%edays = 0
       scisum(isr)%stir = 0.0
       scisum(isr)%energy = 0.0
 

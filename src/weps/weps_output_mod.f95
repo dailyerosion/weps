@@ -15,11 +15,11 @@ module weps_output_mod
       ! crop and individual biomass pools (not all pools have the same variables)
 
       use weps_main_mod, only: old_run_file, rootp, am0ifl
-      use datetime_mod, only: get_simdate_doy, get_simdate_year, get_simdate_daysim
+      use datetime_mod, only: get_psim_doy, get_psim_year, get_psim_daysim, get_psim_juld
       use biomaterial, only: plant_pointer, residue_pointer, biototal, decomp_factors
       use file_io_mod, only: luocrp1, luobio1, makenamnum, makedir, fopenk
       use decomp_data_struct_defs, only: am0dfl
-      use climate_input_mod, only: cli_today
+      use climate_input_mod, only: cli_day
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
@@ -29,6 +29,7 @@ module weps_output_mod
       type(decomp_factors), intent(in) :: decompfac
 
 !     + + + LOCAL VARIABLES + + +
+      integer :: pjuld  ! present julian day
       integer doy, cy
       integer :: nsubr
       real total
@@ -51,9 +52,11 @@ module weps_output_mod
 
 !     + + + END OF SPECIFICATIONS + + +
 
-      if( .not. am0ifl ) then
-        cy = get_simdate_year()
-        doy = get_simdate_doy()
+      pjuld = get_psim_juld(isr)
+
+      if( .not. am0ifl(isr) ) then
+        cy = get_psim_year(isr)
+        doy = get_psim_doy(isr)
       end if
 
       if ((am0dfl(isr) .eq. 1).or.(am0dfl(isr).eq.3)) then
@@ -69,7 +72,7 @@ module weps_output_mod
 
         ! Dead Crop Biomass Pool
         ! write file header if still initializing
-        if (am0ifl .eqv. .true.) then
+        if (am0ifl(isr) .eqv. .true.) then
           write(luocrp1(isr),*) '#daysim doy yy Tmin Tmax Tavg', &
               ' Tfacabove', &
               ' Water Wfacstand Wfacflat Ddaystand Ddayflat Mstand1', &
@@ -137,8 +140,8 @@ module weps_output_mod
           end if
 
           ! NOTE: tf=temperature factor, wf=water factor, dd=decomposition day
-          write(luocrp1(isr),2222) get_simdate_daysim(), doy, cy, & ! simulation day, day of year, year
-          cli_today%tdmn, cli_today%tdmx, cli_today%tdav, decompfac%itcs, & ! tmin, tmax, tavg, tf  
+          write(luocrp1(isr),2222) get_psim_daysim(isr), doy, cy, & ! simulation day, day of year, year
+          cli_day(pjuld)%tdmn, cli_day(pjuld)%tdmx, cli_day(pjuld)%tdav, decompfac%itcs, & ! tmin, tmax, tavg, tf  
           decompfac%aqua, decompfac%iwcs, decompfac%iwcf, & ! precip, wf standing, wf flat
           decompfac%idds, decompfac%iddf, &                 ! dd standing, dd flat
           mst(1), mst(2), mst(3), restot%msttot, & ! mass, standing
@@ -170,7 +173,7 @@ module weps_output_mod
 2345     format (i6,i4,i5,3f10.5,13f10.3)
 
           ! All Residue Pools Combined
-          write(luobio1(isr),2345) get_simdate_daysim(), doy, cy, &
+          write(luobio1(isr),2345) get_psim_daysim(isr), doy, cy, &
           biotot%ffcvtot, biotot%fscvtot, biotot%ftcvtot, &
           0.0, biotot%rsaitot, biotot%rlaitot, &
           biotot%mtot, biotot%mftot, biotot%msttot, &
@@ -233,7 +236,7 @@ module weps_output_mod
 2355        format (i6,1x,i5,1x,i4,1x,i3,1x,i4,1x,i2,30(1x,f10.5),1x,a30)
 
             ! Residue Pool
-            write(thisResidue%bout%luo,2355) get_simdate_daysim(), &
+            write(thisResidue%bout%luo,2355) get_psim_daysim(isr), &
                 thisResidue%resday, thisResidue%resyear, doy, cy, thisResidue%bout%num, &
                 thisResidue%cumdds, thisResidue%cumddf, thisResidue%cumddg(10), &
                 thisResidue%deriv%ffcv, thisResidue%deriv%fscv, thisResidue%deriv%ftcv, &
@@ -261,34 +264,27 @@ module weps_output_mod
 
     end subroutine bpools
 
-    subroutine plotdata(sr, soil, plant, hstate, restot, croptot, biotot, noerod, manFile, subrsurf, cellstate)
+    subroutine plotdata(isr, noerod, manFile, subrsurf, cellstate)
 
-      use weps_main_mod, only: report_loop, am0ifl
-      use datetime_mod, only: get_simdate, get_simdate_doy, get_simdate_daysim
+      use weps_main_mod, only: am0ifl
+      use datetime_mod, only: get_simdate, get_simdate_doy, get_simdate_daysim, get_simdate_jday
       use file_io_mod, only: luoplt
-      use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biototal, plant_pointer
       use erosion_data_struct_defs, only: threshold
       use erosion_data_struct_defs, only: cellsurfacestate
       use erosion_data_struct_defs, only: awadir, awudmx
       use erosion_data_struct_defs, only: am0efl
       use erosion_data_struct_defs, only: subregionsurfacestate
       use grid_mod, only: imax, jmax
-      use hydro_data_struct_defs, only: am0hfl, hydro_state, hhrs
+      use hydro_data_struct_defs, only: am0hfl, hydro_state
       use soil_data_struct_defs, only: am0sfl
-      use manage_data_struct_defs, only: man_file_struct, lastoper
+      use manage_data_struct_defs, only: man_file_struct
       use crop_data_struct_defs, only: am0cfl
       use decomp_data_struct_defs, only: am0dfl
-      use climate_input_mod, only: cli_today
+      use climate_input_mod, only: cli_day
+      use wind_mod, only: biodrag
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer, intent(in) :: sr
-      type(soil_def), intent(in) :: soil  ! soil for this subregion
-      type(plant_pointer), pointer :: plant
-      type(hydro_state), intent(in) :: hstate
-      type(biototal), intent(in) :: restot
-      type(biototal), intent(in) :: croptot
-      type(biototal), intent(in) :: biotot
+      integer, intent(in) :: isr
       type(threshold), intent(in) :: noerod
       type(man_file_struct), intent(in) :: manFile
       type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
@@ -297,7 +293,10 @@ module weps_output_mod
 !       Edit History
 !       04-Mar-99       wjr     created
 
-      integer day, month, year, doy
+      integer :: doy   ! day of year
+      integer :: day   ! day of month
+      integer :: month ! month of year
+      integer :: year  ! year of simulation
 
       integer ngdpt  !number of grid cells within field
       integer idx, jdy   !local loop vars
@@ -305,8 +304,16 @@ module weps_output_mod
       real :: total
       real :: suspen
       real :: pmten
-      character*80     operat
-      character*80     crname
+      real :: pm2_5
+      
+      real :: res_rlaitot   ! total of all leaf area index (all residue pools)
+      real :: res_rsaitot   ! total of all stem area index (all residue pools)
+      real :: res_height    ! sai index averaged crop height (all residue pools)
+      real :: res_biodrag   ! total biodrag all residue pools
+      real :: crop_rlaitot  ! total of all leaf area index (all crop pools)
+      real :: crop_rsaitot  ! total of all stem area index (all crop pools)
+      real :: crop_height   ! sai index averaged crop height (all crop pools)
+      real :: crop_biodrag  ! total biodrag all crop pools
 
 !     + + + OUTPUT FORMATS + + +
 !     format for header of plot file
@@ -321,74 +328,58 @@ module weps_output_mod
 !    &     '|',' crop_sai ','|','crop_st_mass','|','can_cov ')
 
  2040 format (1x,'#daysim','|','doy','|','day','|','mon','|',' yr ')
- 2041 format ('|',' tot_loss ','|','  suspen  ','|','  pm10   ')
- 2042 format ('|',' max_wind ','|',' dir_wind ','|','  precip  ')
- 2043 format ('|',' Surf_H2O ','|',' ridg_ht  ')
- 2044 format ('|',' ridg_wid ','|',' ridg_sp  ','|',' ridg_or  ')
- 2045 format ('|',' dike_ht  ','|',' dike_wid ','|',' dike_sp  ')
- 2046 format ('|',' r_rough  ')
- 2047 format ('|','  gmd_p   ','|','  gsd_p   ','|','  mnot    ')
- 2048 format ('|','   minf   ')
- 2050 format ('|',' ag_stab  ','|',' cr_fract ',                        &
-     &        '|','loose_mass','|','loose_frac','|',' bulk_den ',       &
-     &        '|','   fl_cov%','|','  st_cov% ','|',' crop_lai ',       &
-     &        '|',' crop_sai ','|','crop_st_mass','|','can_cov ')
-
-!     header of plot file (daily crop values derived from mass, column headers)
- 2051 format ('|',' crop_ht ','|','crp_rep_stm_dia',                    &
-     &        '|','crop_drag','|','crp_soil_cov')
-!     header of plot file (daily decomp values derived from mass, column headers)
- 2052 format ('|','res_av_ht','|','res_sai','|','res_lai',              &
-     &        '|',' res_drag ','|','res_can_cov','|','res_soil_cov')
-!     header of plot file (friction velocity and threshold values)
- 2053 format ('|','  eros   ','|','   snow   ',                              &
-     &        '|','wus_anemom','|','wus_random','|','wus_ridge',        &
-     &        '|','wus_biodrag','|',' ne_wus ','|','t_ne_bare',         &
-     &        '|',' t_flat_cov','|','t_surf_wet','|','t_ag_den ',       &
-     &        '|',' t_wust    ')
-!     header of plot file (friction velocity ratios)
- 2054 format ('|','rwus_anemom','|','rwus_random',                      &
-     &        '|','rwus_ridge','|','rwus_biodrag')
-!     header of plot file (velocity threshold ratios)
- 2055 format ('|','r_ne_bare','|',' r_flat_cov',                        &
-     &        '|','r_surf_wet','|',' r_ag_den ')
-!     header of plot file (velocity threshold ratios)
- 2056 format ('|','ne_sf84 ','|',' ne_rock',                            &
-     &        '|','ne_wzzo ','|',' ne_sfcv  ')
- 2057 format ('|','   sf1ic','|','   sf10ic ',                          &
-     &        '|','  sf84ic','|','  sf200ic ')
- 2058 format ('|','   sf1  ','|','   sf10   ',                          &
-     &        '|','  sf84  ','|','  sf200   ')
-!     operation name(s) at end of line
- 2059 format ('|',' operation    ','|',' new_crop ')
+ 2041 format ('|',' tot_loss ','|','  suspen  ','|','  pm10    ','|','  pm2_5   ')
+ 2042 format ('|',' max_wind ','|',' dir_wind ','|','  precip  ','|','snow_depth','|',' Surf_H2O ')
+ 2043 format ('|',' cr_fract ','|',' cr_thick ','|','cr_ms_los ','|','cr_fr_los ')
+ 2044 format ('|',' ridg_ht  ','|',' ridg_wid ','|',' ridg_sp  ','|',' ridg_or  ','|','ridg_sp_wn')
+ 2045 format ('|',' dike_ht  ','|',' dike_sp  ','|',' r_rough  ')
+ 2046 format ('|','  gmd_p   ','|','  gsd_p   ','|','  mnot    ','|','   minf   ')
+ 2047 format ('|',' ag_stab  ','|',' bulk_den ')
+ 2048 format ('|',' fl_cov%  ','|',' bio_hght ','|',' bio_sai  ','|',' bio_lai  ')
+ 2049 format ('|',' crop_hght','|',' crop_sai ','|',' crop_lai ','|',' crop_drag')
+ 2050 format ('|',' res_av_ht','|',' res_sai  ','|',' res_lai  ','|',' res_drag ')
+ 2051 format ('|',' ag_cf_abr','|',' cr_cf_abr')
+ 2052 format ('|',' pm10_abr ','|',' pm10_emt ','|',' pm10_brk ')
+ 2053 format ('|',' pm2_5_abr','|',' pm2_5_emt','|',' pm2_5_brk')
+ 2054 format ('|',' sf1ic    ','|',' sf10ic   ','|',' sf84ic   ','|',' sf200ic  ')
+ 2055 format ('|',' sf1      ','|',' sf10     ','|',' sf84     ','|',' sf200    ')
+ 2056 format ('|','eros','|','snow', &
+              '|','wus_anemom','|','wus_random','|','wus_ridge ', &
+              '|','wus_biodrg','|',' ne_wus   ','|','t_ne_bare ', &
+              '|','t_flat_cov','|','t_surf_wet','|',' t_ag_den ', &
+              '|',' t_wust   ')
+ 2057 format ('|','rwus_anemo','|','rwus_rando','|','rwus_ridge','|','rwus_biodr')
+ 2058 format ('|','r_ne_bare ','|','r_flat_cov','|','r_surf_wet','|',' r_ag_den ')
+ 2059 format ('|',' ne_sf84  ','|',' ne_rock  ','|',' ne_wzzo  ','|',' ne_sfcv  ')
 
 !     + + + END SPECIFICATIONS + + +
 
       ! Don't print plotdata "plot.out" file unless a debug flag is set
-      if((am0hfl(sr).gt.0).or.(am0sfl(sr).gt.0).or.(manFile%am0tfl.gt.0) &
-     &  .or.(am0cfl(sr).gt.0).or.(am0dfl(sr).gt.0).or.(am0efl.gt.0)) then
+      if((am0hfl(isr).gt.0).or.(am0sfl(isr).gt.0).or.(manFile%am0tfl.gt.0) &
+     &  .or.(am0cfl(isr).gt.0).or.(am0dfl(isr).gt.0).or.(am0efl.gt.0)) then
 
         ! write file header if still initializing
-        if (am0ifl .eqv. .true.) then
-           write (luoplt(sr), 2040, ADVANCE="NO")
-           write (luoplt(sr), 2041, ADVANCE="NO")
-           write (luoplt(sr), 2042, ADVANCE="NO")
-           write (luoplt(sr), 2043, ADVANCE="NO")
-           write (luoplt(sr), 2044, ADVANCE="NO")
-           write (luoplt(sr), 2045, ADVANCE="NO")
-           write (luoplt(sr), 2046, ADVANCE="NO")
-           write (luoplt(sr), 2047, ADVANCE="NO")
-           write (luoplt(sr), 2048, ADVANCE="NO")
-           write (luoplt(sr), 2050, ADVANCE="NO")
-           write (luoplt(sr), 2051, ADVANCE="NO")
-           write (luoplt(sr), 2052, ADVANCE="NO")
-           write (luoplt(sr), 2053, ADVANCE="NO")
-           write (luoplt(sr), 2054, ADVANCE="NO")
-           write (luoplt(sr), 2055, ADVANCE="NO")
-           write (luoplt(sr), 2056, ADVANCE="NO")
-           write (luoplt(sr), 2057, ADVANCE="NO")
-           write (luoplt(sr), 2058, ADVANCE="NO")
-           write (luoplt(sr), 2059, ADVANCE="YES")
+        if (am0ifl(isr) .eqv. .true.) then
+           write (luoplt(isr), 2040, ADVANCE="NO")
+           write (luoplt(isr), 2041, ADVANCE="NO")
+           write (luoplt(isr), 2042, ADVANCE="NO")
+           write (luoplt(isr), 2043, ADVANCE="NO")
+           write (luoplt(isr), 2044, ADVANCE="NO")
+           write (luoplt(isr), 2045, ADVANCE="NO")
+           write (luoplt(isr), 2046, ADVANCE="NO")
+           write (luoplt(isr), 2047, ADVANCE="NO")
+           write (luoplt(isr), 2048, ADVANCE="NO")
+           write (luoplt(isr), 2049, ADVANCE="NO")
+           write (luoplt(isr), 2050, ADVANCE="NO")
+           write (luoplt(isr), 2051, ADVANCE="NO")
+           write (luoplt(isr), 2052, ADVANCE="NO")
+           write (luoplt(isr), 2053, ADVANCE="NO")
+           write (luoplt(isr), 2054, ADVANCE="NO")
+           write (luoplt(isr), 2055, ADVANCE="NO")
+           write (luoplt(isr), 2056, ADVANCE="NO")
+           write (luoplt(isr), 2057, ADVANCE="NO")
+           write (luoplt(isr), 2058, ADVANCE="NO")
+           write (luoplt(isr), 2059, ADVANCE="YES")
            return
         endif
 
@@ -396,131 +387,147 @@ module weps_output_mod
         total = 0.0
         suspen = 0.0
         pmten = 0.0
+        pm2_5 = 0.0
 
-        if( report_loop ) then
-           ngdpt = 0     ! (imax-1) * (jmax-1)  !Number of grid cells
-           do idx = 1, imax-1
-              do jdy = 1, jmax-1
-                 if( (sr .eq. 0) .or. (sr .eq. cellstate(idx,jdy)%csr) ) then
-                    total = total + cellstate(idx,jdy)%egt
-                    !salt = salt + (cellstate(idx,jdy)%egtcs
-                    suspen = suspen + cellstate(idx,jdy)%egtss
-                    pmten = pmten + cellstate(idx,jdy)%egt10
-                    ngdpt = ngdpt + 1
-                 end if
-              end do
+        ngdpt = 0 ! (imax-1) * (jmax-1)  !Number of grid cells
+        do idx = 1, imax-1
+           do jdy = 1, jmax-1
+              if( (isr .eq. 0) .or. (isr .eq. cellstate(idx,jdy)%csr) ) then
+                 total = total + cellstate(idx,jdy)%egt
+                 !salt = salt + (cellstate(idx,jdy)%egtcs
+                 suspen = suspen + cellstate(idx,jdy)%egtss
+                 pmten = pmten + cellstate(idx,jdy)%egt10
+                 pm2_5 = pm2_5 + cellstate(idx,jdy)%egt2_5
+                 ngdpt = ngdpt + 1
+              end if
            end do
-           if( ngdpt .gt. 0 ) then
-              total = total/ngdpt
-              suspen = suspen/ngdpt
-              pmten = pmten/ngdpt
-           !else no points totals will still be 0.0
-           end if
+        end do
+        if( ngdpt .gt. 0 ) then
+           total = total/ngdpt
+           suspen = suspen/ngdpt
+           pmten = pmten/ngdpt
+        !else no points totals will still be 0.0
         end if
 
-        call get_simdate(day,month,year)
         doy = get_simdate_doy()
-
-        ! make operation name available for this day
-        if ( (lastoper(sr)%day .eq. day) .and. (lastoper(sr)%mon .eq. month) .and. &
-             (lastoper(sr)%yr .eq. manfile%mnryr) ) then
-           operat = lastoper(sr)%name
-           if( associated(plant) ) then
-             ! name of most recently planted plant
-             crname = plant%bname
-           else
-             crname = '                                               '
-           end if
-        else
-           operat = '                                               '
-           crname = '                                               '
-        end if
+        call get_simdate( day, month, year)
 
         ! insert double blank lines to demarcate years
         if( doy .eq. 1 ) then
-            write (luoplt(sr),*)
-            write (luoplt(sr),*)
+            write (luoplt(isr),*)
+            write (luoplt(isr),*)
         end if
 
-        write (luoplt(sr), 2080, ADVANCE="NO")  &
-     &                    get_simdate_daysim(), doy, &
-     &                    day, month, year,                             &
-     &                    total, suspen, pmten,                         &
-     &         awudmx, awadir, cli_today%zdpt, hstate%rwc0(hhrs/2), &
-     &                    soil%aszrgh, soil%asxrgw,                     &
-     &                    soil%asxrgs, soil%asargo,                     &
-     &                    soil%asxdkh, soil%asxrgw, soil%asxdks,        &
-     &                    soil%aslrr,                                   &
-     &                    soil%aslagm(1), soil%as0ags(1),               &
-     &                    soil%aslagn(1), soil%aslagx(1),               &
-     &                    soil%aseags(1), soil%asfcr,                   &
-     &                    soil%asmlos, soil%asflos, soil%asdblk(1),     &
-     &                    biotot%ffcvtot, biotot%fscvtot,               &
-     &                    croptot%rlaitot, croptot%rsaitot,             &
-     &                    croptot%msttot, croptot%ftcancov
+        ! sum leaf /stem areas accross crop and residue pools
+        res_rlaitot = 0.0
+        res_rsaitot = 0.0
+        res_height = 0.0
+        res_biodrag = 0.0
+        crop_rlaitot = 0.0
+        crop_rsaitot = 0.0
+        crop_height = 0.0
+        crop_biodrag = 0.0
+        do idx = 1, subrsurf%npools
+            if( subrsurf%brcdInput(idx)%residue ) then
+                res_rlaitot = res_rlaitot + subrsurf%brcdInput(idx)%rlai
+                res_rsaitot = res_rsaitot + subrsurf%brcdInput(idx)%rsai
+            else
+                crop_rlaitot = crop_rlaitot + subrsurf%brcdInput(idx)%rlai
+                crop_rsaitot = crop_rsaitot + subrsurf%brcdInput(idx)%rsai
+            end if
+        end do
+        do idx = 1, subrsurf%npools
+            if( subrsurf%brcdInput(idx)%residue ) then
+                res_height = res_height + subrsurf%brcdInput(idx)%rsai * subrsurf%brcdInput(idx)%rsai / res_rsaitot
+                res_biodrag = res_biodrag + biodrag( 0.0, 0.0, subrsurf%brcdInput(idx)%rlai, subrsurf%brcdInput(idx)%rsai, &
+                              subrsurf%brcdInput(idx)%rg, subrsurf%brcdInput(idx)%xrow, &
+                              subrsurf%brcdInput(idx)%zht, subrsurf%aszrgh )
+            else
+                crop_height = crop_height + subrsurf%brcdInput(idx)%rsai * subrsurf%brcdInput(idx)%rsai / crop_rsaitot
+                crop_biodrag = crop_biodrag + biodrag( 0.0, 0.0, subrsurf%brcdInput(idx)%rlai, subrsurf%brcdInput(idx)%rsai, &
+                               subrsurf%brcdInput(idx)%rg, subrsurf%brcdInput(idx)%xrow, &
+                               subrsurf%brcdInput(idx)%zht, subrsurf%aszrgh )
+            end if
+        end do
 
-        write (luoplt(sr), 2081, ADVANCE="NO")                              &
-     &   croptot%zht_ave, croptot%xstmrep, croptot%rcdtot, croptot%ftcvtot
+        write (luoplt(isr), 2080, ADVANCE="NO")  &
+             get_simdate_daysim(), doy, &
+             day, month, year, &
+             total, suspen, pmten, pm2_5, &
+             awudmx, awadir, cli_day(get_simdate_jday())%zdpt, subrsurf%ahzsnd, subrsurf%ahrwc0(subrsurf%nswet/2), &
+             subrsurf%asfcr, subrsurf%aszcr, subrsurf%asmlos, subrsurf%asflos, &
+             subrsurf%aszrgh, subrsurf%asxrgw, subrsurf%asxrgs, subrsurf%asargo, subrsurf%sxprg, &
+             subrsurf%asxdkh, subrsurf%asxdks, subrsurf%aslrr, &
+             subrsurf%bsl(1)%aslagm, subrsurf%bsl(1)%as0ags, subrsurf%bsl(1)%aslagn, subrsurf%bsl(1)%aslagx, &
+             subrsurf%bsl(1)%aseags, subrsurf%bsl(1)%asdblk
 
-        write (luoplt(sr), 2082, ADVANCE="NO")                              &
-     &       restot%zht_ave, restot%rsaitot, restot%rlaitot,            &
-     &       restot%rcdtot, restot%ftcancov, restot%ftcvtot
+        write (luoplt(isr), 2084, ADVANCE="NO") &
+             subrsurf%abffcv, subrsurf%abzht, subrsurf%abrsai, subrsurf%abrlai
+
+        write (luoplt(isr), 2084, ADVANCE="NO") &
+             crop_height, crop_rsaitot, crop_rlaitot, crop_biodrag
+
+        write (luoplt(isr), 2084, ADVANCE="NO") &
+             res_height, res_rsaitot, res_rlaitot, res_biodrag
+
+        write (luoplt(isr), 2082, ADVANCE="NO") &
+             subrsurf%acanag, subrsurf%acancr
+
+        write (luoplt(isr), 2083, ADVANCE="NO") &
+             subrsurf%asf10an, subrsurf%asf10en, subrsurf%asf10bk
+     
+        write (luoplt(isr), 2083, ADVANCE="NO") &
+             subrsurf%asf2_5an, subrsurf%asf2_5en, subrsurf%asf2_5bk
+     
+        write (luoplt(isr), 2084, ADVANCE="NO") &
+             subrsurf%sf1ic, subrsurf%sf10ic, subrsurf%sf84ic, subrsurf%sf200ic
+
+        write (luoplt(isr), 2084, ADVANCE="NO") &
+             subrsurf%sfd1, subrsurf%sfd10, subrsurf%sfd84, subrsurf%sfd200
 
         ! additional friction velocity and threshold outputs
-        write (luoplt(sr), 2085, ADVANCE="NO")                              &
-     &       noerod%erosion, noerod%snowdepth,                          &
-     &       noerod%wus_anemom, noerod%wus_random, noerod%wus_ridge,    &
-     &       noerod%wus_biodrag, noerod%wus, noerod%bare,               &
-     &       noerod%flat_cov, noerod%surf_wet, noerod%ag_den,           &
-     &       noerod%wust
+        write (luoplt(isr), 2085, ADVANCE="NO") &
+             noerod%erosion, noerod%snowdepth, &
+             noerod%wus_anemom, noerod%wus_random, noerod%wus_ridge, &
+             noerod%wus_biodrag, noerod%wus, noerod%bare, &
+             noerod%flat_cov, noerod%surf_wet, noerod%ag_den, &
+             noerod%wust
 
         ! guard against underflow, division fails
         if( noerod%wus .gt. tiny(noerod%wus) ) then
           ! ratios of friction velocity outputs
-          write (luoplt(sr), 2086, ADVANCE="NO")                            &
-     &       min(9999.9, noerod%wus_anemom/noerod%wus), min(9999.9, noerod%wus_random/noerod%wus),&
-     &       min(9999.9,noerod%wus_ridge/noerod%wus), min(9999.9, noerod%wus_biodrag/noerod%wus)
+          write (luoplt(isr), 2084, ADVANCE="NO") &
+             min(9999.9, noerod%wus_anemom/noerod%wus), min(9999.9, noerod%wus_random/noerod%wus), &
+             min(9999.9,noerod%wus_ridge/noerod%wus), min(9999.9, noerod%wus_biodrag/noerod%wus)
         else
           ! zero denominator, write zero values
-          write (luoplt(sr), 2086, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
+          write (luoplt(isr), 2084, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
         end if
 
         if( noerod%wust .gt. tiny(noerod%wust) ) then
           ! ratios of friction velocity threshold outputs
-          write (luoplt(sr), 2086, ADVANCE="NO")                            &
-     &       noerod%bare/noerod%wust, noerod%flat_cov/noerod%wust,      &
-     &       noerod%surf_wet/noerod%wust, noerod%ag_den/noerod%wust
+          write (luoplt(isr), 2084, ADVANCE="NO") &
+             noerod%bare/noerod%wust, noerod%flat_cov/noerod%wust, &
+             noerod%surf_wet/noerod%wust, noerod%ag_den/noerod%wust
         else
           ! zero denominator, write zero values
-          write (luoplt(sr), 2086, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
+          write (luoplt(isr), 2084, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
         end if
 
         ! soil related threshold values
-        write (luoplt(sr), 2086, ADVANCE="NO") noerod%sfd84, noerod%asvroc, &
-     &    noerod%wzzo, noerod%sfcv
+        write (luoplt(isr), 2084, ADVANCE="YES") noerod%sfd84, noerod%asvroc, &
+          noerod%wzzo, noerod%sfcv
 
-        write (luoplt(sr), 2086, ADVANCE="NO") subrsurf%sf1ic, subrsurf%sf10ic, &
-     &                    subrsurf%sf84ic, subrsurf%sf200ic
+ 2080   format (' ',i6,' ',i3,' ',i2,' ',i2,' ',i4,' ', &
+                  31(f10.3,' '))
 
-        write (luoplt(sr), 2086, ADVANCE="NO") subrsurf%sfd1, subrsurf%sfd10, &
-     &                    subrsurf%sfd84, subrsurf%sfd200
-
-        write (luoplt(sr), 2090, ADVANCE="NO") operat
-        write (luoplt(sr), 2091, ADVANCE="YES") crname
-
- 2080   format (' ',i6,' ',i3,' ',i2,' ',i2,' ',i4,' ',                 &
-     &            42(f10.3,' '))
-
- 2081   format ( 4(f10.4,' ') )
- 2082   format ( 6(f10.4,' ') )
+ 2082   format ( 2(f10.4,' ') )
+ 2083   format ( 3(f10.4,' ') )
+ 2084   format ( 4(f10.4,' ') )
  2085   format ( 2('  ',i1,'  '),10(f10.4,' ') )
- 2086   format ( 4(f10.4,' ') )
- 2090   format ( a35,' ' )
- 2091   format ( a35,' ' )
 
       endif
 
-      return
     end subroutine plotdata
 
     subroutine openfils()
@@ -1131,7 +1138,7 @@ module weps_output_mod
 
     end subroutine closefils
 
-    subroutine dbgdmp(day, sr, soil, croptot, biotot, hstate, h1et)
+    subroutine dbgdmp(day, soil, croptot, biotot, hstate, h1et)
 ! ****************************************************************** wjr
 !     The dumps variables that have gone out of range
 
@@ -1141,13 +1148,13 @@ module weps_output_mod
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biototal, ncanlay
       use erosion_data_struct_defs, only: awdair, awadir, awhrmx, awudmx, awudmn, awudav, subday, ntstep
-      use climate_input_mod, only: cli_today, cli_tyav, amalat, amalon, amzele
+      use climate_input_mod, only: cli_today, cli_tyav, amzele
+      use solar_mod, only: amalat, amalon
       use hydro_data_struct_defs, only: hydro_derived_et, hydro_state
       use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: day
-      integer, intent(in) :: sr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
@@ -1158,20 +1165,11 @@ module weps_output_mod
 
       real     tstmin
       parameter (tstmin=1e-10)
-!      
+      
       real     tstmax
       parameter (tstmax=1e10)
-!      
-      logical  dmpflg
-      data dmpflg /.true./
-! prototype, remove before compiling
-!      if (#(sr).lt.tstmin.or.#(sr).gt.tstmax)
-!     &  write(*,*) 'day ',day,' # ', #(sr)
 
-
-! s1surf
-
-      if (dmpflg) write(*,*) 's1surf'
+      write(*,*) 's1surf'
 
       if (soil%aszcr.lt.0.0.or.soil%aszcr.gt.23.0) &
         write(*,*) 'day ',day,' aszcr ', soil%aszcr
@@ -1185,7 +1183,6 @@ module weps_output_mod
       if (soil%asflos.lt.0.0.or.soil%asflos.gt.1.0) &
         write(*,*) 'day ',day,' asflos ', soil%asflos
 
-! wjr,  test values based on definition
       if (soil%asdcr.lt.0.6.or.soil%asdcr.gt.2.0) &
         write(*,*) 'day ',day,' asdcr ', soil%asdcr
 
@@ -1198,8 +1195,7 @@ module weps_output_mod
       if (soil%asfalw.lt.0.05.or.soil%asfalw.gt.0.2) &
         write(*,*) 'day ',day,' asfalw ', soil%asfalw
 
-! s1sgeo
-      if (dmpflg) write(*,*) 's1sgeo'
+      write(*,*) 's1sgeo'
 
       if (soil%aszrgh.lt.0.0.or.soil%aszrgh.gt.500.0) &
      &  write(*,*) 'day ',day,' aszrgh ', soil%aszrgh
@@ -1213,190 +1209,146 @@ module weps_output_mod
       if (soil%asargo.lt.0.0.or.soil%asargo.gt.179.0)                     &
      &  write(*,*) 'day ',day,' asargo ', soil%asargo
 
-! wjr,  test values based on definition
       if (soil%asxdks.lt.0.0.or.soil%asxdks.gt.1000.0)                    &
      &  write(*,*) 'day ',day,' asxdks ', soil%asxdks
 
-! wjr,  test values based on definition
       if (soil%asxdkh.lt.0.0.or.soil%asxdkh.gt.1000.0)                    &
      &  write(*,*) 'day ',day,' asxdkh ', soil%asxdkh
 
       if (soil%aslrr.lt.1.0.or.soil%aslrr.gt.30.0) &
      &  write(*,*) 'day ',day,' aslrr ', soil%aslrr
 
-! w1wind
-      if (dmpflg) write(*,*) 'w1wind'
+      write(*,*) 'w1wind'
 
-! wjr,  test values based on definition
       if (awadir.lt.0.0.or.awadir.gt.360.0)                             &
      &  write(*,*) 'day ',day,' awadir ', awadir
 
       if (awhrmx.lt.1.0.or.awhrmx.gt.24.0)                              &
      &  write(*,*) 'day ',day,' awhrmx ', awhrmx
 
-! wjr,  test values based on definition
       if (awudmx.lt.0.0.or.awudmx.gt.50.0)                              &
      &  write(*,*) 'day ',day,' awudmx ', awudmx
 
-! wjr,  test values based on definition
       if (awudmn.lt.0.0.or.awudmn.gt.25.0)                              &
      &  write(*,*) 'day ',day,' awudmn ', awudmn
 
-! wjr,  test values based on definition
       if (awudav.lt.0.0.or.awudav.gt.35.0)                              &
      &  write(*,*) 'day ',day,' awudav ', awudav
 
-      do 10 idx=1,size(subday)
-! wjr,  test values based on definition
+      do idx=1,size(subday)
         if( subday(idx)%awu .lt. 0.0 .or. subday(idx)%awu .gt. 35.0 )   &
      &    write(*,*) 'day ',day,' awu(',idx,') ',  subday(idx)%awu
-10    continue     
+      end do
 
-! w1pagv
-! wjr,  test values based on definition
       if (awdair.lt.0.0.or.awdair.gt.tstmax)                            &
      &  write(*,*) 'day ',day,' awdair ', awdair
 
-! b1geom
+      write(*,*) 'b1geom'
 
-      if (dmpflg) write(*,*) 'b1geom'
-
-! wjr,  test values based on definition
       if (biotot%rsaitot .lt. 0.0 .or. biotot%rsaitot .gt. 1.0)  &
      &  write(*,*) 'day ',day,' biotot%rsaitot ', biotot%rsaitot
 
-! wjr,  test values based on definition
       if (biotot%rlaitot .lt. 0.0 .or. biotot%rlaitot .gt. 1.0) &
      &  write(*,*) 'day ',day,' biotot%rlaitot ', biotot%rlaitot
 
-      do 20 idx=1,ncanlay
+      do idx=1,ncanlay
+        if (biotot%rsaz(idx) .lt. 0.0 .or. biotot%rsaz(idx) .gt. tstmax) &
+          write(*,*) 'day ',day,' biotot%rsaz(',idx,') ', biotot%rsaz(idx)
 
-! wjr,  test values based on definition
-      if (biotot%rsaz(idx) .lt. 0.0 .or. biotot%rsaz(idx) .gt. tstmax) &
-     &  write(*,*) 'day ',day,' biotot%rsaz(',idx,') ', biotot%rsaz(idx)
+        if (biotot%rlaz(idx) .lt. 0.0 .or. biotot%rlaz(idx) .gt. tstmax) &
+          write(*,*) 'day ',day,' biotot%rlaz(',idx,') ', biotot%rlaz(idx)
+      end do
 
-! wjr,  test values based on definition
-      if (biotot%rlaz(idx) .lt. 0.0 .or. biotot%rlaz(idx) .gt. tstmax) &
-     &  write(*,*) 'day ',day,' biotot%rlaz(',idx,') ', biotot%rlaz(idx)
-
-   20 continue
-
-! wjr,  test values based on definition
       if (biotot%ffcvtot .lt. 0.0 .or. biotot%ffcvtot .gt. 1.0) &
      &  write(*,*) 'day ',day,' biotot%ffcvtot ', biotot%ffcvtot
 
-! wjr,  test values based on definition
       if (biotot%fscvtot .lt. 0.0 .or. biotot%fscvtot .gt. 1.0) &
      &  write(*,*) 'day ',day,' biotot%fscvtot ', biotot%fscvtot
 
-! wjr,  test values based on definition
       if (biotot%ftcvtot .lt. 0.0 .or. biotot%ftcvtot .gt. 1.0) &
      &  write(*,*) 'day ',day,' biotot%ftcvtot ', biotot%ftcvtot
 
-! w1clig
+      write(*,*) 'w1clig'
 
-      if (dmpflg) write(*,*) 'w1clig'
-
-! wjr,  test values based on definition
       if (cli_today%tdav.lt.-20.0.or.cli_today%tdav.gt.50.0)     &
      &  write(*,*) 'day ',day,' cli_today%tdav ', cli_today%tdav
 
-! wjr,  test values based on definition
       if (cli_tyav.lt.0.0.or.cli_tyav.gt.30.0)      &
      &  write(*,*) 'day ',day,' cli_tyav ', cli_tyav
 
-! wjr,  test values based on definition
-      if (cli_today%tdmx.lt.0.0.or.cli_today%tdmx.gt.50.0)      &
+      if (cli_today%tdmx.lt.0.0.or.cli_today%tdmx.gt.50.0) &
      &  write(*,*) 'day ',day,' cli_today%tdmx ', cli_today%tdmx
 
-! wjr,  test values based on definition
-      if (cli_today%tdmn.lt.-20.0.or.cli_today%tdmn.gt.40.0)    &
+      if (cli_today%tdmn.lt.-20.0.or.cli_today%tdmn.gt.40.0) &
      &  write(*,*) 'day ',day,' cli_today%tdmn ', cli_today%tdmn
 
-! wjr,  test values based on definition
-      if (cli_today%tdpt.lt.0.0.or.cli_today%tdpt.gt.40.0)      &
+      if (cli_today%tdpt.lt.0.0.or.cli_today%tdpt.gt.40.0) &
      &  write(*,*) 'day ',day,' cli_today%tdpt ', cli_today%tdpt
 
-! wjr,  test values based on definition
-      if (cli_today%zdpt.lt.0.0.or.cli_today%zdpt.gt.1000.0)    &
+      if (cli_today%zdpt.lt.0.0.or.cli_today%zdpt.gt.1000.0) &
      &  write(*,*) 'day ',day,' cli_today%zdpt ', cli_today%zdpt
 
-! wjr,  test values based on definition
-      if (cli_today%eirr.lt.0.0.or.cli_today%eirr.gt.tstmax)    &
+      if (cli_today%eirr.lt.0.0.or.cli_today%eirr.gt.tstmax) &
      &  write(*,*) 'day ',day,' cli_today%eirr ', cli_today%eirr
 
-! s1layd
-      if (dmpflg) write(*,*) 's1layd'
+      write(*,*) 's1layd'
 
-      do 50 idx=1,soil%nslay
-      if (soil%asdsblk(idx).lt.tstmin.or.soil%asdsblk(idx).gt.tstmax)     &
-     &  write(*,*) 'day ',day,' asdsblk(',idx,') ', soil%asdsblk(idx)
+      do idx=1,soil%nslay
+        if (soil%asdsblk(idx).lt.tstmin.or.soil%asdsblk(idx).gt.tstmax) &
+          write(*,*) 'day ',day,' asdsblk(',idx,') ', soil%asdsblk(idx)
 
-      if (soil%aszlyd(idx).lt.tstmin.or.soil%aszlyd(idx).gt.tstmax)       &
-     &  write(*,*) 'day ',day,' aszlyd(',idx,') ', soil%aszlyd(idx)
+        if (soil%aszlyd(idx).lt.tstmin.or.soil%aszlyd(idx).gt.tstmax) &
+          write(*,*) 'day ',day,' aszlyd(',idx,') ', soil%aszlyd(idx)
+      end do
 
-   50 continue
+      write(*,*) 's1layr'
 
-! s1layr
-
-      if (dmpflg) write(*,*) 's1layr'
-!      
-      if (soil%nslay.lt.1.or.soil%nslay.gt.10)                            &
+      if (soil%nslay.lt.1.or.soil%nslay.gt.10) &
      &  write(*,*) 'day ',day,' nslay ', soil%nslay
 
-      if (soil%aszlyt(1).lt.10.0.or.soil%aszlyt(1).gt.10.0)               &
+      if (soil%aszlyt(1).lt.10.0.or.soil%aszlyt(1).gt.10.0) &
      &  write(*,*) 'day ',day,' aszlyt(1) ', soil%aszlyt(1)
 
-      if (soil%nslay.gt.1.and.                                           &
-     & (soil%aszlyt(2).lt.40.0.or.soil%aszlyt(2).gt.40.0))                &
-     &  write(*,*) 'day ',day,' aszlyt(2) ', soil%aszlyt(2)
+      if (soil%nslay.gt.1.and. (soil%aszlyt(2).lt.40.0.or.soil%aszlyt(2).gt.40.0)) &
+        write(*,*) 'day ',day,' aszlyt(2) ', soil%aszlyt(2)
 
-      if (soil%nslay.gt.2.and.                                           &
-     & (soil%aszlyt(3).lt.50.0.or.soil%aszlyt(3).gt.100.0))               &
+      if (soil%nslay.gt.2.and. (soil%aszlyt(3).lt.50.0.or.soil%aszlyt(3).gt.100.0)) &
      &  write(*,*) 'day ',day,' aszlyt(3) ', soil%aszlyt(3)
 
-      if (soil%nslay.gt.3.and.                                           &
-     & (soil%aszlyt(4).lt.50.0.or.soil%aszlyt(4).gt.100.0))               &
+      if (soil%nslay.gt.3.and. (soil%aszlyt(4).lt.50.0.or.soil%aszlyt(4).gt.100.0)) &
      &  write(*,*) 'day ',day,' aszlyt(4) ', soil%aszlyt(4)
 
-      do 60 idx=5,soil%nslay
-      if (soil%nslay.ge.idx.and.                                         &
-     & (soil%aszlyt(idx).lt.1.0.or.soil%aszlyt(idx).gt.1000.0))           &
-     &  write(*,*) 'day ',day,' aszlyt(',idx,') ', soil%aszlyt(idx)
-   60 continue     
+      do idx=5,soil%nslay
+        if (soil%nslay.ge.idx.and. (soil%aszlyt(idx).lt.1.0.or.soil%aszlyt(idx).gt.1000.0)) &
+          write(*,*) 'day ',day,' aszlyt(',idx,') ', soil%aszlyt(idx)
+      end do
 
-! s1phys
+      write(*,*) 's1phys'
 
-      if (dmpflg) write(*,*) 's1phys'
+      do idx=1, soil%nslay
+        if (soil%asdblk(idx).lt.0.50.or.soil%asdblk(idx).gt.2.5) &
+          write(*,*) 'day ',day,' asdblk(',idx,') ', soil%asdblk(idx)
+      end do
 
-      do 70 idx=1, soil%nslay
-      if (soil%asdblk(idx).lt.0.50.or.soil%asdblk(idx).gt.2.5)            &
-     &  write(*,*) 'day ',day,' asdblk(',idx,') ', soil%asdblk(idx)
-  70  continue
+      write(*,*) 's1dbh'
 
-! s1dbh
+      do idx=1,soil%nslay
+        if (soil%asfsan(idx).lt.0.0.or.soil%asfsan(idx).gt.1.0) &
+          write(*,*) 'day ',day,' asfsan(',idx,') ', soil%asfsan(idx)
 
-      if (dmpflg) write(*,*) 's1dbh'
+        if (soil%asfsil(idx).lt.0.0.or.soil%asfsil(idx).gt.1.0) &
+          write(*,*) 'day ',day,' asfsil(',idx,') ', soil%asfsil(idx)
 
-      do 80 idx=1,soil%nslay
-      if (soil%asfsan(idx).lt.0.0.or.soil%asfsan(idx).gt.1.0)             &
-     &  write(*,*) 'day ',day,' asfsan(',idx,') ', soil%asfsan(idx)
+        if (soil%asfcla(idx).lt.0.0.or.soil%asfcla(idx).gt.1.0) &
+          write(*,*) 'day ',day,' asfcla(',idx,') ', soil%asfcla(idx)
 
-      if (soil%asfsil(idx).lt.0.0.or.soil%asfsil(idx).gt.1.0)             &
-     &  write(*,*) 'day ',day,' asfsil(',idx,') ', soil%asfsil(idx)
+        if (soil%asvroc(idx).lt.0.0.or.soil%asvroc(idx).gt.1.0) &
+          write(*,*) 'day ',day,' asvroc(',idx,') ', soil%asvroc(idx)
+      end do
 
-      if (soil%asfcla(idx).lt.0.0.or.soil%asfcla(idx).gt.1.0)             &
-     &  write(*,*) 'day ',day,' asfcla(',idx,') ', soil%asfcla(idx)
+      write(*,*) 's1agg'
 
-      if (soil%asvroc(idx).lt.0.0.or.soil%asvroc(idx).gt.1.0)             &
-     &  write(*,*) 'day ',day,' asvroc(',idx,') ', soil%asvroc(idx)
-   80 continue     
-
-! s1agg
-
-      if (dmpflg) write(*,*) 's1agg'
-
-      do 90 idx=1, soil%nslay
+      do idx=1, soil%nslay
       if (soil%asdagd(idx).lt.0.6.or.soil%asdagd(idx).gt.2.5)             &
      &  write(*,*) 'day ',day,' asdagd(',idx,') ', soil%asdagd(idx)
 
@@ -1414,13 +1366,11 @@ module weps_output_mod
 
       if (soil%as0ags(idx).lt.1.0.or.soil%as0ags(idx).gt.20.0)            &
      &  write(*,*) 'day ',day,' as0ags(',idx,') ', soil%as0ags(idx)
-   90 continue     
+      end do
 
-! s1dbc
-
-      if (dmpflg) write(*,*) 's1dbc'
+      write(*,*) 's1dbc'
       
-      do 100 idx=1, soil%nslay
+      do idx=1, soil%nslay
       if (soil%as0ph(idx).lt.0.0.or.soil%as0ph(idx).gt.14.0)              &
      &  write(*,*) 'day ',day,' as0ph(',idx,') ', soil%as0ph(idx)
 
@@ -1432,12 +1382,9 @@ module weps_output_mod
 
       if (soil%asfom(idx).lt.0.0.or.soil%asfom(idx).gt.tstmax)            &
      &  write(*,*) 'day ',day,' asfom(',idx,') ', soil%asfom(idx)
-  100 continue
+      end do
 
-
-! m1sim
-
-      if (dmpflg) write(*,*) 'm1sim'
+      write(*,*) 'm1sim'
 
       if (ntstep.lt.1.or.ntstep.gt.96)                                  &
      &  write(*,*) 'day ',day,' ntstep ', ntstep
@@ -1451,18 +1398,14 @@ module weps_output_mod
       if (amzele.lt.0.0.or.amzele.gt.2500.0)                            &
      &  write(*,*) 'day ',day,' amzele ', amzele
 
-! m1subr
-
-      if (dmpflg) write(*,*) 'm1subr'
+      write(*,*) 'm1subr'
 
       if (soil%amrslp.lt.0.0.or.soil%amrslp.gt.1.0)                       &
      &  write(*,*) 'day ',day,' amrslp ', soil%amrslp
 
-! h1temp
+      write(*,*) 'h1temp'
 
-      if (dmpflg) write(*,*) 'h1temp'
-
-      do 110 idx=1,soil%nslay
+      do idx=1,soil%nslay
       if (soil%tsav(idx).lt.-20.0.or.soil%tsav(idx).gt.50.0)          &
      &  write(*,*) 'day ',day,' ahtsav(',idx,') ', soil%tsav(idx)
 
@@ -1471,12 +1414,11 @@ module weps_output_mod
 
       if (soil%tsmn(idx).lt.-20.0.or.soil%tsmn(idx).gt.50.0)          &
      &  write(*,*) 'day ',day,' ahtsmn(',idx,') ', soil%tsmn(idx)
-  110 continue     
+      end do
 
-! h1hydro
-      if (dmpflg) write(*,*) 'h1hydro'
+      write(*,*) 'h1hydro'
 
-      do 120 idx=1, soil%nslay
+      do idx=1, soil%nslay
       if (soil%ahrwc(idx).lt.0.011.or.soil%ahrwc(idx).gt.0.379)           &
      &  write(*,*) 'day ',day,' ahrwc(',idx,') ', soil%ahrwc(idx)
 
@@ -1488,7 +1430,7 @@ module weps_output_mod
 
       if (soil%ah0cb(idx).lt.0.917.or.soil%ah0cb(idx).gt.27.927)          &
      &  write(*,*) 'day ',day,' ah0cb(',idx,') ', soil%ah0cb(idx)
-  120 continue
+      end do
 
       if (hstate%zsno.lt.0.0.or.hstate%zsno.gt.tstmax)                    &
      &  write(*,*) 'day ',day,' ahzsno ', hstate%zsno
@@ -1505,7 +1447,7 @@ module weps_output_mod
       if (hstate%zsmt.lt.0.0.or.hstate%zsmt.gt.tstmax)                    &
      &  write(*,*) 'day ',day,' ahzsmt ', hstate%zsmt
 
-      do 130 idx=1, soil%nslay
+      do idx=1, soil%nslay
       if (soil%ahrwcw(idx).lt.0.005.or.soil%ahrwcw(idx).gt.0.242)         &
      &  write(*,*) 'day ',day,' ahrwcw(',idx,') ', soil%ahrwcw(idx)
 
@@ -1517,9 +1459,9 @@ module weps_output_mod
 
       if (soil%ahrwca(idx).lt.0.0.or.soil%ahrwca(idx).gt.tstmax)          &
      &  write(*,*) 'day ',day,' ahrwca(',idx,') ', soil%ahrwca(idx)
-  130 continue     
+      end do
 
-      if (dmpflg) write(*,*) 'c1gen'
+      write(*,*) 'c1gen'
 
       if (croptot%rsaitot.lt.0.0.or.croptot%rsaitot.gt.tstmax) &
           write(*,*) 'day ',day,' croptot%rsaitot ', croptot%rsaitot
@@ -1527,13 +1469,13 @@ module weps_output_mod
       if (croptot%rlaitot.lt.0.0.or.croptot%rlaitot.gt.tstmax) &
           write(*,*) 'day ',day,' croptot%rlaitot ', croptot%rlaitot
 
-      do 191 idx=1,ncanlay
+      do idx=1,ncanlay
       if (croptot%rsaz(idx).lt.0.0.or.croptot%rsaz(idx).gt.tstmax) &
          write(*,*) 'day ',day,' croptot%rsaz(',idx,') ', croptot%rsaz(idx)
 
       if (croptot%rlaz(idx).lt.0.0.or.croptot%rlaz(idx).gt.tstmax) &
          write(*,*) 'day ',day,' croptot%rlaz(',idx,') ', croptot%rlaz(idx)
-191   continue
+      end do
 
       if (croptot%ffcvtot.lt.0.0.or.croptot%ffcvtot.gt.tstmax) &
          write(*,*) 'day ',day,' croptot%ffcvtot ', croptot%ffcvtot
@@ -1544,9 +1486,7 @@ module weps_output_mod
       if (croptot%ftcvtot.lt.0.0.or.croptot%ftcvtot.gt.tstmax) &
          write(*,*) 'day ',day,' croptot%ftcvtot ', croptot%ftcvtot
 
-! c1glob
-
-      if (dmpflg) write(*,*) 'c1glob'
+      write(*,*) 'c1glob'
 
       if (croptot%zht_ave.lt.0.0.or.croptot%zht_ave.gt.3.0) &
          write(*,*) 'day ',day,' croptot%zht_ave ', croptot%zht_ave
@@ -1560,10 +1500,10 @@ module weps_output_mod
       if (croptot%mrttot.lt.0.0.or.croptot%mrttot.gt.tstmax) &
          write(*,*) 'day ',day,' croptot%mrttot ', croptot%mrttot
 
-      do 2000 idx = 1, soil%nslay
+      do idx = 1, soil%nslay
         if (croptot%mrtz(idx).lt.0.0.or.croptot%mrtz(idx).gt.tstmax) &
            write(*,*) 'day ',day,' croptot%mrtz ', croptot%mrtz(idx)
-2000  continue
+      end do
 
       if (croptot%rsaitot.lt.0.0.or.croptot%rsaitot.gt.tstmax) &
          write(*,*) 'day ',day,' croptot%rsaitot ', croptot%rsaitot
@@ -1571,12 +1511,12 @@ module weps_output_mod
       if (croptot%rlaitot.lt.0.0.or.croptot%rlaitot.gt.tstmax) &
          write(*,*) 'day ',day,' croptot%rlaitot ', croptot%rlaitot
 
-      do 2100 idx = 1, ncanlay 
+      do idx = 1, ncanlay 
         if (croptot%rsaz(idx).lt.0.0.or.croptot%rsaz(idx).gt.tstmax) &
            write(*,*) 'day ',day,' croptot%rsaz ', croptot%rsaz(idx)
         if (croptot%rlaz(idx).lt.0.0.or.croptot%rlaz(idx).gt.tstmax) &
            write(*,*) 'day ',day,' croptot%rlaz ', croptot%rlaz(idx)
-2100  continue
+      end do
 
       if (croptot%ffcvtot.lt.0.0.or.croptot%ffcvtot.gt. 1.0) &
          write(*,*) 'day ',day,' croptot%ffcvtot ', croptot%ffcvtot
@@ -1590,9 +1530,8 @@ module weps_output_mod
       if (croptot%dstmtot.lt.0.0.or.croptot%dstmtot.gt.tstmax) &
          write(*,*) 'day ',day,' croptot%dstmtot ', croptot%dstmtot
 
-      if (dmpflg) write(*,*) 'end dbgdmp'
+      write(*,*) 'end dbgdmp'
       
     end subroutine dbgdmp
-
 
 end module weps_output_mod

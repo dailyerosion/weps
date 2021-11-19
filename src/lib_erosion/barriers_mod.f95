@@ -229,7 +229,7 @@ contains
         else
           do tdx = 1, barseas(bdx)%ntm-1
             ! search for low time mark index
-            if( doy .ge. barseas(bdx)%dst(tdx)%doy ) then
+            if( (doy .ge. barseas(bdx)%dst(tdx)%doy) .and. (doy .lt. barseas(bdx)%dst(tdx+1)%doy) ) then
               low_tm = tdx
               exit
             end if

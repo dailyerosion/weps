@@ -11,15 +11,17 @@ module report_init_mod
   SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, rep_update, rep_dates)
 
     use weps_cmdline_parms, only: report_debug
-    USE pd_dates_vars
-    USE pd_update_vars
-    USE pd_report_vars
+    USE pd_dates_vars, only: reporting_dates
+    USE pd_update_vars, only: reporting_update
+    USE pd_report_vars, only: reporting_report
 
-    USE pd_var_tables
+    USE pd_var_tables, only: Min_period_vars, Max_period_vars
+    USE pd_var_tables, only: Min_hmonth_vars, Max_hmonth_vars
+    USE pd_var_tables, only: Min_monthly_vars, Max_monthly_vars
+    USE pd_var_tables, only: Min_yrly_vars, Max_yrly_vars
 
     USE mandate_mod, only: opercrop_date
-
-    USE alloc_pd_vars_func         !defines alloc_pd_vars function
+    USE alloc_pd_vars_func, only: alloc_pd_vars
 
     IMPLICIT NONE
 

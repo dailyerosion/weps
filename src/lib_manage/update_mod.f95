@@ -13,15 +13,15 @@ module update_mod
 
   real, parameter :: minimum_res = 0.0001 ! (kg/m^2) ie. 0.001 = 1 gram/m^2
 
-  logical :: am0cropupfl  ! flag to determine that the crop state has been changed
-                          ! external to crop and that the crop update process must
-                          ! run to synchronize dependent variable values with state values
-                          ! .true. - update crop dependent
-                          ! .false. - update not necessary due to mangement operations
+  logical, dimension(:), allocatable :: am0cropupfl  ! flag to determine that the crop state has been changed
+                                                     ! external to crop and that the crop update process must
+                                                     ! run to synchronize dependent variable values with state values
+                                                     ! .true. - update crop dependent
+                                                     ! .false. - update not necessary due to mangement operations
 
   contains
 
-    subroutine plantupdate( soil, plant, croptot, restot, biotot )
+    subroutine plantupdate( sr, soil, plant, croptot, restot, biotot )
 
       ! + + + PURPOSE + + +
       ! calculates values of derived variables based on the present values
@@ -36,6 +36,7 @@ module update_mod
       use soillay_mod, only: valbydepth
 
 !     + + +   ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: sr       ! the subregion number
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
       type(biototal), intent(inout) :: croptot  ! structure containing living crop derived variables
@@ -82,9 +83,9 @@ module update_mod
         ! Living plant material section
         iplt = iplt + 1
 
-        if( thisPlant%growth%living .or. am0cropupfl ) then
+        if( thisPlant%growth%living .or. am0cropupfl(sr) ) then
           ! plant growing so update derived variables (if not growing should be residue)
-          am0cropupfl = .false.
+          am0cropupfl(sr) = .false.
 
           ! accumulate layer values into root mass totals
           ! NOTE: mbgleaf and mbgstore are set to zero and not updated for live plant

@@ -339,7 +339,6 @@ module WEPSCrop_mod
       ! spring leaf emergence
 
       use biomaterial, only: plant_pointer
-      use datetime_mod, only: get_simdate_doy
 
       ! + + + ARGUMENT DECLARATIONS + + +
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older
@@ -360,8 +359,6 @@ module WEPSCrop_mod
       real(dp) :: avail_mass    ! storage root mass sum in (mg/plant)
       real(dp) :: dlfwt         ! increment in leaf dry weight (kg/m^2)
 
-      integer(int32) :: doy
-
       ! + + + LOCAL PARAMETERS + + +
       real(dp), parameter :: leaf_exp = 2.0D0  ! exponent for shape of exponential function
                                                ! small numbers  go toward straight line
@@ -371,7 +368,6 @@ module WEPSCrop_mod
 !     + + + END OF SPECIFICATIONS + + +
 
       bnslay = size(plant%mass%rootstorez)
-      doy = get_simdate_doy()
 
       ! total leaf emergence occurs at an exponential rate
       fexp_hui = (exp(leaf_exp*leaf_hui)-1.0) / (exp(leaf_exp)-1)
@@ -462,7 +458,6 @@ module WEPSCrop_mod
 
       integer(int32), parameter :: growth_stress = 3
       real(dp), parameter :: water_stress_max = 0.0_dp
-      integer(int32), parameter :: winter_ann_root = 1
 
       ! + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), intent(in) :: soil  ! soil for this subregion
@@ -503,7 +498,6 @@ module WEPSCrop_mod
       real(dp) :: drswt      ! biomass diverted from partitioning to root storage
       real(dp) :: dstandstem
       real(dp) :: dht        ! daily height increment (m)
-      real(dp) :: xw         ! absolute value of minimum temperature
       real(dp) :: clfwt      ! leaf dry weight (kg/plant)
       real(dp) :: clfarea    ! leaf area (m^2/plant)
       integer(int32) :: i    ! array index used in loops
@@ -513,9 +507,6 @@ module WEPSCrop_mod
       real(dp) :: wfstore    ! total of weight fractions for storage roots (normalization)
       integer(int32) :: irfiber ! index of deepest soil layer for fibrous roots
       integer(int32) :: irstore ! index of deepest soil layer for storage roots
-      real(dp) :: temp_fiber
-      real(dp) :: temp_store
-      real(dp) :: temp_stem
       real(dp), dimension(:), allocatable :: wfl ! weight fraction by layer used to distribute root mass into the soil layers
       real(dp), dimension(:), allocatable :: za  ! soil layer representative depth
       real(dp) :: bhfwsf_adj  ! water stress factor adjusted by biomass adjustment factor
@@ -525,9 +516,6 @@ module WEPSCrop_mod
                                ! Adjusted based on: plants freeze hardening index, fullness of storage root reservoir
       real(dp) :: tempdstm   ! number of stem possible from root stores
       real(dp) :: temptotshoot ! amount of storage required from each stem
-      real(dp) :: froz_mass  ! mass of living tissue that died today
-      real(dp) :: live_leaf
-      real(dp) :: dead_leaf  ! mass in kg/m^2
       real(dp) :: strs       ! stress mass reduction factor
       real(dp) :: lost_mass_weath  ! lost mass from weathering of senesence material
       real(dp) :: senes_mass ! mass of leaf moved from live to dead (senescence)

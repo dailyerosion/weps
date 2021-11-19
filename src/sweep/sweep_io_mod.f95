@@ -38,6 +38,7 @@ module sweep_io_mod
       use sweep_io_xml_mod, only: begin_sweep_element_handler, end_sweep_element_handler, pcdata_sweep_chunk_handler
       use sweep_io_xml_mod, only: begin_treatment_element_handler, end_treatment_element_handler, pcdata_treatment_chunk_handler
       use sweep_io_xml_mod, only: begin_soilstate_element_handler, end_soilstate_element_handler, pcdata_soilstate_chunk_handler
+      use sweep_io_xml_mod, only: nsubr
       use sae_in_out_mod, only: mksaeinp, subrfiles
       use grid_mod, only: gridfile, griddata_complete, init_grid_xml
       use grid_mod, only: begin_griddata_element_handler, end_griddata_element_handler, pcdata_griddata_chunk_handler
@@ -54,8 +55,6 @@ module sweep_io_mod
 
       type(xml_t) :: fxml   ! xml file handle structure
       integer :: iostat     ! input/output status
-
-      integer :: nsubr      ! number of subregions
 
       ! +++ END SPECIFICATIONS +++
 
@@ -94,9 +93,6 @@ module sweep_io_mod
             write(*,*) 'Simulation run file incomplete'
             call exit(1)
           end if
-
-          ! number of subregions
-          nsubr = size(subrfiles)
 
           do isr = 1, nsubr
 
@@ -187,6 +183,7 @@ module sweep_io_mod
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
       use barriers_mod, only: create_barrier, barrier, barseas
       use grid_mod, only: amasim, amxsim
+      use sweep_io_xml_mod, only: nsubr
 
       ! +++ ARGUMENT DECLARATIONS +++
       character*(mrcl), intent(inout) :: line
@@ -210,7 +207,6 @@ module sweep_io_mod
       integer :: alloc_stat  ! indicates status of memory allocation attempt
       integer :: sum_stat    ! accumulates for multiple allocations, one error statement.
       integer :: npools      ! number of brcdInput pools
-      integer :: nsubr       ! number of subregions (read from input file)
       integer :: nacctr      ! number of accounting regions (read from input file)
       integer :: nbr         ! number of barriers (read from input file)
 
@@ -366,7 +362,7 @@ module sweep_io_mod
 
       ! create data array to hold input and derived values for each subregion
       sum_stat = 0
-      allocate(subrsurf(0:nsubr), stat=alloc_stat)
+      allocate(subrsurf(1, nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       ! create subregion polygon array
       allocate(subr_poly(nsubr), stat=alloc_stat)
@@ -426,15 +422,15 @@ module sweep_io_mod
 
         ! use crop and residue values to find the total value
         ! sum the stem area index and leaf area index values
-        subrsurf(sr)%abrsai = acrsai + adrsaitot
-        subrsurf(sr)%abrlai = acrlai + adrlaitot
+        subrsurf(1,sr)%abrsai = acrsai + adrsaitot
+        subrsurf(1,sr)%abrlai = acrlai + adrlaitot
 
         ! Compute the weighted average "biomass height" (residues and crop)
         ! which is used internally by the erosion code - LEW 1/26/06
-        if (subrsurf(sr)%abrsai .le. 0.0) then
-            subrsurf(sr)%abzht = 0.0
+        if (subrsurf(1,sr)%abrsai .le. 0.0) then
+            subrsurf(1,sr)%abzht = 0.0
         else
-            subrsurf(sr)%abzht = ( adzht_ave * adrsaitot + aczht * acrsai ) / subrsurf(sr)%abrsai
+            subrsurf(1,sr)%abzht = ( adzht_ave * adrsaitot + aczht * acrsai ) / subrsurf(1,sr)%abrsai
         endif
 
         ! addition to code for biodrag
@@ -450,31 +446,31 @@ module sweep_io_mod
         if( (adzht_ave .gt. 0.0) .and. ((adrsaitot .gt. 0.0) .or. (adrlaitot .gt. 0.0)) ) then
           npools = npools + 1
         end if
-        subrsurf(sr)%npools = npools
-        call create_brcdinputpools( npools, subrsurf(sr) )
+        subrsurf(1,sr)%npools = npools
+        call create_brcdinputpools( npools, subrsurf(1,sr) )
 
         ! Place old values for lai, sai into brcdInput
         npools = 0
         if( (aczht .gt. 0.0) .and. ((acrsai .gt. 0.0) .or. (acrlai .gt. 0.0)) ) then
           ! biodrag elements exist, add brcdInput
           npools = npools + 1
-          subrsurf(sr)%brcdInput(npools)%bname = 'crop'
-          subrsurf(sr)%brcdInput(npools)%rlai = acrlai
-          subrsurf(sr)%brcdInput(npools)%rsai = acrsai
-          subrsurf(sr)%brcdInput(npools)%rg = ac0rg
-          subrsurf(sr)%brcdInput(npools)%xrow = acxrow
-          subrsurf(sr)%brcdInput(npools)%zht = aczht
+          subrsurf(1,sr)%brcdInput(npools)%bname = 'crop'
+          subrsurf(1,sr)%brcdInput(npools)%rlai = acrlai
+          subrsurf(1,sr)%brcdInput(npools)%rsai = acrsai
+          subrsurf(1,sr)%brcdInput(npools)%rg = ac0rg
+          subrsurf(1,sr)%brcdInput(npools)%xrow = acxrow
+          subrsurf(1,sr)%brcdInput(npools)%zht = aczht
         end if
 
         if( (adzht_ave .gt. 0.0) .and. ((adrsaitot .gt. 0.0) .or. (adrlaitot .gt. 0.0)) ) then
           ! biodrag elements exist, add brcdInput
           npools = npools + 1
-          subrsurf(sr)%brcdInput(npools)%bname = 'residue'
-          subrsurf(sr)%brcdInput(npools)%rlai = adrlaitot
-          subrsurf(sr)%brcdInput(npools)%rsai = adrsaitot
-          subrsurf(sr)%brcdInput(npools)%rg = 0
-          subrsurf(sr)%brcdInput(npools)%xrow = 0.0
-          subrsurf(sr)%brcdInput(npools)%zht = adzht_ave
+          subrsurf(1,sr)%brcdInput(npools)%bname = 'residue'
+          subrsurf(1,sr)%brcdInput(npools)%rlai = adrlaitot
+          subrsurf(1,sr)%brcdInput(npools)%rsai = adrsaitot
+          subrsurf(1,sr)%brcdInput(npools)%rg = 0
+          subrsurf(1,sr)%brcdInput(npools)%xrow = 0.0
+          subrsurf(1,sr)%brcdInput(npools)%zht = adzht_ave
         end if
 
         ! These aren't used in EROSION yet
@@ -487,124 +483,124 @@ module sweep_io_mod
         ! read (getline(i_unit),*) abffcv(sr), abfscv(sr), abftcv(sr)
         ! Only flat fraction cover used yet
         line = getline(i_unit)
-        read (line,*) subrsurf(sr)%abffcv
+        read (line,*) subrsurf(1,sr)%abffcv
 
       ! +++ SOIL +++
 
         ! Number of soil layers (in this subregion)
         line = getline(i_unit)
-        read (line,*) subrsurf(sr)%nslay
+        read (line,*) subrsurf(1,sr)%nslay
 
         ! allocate arrays for soil layer and surface wetness values
-        call create_subregionsoillayers(subrsurf(sr)%nslay, subrsurf(sr))
-        call create_subregionsurfacewet(24, subrsurf(sr))
+        call create_subregionsoillayers(subrsurf(1,sr)%nslay, subrsurf(1,sr))
+        call create_subregionsurfacewet(24, subrsurf(1,sr))
 
         ! Soil layer thickness
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%aszlyt,l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%aszlyt,l=1,subrsurf(1,sr)%nslay)
 
         ! Soil layer bulk density
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%asdblk, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%asdblk, l=1,subrsurf(1,sr)%nslay)
 
         ! Sand, silt, and clay fractions
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%asfsan, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%asfsan, l=1,subrsurf(1,sr)%nslay)
 
         ! read very fine sand content edit 6-9-01 LH
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%asfvfs, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%asfvfs, l=1,subrsurf(1,sr)%nslay)
 
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%asfsil, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%asfsil, l=1,subrsurf(1,sr)%nslay)
 
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%asfcla, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%asfcla, l=1,subrsurf(1,sr)%nslay)
 
         ! Volume of rock fraction
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%asvroc, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%asvroc, l=1,subrsurf(1,sr)%nslay)
 
         ! Soil layer aggregate density
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%asdagd, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%asdagd, l=1,subrsurf(1,sr)%nslay)
 
         ! Soil layer aggregate stability
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%aseags, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%aseags, l=1,subrsurf(1,sr)%nslay)
 
 ! Check these variables with ASD inc files and Hagen's EROSION inc files - LEW
         ! Soil layer ASD parms (gmd, min, max, gsd)
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%aslagm, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%aslagm, l=1,subrsurf(1,sr)%nslay)
 
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%aslagn, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%aslagn, l=1,subrsurf(1,sr)%nslay)
 
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%aslagx, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%aslagx, l=1,subrsurf(1,sr)%nslay)
 
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%as0ags, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%as0ags, l=1,subrsurf(1,sr)%nslay)
 
         ! Crust parms (fraction, thickness)
         line = getline(i_unit)
-        read (line,*) subrsurf(sr)%asfcr, subrsurf(sr)%aszcr, &
+        read (line,*) subrsurf(1,sr)%asfcr, subrsurf(1,sr)%aszcr, &
         ! Crust parms (fraction cover of loose material, mass loose material)
-             subrsurf(sr)%asflos, subrsurf(sr)%asmlos, &
+             subrsurf(1,sr)%asflos, subrsurf(1,sr)%asmlos, &
         ! Crust parms (crust density and stability)
-             subrsurf(sr)%asdcr, subrsurf(sr)%asecr
+             subrsurf(1,sr)%asdcr, subrsurf(1,sr)%asecr
 
         ! Random Roughness
         line = getline(i_unit)
-        read (line,*) subrsurf(sr)%aslrr
+        read (line,*) subrsurf(1,sr)%aslrr
 
         !Lower and upper limits of grid cell RR allowed by erosion submodel
-        if (subrsurf(sr)%aslrr < SLRR_MIN) then
-           write(0,*) 'slrr: ', subrsurf(sr)%aslrr,' < ', SLRR_MIN
+        if (subrsurf(1,sr)%aslrr < SLRR_MIN) then
+           write(0,*) 'slrr: ', subrsurf(1,sr)%aslrr,' < ', SLRR_MIN
         end if
-        if (subrsurf(sr)%aslrr > SLRR_MAX) then
-           write(0,*) 'slrr: ', subrsurf(sr)%aslrr,' < ', SLRR_MIN
+        if (subrsurf(1,sr)%aslrr > SLRR_MAX) then
+           write(0,*) 'slrr: ', subrsurf(1,sr)%aslrr,' < ', SLRR_MIN
         end if
 
         !Lower and upper limits of grid cell aerodynamic roughness allowed
         !by erosion submodel (currently determined by equation used here)
-        if (subrsurf(sr)%aslrr < (WZZO_MIN/0.3)) then
-           write(0,*) 'slrr: ', subrsurf(sr)%aslrr
-           write(0,*) 'wzzo < WZZO_MIN: ', subrsurf(sr)%aslrr*0.3,' < ', WZZO_MIN
-        else if(subrsurf(sr)%aslrr > (WZZO_MAX/0.3)) then
-           write(0,*) 'slrr: ', subrsurf(sr)%aslrr
-           write(0,*) 'wzzo > WZZO_MAX: ', subrsurf(sr)%aslrr*0.3,' > ', WZZO_MAX
+        if (subrsurf(1,sr)%aslrr < (WZZO_MIN/0.3)) then
+           write(0,*) 'slrr: ', subrsurf(1,sr)%aslrr
+           write(0,*) 'wzzo < WZZO_MIN: ', subrsurf(1,sr)%aslrr*0.3,' < ', WZZO_MIN
+        else if(subrsurf(1,sr)%aslrr > (WZZO_MAX/0.3)) then
+           write(0,*) 'slrr: ', subrsurf(1,sr)%aslrr
+           write(0,*) 'wzzo > WZZO_MAX: ', subrsurf(1,sr)%aslrr*0.3,' > ', WZZO_MAX
         end if
 
         ! Oriented Roughness (ridge ht, spacing, width, orientation)
         line = getline(i_unit)
-        read (line,*) subrsurf(sr)%aszrgh, subrsurf(sr)%asxrgs, subrsurf(sr)%asxrgw, subrsurf(sr)%asargo
+        read (line,*) subrsurf(1,sr)%aszrgh, subrsurf(1,sr)%asxrgs, subrsurf(1,sr)%asxrgw, subrsurf(1,sr)%asargo
 
         ! Oriented Roughness ( spacing)
         line = getline(i_unit)
-        read (line,*) subrsurf(sr)%asxdks
+        read (line,*) subrsurf(1,sr)%asxdks
 
       ! +++ HYDROLOGY +++
 
         ! Snow depth
         line = getline(i_unit)
-        read (line,*) subrsurf(sr)%ahzsnd
+        read (line,*) subrsurf(1,sr)%ahzsnd
 
         ! Soil layer wilting point
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%ahrwcw, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%ahrwcw, l=1,subrsurf(1,sr)%nslay)
 
         ! Soil layer water content
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%bsl(l)%ahrwca, l=1,subrsurf(sr)%nslay)
+        read (line,*) (subrsurf(1,sr)%bsl(l)%ahrwca, l=1,subrsurf(1,sr)%nslay)
 
         ! Soil surface hourly water content
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%ahrwc0(h), h=1,12)
+        read (line,*) (subrsurf(1,sr)%ahrwc0(h), h=1,12)
 
         line = getline(i_unit)
-        read (line,*) (subrsurf(sr)%ahrwc0(h), h=13,24)
+        read (line,*) (subrsurf(1,sr)%ahrwc0(h), h=13,24)
 
   100 continue
 
@@ -712,7 +708,7 @@ module sweep_io_mod
       endif
 
       if( hagen_plot_flag ) then 
-         call plotin(subrsurf)
+         call plotin(subrsurf(1,1))
       end if
 
    end subroutine erodin_legacy
@@ -783,7 +779,7 @@ module sweep_io_mod
       use grid_mod, only: amxsim
 
 
-      type(subregionsurfacestate), dimension(:), allocatable :: subrsurf
+      type(subregionsurfacestate), intent(in) :: subrsurf
 
       integer i_unit   ! logical unit input file number
       character*(mrcl) line
@@ -825,7 +821,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) = subrsurf(1)%abzht
+          xin(xplot) = subrsurf%abzht
         else
           line = getline(i_unit)
         endif
@@ -837,7 +833,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) = subrsurf(1)%abrsai
+          xin(xplot) = subrsurf%abrsai
         else
           line = getline(i_unit)
         endif
@@ -849,7 +845,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) = subrsurf(1)%abrlai
+          xin(xplot) = subrsurf%abrlai
         else
           line = getline(i_unit)
         endif
@@ -861,7 +857,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) = subrsurf(1)%abffcv
+          xin(xplot) = subrsurf%abffcv
         else
           line = getline(i_unit)
         endif
@@ -873,7 +869,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) = subrsurf(1)%bsl(1)%asfvfs
+          xin(xplot) = subrsurf%bsl(1)%asfvfs
         else
           line = getline(i_unit)
         endif
@@ -885,7 +881,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%bsl(1)%asfsan
+          xin(xplot) =  subrsurf%bsl(1)%asfsan
         else
           line = getline(i_unit)
         endif
@@ -897,7 +893,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) = subrsurf(1)%bsl(1)%asfsil
+          xin(xplot) = subrsurf%bsl(1)%asfsil
         else
           line = getline(i_unit)
         endif
@@ -909,7 +905,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%bsl(1)%asfcla
+          xin(xplot) =  subrsurf%bsl(1)%asfcla
         else
           line = getline(i_unit)
         endif
@@ -921,7 +917,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%bsl(1)%asvroc
+          xin(xplot) =  subrsurf%bsl(1)%asvroc
         else
           line = getline(i_unit)
         endif
@@ -933,7 +929,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) = subrsurf(1)%bsl(1)%asdagd
+          xin(xplot) = subrsurf%bsl(1)%asdagd
         else
           line = getline(i_unit)
         endif
@@ -945,7 +941,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%bsl(1)%aseags
+          xin(xplot) =  subrsurf%bsl(1)%aseags
         else
           line = getline(i_unit)
         endif
@@ -957,7 +953,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%bsl(1)%aslagm
+          xin(xplot) =  subrsurf%bsl(1)%aslagm
         else
           line = getline(i_unit)
         endif
@@ -969,7 +965,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%bsl(1)%aslagn
+          xin(xplot) =  subrsurf%bsl(1)%aslagn
         else
           line = getline(i_unit)
         endif
@@ -981,7 +977,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%bsl(1)%aslagx
+          xin(xplot) =  subrsurf%bsl(1)%aslagx
         else
           line = getline(i_unit)
         endif
@@ -993,7 +989,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%bsl(1)%as0ags
+          xin(xplot) =  subrsurf%bsl(1)%as0ags
         else
           line = getline(i_unit)
         endif
@@ -1005,7 +1001,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) = subrsurf(1)%asfcr
+          xin(xplot) = subrsurf%asfcr
         else
           line = getline(i_unit)
         endif
@@ -1017,7 +1013,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) = subrsurf(1)%aszcr
+          xin(xplot) = subrsurf%aszcr
         else
           line = getline(i_unit)
         endif
@@ -1029,7 +1025,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%asflos
+          xin(xplot) =  subrsurf%asflos
         else
           line = getline(i_unit)
         endif
@@ -1041,7 +1037,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%asmlos
+          xin(xplot) =  subrsurf%asmlos
         else
           line = getline(i_unit)
         endif
@@ -1053,7 +1049,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%asecr
+          xin(xplot) =  subrsurf%asecr
         else
           line = getline(i_unit)
         endif
@@ -1065,7 +1061,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) = subrsurf(1)%aslrr
+          xin(xplot) = subrsurf%aslrr
         else
           line = getline(i_unit)
         endif
@@ -1077,7 +1073,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%aszrgh
+          xin(xplot) =  subrsurf%aszrgh
         else
           line = getline(i_unit)
         endif
@@ -1089,7 +1085,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%asxrgs
+          xin(xplot) =  subrsurf%asxrgs
         else
           line = getline(i_unit)
         endif
@@ -1101,7 +1097,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%asxrgw
+          xin(xplot) =  subrsurf%asxrgw
         else
           line = getline(i_unit)
         endif
@@ -1113,7 +1109,7 @@ module sweep_io_mod
           xplot = xplot + 1
           line = getline(i_unit)
           xcharin(xplot) = line(1:xchl)
-          xin(xplot) =  subrsurf(1)%asargo
+          xin(xplot) =  subrsurf%asargo
         else
           line = getline(i_unit)
         endif

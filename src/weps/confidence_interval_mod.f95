@@ -12,7 +12,7 @@ contains
 ! rotation as one number. No confidence interval can be obtained until
 ! three rotation cycles have been completed.
 
-subroutine confidence_interval(ci, nrot_yrs, n1cycles, ci_year, yrly_report, yr_report)
+subroutine confidence_interval(ci, nrot_yrs, ncycles, ci_year, yrly_report, yr_report)
 
     USE pd_var_type_def
     use pd_var_tables
@@ -23,12 +23,11 @@ subroutine confidence_interval(ci, nrot_yrs, n1cycles, ci_year, yrly_report, yr_
 
     real,    intent (in) :: ci ! confidence interval value (decimal)
     integer, intent (in) :: nrot_yrs ! number of year in a rotation cycle
-    integer, intent (in) :: n1cycles ! one more than the number of rotation cycles completed
+    integer, intent (in) :: ncycles ! the number of rotation cycles completed
     integer, intent (inout) :: ci_year ! indicates how many years of data have been printed into ci.out
     TYPE (pd_var_type), DIMENSION(:,0:), intent(in) :: yrly_report
     TYPE (pd_var_type), DIMENSION(:,:), intent(in) :: yr_report
 
-    integer :: ncycles      ! the number of rotation cycles completed
     integer :: idy          ! local loop variable
     integer :: nrot         ! index of which time through the rotation
     integer :: rot_yr_cnt   ! number of values accumuated for this time through the rotation
@@ -41,9 +40,6 @@ subroutine confidence_interval(ci, nrot_yrs, n1cycles, ci_year, yrly_report, yr_
                             ! since printing does not start until ncycle = 4.
 
     INTEGER :: alloc_status = 0         ! Local allocate status return
-
-    ! find number of cycles completed
-    ncycles = n1cycles - 1
 
     ! check for a sufficient number of data values before first calculation
     if( ncycles .le. 3 ) then

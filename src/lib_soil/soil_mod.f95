@@ -5,18 +5,12 @@
 
 module soil_mod
 
-    integer :: tday      ! The last accessed day of simulation month.
-    integer :: tmo       ! The last accessed month of simulation year.
-    integer :: tyr       ! The last accessed year of simulation run.
-    integer :: tisr      ! The last accessed subregion index.
-
   contains
 
     subroutine callsoil(daysim, isr, soil, croptot, biotot, hstate, h1et)
       ! Wrapper to call soil
 
       use biomaterial, only: biototal
-      use timer_mod, only: timer, TIMSOIL, TIMSTART, TIMSTOP
       use soil_data_struct_defs, only: am0sdb, soil_def
       use hydro_data_struct_defs, only: hydro_derived_et, hydro_state
 
@@ -25,13 +19,11 @@ module soil_mod
       integer isr                   
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biototal), intent(in) :: croptot, biotot
-      type(hydro_state), intent(in) :: hstate
+      type(hydro_state), intent(inout) :: hstate
       type(hydro_derived_et), intent(in) :: h1et
 
-      call timer(TIMSOIL,TIMSTART)      
-
       if (am0sdb(isr) .eq. 1) then
-         call sdbug(isr, soil, croptot, biotot, hstate, h1et)
+         call sdbug(.false., isr, soil, croptot, biotot, hstate, h1et)
       end if
 
       call soilproc(isr, daysim, hstate%locirr, h1et%zirr, hstate%zsmt,  &
@@ -41,22 +33,19 @@ module soil_mod
      &                 hstate%zinf, hstate%zwid, soil)
 
       if (am0sdb(isr) .eq. 1) then
-         call sdbug(isr, soil, croptot, biotot, hstate, h1et)
+         call sdbug(.true., isr, soil, croptot, biotot, hstate, h1et)
       end if
 
       ! recalculate  depth to bottom of soil layer
       call depthini( soil%nslay, soil%aszlyt, soil%aszlyd )
 
-      call timer(TIMSOIL,TIMSTOP)      
-
     end subroutine callsoil
 
-    subroutine soilproc (isr, daysim, bhlocirr, bhzirr, bhzsmt,           &
-     &                 bhtsmx, bhtsmn,                                  &
-     &                 bslay, &
-     &                 bbffcv, bbfscv,                                  &
-     &                 bhzinf, bhzwid, soil)
-
+    subroutine soilproc (isr, daysim, bhlocirr, bhzirr, bhzsmt, &
+                         bhtsmx, bhtsmn, &
+                         bslay, &
+                         bbffcv, bbfscv, &
+                         bhzinf, bhzwid, soil)
 
 !     + + + PURPOSE + + +
 ! SOIL submodel for the Wind Erosion Prediction System model.
@@ -71,86 +60,67 @@ module soil_mod
 !     + + + KEY WORDS + + +
 !     wind erosion, soil processes, surface process, layer process
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-
-      use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luosoilsurf, luosoillay
       use soil_data_struct_defs, only: am0sfl
       use soil_processes_mod, only: updlay, cru, ranrou, rid
-      use climate_input_mod, only: cli_today
+      use climate_input_mod, only: cli_day
+      use datetime_mod, only: get_psim_doy, get_psim_year, get_psim_juld
       use process_mod, only: coef_abrasion
       use soil_data_struct_defs, only: soil_def
 
-!     + + + ARGUMENT DECLARATIONS + + +
+      ! + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
-      integer daysim
-      real bhlocirr, bhzirr, bhzsmt
-      real bhtsmx(*), bhtsmn(*)
-      integer bslay
-      real bbffcv, bbfscv
-      real bhzinf, bhzwid
+      integer, intent(in) :: daysim ! an index for the day of simulation.
+      real, intent(in) :: bhlocirr  ! location of irrigation application
+                                    ! + means above the soil surface
+                                    ! - means below the soil surface
+                                    ! soil surface reference is the bottom of the furrow 
+      real, intent(in) :: bhzirr    ! irrigation water applied, mm/day.
+      real, intent(in) :: bhzsmt    ! snowmelt, mm/day
+      real, intent(in) :: bhtsmx(*) ! layer maximum temperature of today in C.
+      real, intent(in) :: bhtsmn(*) ! layer minimum temperature of today in C.
+      integer, intent(in) :: bslay  ! number of soil layers
+      real, intent(in) :: bbffcv    ! biomass fraction flat cover
+      real, intent(in) :: bbfscv    ! biomass fraction standing cover
+      real, intent(in) :: bhzinf    ! daily water infiltration depth (mm of water)
+      real, intent(inout) :: bhzwid    ! water infiltration depth (mm of soil)
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
 
-!     + + + ARGUMENT DEFINITIONS + + +
-!   daysim    - an index for the day of simulation.
-!   bhlocirr  - location of irrigation application
-!               + means above the soil surface
-!               - means below the soil surface
-!               soil surface reference is the bottom of the furrow 
-!   bhzirr    - irrigation water applied, mm/day.
-!   bhzsmt    - snowmelt, mm/day.
-!   bhtsmx    - layer maximum temperature of today in C.
-!   bhtsmn    - layer minimum temperature of today in C.
-!   bslay     - number of soil layers
-!   bbffcv    - biomass fraction flat cover
-!   bbfscv    - biomass fraction standing cover
-!   bhzinf    - daily water infiltration depth (mm of water)
-!   bhzwid    - water infiltration depth (mm of soil)
+      ! + + + LOCAL VARIABLES + + +
+      real :: rain   ! water added to soil as rain.
+      real :: snow   ! water equivalent added to soil surface as snow, mm.
+      real :: sprink ! water added to soil as sprinkler irrigation, mm.
+      real :: cumpa  ! apparent (rain + sprinkler + snow-metl) to current
+                     ! day from time of last tillage
+      real :: cf2cov ! a plant cover correction factor for ridge height
+                     ! and random roughness decrease as a result of rain.
+      real :: szlyd(bslay)     ! depth to bottom of each soil layer, mm
+      real :: laycenter(bslay) ! depth to middle of each soil layer, mm
+      real :: bsmls0  ! prior value of bsmlos before update by SOIL, kg/m^2
+      real :: dcump   ! total rain + sprinkler + snow-melt for current day.
+      integer :: yr   ! current year of simulation for output.
+      integer :: idoy ! day of year for output
+      integer :: ldx  ! index for layers
+      integer :: trigger(bslay) ! bitmapped integer showing the state of soil property change
+                                ! condition triggers for output into the layer detail file
+                                ! This is the same as the value of the integer being set in 
+                                ! powers of two
+                                ! BIT - representative condition
+                                !  0   - freeze
+                                !  1   - freeze_thaw
+                                !  2   - thaw
+                                !  3   - frozen
+                                !  4   - wetting
+                                !  5   - drying
+                                !  6   - warm_puddling
+                                !  7   - wet_bulk_den
 
-      real rain, snow, sprink
-      real cumpa
-      real cf2cov
-      real szlyd(bslay), laycenter(bslay)
-      real bsmls0
-      real dcump
-      integer yr, idoy
-      integer ldx, trigger(bslay)
+      ! + + + END SPECIFICATIONS + + +
 
-!     + + + LOCAL DEFINITIONS + + +
-!   rain      - water added to soil as rain.
-!   snow      - water equivalent added to soil surface as snow, mm.
-!   sprink    - water added to soil as sprinkler irrigation, mm.
-!   cumpa     - apparent (rain + sprinkler + snow-metl) to current
-!               day from time of last tillage
-!   cf2cov    - a plant cover correction factor for ridge height
-!               and random roughness decrease as a result of rain.
-!   szlyd     - depth to bottom of each soil layer, mm
-!   laycenter - depth to middle of each soil layer, mm
-!   bsmls0    - prior value of bsmlos before update by SOIL, kg/m^2
-!   dcump     - total rain + sprinkler + snow-melt for current day.
-!   yr        - current year of simulation for output.
-!   idoy      - day of year for output
-!   ldx       - index for layers
-!   trigger   - bitmapped integer showing the state of soil property change
-!               condition triggers for output into the layer detail file
-!               This is the same as the value of the integer being set in 
-!               powers of two
-!               BIT - representative condition
-!               0   - freeze
-!               1   - freeze_thaw
-!               2   - thaw
-!               3   - frozen
-!               4   - wetting
-!               5   - drying
-!               6   - warm_puddling
-!               7   - wet_bulk_den
+      ! + + + INITIALIZATION  SECTION + + +
 
-!     + + + END SPECIFICATIONS + + +
-
-!     + + + INITIALIZATION  SECTION + + +
-
-! call daily initialization
-      call sinit (daysim, &
+      ! call daily initialization
+      call sinit( daysim, &
                   bhtsmx, soil%ahrwc, soil%asfom, soil%aszlyt, &
                   bslay, soil%asfsan, soil%asfsil, soil%asfcla, &
                   soil%aszrgh, soil%aslrr, soil%asfcce, soil%asfcec, &
@@ -162,40 +132,40 @@ module soil_mod
                   rain, snow, sprink, &
                   bhzirr, soil%aszrho, &
                   bhlocirr, bhzsmt, soil%aslrro, &
-                  soil%asdsblk, cli_today%zdpt, cli_today%tdav, trigger)
+                  soil%asdsblk, cli_day(get_psim_juld(isr))%zdpt, cli_day(get_psim_juld(isr))%tdav, trigger)
 
-!  UPDATE SURFACE
-!     do surface processes if (rain+sprinkler+snowmelt>0)
+      ! UPDATE SURFACE
+      ! do surface processes if (rain+sprinkler+snowmelt>0)
 
       if (dcump .gt. 0.0) then
 
-!  RIDGE SECTION:
-        call rid(cf2cov, bbfscv, bbffcv, soil%aszrgh, &
-          soil%asxrgs, soil%aszrho, cumpa, dcump, soil%asvroc)
+        ! RIDGE SECTION:
+        call rid( cf2cov, bbfscv, bbffcv, soil%aszrgh, &
+                  soil%asxrgs, soil%aszrho, cumpa, dcump, soil%asvroc)
 
-!  RANDOM ROUGHNESS SECTION:
-        call ranrou(soil%asfsil(1), soil%asfsan(1), soil%aslrr, soil%aslrro, &
-     &    cumpa, dcump, cf2cov, soil%asvroc(1))
+        ! RANDOM ROUGHNESS SECTION:
+        call ranrou( soil%asfsil(1), soil%asfsan(1), soil%aslrr, soil%aslrro, &
+                     cumpa, dcump, cf2cov, soil%asvroc(1))
 
-!  CRUST SECTION:
-        call  cru(soil%aszcr, cumpa, soil%asfcla(1), dcump, &
-          soil%asfcr, bhzsmt, soil%asmlos, soil%asfom(1), soil%asfcce(1), &
-          soil%asfsan(1), bsmls0, soil%aszrgh, soil%aslrr, soil%asflos)
+        ! CRUST SECTION:
+        call  cru( soil%aszcr, cumpa, soil%asfcla(1), dcump, &
+                   soil%asfcr, bhzsmt, soil%asmlos, soil%asfom(1), soil%asfcce(1), &
+                   soil%asfsan(1), bsmls0, soil%aszrgh, soil%aslrr, soil%asflos)
 
       endif
 
-!  skip layer update on first simulation day
+      ! skip layer update on first simulation day
       if (daysim .ge. 2) then
         call updlay( daysim, szlyd, &
-     &  soil%bhrwc0, soil%ahrwc, soil%ahrwcdmx, &
-     &  soil%aseagmx, soil%aseagmn, soil%aseags, &
-     &  soil%ahrwcw, soil%ahrwcs, &
-     &  bhtsmn, soil%bhtmx0, bhtsmx, &
-     &  soil%aslmin, soil%aslmax, &
-     &  soil%aslagm, &
-     &  soil%as0ags, soil%aslagn, soil%aslagx, soil%asdblk, &
-     &  soil%aszlyt, soil%asdagd, bslay, &
-     &  soil%asdsblk, soil%asvroc, bhzinf, bhzwid, trigger, isr)
+                     soil%bhrwc0, soil%ahrwc, soil%ahrwcdmx, &
+                     soil%aseagmx, soil%aseagmn, soil%aseags, &
+                     soil%ahrwcw, soil%ahrwcs, &
+                     bhtsmn, soil%bhtmx0, bhtsmx, &
+                     soil%aslmin, soil%aslmax, &
+                     soil%aslagm, &
+                     soil%as0ags, soil%aslagn, soil%aslagx, soil%asdblk, &
+                     soil%aszlyt, soil%asdagd, bslay, &
+                     soil%asdsblk, soil%asvroc, bhzinf, bhzwid, trigger, isr)
 
         ! update surface properties based on surface layer properties
         ! crust stability
@@ -218,7 +188,7 @@ module soil_mod
       soil%bszrr0 = soil%aslrr
       soil%bszrh0 = soil%aszrgh
 
-!     + + + OUTPUT FORMATS + + +
+      ! + + + OUTPUT FORMATS + + +
  2100 format('#daysim idoy yr cump dcump bszrgh bsxrgs bszrr bszcr bsfcr&
      & bsecr bsmlos bsflos bcanag bcancr')
  2200 format( 3(1x,i4), 10(1x,f8.4) )
@@ -231,12 +201,12 @@ module soil_mod
      &  freeze|frz_thw|   thaw| frozen|wetting| drying|puddling|wet_bulk_den')
  2400 format( i6, 1x,i3, 1x,i4, 1x,i3, 17(1x,f10.4), 8(7x,b1) )
 
-!  + + +  OUTPUT SECTION  + + +
+      ! + + +  OUTPUT SECTION  + + +
 
       if ((am0sfl(isr) .eq. 1)) then
          ! get some date, day variables
-         yr = get_simdate_year()
-         idoy = get_simdate_doy()
+         yr = get_psim_year(isr)
+         idoy = get_psim_doy(isr)
 
          ! write output headers
          if( daysim .eq. 1 ) then
@@ -257,7 +227,7 @@ module soil_mod
               soil%asfcr, soil%asecr, soil%asmlos, soil%asflos, &
               soil%acanag, soil%acancr
 
-! output new values by layer to the soil output file.
+         ! output new values by layer to the soil output file.
          do ldx = 1,bslay
             if( ldx .eq. 1 ) then
               laycenter(ldx) = 0.5 * szlyd(ldx)
@@ -265,18 +235,17 @@ module soil_mod
               laycenter(ldx) = 0.5 * ( szlyd(ldx-1) + szlyd(ldx) )
             end if
 
-            write (luosoillay(isr),2400) daysim, idoy, yr, ldx,         &
-     &          laycenter(ldx), soil%aszlyd(ldx), soil%aszlyt(ldx), soil%asdblk(ldx), &
-     &          soil%aseags(ldx), soil%aseagmn(ldx), soil%aseagm(ldx), soil%aseagmx(ldx),   &
-
-     &          soil%aslagm(ldx), soil%as0ags(ldx), soil%aslagn(ldx), soil%aslagx(ldx), &
-     &          soil%aslmin(ldx), soil%aslmax(ldx),     &
-     &          (soil%aslagm(ldx) - soil%aslmin(ldx))/(soil%aslmax(ldx) - soil%aslmin(ldx)),&
-     &          soil%asdagd(ldx), (soil%aseags(ldx)-soil%aseagmn(ldx))/(soil%aseagmx(ldx)-soil%aseagmn(ldx)), &
-     &          ibits(trigger(ldx),0,1), ibits(trigger(ldx),1,1),       &
-     &          ibits(trigger(ldx),2,1), ibits(trigger(ldx),3,1),       &
-     &          ibits(trigger(ldx),4,1), ibits(trigger(ldx),5,1),       &
-     &          ibits(trigger(ldx),6,1), ibits(trigger(ldx),7,1)
+            write (luosoillay(isr),2400) daysim, idoy, yr, ldx, &
+               laycenter(ldx), soil%aszlyd(ldx), soil%aszlyt(ldx), soil%asdblk(ldx), &
+               soil%aseags(ldx), soil%aseagmn(ldx), soil%aseagm(ldx), soil%aseagmx(ldx), &
+               soil%aslagm(ldx), soil%as0ags(ldx), soil%aslagn(ldx), soil%aslagx(ldx), &
+               soil%aslmin(ldx), soil%aslmax(ldx), &
+               (soil%aslagm(ldx) - soil%aslmin(ldx))/(soil%aslmax(ldx) - soil%aslmin(ldx)), &
+               soil%asdagd(ldx), (soil%aseags(ldx)-soil%aseagmn(ldx))/(soil%aseagmx(ldx)-soil%aseagmn(ldx)), &
+               ibits(trigger(ldx),0,1), ibits(trigger(ldx),1,1), &
+               ibits(trigger(ldx),2,1), ibits(trigger(ldx),3,1), &
+               ibits(trigger(ldx),4,1), ibits(trigger(ldx),5,1), &
+               ibits(trigger(ldx),6,1), ibits(trigger(ldx),7,1)
          end do
       endif
 
@@ -574,7 +543,7 @@ module soil_mod
       cump = cump + dcump
       end subroutine sinit
 
-    subroutine  sdbug(isr, soil, croptot, biotot, hstate, h1et)
+    subroutine sdbug(aflg, isr, soil, croptot, biotot, hstate, h1et)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -587,60 +556,30 @@ module soil_mod
 !     + + + KEY WORDS + + +
 !     wind, erosion, hydrology, tillage, soil, crop, decomposition
 
-      use weps_main_mod, only: am0ifl
-      use datetime_mod, only: get_simdate, get_simdate_daysim
+      use datetime_mod, only: get_psim_juld, get_psim_doy, get_psim_year, get_psim_daysim
       use file_io_mod, only: luosdb
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biototal
-      use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
-      use climate_input_mod, only: cli_today, amzele
+      use climate_input_mod, only: cli_day, wind_day, amzele
       use hydro_data_struct_defs, only: hydro_derived_et, hydro_state
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer isr
+      logical, intent(in) :: aflg  ! .false. indicates called before, .true. indicates called after
+      integer, intent(in) :: isr   ! subregion index
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biototal), intent(in) :: croptot, biotot
       type(hydro_state), intent(in) :: hstate
       type(hydro_derived_et), intent(in) :: h1et
 
 !     + + + LOCAL VARIABLES + + +
-      integer cd, cm, cy, l
-
-!     + + + LOCAL DEFINITIONS + + +
-
-!   cd        - The current day of simulation month.
-!   cm        - The current month of simulation year.
-!   cy        - The current year of simulation run.
-!   isr       - This variable holds the subregion index.
-!   l         - This variable is an index on soil layers.
-
-!     + + + SUBROUTINES CALLED + + +
-
-!     + + + FUNCTIONS CALLED + + +
-
-!     + + + UNIT NUMBERS FOR INPUT/OUTPUT DEVICES + + +
-!     * = screen and keyboard
-!    26 = debug SOIL
-
-!     + + + DATA INITIALIZATIONS + + +
-
-      if (am0ifl  .eqv. .true.) then
-          tday = -1
-          tmo = -1
-          tyr = -1
-          tisr = -1
-      end if
-      call get_simdate (cd, cm, cy)
-
-!     + + + INPUT FORMATS + + +
+      integer :: l      ! index for soil layers
+      integer :: pjuld  ! index for present simulation day
 
 !     + + + OUTPUT FORMATS + + +
- 2030 format ('**',1x,2(i2,'/'),i4,' daysim=',i4,'   After  call to SOIL&
-     &    Subregion No. ',i3)
- 2031 format ('**',1x,2(i2,'/'),i4,' daysim=',i4,'   Before call to SOIL&
-     &    Subregion No. ',i3)
- 2032 format (' cli_today%zdpt  cli_today%tdmx  cli_today%tdmn  cli_today%eirr  awudmx  awudmn ', &
-     &        ' cli_today%tdpt  awadir  awhrmx  amzele ')
+ 2030 format ('**',1x,'Day ',i2,'of Year ',i4,' daysim=',i4,'   After  call to SOIL    Subregion No. ',i3)
+ 2031 format ('**',1x,'Day ',i2,'of Year ',i4,' daysim=',i4,'   Before call to SOIL    Subregion No. ',i3)
+ 2032 format (' cli_day%zdpt  cli_day%tdmx  cli_day%tdmn  cli_day%eirr  awudmx  awudmn ', &
+     &        ' cli_day%tdpt  awadir  awhrmx  amzele ')
  2038 format (f7.2,9f8.2)
  2050 format ('amrslp(',i2,') croptot%ftcvtot(',i2,') croptot%rlaitot(',&
      &  i2,')',                                                         &
@@ -662,16 +601,18 @@ module soil_mod
 
 !     + + + END SPECIFICATIONS + + +
 
-!          write weather cligen and windgen variables
-      if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and.  &
-     &   (isr .eq. tisr)) then
-         write(luosdb(isr),2030) cd,cm,cy,get_simdate_daysim(),isr
+      pjuld = get_psim_juld(isr)
+
+      ! write weather cligen and windgen variables
+      if( aflg )then
+         write(luosdb(isr),2030) get_psim_doy(isr),get_psim_year(isr),get_psim_daysim(isr),isr
       else
-         write(luosdb(isr),2031) cd,cm,cy,get_simdate_daysim(),isr
+         write(luosdb(isr),2031) get_psim_doy(isr),get_psim_year(isr),get_psim_daysim(isr),isr
       end if
       write(luosdb(isr),2032)
-      write(luosdb(isr),2038) cli_today%zdpt,cli_today%tdmx,cli_today%tdmn,cli_today%eirr,awudmx,awudmn,&
-     &               cli_today%tdpt,awadir,awhrmx,amzele
+      write(luosdb(isr),2038) cli_day(pjuld)%zdpt, cli_day(pjuld)%tdmx, &
+                              cli_day(pjuld)%tdmn, cli_day(pjuld)%eirr, wind_day(pjuld)%wwudmx, wind_day(pjuld)%wwudmn, &
+                              cli_day(pjuld)%tdpt, wind_day(pjuld)%wwadir, wind_day(pjuld)%wwhrmx, amzele
 
       write(luosdb(isr),2050) isr,isr,isr,isr,isr,isr,isr
 
@@ -700,11 +641,6 @@ module soil_mod
      &                  soil%aslagm(l), soil%as0ags(l), soil%aslagn(l), &
      &                  soil%aslagx(l), soil%aseags(l)
   300 continue
-
-      tisr = isr
-      tday = cd
-      tmo = cm
-      tyr = cy
 
       return
     end subroutine sdbug

@@ -8,7 +8,6 @@ module WEPSleafon_mod
   use constants, only: dp, check_return
   use plant_mod
   use WEPSCrop_util_mod, only: shoot_delay
-  use datetime_mod, only: get_simdate_doy
   implicit none
 
   type, extends(preprocess) :: WEPSleafon
@@ -123,7 +122,8 @@ module WEPSleafon_mod
               ! activate leafon in growth
               do_leafon = .true.
               ! set day of year on which transition took place
-              bcdayleafon = get_simdate_doy()
+              call env%state%get("day_of_year", bcdayleafon, succ)
+              if( .not. check_return( trim(self%processName) , "day_of_year", succ ) ) return
               ! reset triggers
               bcdayleafoff = 0
 

@@ -59,13 +59,13 @@ module crop_growth_mod
 !     This is the main program for implementing the crop growth calculations.
 
       use weps_cmdline_parms, only: frac_frst_mass_lost
-      use datetime_mod, only: get_simdate_doy, get_simdate
+      use datetime_mod, only: get_psim_doy, get_psim_juld
       use file_io_mod, only: luocrop, luoshoot
       use constants, only: u_mgtokg
       use crop_data_struct_defs, only: am0cfl
       use crop_climate_mod, only: huc1, freezeharden, chillunit_cum, warmday_cum, coldday_cum
-      use climate_input_mod, only: amalat
-      use solar_mod, only: civilrise, daylen
+      use climate_input_mod, only: cli_day
+      use solar_mod, only: amalat, civilrise, daylen
       use solar_mod, only: N_spring_eqx, N_summer_sol, N_fall_eqx, N_winter_sol
       use solar_mod, only: S_spring_eqx, S_summer_sol, S_fall_eqx, S_winter_sol
 
@@ -259,7 +259,7 @@ module crop_growth_mod
       integer :: fall_eqx
       integer :: winter_sol
 
-      integer lay, dd, mm, yy
+      integer lay
       double precision root_store_rel, pot_stems, pot_leaf_mass
       double precision vern_delay, photo_delay
       double precision trend
@@ -278,6 +278,8 @@ module crop_growth_mod
 
       double precision :: u_bcmtotshoot
       double precision :: u_bcdstm
+
+      integer :: pjuld   ! present julian day for subregion
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     root_store_rel - root storage which could be released for regrowth
@@ -335,16 +337,18 @@ module crop_growth_mod
 
 !     + + + END OF SPECIFICATIONS + + +
 
+      ! set present julian day for subregion to index into cli_day array
+      pjuld = get_psim_juld(isr)
+
+      ! day of year
+      jd = get_psim_doy(isr)
+
+      ! convert single to double
       u_bcmtotshoot = dble(bcmtotshoot)
       u_bcdstm = dble(bcdstm)
 
-      ! get simulation month and day
-      call get_simdate(dd, mm, yy)
-!     day of year
-      jd = get_simdate_doy()
-
-!     initialize growth variables when crop is planted
-!     bm0cif is flag to initialize crop at start of planting
+      ! initialize growth variables when crop is planted
+      ! bm0cif is flag to initialize crop at start of planting
       if (bm0cif) then
           if (am0cfl(isr) .ge. 1) then
               ! put double blank lines in daily files to create growth blocks
@@ -413,13 +417,13 @@ module crop_growth_mod
       end if
 
       ! check for consecutive "warm" days based on daily average temperature
-      call warmday_cum( bctwarmdays, bctmin )
+      call warmday_cum( bctwarmdays, bctmin, cli_day(pjuld)%tdmx, cli_day(pjuld)%tdmn )
 
       ! check for consecutive "cold" days based on daily average temperature
-      call coldday_cum( bctcolddays, bctmin )
+      call coldday_cum( bctcolddays, bctmin, cli_day(pjuld)%tdmx, cli_day(pjuld)%tdmn )
 
       ! accumulate chill units
-      call chillunit_cum(bctchillucum)
+      call chillunit_cum(bctchillucum, cli_day(pjuld)%tdmx, cli_day(pjuld)%tdmn)
 
       ! calculate freeze hardening index 
       call freezeharden(bcthardnx, dble(bhtsmx(1)), dble(bhtsmn(1)))
@@ -786,7 +790,7 @@ module crop_growth_mod
                   hu_delay =  max(dev_floor,min(vern_delay,photo_delay))
               end if
               ! accumulate heat units using set heat unit delay
-              huc = huc1(bctopt,bctmin)
+              huc = huc1(cli_day(pjuld)%tdmx, cli_day(pjuld)%tdmn, bctopt,bctmin)
               bcthucum = bcthucum + huc * hu_delay
 
               ! root depth growth heat units
@@ -976,11 +980,11 @@ module crop_growth_mod
 !     biomass
 
       use weps_cmdline_parms, only: growth_stress, water_stress_max, winter_ann_root, cook_yield
-      use datetime_mod, only: get_simdate_doy, get_simdate_year
+      use datetime_mod, only: get_psim_juld, get_psim_doy, get_psim_year
       use file_io_mod, only: luocrop
       use constants, only: u_hatom2, u_pi, u_mmtom
       use crop_data_struct_defs, only: am0cfl
-      use climate_input_mod, only: cli_today
+      use climate_input_mod, only: cli_day
       use crop_climate_mod, only: temp_stress
       use precision_mod, only: max_real, max_arg_exp
 
@@ -1115,7 +1119,6 @@ module crop_growth_mod
       double precision ts
       double precision stem_propor, prdy, prd
       double precision eff_lai, trad_lai
-      integer yr, doy
       integer i   
       double precision wcg, wmaxd
       double precision wffiber, wfstore
@@ -1131,6 +1134,7 @@ module crop_growth_mod
       double precision lost_mass_weath  ! lost mass from weathering of senesence material
       double precision senes_mass       ! mass of leaf moved from live to dead (senescence)
       double precision temp_fliveleaf
+      integer :: pjuld   ! julian day
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     par - photosynthetically active radiation (MJ/m2)
@@ -1181,8 +1185,6 @@ module crop_growth_mod
 !     prd - potential root depth today
 !     eff_lai - single plant effective leaf area index (based on maximum single plant coverage area)
 !     trad_lai - leaf area index based on whole field area (traditional)
-!     yr - year
-!     doy - day of year
 !     i - array index used in loops
 !     wcg - root mass distribution function exponent (see reference at equation)
 !     wmaxd - root mass distribution function depth limit parameter
@@ -1211,9 +1213,6 @@ module crop_growth_mod
 !             1 - returns the shoot number unconstrained by bcdmaxshoot
 
 !     + + + END OF SPECIFICATIONS + + +
-
-      yr = get_simdate_year()
-      doy = get_simdate_doy()
 
       !!!!! START SINGLE PLANT CALCULATIONS !!!!!
       ! calculate single plant effective lai (standing living leaves only)
@@ -1251,10 +1250,13 @@ module crop_growth_mod
       !traditional lai calculation for reporting puposes
       trad_lai = clfarea * dble(bcdpop)
 
-!     Start biomass calculations
-!     cli_today%eirr is total shortwave radiation and a factor of .5 is assumed
-!     to get to the photosynthetically active radiation
-      par=0.5d0 * dble(cli_today%eirr)                    ! MJ/m^2                                    ! C-4
+      ! simulation julian day index into cli_day
+      pjuld = get_psim_juld(isr)
+      
+      ! Start biomass calculations
+      ! cli_day(pjuld)%eirr is total shortwave radiation and a factor of .5 is assumed
+      ! to get to the photosynthetically active radiation
+      par=0.5d0 * dble(cli_day(pjuld)%eirr)                    ! MJ/m^2   ! C-4
 
 !     calculate intercepted PAR, which is the good stuff less what hits the ground
       apar=par*(1.0d0-exp(-bc0ck*eff_lai))                                             ! C-4
@@ -1283,7 +1285,7 @@ module crop_growth_mod
       !bhfwsf_adj = 1 !no water stress
 
 !     calculate temperature stress
-      ts = temp_stress(bctopt, bctmin)
+      ts = temp_stress(cli_day(pjuld)%tdmx, cli_day(pjuld)%tdmn, bctopt, bctmin)
 
       ! select application of stress functions based on command line flag
       if( growth_stress .eq. 0 ) then
@@ -1613,7 +1615,7 @@ module crop_growth_mod
             temp_fliveleaf = 1.0d0
           end if
 
-          write(luocrop(isr), 2130) daysim, doy, yr, bcdayap, hui,      &
+          write(luocrop(isr), 2130) daysim, get_psim_doy(isr), get_psim_year(isr), bcdayap, hui, &
      &                    bcmstandstem, bcmstandleaflive + bcmstandleafdead, bcmstandstore, &
      &                    bcmflatstem, bcmflatleaf, bcmflatstore,       &
      &                    temp_store, temp_fiber, temp_stem,            &
@@ -1655,7 +1657,7 @@ module crop_growth_mod
 !     shoot growth
 
       use weps_cmdline_parms, only: cook_yield
-      use datetime_mod, only: get_simdate_doy, get_simdate_year
+      use datetime_mod, only: get_psim_doy, get_psim_year 
       use file_io_mod, only: luoshoot
       use constants, only: u_mgtokg, u_mmtom
       use crop_data_struct_defs, only: am0cfl
@@ -1737,7 +1739,6 @@ module crop_growth_mod
 !     bcdayap - number of days of growth completed since crop planted
 
 !     + + + LOCAL VARIABLES + + +
-      integer yr, doy
       integer lay
       double precision shoot_hui, shoot_huiy
       double precision fexp_hui, fexp_huiy
@@ -1753,8 +1754,6 @@ module crop_growth_mod
       double precision dlfwt, dstwt, drpwt, drswt
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
-!     yr - year
-!     doy - day of year
 !     lay - index into soil layers for looping
 !     shoot_hui - today fraction of heat unit shoot growth index accumulation
 !     shoot_huiy - previous day fraction of heat unit shoot growth index accumulation
@@ -1803,9 +1802,6 @@ module crop_growth_mod
 !      real frac_lay
 
 !     + + + END OF SPECIFICATIONS + + +
-
-      yr = get_simdate_year()
-      doy = get_simdate_doy()
 
       ! fraction of shoot growth from stored reserves (today and yesterday)
       shoot_hui = min( 1.0d0, (hui - bcthu_shoot_beg)                     &
@@ -2042,7 +2038,7 @@ module crop_growth_mod
 !     the following write statements are for 'shoot.out'
 !     am0cfl is flag to print crop submodel output
  900  if (am0cfl(isr) .ge. 1) then
-          write(luoshoot(isr), 1000) daysim,doy, yr, bcdayap, shoot_hui,&
+          write(luoshoot(isr), 1000) daysim, get_psim_doy(isr), get_psim_year(isr), bcdayap, shoot_hui, &
      &        s_root_sum, f_root_sum, tot_mass_req, end_shoot_mass,     &
      &        end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass,  &
      &        end_stem_mass, end_stem_area, end_shoot_len, bczshoot,    &
@@ -2058,7 +2054,7 @@ module crop_growth_mod
       return
     end subroutine shoot_grow
 
-    subroutine leaf_emerge( bnslay, bcdpop, hui, huiy, bcthu_leaf_beg, bcthu_leaf_end, &
+    pure subroutine leaf_emerge( bnslay, bcdpop, hui, huiy, bcthu_leaf_beg, bcthu_leaf_end, &
      &                      bcmstandleaflive, bcmtotleaf, bcmrootstorez )
 
 !     + + + KEYWORDS + + +
@@ -2066,16 +2062,16 @@ module crop_growth_mod
 
       use constants, only: u_mgtokg
 
-      use datetime_mod, only: get_simdate_doy
-
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer bnslay
-      real bcdpop
-      double precision hui, huiy
-      double precision bcthu_leaf_beg, bcthu_leaf_end
-      real bcmstandleaflive
-      double precision bcmtotleaf
-      real bcmrootstorez(*)
+      integer, intent(in) :: bnslay
+      real, intent(in) :: bcdpop
+      double precision, intent(in) :: hui
+      double precision, intent(in) :: huiy
+      double precision, intent(in) :: bcthu_leaf_beg
+      double precision, intent(in) :: bcthu_leaf_end
+      real, intent(inout) :: bcmstandleaflive
+      double precision, intent(in) :: bcmtotleaf
+      real, intent(inout) :: bcmrootstorez(*)
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     bnslay - number of soil layers
@@ -2101,8 +2097,6 @@ module crop_growth_mod
       double precision end_leaf_mass
       double precision s_root_sum, avail_mass
       double precision dlfwt
-
-      integer doy
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     lay - index into soil layers for looping
@@ -2130,8 +2124,6 @@ module crop_growth_mod
 !     be_stor - conversion efficiency of biomass from storage to growth
 
 !     + + + END OF SPECIFICATIONS + + +
-
-      doy = get_simdate_doy()
 
       ! fraction of leaf growth from stored reserves (today and yesterday)
       leaf_hui = min( 1.0d0, (hui - bcthu_leaf_beg) / (dble(bcthu_leaf_end) - bcthu_leaf_beg) )
@@ -2203,7 +2195,7 @@ module crop_growth_mod
       return
     end subroutine leaf_emerge
 
-    double precision function frac_lay( top_loc, bot_loc, top_lay, bot_lay )
+    pure function frac_lay( top_loc, bot_loc, top_lay, bot_lay ) result(frac_layer)
 
       ! this function determines the fraction of a location which
       ! is contained in a layer. It could also be viewed as the
@@ -2211,34 +2203,39 @@ module crop_growth_mod
       ! depth slice. It was written assuming that top values are 
       ! less than bottom values
 
-      double precision top_loc, bot_loc, top_lay, bot_lay
+      double precision, intent(in) :: top_loc
+      double precision, intent(in) :: bot_loc
+      double precision, intent(in) :: top_lay
+      double precision, intent(in) :: bot_lay
+      
+      double precision frac_layer
 
       if( top_lay .le. top_loc .and. bot_lay .gt. top_loc ) then
           ! top location is in layer
           if( bot_lay .ge. bot_loc ) then
               ! bottom location is also in layer
-              frac_lay = 1.0d0
+              frac_layer = 1.0d0
           else
               ! bottom location is below layer, proportion
-              frac_lay = (bot_lay - top_loc)/(bot_loc - top_loc)
+              frac_layer = (bot_lay - top_loc)/(bot_loc - top_loc)
           end if
       else if( top_lay .lt. bot_loc .and. bot_lay .ge. bot_loc ) then
           ! bottom location is in layer
           ! if we are here, top location is not in layer so proportion
-          frac_lay = (bot_loc - top_lay)/(bot_loc - top_loc)
+          frac_layer = (bot_loc - top_lay)/(bot_loc - top_loc)
       else if( top_lay .gt. top_loc .and. bot_lay .lt. bot_loc ) then
           ! location completely spans layer
-          frac_lay = (bot_lay - top_lay)/(bot_loc - top_loc)
+          frac_layer = (bot_lay - top_lay)/(bot_loc - top_loc)
       else
           ! location is not in the layer at all
-          frac_lay = 0.0d0
+          frac_layer = 0.0d0
       end if
 
       return
     end function frac_lay
 
-    subroutine shootnum( shoot_flg, bnslay, bc0idc, bcdpop, bc0shoot, &
-     &           bcdmaxshoot, bcmtotshoot, bcmrootstorez, bcdstm )
+    pure subroutine shootnum( shoot_flg, bnslay, bc0idc, bcdpop, bc0shoot, &
+                              bcdmaxshoot, bcmtotshoot, bcmrootstorez, bcdstm )
 
 !     + + + PURPOSE + + +
 !     determine the number of shoots that root storage mass can support,
@@ -2250,11 +2247,15 @@ module crop_growth_mod
       use constants, only: u_mgtokg
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer shoot_flg, bnslay, bc0idc
-      real bcdpop, bc0shoot, bcdmaxshoot
-      double precision bcmtotshoot
-      real bcmrootstorez(*)
-      double precision bcdstm
+      integer, intent(in) :: shoot_flg
+      integer, intent(in) :: bnslay
+      integer, intent(in) :: bc0idc
+      real, intent(in) :: bcdpop
+      real, intent(in) :: bc0shoot
+      real, intent(in) :: bcdmaxshoot
+      double precision, intent(out) :: bcmtotshoot
+      real, intent(in) :: bcmrootstorez(*)
+      double precision, intent(out) :: bcdstm
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     shoot_flg - used to control the behavior of the shootnum subroutine
@@ -2328,7 +2329,7 @@ module crop_growth_mod
       return
     end subroutine shootnum
 
-    function total_leaf( bnslay, bcmrootstorez ) result(bcmtotleaf)
+    pure function total_leaf( bnslay, bcmrootstorez ) result(bcmtotleaf)
 
 !     + + + PURPOSE + + +
 !     determine the mass of leaf emergence that root storage mass can support,
@@ -2338,8 +2339,9 @@ module crop_growth_mod
 !     leaf emergence
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer bnslay
-      real bcmrootstorez(*)
+      integer, intent(in) :: bnslay
+      real, intent(in) :: bcmrootstorez(*)
+      
       double precision bcmtotleaf
 
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -2378,11 +2380,11 @@ module crop_growth_mod
       return
     end function total_leaf
 
-    subroutine cookyield(bchyfg, bnslay, dlfwt, dstwt, drpwt, drswt,  &
-     &                     bcmstandstem, bcmstandleaf, bcmstandstore,   &
-     &                     bcmflatstem, bcmflatleaf, bcmflatstore,      &
-     &                     bcmrootstorez, lost_mass,                    &
-     &                     bcyld_coef, bcresid_int, bcgrf )
+    pure subroutine cookyield(bchyfg, bnslay, dlfwt, dstwt, drpwt, drswt, &
+                              bcmstandstem, bcmstandleaf, bcmstandstore, &
+                              bcmflatstem, bcmflatleaf, bcmflatstore, &
+                              bcmrootstorez, lost_mass, &
+                              bcyld_coef, bcresid_int, bcgrf )
 
 !     + + + PURPOSE + + +
 !     adjust incremental biomass allocation to leaf stem and reproductive
@@ -2390,13 +2392,23 @@ module crop_growth_mod
 !     if running the model in that mode
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer bchyfg, bnslay
-      double precision dlfwt, dstwt, drpwt, drswt
-      double precision bcmstandstem, bcmstandleaf, bcmstandstore
-      double precision bcmflatstem, bcmflatleaf, bcmflatstore
-      real bcmrootstorez(*)
-      double precision lost_mass
-      double precision bcyld_coef, bcresid_int, bcgrf
+      integer, intent(in) :: bchyfg
+      integer, intent(in) :: bnslay
+      double precision, intent(inout) :: dlfwt
+      double precision, intent(inout) :: dstwt
+      double precision, intent(inout) :: drpwt
+      double precision, intent(inout) :: drswt
+      double precision, intent(in) :: bcmstandstem
+      double precision, intent(in) :: bcmstandleaf
+      double precision, intent(in) :: bcmstandstore
+      double precision, intent(in) :: bcmflatstem
+      double precision, intent(in) :: bcmflatleaf
+      double precision, intent(in) :: bcmflatstore
+      real, intent(in) :: bcmrootstorez(*)
+      double precision, intent(in) :: lost_mass
+      double precision, intent(in) :: bcyld_coef
+      double precision, intent(in) :: bcresid_int
+      double precision, intent(in) :: bcgrf
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     bchyfg - flag indicating the part of plant to apply the "grain fraction",
@@ -2482,14 +2494,13 @@ module crop_growth_mod
           end do
       end if
       ! add lost mass here to allow removing if mass was above threshold
-      temp_tot = temp_tot + lost_mass                                   &
-     &         + bcmstandstem + bcmstandleaf + bcmstandstore            &
-     &         + bcmflatstem + bcmflatleaf + bcmflatstore
+      temp_tot = temp_tot + lost_mass &
+               + bcmstandstem + bcmstandleaf + bcmstandstore &
+               + bcmflatstem + bcmflatleaf + bcmflatstore
       if( temp_tot + ddm_res_yld .le. bcresid_int ) then
           store_mass = 0.0
       else if( temp_tot .le. bcresid_int ) then
-          store_mass = (ddm_res_yld - (bcresid_int-temp_tot))           &
-     &               / bcyld_coef / bcgrf
+          store_mass = (ddm_res_yld - (bcresid_int-temp_tot)) / bcyld_coef / bcgrf
       else
           store_mass = ddm_res_yld / bcyld_coef / bcgrf
       end if
@@ -2545,36 +2556,36 @@ module crop_growth_mod
       return
     end subroutine cookyield
 
-    subroutine ht_dia_sai( bcdpop, bcmstandstem, dmstandstem,         &
-     &                       bc0ssa, bc0ssb, bcdstm,                    &
-     &                       bczht, dht, bcxstmrep, bcrsai )
+    pure subroutine ht_dia_sai( bcdpop, bcmstandstem, dmstandstem, &
+                                bc0ssa, bc0ssb, bcdstm, &
+                                bczht, dht, bcxstmrep, bcrsai )
 
-!     + + + PURPOSE + + +
-! this routine checks for consistency between plant height and biomass
-! accumulation, using half and double the stem diameter (previously unused)
-! as check points. The representative stem diameter is set to show where
-! within the range the actual stem diameter is.
+      !     + + + PURPOSE + + +
+      ! this routine checks for consistency between plant height and biomass
+      ! accumulation, using half and double the stem diameter (previously unused)
+      ! as check points. The representative stem diameter is set to show where
+      ! within the range the actual stem diameter is.
 
-!     + + + ARGUMENT DECLARATIONS + + +
+      ! + + + ARGUMENT DECLARATIONS + + +
       double precision, intent(in) :: bcdpop, bcmstandstem, dmstandstem
       double precision, intent(in) :: bc0ssa, bc0ssb
       double precision, intent(in) :: bcdstm, bczht 
       double precision, intent(inout) :: dht
       double precision, intent(out) :: bcxstmrep, bcrsai
 
-!     + + + ARGUMENT DEFINITIONS + + +
-!     bcdpop - Crop seeding density (#/m^2)
-!     bcmstandstem - crop standing stem mass (kg/m^2)
-!     dmstandstem - daily crop standing stem mass increment (kg/m^2)
-!     bc0ssa - stem area to mass coefficient a, result is m^2 per plant
-!     bc0ssb - stem area to mass coefficient b, argument is kg per plant
-!     bcdstm - Number of crop stems per unit area (#/m^2)
-!     bczht  - Crop height (m)
-!     dht - daily height increment (m)
-!     bcxstmrep - a representative diameter so that acdstm*acxstmrep*aczht=acrsai
-!     bcrsai - Crop stem area index (m^2/m^2)
+      ! + + + ARGUMENT DEFINITIONS + + +
+      ! bcdpop - Crop seeding density (#/m^2)
+      ! bcmstandstem - crop standing stem mass (kg/m^2)
+      ! dmstandstem - daily crop standing stem mass increment (kg/m^2)
+      ! bc0ssa - stem area to mass coefficient a, result is m^2 per plant
+      ! bc0ssb - stem area to mass coefficient b, argument is kg per plant
+      ! bcdstm - Number of crop stems per unit area (#/m^2)
+      ! bczht  - Crop height (m)
+      ! dht - daily height increment (m)
+      ! bcxstmrep - a representative diameter so that acdstm*acxstmrep*aczht=acrsai
+      ! bcrsai - Crop stem area index (m^2/m^2)
 
-!     + + + END OF SPECIFICATIONS + + +
+      ! + + + END OF SPECIFICATIONS + + +
 
       ! calculate crop stem area index
       ! when exponent is not 1, must use mass for single plant stem to get stem area
@@ -2586,10 +2597,10 @@ module crop_growth_mod
           bcrsai = 0.0
       end if
 
-     ! if( dmstandstem .le. 0.0 ) then
-     !   ! stem mass is not increasing, therefore height is not increasing.
-     !   dht = 0.0
-     ! end if
+      ! if( dmstandstem .le. 0.0 ) then
+      !   ! stem mass is not increasing, therefore height is not increasing.
+      !   dht = 0.0
+      ! end if
 
       ! (m^2 stem / m^2 ground) / ((stems/m^2 ground) * m) = m/stem
       ! this value not reset unless it is meaningful
@@ -2602,7 +2613,7 @@ module crop_growth_mod
       return
     end subroutine ht_dia_sai
 
-    function freeze_damage( x1, y1, x2, y2, xw ) result(frst)
+    pure function freeze_damage( x1, y1, x2, y2, xw ) result(frst)
 
       use precision_mod, only: max_arg_exp_dp
 
@@ -2610,8 +2621,12 @@ module crop_growth_mod
       ! with a low temperature of xw
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real x1,x2,y1,y2
-      double precision xw
+      real, intent(in) :: x1
+      real, intent(in) :: x2
+      real, intent(in) :: y1
+      real, intent(in) :: y2
+      double precision, intent(in) :: xw
+
       double precision frst
 
       ! + + + LOCAL VARIABLES + + +

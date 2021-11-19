@@ -12,9 +12,10 @@ module decomp_process_mod
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residue_pointer, decomp_factors
       use decomp_data_struct_defs, only: am0dfl, am0ddb
-      use climate_input_mod, only: cli_today
+      use climate_input_mod, only: cli_day
       use hydro_data_struct_defs, only: hydro_derived_et, hydro_state, hhrs
       use decomp_out_mod, only: ddbug, decout
+      use datetime_mod, only: get_psim_juld
 
 !     +++ PURPOSE + + +
 
@@ -43,10 +44,9 @@ module decomp_process_mod
 
 !     + + + VARIABLE DECLARATIONS + + +
 
-      integer :: iage    ! residue pool age index
       integer :: isz     ! soil layer indexing variable
       integer :: nslay   ! maximum number of soil layers
-      integer :: npools  ! maximum number of residue pools
+      integer :: pjuld   ! present julian day
 
 ! + + +  ADDITIONAL LOCAL VARIABLES NOT IN DECOMP.KOM + + +
 !     These are used in tc function.
@@ -62,13 +62,6 @@ module decomp_process_mod
 !     leaf_fac  - leaf decomposition rate = leaf_fac * stem decomposition rate
 !     store_fac - store decomposition rate = store_fac * stem decomposition rate
 
-!     + + +   FUNCTION CALLS +++
-!
-!     tc - Calculates temperature based scaling factor
-!      real  tc
-      
-      logical dbgflg
-
       type(plant_pointer), pointer :: thisPlant
       type(residue_pointer), pointer :: thisResidue
 
@@ -77,29 +70,23 @@ module decomp_process_mod
 !  sure that when a harvest takes place that all the decomp pools are
 !  updated correctly.
 !
-      data dbgflg /.false./
+      pjuld = get_psim_juld(isr)
 
       ! set the number of soil layers from previously allocated structure
       nslay = size(decompfac%iwcg)
 
       if (am0ddb(isr) .eq. 1) call ddbug(isr, nslay, plant)
 
-      if (dbgflg) write(*,*) 'decomp 1'
+      ! + + +  END SPECIFICATIONS + + +
 
-!     + + +  END SPECIFICATIONS + + +
-      if (dbgflg) write(*,*) 'decomp 1a'
+      !  Calculation of water coefficent for decomp days
+      ! Standing residues water factor  ( 0. to 1. )
+      ! Steiner et al. 1994 Agronomy Journal  Jan-Feb issue
 
-!  Calculation of water coefficent for decomp days
-! Standing residues water factor  ( 0. to 1. )
-! Steiner et al. 1994 Agronomy Journal  Jan-Feb issue
+      ! sum rain, irr, snow melt
+      decompfac%aqua = cli_day(pjuld)%zdpt + h1et%zirr + hstate%zsmt
 
-! sum rain, irr, snow melt
-
-      if (dbgflg) write(*,*) 'decomp 2'
-      decompfac%aqua = cli_today%zdpt + h1et%zirr + hstate%zsmt
-
-! Test for water input day.
-
+      ! Test for water input day.
       if (decompfac%aqua .gt. 0.) then
 
          decompfac%weti = 4 !set # of days for antecedent
@@ -118,86 +105,73 @@ module decomp_process_mod
 
       decompfac%iwcsy = decompfac%iwcs !save decompfac%iwcs for calc. of tomorrows water factor
 
-!  Surface water factor same as standing  (0. to 1.)
-!     Need to set up better test of water factor  (12-8-1993)
+      ! Surface water factor same as standing  (0. to 1.)
+      ! Need to set up better test of water factor  (12-8-1993)
 
-
-!     code changed to use hydrology global variables  HHS 1- 4- 1994
-!     old code >    decompfac%iwcf = theta(1)/thetaf(1)
+      ! code changed to use hydrology global variables  HHS 1- 4- 1994
+      ! old code >    decompfac%iwcf = theta(1)/thetaf(1)
 
       decompfac%iwcf = hstate%rwc0(hhrs/2) / soil%ahrwcf(1) !use water content at surface at midday
-      !decompfac%iwcf = ahrwc(1,isr) / soil%ahrwcf(1) !use water content of soil layer 1
+      ! decompfac%iwcf = ahrwc(1,isr) / soil%ahrwcf(1) !use water content of soil layer 1
 
 !     water factor = water content of top soil layer / optimum water content of top soil layer
       if (decompfac%iwcf.gt.1.0) decompfac%iwcf = 1.0
       decompfac%iwcf = max(decompfac%iwcf,decompfac%iwcs) !for flat residue, use the greatest of flat and standing water factor
 
+      ! decompfac%iwcf = decompfac%iwcs !flat: precip based (like standing) --> underestimation of decomposition
+      ! decompfac%iwcf = 1.0 !flat: optimum moisture for decomp --> overestimation of decomposition
 
+      ! Belowground water factor             (0. to 1.)
+      ! Stanford and Epstien 1974, SSSAJ 34:103-107 theta/thetaopt
 
-      !decompfac%iwcf = decompfac%iwcs !flat: precip based (like standing) --> underestimation of decomposition
-      !decompfac%iwcf = 1.0 !flat: optimum moisture for decomp --> overestimation of decomposition
+      ! code changed to use global hydrology variables HHS 1-4-1994
 
-
-
-
-! Belowground water factor             (0. to 1.)
-! Stanford and Epstien 1974, SSSAJ 34:103-107 theta/thetaopt
-
-
-! code changed to use global hydrology variables HHS 1-4-1994
-!
-!      do 30 isz = 1 , nslay
-!          decompfac%iwcg(isz) = theta(isz)/ thetaf(isz)
-!          if (decompfac%iwcg(isz) .gt. 1.) decompfac%iwcg(isz) = 1.
-!   30 continue
-
-      if (dbgflg) write(*,*) 'decomp 3'
+      ! do isz = 1 , nslay
+      !     decompfac%iwcg(isz) = theta(isz)/ thetaf(isz)
+      !     if (decompfac%iwcg(isz) .gt. 1.) decompfac%iwcg(isz) = 1.
+      ! end do
 
       do isz = 1 , nslay
          decompfac%iwcg(isz) = soil%ahrwc(isz)/ soil%ahrwcf(isz)
-!        water factor = water content of soil layer / optimum water content of soil layer
+         ! water factor = water content of soil layer / optimum water content of soil layer
          if (decompfac%iwcg(isz) .gt. 1.0) decompfac%iwcg(isz) = 1.0
       end do
 
-! Calculate temperature coefficient    (0. to 1.)
-! Stroo et al., 1989, SSSAJ 53:91-99 used in the tc function.
-! Above ground (standing and flat) biomass tc use air temp.
-! Compute TC(Tmax) and TC(Tmin)and then average the two results.
-! This is the way it was intended to be (Harry Schomberg, 
-! phone call with Simon van Donk, July 2002)
+      ! Calculate temperature coefficient    (0. to 1.)
+      ! Stroo et al., 1989, SSSAJ 53:91-99 used in the tc function.
+      ! Above ground (standing and flat) biomass tc use air temp.
+      ! Compute TC(Tmax) and TC(Tmin)and then average the two results.
+      ! This is the way it was intended to be (Harry Schomberg, 
+      ! phone call with Simon van Donk, July 2002)
 
       ! replaced itca with itcs (standing) and itcf (flat) so different methods could be used. (like under snow or w/ thick mulch)
-      decompfac%itcs =  (tc(cli_today%tdmn) + tc(cli_today%tdmx))/2
-      decompfac%itcf =  (tc(cli_today%tdmn) + tc(cli_today%tdmx))/2
+      decompfac%itcs =  (tc(cli_day(pjuld)%tdmn) + tc(cli_day(pjuld)%tdmx))/2
+      decompfac%itcf =  (tc(cli_day(pjuld)%tdmn) + tc(cli_day(pjuld)%tdmx))/2
 
-! Below ground biomass tc calculated for each soil layer
-!!use average of max and min for calculation
+      ! Below ground biomass tc calculated for each soil layer
+      !!use average of max and min for calculation
 
       do isz = 1, nslay
-
-! Code changed to use global hydrology soil temp variable
-!              tsavg= (tsmax(isz) + tsmin(isz))/2.
-!              decompfac%itcg(isz) = tc(tsavg)
-
+         ! Code changed to use global hydrology soil temp variable
+         ! tsavg= (tsmax(isz) + tsmin(isz))/2.
+         ! decompfac%itcg(isz) = tc(tsavg)
          decompfac%itcg(isz) =  tc(soil%tsav(isz))
       end do
 
-! Select minimum of temperature or water functions for
-! the quantity (fraction) of a decomposition day accumulated
-! during the current 24 hr period.
+      ! Select minimum of temperature or water functions for
+      ! the quantity (fraction) of a decomposition day accumulated
+      ! during the current 24 hr period.
 
-!  for standing, flat and buried residues
+      ! for standing, flat and buried residues
       decompfac%idds = min(decompfac%iwcs,decompfac%itcs) !standing
       decompfac%iddf = min(decompfac%iwcf,decompfac%itcf) !flat
       do isz = 1, nslay
          decompfac%iddg(isz) = min(decompfac%iwcg(isz),decompfac%itcg(isz)) !buried
       end do
 
-      if (dbgflg) write(*,*) 'decomp 4'
-
-! Decompose each age pool of residue based on decomp days accumulated in
-! the present 24 hr using the numerical formula for exponential decay
-!      Mass(t) = mass(t-1) * (1 - k * dday)
+      ! Decompose each age pool of residue based on decomp days accumulated in
+      ! the present 24 hr using the numerical formula for exponential decay
+      ! Mass(t) = mass(t-1) * (1 - k * dday)
 
       thisPlant => plant
       do while( associated(thisPlant) )
@@ -259,8 +233,6 @@ module decomp_process_mod
           ! Change standing stem number and adjust the mass for standing
           ! and surface biomass Steiner et al., 1994 Agronomy Journal
 
-          if (dbgflg) write(*,*) 'decomp 5'
-
           ! check for threshold ddays value before allowing stems to decline
           if (thisResidue%cumdds .gt. thisPlant%database%ddsthrsh) then
             if (thisResidue%dstm .gt. 0.0) then
@@ -296,7 +268,6 @@ module decomp_process_mod
       end do
 
       ! for debug and out, no derived values are updated at this point
-      if (dbgflg) write(*,*) 'decomp 10'
       if (am0ddb(isr) .eq. 1) call ddbug(isr, nslay, plant)
       if ((am0dfl(isr) .eq. 1).or.(am0dfl(isr) .eq. 2).or.(am0dfl(isr) .eq.3)) call decout(isr, plant)
 

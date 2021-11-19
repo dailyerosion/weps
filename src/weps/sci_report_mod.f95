@@ -9,13 +9,19 @@ module sci_report_mod
 
    type sci_summations
       real :: allbiomass
+      integer :: bdays
       real :: allerosion
-      integer :: days
+      integer :: edays
       real :: stir
       real :: energy
    end type sci_summations
 
    type(sci_summations), dimension(:), allocatable :: scisum 
+
+   interface sci_cum
+      module procedure sci_cum_restot
+      module procedure sci_cum_cellstate
+   end interface sci_cum
 
   contains
 
@@ -36,7 +42,7 @@ module sci_report_mod
 !     + + + ARGUMENT DECLARATIONS + + +
       integer :: isr                                                        ! subregion index
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
-      type(soil_def), dimension(0:), intent(in) :: soil 
+      type(soil_def), dimension(:), intent(in) :: soil 
 
 !     + + + LOCAL VARIABLES + + +
       integer idx, jdy
@@ -139,8 +145,8 @@ module sci_report_mod
 
         do sdx = 1, nsubr
 
-          allbiomass_avg(sdx) = scisum(sdx)%allbiomass / scisum(sdx)%days
-          allerosion_avg(sdx) = scisum(sdx)%allerosion * 365.25 / scisum(sdx)%days 
+          allbiomass_avg(sdx) = scisum(sdx)%allbiomass / scisum(sdx)%bdays
+          allerosion_avg(sdx) = scisum(sdx)%allerosion * 365.25 / scisum(sdx)%edays 
           avgallbiomass = avgallbiomass + allbiomass_avg(sdx) * sarea_ratio(sdx)
           avgallerosion = avgallerosion + allerosion_avg(sdx) * sarea_ratio(sdx)
           avgallwatererosion =avgallwatererosion+soil(sdx)%WaterErosion*sarea_ratio(sdx)
@@ -162,8 +168,8 @@ module sci_report_mod
         avgallerosion = -avgallerosion ! make erosion positive to match renner
 
       else
-          avgallbiomass = scisum(isr)%allbiomass / scisum(isr)%days
-          avgallerosion = -scisum(isr)%allerosion * 365.25 / scisum(isr)%days  ! make erosion positive to match renner
+          avgallbiomass = scisum(isr)%allbiomass / scisum(isr)%bdays
+          avgallerosion = -scisum(isr)%allerosion * 365.25 / scisum(isr)%edays  ! make erosion positive to match renner
           avgallwatererosion = soil(isr)%WaterErosion
 
           ! get soil texture multiplier
@@ -207,7 +213,35 @@ module sci_report_mod
       return
     end subroutine sci_report
 
-    subroutine sci_cum( isr, restot, cellstate )
+    subroutine sci_cum_restot( isr, restot )
+
+      use weps_cmdline_parms, only: soil_cond
+      use biomaterial, only: biototal
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr
+      type(biototal), intent(in) :: restot
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     isr - subregion index
+!     restot - structure containing residue totals
+
+!     + + + PURPOSE + + +
+!     each time it is called, it adds a value to the total biomass increments
+!     the counter for number of values added together.
+
+      ! only do if flag is set 
+      if( soil_cond .eq. 0 ) return
+
+      ! scisum(isr)%allbiomass = scisum(isr)%allbiomass + admtotto4(isr)
+      scisum(isr)%allbiomass = scisum(isr)%allbiomass + restot%mftot    &
+                             + restot%msttot + restot%mbgtot + restot%mrttotto4
+      scisum(isr)%bdays = scisum(isr)%bdays + 1
+
+      return
+    end subroutine sci_cum_restot
+
+    subroutine sci_cum_cellstate( isr, cellstate )
 
       use weps_cmdline_parms, only: soil_cond
       use biomaterial, only: biototal
@@ -216,7 +250,6 @@ module sci_report_mod
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr
-      type(biototal), intent(in) :: restot
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
 
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -249,14 +282,10 @@ module sci_report_mod
           total = total/ngdpt
       end if
 
-      ! scisum(isr)%allbiomass = scisum(isr)%allbiomass + admtotto4(isr)
-      scisum(isr)%allbiomass = scisum(isr)%allbiomass + restot%mftot    &
-     &      + restot%msttot + restot%mbgtot + restot%mrttotto4
-
       scisum(isr)%allerosion = scisum(isr)%allerosion + total
-      scisum(isr)%days = scisum(isr)%days + 1
+      scisum(isr)%edays = scisum(isr)%edays + 1
 
       return
-    end subroutine sci_cum
+    end subroutine sci_cum_cellstate
 
 end module sci_report_mod

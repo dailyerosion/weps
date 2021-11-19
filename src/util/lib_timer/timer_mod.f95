@@ -5,78 +5,41 @@
 
 module timer_mod
 
-      integer   TIMSTART
-      parameter (TIMSTART = 1)
+      integer, parameter :: TIMSTART = 1
+      integer, parameter :: TIMSTOP = 2
+      integer, parameter :: TIMPRINT = 3
+      integer, parameter :: TIMRESET = 4
 
-      integer   TIMSTOP
-      parameter (TIMSTOP = 2)
+      integer, parameter :: TIMINIT = 1
+      integer, parameter :: TIMSUBR = 2
+      integer, parameter :: TIMEROD = 3
+      integer, parameter :: TIMREPO = 4
+      integer, parameter :: TIMWEPS = 5
 
-      integer   TIMPRINT
-      parameter (TIMPRINT = 3)
+      integer, parameter :: ntim = 5
 
-      integer   TIMRESET
-      parameter (TIMRESET = 4)
+      character*8 timnam(0:ntim)
+      data timnam /'system', 'initialize', 'subregion', 'erosion', 'reports', 'weps'/
 
-      integer   TIMCROP
-      parameter (TIMCROP = 1)
-
-      integer   TIMHYDR
-      parameter (TIMHYDR = 2)
-
-      integer   TIMSOIL
-      parameter (TIMSOIL = 3)
-
-      integer   TIMDECO
-      parameter (TIMDECO = 4)
-
-      integer   TIMMANG
-      parameter (TIMMANG = 5)
-
-      integer   TIMDARC
-      parameter (TIMDARC = 6)
-
-      integer   TIMEROS
-      parameter (TIMEROS = 7)
-
-      integer   TIMSBWIND
-      parameter (TIMSBWIND = 8)
-
-      integer   TIMSBEROD
-      parameter (TIMSBEROD = 9)
-
-      integer   TIMSBQOUT
-      parameter (TIMSBQOUT = 10)
-
-      integer   TIMWEPS
-      parameter (TIMWEPS = 11)
-
-      character*8  timnam(0:11)
-      data timnam /'system', 'crop', 'hydro', 'soil', 'decomp',         &
-     &  'manage', 'darcy', 'erosion', 'sbwind','sberod','sbqout','weps'/
+      real :: timarr(0:ntim)
+      
+      data timarr /6*0.0/
 
   contains
 
     subroutine timer(timnum,timact)
-! ****************************************************************** wjr
-!
-! Provides benchmark data
-!
-!       Edit History
-!       05-Feb-99       wjr     Original coding
+
+      ! Provides benchmark data
+      ! 05-Feb-99       wjr     Original coding
 
       integer     timnum                        !# of timer being used
       integer     timact                        !action: 1==start, 2==end, 3==print, 4==reset
       integer     idx
 
-      real        timarr(0:11)
       real        tim
       integer     lsttim
     
-
-      data timarr /12*0.0/
       data lsttim / 0 /
-
-      save timarr
 
       call cpu_time(tim)
 
@@ -93,7 +56,7 @@ module timer_mod
         timarr(timnum) = timarr(timnum) + tim
       case (3)                                  ! print out timers
         timarr(0) = timarr(0) + tim
-        do idx = 0,11
+        do idx = 0, ntim
           write(*,fmt="(' ',a8,2x,f8.2)") timnam(idx),timarr(idx)
         end do
         timarr(0) = timarr(0) - tim

@@ -121,7 +121,8 @@ contains
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag
-      use climate_input_mod, only: amalat, amalon, amzele
+      use climate_input_mod, only: amzele
+      use solar_mod, only: amalat, amalon
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
@@ -487,7 +488,7 @@ contains
 
          case (20)
             read (line,*,err=80) am0hfl(isr),am0sfl(isr),manFile(isr)%am0tfl, am0cfl(isr),am0dfl(isr),am0efl
-
+            
          case (21)
             ! debug flag line. Add zero integer to end to make sure six values
             ! are available to read. Previously interface only set 5 flags.
@@ -787,7 +788,8 @@ contains
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag
-      use climate_input_mod, only: amalat, amalon, amzele
+      use climate_input_mod, only: amzele
+      use solar_mod, only: amalat, amalon
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), dimension(:), intent(inout) :: soil 

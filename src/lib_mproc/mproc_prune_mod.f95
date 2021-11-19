@@ -25,12 +25,12 @@ module mproc_prune_mod
       use biomaterial, only: plant_pointer, residue_pointer, residueAdd
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real :: stemf       ! fraction of plant stems removed (kg/kg)
-      real :: leaff       ! fraction of plant leaves removed (kg/kg)
-      real :: storef      ! fraction of storage (reproductive components) removed (kg/kg)
-      real :: rootstoref  ! fraction of plant storage root removed (kg/kg)
-      real :: rootfiberf  ! fraction of plant fibrous root removed (kg/kg)
-      integer :: nslay    ! number of soil layers
+      real, intent(in) :: stemf       ! fraction of plant stems removed (kg/kg)
+      real, intent(in) :: leaff       ! fraction of plant leaves removed (kg/kg)
+      real, intent(in) :: storef      ! fraction of storage (reproductive components) removed (kg/kg)
+      real, intent(in) :: rootstoref  ! fraction of plant storage root removed (kg/kg)
+      real, intent(in) :: rootfiberf  ! fraction of plant fibrous root removed (kg/kg)
+      integer, intent(in) :: nslay    ! number of soil layers
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
 
       ! + + + LOCAL VARIABLES + + +
@@ -108,9 +108,10 @@ module mproc_prune_mod
     function prune_pool( pool_mass, pool_frac, pool_flag ) result(mass_prune)
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real pool_mass, pool_frac
-      logical :: pool_flag
-      real mass_prune
+      real, intent(inout) :: pool_mass
+      real, intent(in) :: pool_frac
+      logical, intent(inout) :: pool_flag
+      real :: mass_prune
 
       mass_prune = pool_mass * pool_frac
       if( mass_prune.gt.0.0 ) then 

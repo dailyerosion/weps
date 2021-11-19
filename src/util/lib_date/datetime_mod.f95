@@ -21,13 +21,14 @@ module datetime_mod
     integer :: julian_day
     integer :: day_of_year
     integer :: day_of_sim       ! current day number of the simulation run
+    integer :: num_days_in_year ! true or false
   end type date_time_numbers_strings
 
+  type(date_time_numbers_strings), dimension(:), allocatable :: psim_date
 
   type(date_time_numbers_strings) :: sys_time
-  save sys_time
+
   type(date_time_numbers_strings) :: sim_date
-  save sim_date
 
   public :: update_system_time
 
@@ -53,6 +54,7 @@ module datetime_mod
   public :: get_simdate_jday
   public :: get_simdate_doy
   public :: get_simdate_year
+  public :: get_simdate_ndiy
 
   public :: caldat
   public :: julday
@@ -63,6 +65,17 @@ module datetime_mod
   public :: wkday
   public :: mvdate
   public :: ckdate
+  
+  public :: psim_date
+  public :: set_psimdate
+  public :: get_psimdate
+  public :: get_psim_doy
+  public :: get_psim_ndiy
+  public :: get_psim_day
+  public :: get_psim_mon
+  public :: get_psim_year
+  public :: get_psim_juld
+  public :: get_psim_daysim
 
 contains
 
@@ -115,6 +128,11 @@ contains
       sim_date%day_of_year = dayear( sim_date%dt(3), sim_date%dt(2), sim_date%dt(1) )
       ! set simulation day
       sim_date%day_of_sim = julian_day - beg_julian_day + 1
+      if( isleap(sim_date%dt(1)) ) then
+        sim_date%num_days_in_year = 366
+      else
+        sim_date%num_days_in_year = 365
+      end if
     end subroutine update_simulation_date
 
     subroutine get_simdate_day_month_year( day, month, year )
@@ -154,6 +172,85 @@ contains
       integer :: year
       year = get_time_year( sim_date )
     end function get_simdate_year
+
+    function get_simdate_ndiy() result( ndiy )
+      integer :: ndiy
+      ndiy = sim_date%num_days_in_year
+    end function get_simdate_ndiy
+
+    ! sets the subregion present simulation date
+    subroutine set_psimdate( isr, beg_julian_day, julian_day )
+      integer, intent(in) :: isr
+      integer, intent(in) :: beg_julian_day
+      integer, intent(in) :: julian_day
+      ! set julian_day
+      psim_date(isr)%julian_day = julian_day
+      ! set day, month, year
+      call caldat( julian_day, psim_date(isr)%dt(3), psim_date(isr)%dt(2), psim_date(isr)%dt(1) ) 
+      ! set three letter abbreviation for month of year
+      psim_date(isr)%mstring = find_month_string( psim_date(isr)%dt(2) )
+      ! set day_of_year
+      psim_date(isr)%day_of_year = dayear( psim_date(isr)%dt(3), psim_date(isr)%dt(2), psim_date(isr)%dt(1) )
+      ! set simulation day
+      psim_date(isr)%day_of_sim = julian_day - beg_julian_day + 1
+      if( isleap(psim_date(isr)%dt(1)) ) then
+        psim_date(isr)%num_days_in_year = 366
+      else
+        psim_date(isr)%num_days_in_year = 365
+      end if
+    end subroutine set_psimdate
+    
+    subroutine get_psimdate( isr, day, month, year )
+      integer, intent(in) :: isr
+      integer, intent(out) :: day   ! day of month
+      integer, intent(out) :: month ! month of year
+      integer, intent(out) :: year  ! year
+      day = psim_date(isr)%dt(3)
+      month = psim_date(isr)%dt(2)
+      year = psim_date(isr)%dt(1)
+    end subroutine get_psimdate
+    
+    function get_psim_doy( isr ) result( doy )
+      integer, intent(in) :: isr ! subregion
+      integer :: doy             ! day of year
+      doy = psim_date(isr)%day_of_year
+    end function get_psim_doy
+
+    function get_psim_ndiy( isr ) result( ndiy )
+      integer, intent(in) :: isr ! subregion
+      integer :: ndiy            ! number of days in year
+      ndiy = psim_date(isr)%num_days_in_year
+    end function get_psim_ndiy
+
+    function get_psim_day( isr ) result( day )
+      integer, intent(in) :: isr ! subregion
+      integer :: day             ! day of month
+      day = psim_date(isr)%dt(3)
+    end function get_psim_day
+
+    function get_psim_mon( isr ) result( mon )
+      integer, intent(in) :: isr ! subregion
+      integer :: mon             ! month of year
+      mon = psim_date(isr)%dt(2)
+    end function get_psim_mon
+
+    function get_psim_year( isr) result( year )
+      integer, intent(in) :: isr ! subregion
+      integer :: year            ! year
+      year = psim_date(isr)%dt(1)
+    end function get_psim_year
+
+    function get_psim_juld( isr) result( juld )
+      integer, intent(in) :: isr ! subregion
+      integer :: juld             ! julian day
+      juld = psim_date(isr)%julian_day
+    end function get_psim_juld
+
+    function get_psim_daysim( isr) result( daysim )
+      integer, intent(in) :: isr ! subregion
+      integer :: daysim          ! simulation day
+      daysim = psim_date(isr)%day_of_sim
+    end function get_psim_daysim
 
     subroutine get_time_day_month_year( datetime, day, month, year )
       type(date_time_numbers_strings), intent(in) :: datetime

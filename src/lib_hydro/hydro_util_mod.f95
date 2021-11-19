@@ -6,49 +6,33 @@ module hydro_util_mod
 
   contains
 
-    subroutine param_blkden_adj( nlay, bsdblk, bsdblk0, &
-                               bsdpart, bhrwcf, bhrwcw, bhrwca, &
-                               bsfcla, bsfom, bh0cb, bheaep, bhrsk )
-
-      ! + + + PURPOSE + + +
-      ! 
-      ! This subroutine adjusts the air entry potential and saturated hydraulic
+    pure subroutine param_blkden_adj( nlay, bsdblk, bsdblk0,  bsdpart, bhrwcf, bhrwcw, bhrwca, &
+                                 bsfcla, bsfom, bh0cb, bheaep, bhrsk )
+      ! adjusts the air entry potential and saturated hydraulic
       ! for changes in bulk density
-
-      ! + + + KEYWORDS + + +
-      ! bulk density adjustment hydraulic parameters
 
       use hydro_data_struct_defs, only: claygrav80rh, orggrav80rh
 
-      ! + + + ARGUMENT DECLARATIONS + + +
-      integer nlay
-      real bsdblk(*), bsdblk0(*)
-      real bsdpart(*), bhrwcf(*), bhrwcw(*), bhrwca(*)
-      real bsfcla(*), bsfom(*)
-      real bh0cb(*), bheaep(*), bhrsk(*)
+      integer, intent(in) :: nlay    ! number of soil layers to be updated
+      real, intent(in) :: bsdblk(*)  ! bulk density (Mg/m^3)
+      real, intent(inout) :: bsdblk0(*) ! previous day bulk density (Mg/m^3)
+      real, intent(in) :: bsdpart(*) ! particle density (Mg/m^3)
+      real, intent(out) :: bhrwcf(*)  ! gravimetric 1/3 bar water
+      real, intent(out) :: bhrwcw(*)  ! gravimetric 15 bar water
+      real, intent(out) :: bhrwca(*)  ! gravimetric plant available water
+      real, intent(in) :: bsfcla(*)  ! fraction of soil mineral portion which is clay
+      real, intent(in) :: bsfom(*)   ! fraction of total soil mass which is organic matter
+      real, intent(in) :: bh0cb(*)   ! Brooks and Corey pore size interation exponent b
+      real, intent(inout) :: bheaep(*)  ! Brooks and Corey air entry potential
+      real, intent(inout) :: bhrsk(*)   ! Saturated hydraulic conductivity (m/s)
 
-      ! + + + ARGUMENT DEFINITIONS + + +
-      ! nlay     - number of soil layers to be updated
-      ! bsdblk   - bulk density (Mg/m^3)
-      ! bsdblk0  - previous day bulk density (Mg/m^3)
-      ! bsdpart  - particle density (Mg/m^3)
-      ! bhrwcf   - gravimetric 1/3 bar water
-      ! bhrwcw   - gravimetric 15 bar water
-      ! bhrwca   - gravimetric plant available water
-      ! bsfcla   - fraction of soil mineral portion which is clay
-      ! bsfomf   - fraction of total soil mass which is organic matter
-      ! bh0cb    - Brooks and Corey pore size interation exponent b
-      ! bheaep   - Brooks and Corey air entry potential
-      ! bhrsk    - Saturated hydraulic conductivity (m/s)
-
-      ! + + + LOCAL VARIABLES + + +
-      integer lay
-      real thetas, thetaf, thetaw, thetar
-      real temp, temp1
-
-      ! + + + LOCAL VARIABLE DEFINITIONS + + +
-
-      ! + + + END SPECIFICATIONS + + + 
+      integer :: lay
+      real :: thetas
+      real :: thetaf
+      real :: thetaw
+      real :: thetar
+      real :: temp
+      real :: temp1
 
       do lay=1,nlay
           ! adjust air entry potential from Campbell (1985) pg 46
@@ -79,50 +63,36 @@ module hydro_util_mod
 
     end subroutine param_blkden_adj
 
-    subroutine param_pot_bc( nlay, bsdblk, bsdpart, bhrwcf, bhrwcw, &
-                               bsfcla, bsfom, bh0cb, bheaep )
-
-      ! + + + PURPOSE + + +
-      ! 
-      ! This subroutine calculates matric potential parameters from given
+    pure subroutine param_pot_bc( resflg, nlay, bsdblk, bsdpart, bhrwcf, bhrwcw, bsfcla, bsfom, bh0cb, bheaep )
+      ! calculates matric potential parameters from given
       ! values of bulk density, gravimetric 1.3 bar water, 15 bar water and
       ! clay and organic matter fraction
 
-      ! + + + KEYWORDS + + +
-      ! matric potential parameters
-
       use hydro_data_struct_defs, only: claygrav80rh, orggrav80rh
 
-      ! + + + ARGUMENT DECLARATIONS + + +
-      integer nlay
-      real bsdblk(*)
-      real bsdpart(*), bhrwcf(*), bhrwcw(*)
-      real bsfcla(*), bsfom(*)
-      real bh0cb(*), bheaep(*)
+      integer, intent(out) :: resflg ! returns error result (vs exiting within routine making it impure)
+                                     ! 0 - no error
+                                     ! 1 - saturation less than field capacity
+                                     ! 2 - field capacity less than wilting point
+                                     ! 3 - Derived Brooks and Corey b too large
+      integer, intent(in) :: nlay    ! number of soil layers to be updated
+      real, intent(in) :: bsdblk(*)  ! bulk density (Mg/m^3)
+      real, intent(in) :: bsdpart(*) ! particle density (Mg/m^3)
+      real, intent(in) :: bhrwcf(*)  ! gravimetric 1/3 bar water
+      real, intent(in) :: bhrwcw(*)  ! gravimetric 15 bar water
+      real, intent(in) :: bsfcla(*)  ! fraction of soil mineral portion which is clay
+      real, intent(in) :: bsfom(*)   ! fraction of total soil mass which is organic matter
+      real, intent(out) :: bh0cb(*)   ! Brooks and Corey pore size interation exponent b
+      real, intent(out) :: bheaep(*)  ! Brooks and Corey air entry potential
 
-      ! + + + ARGUMENT DEFINITIONS + + +
-      ! nlay     - number of soil layers to be updated
-      ! bsdblk   - bulk density (Mg/m^3)
-      ! bsdpart  - particle density (Mg/m^3)
-      ! bhrwcf   - gravimetric 1/3 bar water
-      ! bhrwcw   - gravimetric 15 bar water
-      ! bsfcla   - fraction of soil mineral portion which is clay
-      ! bsfomf   - fraction of total soil mass which is organic matter
-      ! bh0cb    - Brooks and Corey pore size interation exponent b
-      ! bheaep   - Brooks and Corey air entry potential
+      integer :: lay
+      real :: thetas
+      real :: thetaf
+      real :: thetaw
+      real :: thetar
+      real :: temp
 
-      ! + + + FUNCTION DECLARATIONS + + +
-      !  real volwatadsorb
-
-      ! + + + LOCAL VARIABLES + + +
-      integer lay
-      real thetas, thetaf, thetaw, thetar
-      real temp
-
-      ! + + + LOCAL VARIABLE DEFINITIONS + + +
-
-      ! + + + END SPECIFICATIONS + + + 
-
+      resflg = 0
       do lay=1,nlay
           thetaf = bhrwcf(lay) * bsdblk(lay)        ! field capacity
           thetaw = bhrwcw(lay) * bsdblk(lay)        ! wilting point
@@ -135,12 +105,9 @@ module hydro_util_mod
           ! error check and adjustments to prevent numerical problems
           ! with curve fit
           if( thetas.le.thetaf ) then
-              write(0,*) &
-               'Error: saturation less than field capacity, layer', lay
-              call exit(1)
+              resflg = 1
           else if( thetaf.le.thetaw ) then
-              write(0,*) 'field capacity less than wilting point, layer', lay
-              call exit(1)
+              resflg = 2
           end if
           thetar = min( thetar, 0.8 * thetaw )
 
@@ -156,15 +123,14 @@ module hydro_util_mod
           ! error check brooks and corey b value to keep in range and
           ! prevent later numberical problems
           if( bh0cb(lay).gt.50.0 ) then
-              write(0,*) 'Derived Brooks and Corey b too large, layer', lay
-              call exit(1)
+              resflg = 3
           endif
 
       end do
 
     end subroutine param_pot_bc
 
-    subroutine param_prop_bc( nlay, bszlyd, bsdblk, bsdpart, &
+    pure subroutine param_prop_bc( nlay, bszlyd, bsdblk, bsdpart, &
                                 bsfcla, bsfsan, bsfom, bsfcec, &
                                 bhrwcs, bhrwcf, bhrwcw, bhrwcr, &
                                 bhrwca, bh0cb, bheaep, bhrsk, &
@@ -188,32 +154,24 @@ module hydro_util_mod
       use hydro_data_struct_defs, only: gravconst, potfc, potfcs, potwilt
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      integer nlay
-      real bszlyd(*), bsdblk(*), bsdpart(*)
-      real bsfcla(*), bsfsan(*), bsfom(*), bsfcec(*)
-      real bhrwcs(*), bhrwcf(*), bhrwcw(*), bhrwcr(*)
-      real bhrwca(*), bh0cb(*), bheaep(*), bhrsk(*)
-      real bhfredsat(*)
-
-      ! + + + ARGUMENT DEFINITIONS + + +
-      ! nlay     - number of soil layers to be updated
-      ! bszlyd - Depth to bottom of each soil layer for each subregion (mm)
-      ! bsdblk   - bulk density (Mg/m^3) = (g/cm^3)
-      ! bsdpart  - particle density (Mg/m^3)
-      ! bsfcla   - fraction of soil mineral portion which is clay
-      ! bsfsan   - fraction of soil mineral portion which is sand
-      ! bsfom    - fraction of total soil mass which is organic matter
-      ! bsfcec   - Soil layer cation exchange capacity (cmol/kg) (meq/100g)
-      ! bhrwcs   - gravimetric saturated water
-      ! bhrwcf   - gravimetric 1/3 bar water
-      ! bhrwcw   - gravimetric 15 bar water
-      ! bhrwcr   - gravimetric residual water
-      ! bhrwca   - gravimetric plant available water
-      ! bh0cb    - Brooks and Corey pore size interation exponent b
-      ! bheaep   - Brooks and Corey air entry potential (J/kg)
-      ! bhrsk    - saturated hydraulic conductivity (m/s)
-      ! bhfredsat - fraction of soil porosity that will be filled with water
-      !             while wetting under normal field conditions due to entrapped air
+      integer, intent(in) :: nlay      ! number of soil layers to be updated
+      real, intent(in) :: bszlyd(*)    ! Depth to bottom of each soil layer for each subregion (mm)
+      real, intent(in) :: bsdblk(*)    ! bulk density (Mg/m^3) = (g/cm^3)
+      real, intent(in) :: bsdpart(*)   ! particle density (Mg/m^3)
+      real, intent(in) :: bsfcla(*)    ! fraction of soil mineral portion which is clay
+      real, intent(in) :: bsfsan(*)    ! fraction of soil mineral portion which is sand
+      real, intent(in) :: bsfom(*)     ! fraction of total soil mass which is organic matter
+      real, intent(in) :: bsfcec(*)    ! Soil layer cation exchange capacity (cmol/kg) (meq/100g)
+      real, intent(out) :: bhrwcs(*)    ! gravimetric saturated water
+      real, intent(out) :: bhrwcf(*)    ! gravimetric 1/3 bar water
+      real, intent(out) :: bhrwcw(*)    ! gravimetric 15 bar water
+      real, intent(out) :: bhrwcr(*)    ! gravimetric residual water
+      real, intent(out) :: bhrwca(*)    ! gravimetric plant available water
+      real, intent(out) :: bh0cb(*)     ! Brooks and Corey pore size interation exponent b
+      real, intent(out) :: bheaep(*)    ! Brooks and Corey air entry potential (J/kg)
+      real, intent(out) :: bhrsk(*)     ! saturated hydraulic conductivity (m/s)
+      real, intent(out) :: bhfredsat(*) ! fraction of soil porosity that will be filled with water
+                                       ! while wetting under normal field conditions due to entrapped air
 
       ! + + + LOCAL VARIABLES + + +
       integer lay
@@ -363,58 +321,33 @@ module hydro_util_mod
 
     end subroutine param_prop_bc
 
-    real function albedo (bcrlai, snwc, sndp, soil)
-
-      ! + + + purpose + + +
+    pure function albedo (bcrlai, snwc, sndp, soil) result(alb_res)
       ! this subroutine estimates the net radiation for a given area
       ! using known solar radiation, air temperature, and vapor pressure
       ! according to wright's (1982) modified version of penman's (1948)
       ! relationship.
 
-      ! + + + key words + + +
-      ! radiation, hydrology, weps
       use p1unconv_mod, only: mtomm
       use hydro_heat_mod, only: max_snow_den, min_snow_den
       use soil_data_struct_defs, only: soil_def
 
-      ! + + + argument declarations + + +
-      real bcrlai
-      real snwc
-      real sndp
-      type(soil_def), intent(inout) :: soil  ! soil for this subregion
+      real, intent(in) :: bcrlai ! plant leaf area index
+      real, intent(in) :: snwc   ! water content of snow, mm
+      real, intent(in) :: sndp   ! depth of snow, mm
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
 
-      ! + + + argument definitions + + +
-      ! bcrlai   - plant leaf area index
-      ! snwc     - water content of snow, mm
-      ! sndp     - depth of snow, mm
+      real :: alb_res
 
-      ! + + + local variables + + +
-      real snow_den
-      real albs
-      real albsn
-      real sci
-      real snci
-      real pci
+      real :: snow_den ! density of the snow
+      real :: albs     ! soil albedo
+      real :: albsn    ! snow albedo
+      real :: sci      ! soil albedo fraction
+      real :: snci     ! snow albedo fraction
+      real :: pci      ! plant albedo fraction
 
-      ! + + + local definitions + + +
-      ! snow_den - density of the snow
-      ! albs   - soil albedo
-      ! albsn  - snow albedo
-      ! sci    - soil albedo fraction
-      ! snci   - snow albedo fraction
-      ! pci    - plant albedo fraction
-
-      ! + + + parameters + + +
-      real albp
-      real alb_snow_max
-      real alb_snow_min
-      parameter   (albp = 0.23)            ! albedo of plants
-      parameter   (alb_snow_max = 0.6)     ! albedo of new snow
-      parameter   (alb_snow_min = 0.2)     ! albedo of fully dense snow
-
-      ! + + + data initialization + + +
-
-      ! + + + end specifications + + +
+      real, parameter :: albp = 0.23         ! albedo of plants
+      real, parameter :: alb_snow_max = 0.6  ! albedo of new snow
+      real, parameter :: alb_snow_min = 0.2  ! albedo of fully dense snow
 
       ! estimate snow albedo
 
@@ -431,99 +364,62 @@ module hydro_util_mod
 
       ! estimate the surface albedo
       if ( snwc .ge. 5.0 ) then
-        albedo = albsn                          !snow covers surface & plants
+        alb_res = albsn                         ! snow covers surface & plants
       else
-        snci = snwc / 5.0                       !coverage factor for snow
-        pci = min(bcrlai/3, 1.0)                !coverage factor for plants based upon leaf area index
-        if (pci + snci .gt. 1.0) pci = 1.0 - snci  !make sure factors sum to 1
-        sci = 1.0 - (pci + snci)                !soil albedo factor is what is left over
-        if (sci.gt.0.0) then                    !need to calc soil albedo
+        snci = snwc / 5.0                       ! coverage factor for snow
+        pci = min(bcrlai/3, 1.0)                ! coverage factor for plants based upon leaf area index
+        if (pci + snci .gt. 1.0) pci = 1.0 - snci  ! make sure factors sum to 1
+        sci = 1.0 - (pci + snci)                ! soil albedo factor is what is left over
+        if (sci.gt.0.0) then                    ! need to calc soil albedo
           albs = soil%asfald + (soil%asfalw - soil%asfald) &
                * (soil%theta(0) - soil%thetaw(1)) / (soil%thetaf(1) - soil%thetaw(1))
-          albs = max(albs, soil%asfalw)   !no less than wet  (wet is less than dry)
-          albs = min(albs, soil%asfald)   !no greater than dry
-          albedo = snci*albsn + pci * albp + sci * albs
+          albs = max(albs, soil%asfalw)   ! no less than wet  (wet is less than dry)
+          albs = min(albs, soil%asfald)   ! no greater than dry
+          alb_res = snci*albsn + pci * albp + sci * albs
         else
-          albedo = snci*albsn + pci * albp
+          alb_res = snci*albsn + pci * albp
         endif
       endif
 
-      return
     end function albedo
 
-    real function radnet( bcrlai, bweirr, snwc, sndp, bwtdmx, bwtdmn, &
-                          bmalat, idoy, bwtdpt, soil )
-
-      ! + + + purpose + + +
+    pure function radnet( bcrlai, bweirr, snwc, sndp, bwtdmx, bwtdmn, bmalat, idoy, bwtdpt, soil ) result(netrad)
       ! this function estimates the net radiation for a given area (Mj/m^2/day)
       ! using known solar radiation, air temperature, and vapor pressure
       ! according to wright's (1982) modified version of penman's (1948)
       ! relationship.
 
-      ! + + + key words + + +
-      ! radiation, hydrology, weps
-
       use solar_mod, only: radext
       use soil_data_struct_defs, only: soil_def
 
-      ! + + + argument declarations + + +
-      real bcrlai, bweirr, snwc, sndp, bwtdmx, bwtdmn
-      real bmalat
-      integer idoy
-      real bwtdpt
-      type(soil_def), intent(inout) :: soil  ! soil for this subregion
+      real, intent(in) :: bcrlai  ! plant leaf area index
+      real, intent(in) :: bweirr  ! solar radiation, Mj/m^2/day
+      real, intent(in) :: snwc    ! water content of snow, mm
+      real, intent(in) :: sndp    ! actual depth of snow, mm
+      real, intent(in) :: bwtdmx  ! maximum air temperature, C
+      real, intent(in) :: bwtdmn  ! minimum air temperature, C
+      real, intent(in) :: bmalat  ! latitude of the site, degrees
+      integer, intent(in) :: idoy ! julian day of year, 1-366
+      real, intent(in) :: bwtdpt  ! dew point temperature, C
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
 
-      ! + + + argument definitions + + +
-      ! bcrlai - plant leaf area index
-      ! bweirr - solar radiation, Mj/m^2/day
-      ! snwc   - water content of snow, mm
-      ! sndp   - actual depth of snow, mm
-      ! bwtdmx - maximum air temperature, c
-      ! bwtdmn - minimum air temperature, c
-      ! bmalat - latitude of the site, degrees
-      ! idoy   - julian day of year, 1-366
-      ! bwtdpt - dew point temperature, c
+      real :: netrad
 
-      ! + + + local variables + + +
-      real albt
-      real tmink
-      real tmaxk
-      real rna
-      real rnb
-      real ra
-      real rso
-      real a
-      real a1
-      real b
-      real e
-      real rno
+      real :: albt  ! composite albedo value (snow, plant, soil)
+      real :: tmink ! temperatures converted from degrees C to degrees K
+      real :: tmaxk ! temperatures converted from degrees C to degrees K
+      real :: rna   ! net radiation term a
+      real :: rnb   ! net radiation term b
+      real :: ra    ! extraterrestrial radiation
+      real :: rso   ! terrestrial clear sky radiation
+      real :: a     ! coefficients proportioning long wave and short wave
+                    ! radiation exchange based on actual to clear sky ratio
+      real :: b
+      real :: a1    ! intermediate calculations
+      real :: e
+      real :: rno
 
-      ! + + + local definitions + + +
-      ! albt - composite albedo value (snow, plant, soil)
-      ! tmink, tmaxk - temperatures converted from degrees C to degrees K
-      ! rna  - net radiation term a
-      ! rnb  - net radiation term b
-      ! ra   - extraterrestrial radiation
-      ! rso  - terrestrial clear sky radiation
-      ! a, b - coefficients relating proportioning long wave and short wave
-      !        radiation exchange based on actual to clear sky ratio
-      ! a1, e - intermediate calculations
-     
-      ! + + + parameters + + +
-
-      ! real coeff
-      real sbc
-
-      ! parameter   (coeff= -2.9e-5)
-      parameter   (sbc = 4.903e-9)
-
-      ! coeff  - coefficient in the equation to estimate soil cover index
-      ! sbc    - stefan-boltzmann constant, mj/m^2/day
-
-      ! + + + FUNCTION DECLARATIONS + + +
-      ! real albedo
-
-      ! + + + end specifications + + +
+      real, parameter :: sbc = 4.903e-9  ! stefan-boltzmann constant, mj/m^2/day
 
       tmaxk = bwtdmx + 273.15         !prereq h-17
       tmink = bwtdmn + 273.15         !prereq h-17
@@ -549,122 +445,74 @@ module hydro_util_mod
 
           rnb = (a*(bweirr/rso) + b)        !h-17(c)
 
-          radnet = rna-(rno*rnb)         !h-17
+          netrad = rna-(rno*rnb)         !h-17
       else
-          radnet = 0.0
+          netrad = 0.0
       end if
 
-      return
     end function radnet
 
-    subroutine transp (layrsn, actflg, bszlyd, bszlyt, rootd,         &
-     &                   theta, thetas, thetaf, thetaw,                 &
-     &                   theta80rh, thetar, airentry, lambda,           &
-     &                   ksat, soiltemp, potwu, actwu, wsf)
-!     + + + PURPOSE + + +
-!     This subroutine determines the actual plant transpiration first
-!     by distributing the potential rate of plant transpiration
-!     throughout the root zone.  the actual plant transpiration is
-!     then obtained by adjusting the potential plant traspiration
-!     on the basis of soil water availability.
-!     DATE:  09/22/93
-!     MODIFIED:  10/06/93
-!     MODIFIED:  08/03/95
-!     MODIFIED:  05/01/99 - LEW
+    pure subroutine transp (layrsn, actflg, bszlyd, bszlyt, rootd, theta, thetas, thetaf, thetaw, &
+                       theta80rh, thetar, airentry, lambda, ksat, soiltemp, potwu, actwu, wsf)
+      ! This subroutine determines the actual plant transpiration first
+      ! by distributing the potential rate of plant transpiration
+      ! throughout the root zone.  the actual plant transpiration is
+      ! then obtained by adjusting the potential plant traspiration
+      ! on the basis of soil water availability.
 
-!     + + + KEYWORDS + + +
-!     transpiration
+      integer, intent(in) :: layrsn   ! Number of soil layers used in simulation
+      integer, intent(in) :: actflg   ! flag to trigger removal of soil water
+                                      ! 0 no soil water removal
+                                      ! 1 soil water is actually removed 
+      real, intent(in) :: bszlyd(*)   ! Depth to bottom of soil layer from surface (mm)
+      real, intent(in) :: bszlyt(*)   ! Layer thickness (mm)
+      real, intent(in) :: rootd       ! Plant root depth (converted to mm)
+      real, intent(inout) :: theta(0:*)  ! present volumetric water content
+      real, intent(in) :: thetas(*)   ! saturated volumetric water content
+      real, intent(in) :: thetaf(*)   ! field capacity volumetric water content
+      real, intent(in) :: thetaw(*)   ! volumetric water content at wilting (15 bar or 1.5 MPa)
+      real, intent(in) :: theta80rh(*) ! volumetric water content at %80 relative humidity (300 bar or 30 MPa)
+      real, intent(in) :: thetar(*)   ! volumetric water content where hydraulic conductivity becomes zero
+      real, intent(in) :: airentry(*) ! Brooks/Corey air entry potential (1/pressure) (modify to set units returned)
+      real, intent(in) :: lambda(*)   ! Brooks/Corey pore size interaction parameter
+      real, intent(in) :: ksat(*)     ! Saturated hydraulic conductivity (m/s)
+      real, intent(in) :: soiltemp(*) ! soil temperature (C)
+      real, intent(in) :: potwu       ! potential use of water by plant (mm)
+      real, intent(out) :: actwu       ! actual soil water use (estimated or actucally removed (mm)
+      real, intent(out) :: wsf         ! Plant growth water stress factor (unitless)
 
-!     + + + ARGUMENT DECLARATIONS + + +
-      integer layrsn, actflg
-      real bszlyd(*), bszlyt(*), rootd
-      real theta(0:*), thetas(*), thetaf(*), thetaw(*)
-      real theta80rh(*), thetar(*), airentry(*), lambda(*)
-      real ksat(*), soiltemp(*), potwu, actwu, wsf
+      real, parameter :: wud = 3.0650 ! Water use distribution, a depth parameter of 3.065 is
+                                      ! used in weps assuming about 30 percent of the total
+                                      ! water use comes from the top 10 percent of the root zone
+      real, parameter :: wuc = 0.8 ! Water use compensation factor, determines how much a plant
+                                   ! can draw water from lower soil layers when higher soil layers
+                                   ! are dry. wuc = 0 means water will be withdrawn according to
+                                   ! the wud distribution without compensation if upper layers are 
+                                   ! dry. wuc = 1 means that if water is available in lower layer, 
+                                   ! more water than indicated by wud will be withdrawn.
+      real, parameter :: cond_crit = 1.0e-12 ! (m/s) = 8.64*10^-5 mm/day
+                                             ! critical soil water conductivity where water stress occurs
+                                             ! Taken from Gardner, C.M.K., K.B. Laryea and P.W. Unger. 1999.
+                                             ! Soil Physical Constraints to Plant Growth and Crop Production.
+                                             ! AGL/MISC/24/99, Land and Water Development Division, Food and
+                                             ! Agriculture Organization of the United Nations, Rome, page 24
 
-!     + + + ARGUMENT DEFINITIONS + + +
-!     layrsn - Number of soil layers used in simulation
-!     actflg - flag to trigger removal of soil water
-!              0 no soil water removal
-!              1 soil water is actually removed 
-!     bszlyd  - Depth to bottom of soil layer from surface (mm)
-!     bszlyt - Layer thickness (mm)
-!     rootd   - Plant root depth (converted to mm)
-!     theta      - present volumetric water content
-!     thetas     - saturated volumetric water content
-!     thetaf     - field capacity volumetric water content
-!     thetaw     - volumetric water content at wilting (15 bar or 1.5 MPa)
-!     theta80rh  - volumetric water content at %80 relative humidity (300 bar or 30 MPa)
-!     thetar     - volumetric water content where hydraulic conductivity becomes zero
-!     airentry   - Brooks/Corey air entry potential (1/pressure) (modify to set units returned)
-!     lambda     - Brooks/Corey pore size interaction parameter 
-!     ksat       - Saturated hydraulic conductivity (m/s)
-!     soiltemp   - soil temperature (C)
-!     potwu      - potential use of water by plant (mm)
-!     actwu      - actual soil water use (estimated or actucally removed (mm)
-!     wsf    - Plant growth water stress factor (unitless)
+      ! + + + FUNCTIONS CALLED + + +
+      ! availwc - Available water content (mm/mm)
+      ! acplwu - Actual water use rate from soil layer (mm/day)
+      ! unsatcond_bc - unsaturated hydraulic conductivity (same units as ksat)
 
-!     + + + PARAMETERS + + +
-      real   wud
-      parameter   (wud = 3.0650)
-      real   wuc
-!      parameter   (wuc = 1.0)
-      parameter   (wuc = 0.8)
-      real cond_crit
-      parameter   (cond_crit = 1.0e-12)      !(m/s) = 8.64*10^-5 mm/day
+      integer :: k   ! Local loop variable
+      real :: depth  ! used to set soil depth used for available water
+      real :: awcr   ! Relative available soil water content (or potential), fraction (0-1.0)
+      real :: awcr_crit ! Critical relative available soil water content (or potential)
+      real :: wua    ! Actual water use rate from soil layer (mm/day)
+      real :: wup    ! Potential water use rate from soil layer (mm/day)
+      real :: wup_fac(0:layrsn) ! water uptake factor with depth in soil
+      real :: wu_bal ! used to store and test layer water balance after removal
+      real :: cond   ! soil hydraulic conductivity (m/s)
 
-!     wud - Water use distribution, a depth parameter of 3.065 is
-!           used in weps assuming about 30 percent of the total
-!           water use comes from the top 10 percent of the root
-!           zone
-!     wuc - Water use compensation factor, determines how much a plant
-!           can draw water from lower soil layers when higher soil layers
-!           are dry. wuc = 0 means water will be withdrawn according to
-!           the wud distribution without compensation if upper layers are 
-!           dry. wuc = 1 means that if water is available in lower layer, 
-!           more water than indicated by wud will be withdrawn.
-!     cond_crit = critical soil water conductivity where water stress occurs
-!           Taken from Gardner, C.M.K., K.B. Laryea and P.W. Unger. 1999.
-!           Soil Physical Constraints to Plant Growth and Crop Production.
-!           AGL/MISC/24/99, Land and Water Development Division, Food and
-!           Agriculture Organization of the United Nations, Rome, page 24
-
-!     + + + FUNCTIONS CALLED + + +
-!      real availwc
-!      real acplwu
-!      real unsatcond_bc
-
-!     availwc - Available water content (mm/mm)
-!     acplwu - Actual water use rate from soil layer (mm/day)
-!     unsatcond_bc - unsaturated hydraulic conductivity (same units as ksat)
-
-!     + + + LOCAL VARIABLES + + +
-
-      integer k
-      real depth
-      real awcr, awcr_crit
-      real wua, wup
-      real wup_fac(0:layrsn)
-      real wu_bal
-      !real potm, soilrh
-      real cond
-
-!     + + + LOCAL DEFINITIONS + + +
-
-!     k      - Local loop variable
-!     awcr   - Relative available soil water content (or potential), fraction (0-1.0)
-!     awcr_crit - Critical relative available soil water content (or potential)
-!     wua    - Actual water use rate from soil layer (mm/day)
-!     wup    - Potential water use rate from soil layer (mm/day)
-!     wup_fac - water uptake factor with depth in soil
-!     wu_bal  - used to store and test layer water balance after removal
-!     potm    - soil water potential (meters of water at max density)
-!     soilrh  - soil air relative humidity
-!     cond    - soil hydraulic conductivity (m/s)
-
-!     + + + END SPECIFICATIONS + + +
-
-      !handle special case of no roots yet
+      ! handle special case of no roots yet
       if (rootd .le. 0.0) then
           actwu = 0.0
           goto 999  !finish up
@@ -672,7 +520,7 @@ module hydro_util_mod
 
       actwu = 0.0
       wup_fac(0) = 0.0
-      do 100 k = 1, layrsn
+      do k = 1, layrsn
          !compute transpiration in root zone only
          if (rootd .ge. bszlyd(k)) then
              depth = bszlyd(k)
@@ -694,14 +542,12 @@ module hydro_util_mod
          ! R.B. Jackson, P. Kabat, A. Kleidon, A. Lilly, and A.J. Pitman.
          ! 2001. Modeling Root Water Uptake in Hydrological and Climate Models.
          ! Bulletin of the American Meteorological Society. Vol. 82, No. 12, Pg. 2800
-!         call matricpot_bc(theta(k), thetar(k), thetas(k),              &
-!     &                     airentry(k), lambda(k), thetaw(k),           &
-!     &                     theta80rh(k), soiltemp(k), potm, soilrh )
+         ! call matricpot_bc(theta(k), thetar(k), thetas(k), airentry(k), lambda(k), thetaw(k), &
+         !                   theta80rh(k), soiltemp(k), potm, soilrh )
 
-         cond = unsatcond_bc(theta(k), thetar(k),                       &
-     &                       thetas(k), ksat(k), lambda(k))
-!         awcr = min(1.0, max(0.0, (potm - potwilt) / (potfc - potwilt)))
-!         awcr_crit = 0.95  ! this corresponds to -1bar water stress level
+         cond = unsatcond_bc( theta(k), thetar(k), thetas(k), ksat(k), lambda(k) )
+         ! awcr = min(1.0, max(0.0, (potm - potwilt) / (potfc - potwilt)))
+         ! awcr_crit = 0.95  ! this corresponds to -1bar water stress level
 
          ! test for critical conductivity value
          ! from Gardner, C.M.K., K.B. Laryea, P.W. Unger. 1999. Soil Physical
@@ -740,7 +586,7 @@ module hydro_util_mod
              end if
              actwu = actwu + wua
           end if
-100   continue
+      end do
 
 999   continue
 
@@ -748,48 +594,36 @@ module hydro_util_mod
       !winter wheat, we check that condition here.
       !However, this routine really shouldn't be called if a crop
       !is in dormancy because it isn't using any water - LEW 5/1/99
-      if (potwu .eq. 0.0) then
-         wsf = 1.0              !set it to not negatively influence growth
-      else
+      if (potwu .gt. 0.0) then
          wsf = actwu / potwu  !set water stress factor
+      else
+         wsf = 1.0              !set it to not negatively influence growth
       endif
 
-      return
     end subroutine transp
 
-    subroutine matricpot_bc(theta, thetar, thetas, airentry, lambda,  &
-     &                        thetaw, theta80rh, soiltemp,              &
-     &                        matricpot, soilrh )
+    subroutine matricpot_bc(theta, thetar, thetas, airentry, lambda, &
+                            thetaw, theta80rh, soiltemp, matricpot, soilrh )
+      ! returns: matricpot, soilrh
+      ! returns the matric potential in meters of water as defined by the 
+      ! Brooks and Corey function down to wilting point. Below wilting point,
+      ! the calculation is done based on clay and organic matter adsorption
+      ! isotherms. Coincidentally, the soil relative humidity is used to find 
+      ! the matric potential from the clay isotherms and is also returned for
+      ! potentials in the wetter range.
 
-!     returns: matricpot, soilrh
-!     returns the matric potential in meters of water as defined by the 
-!     Brooks and Corey function down to wilting point. Below wilting point,
-!     the calculation is done based on clay and organic matter adsorption
-!     isotherms. Coincidentally, the soil relative humidity is used to find 
-!     the matric potential from the clay isotherms and is also returned for
-!     potentials in the wetter range.
+      real, intent(in) :: theta      ! present volumetric water content
+      real, intent(in) :: thetar     ! volumetric water content where hydraulic conductivity becomes zero
+      real, intent(in) :: thetas     ! saturated volumetric water content
+      real, intent(in) :: airentry   ! Brooks/Corey air entry potential (1/pressure) (modify to set units returned)
+      real, intent(in) :: lambda     ! Brooks/Corey pore size interaction parameter
+      real, intent(in) :: thetaw     ! volumetric water content at wilting (15 bar or 1.5 MPa)
+      real, intent(in) :: theta80rh  ! volumetric water content at %80 relative humidity (300 bar or 30 MPa)
+      real, intent(in) :: soiltemp   ! soil temperature (C)
+      real, intent(out) :: matricpot ! matric potential (meters of water)
+      real, intent(out) :: soilrh    ! relative humidity of soil air (fraction)
 
-!*** Argument declarations ***
-      real  theta, thetar, thetas, airentry, lambda
-      real  thetaw, theta80rh, soiltemp
-      real  matricpot, soilrh
-!     theta      - present volumetric water content
-!     thetar     - volumetric water content where hydraulic conductivity becomes zero
-!     thetas     - saturated volumetric water content
-!     airentry   - Brooks/Corey air entry potential (1/pressure) (modify to set units returned)
-!     lambda     - Brooks/Corey pore size interaction parameter 
-!     thetaw     - volumetric water content at wilting (15 bar or 1.5 MPa)
-!     theta80rh  - volumetric water content at %80 relative humidity (300 bar or 30 MPa)
-!     soiltemp   - soil temperature (C)
-!     matricpot  - matric potential (meters of water)
-!     soilrh     - relative humidity of soil air (fraction)
-
-!*** function declarations ***
-!      real soilrelhum, matricpot_from_rh
-
-!*** Local variable declarations ***
-      real  satrat
-!     satrat     - conductivity relative saturation ratio
+      real :: satrat  ! conductivity relative saturation ratio
 
       if( theta .ge. thetaw ) then
           satrat = (theta-thetar)/(thetas-thetar)
@@ -812,72 +646,64 @@ module hydro_util_mod
      &                        matricpot)
           matricpot = matricpot_from_rh( soilrh, soiltemp )
       end if
-      return
+
     end subroutine matricpot_bc
 
-    real function soilrelhum(theta, thetaw, theta80rh, soiltemp,      &
-     &                           matricpot)
-!     returns the soil relative humidity using approximation of water
-!     adsorption isotherms on clay minerals by Berge, H.F.M. ten, 1990
+    pure function soilrelhum( theta, thetaw, theta80rh, soiltemp, matricpot ) result(relhum)
+      ! returns the soil relative humidity using approximation of water
+      ! adsorption isotherms on clay minerals by Berge, H.F.M. ten, 1990
 
       use hydro_data_struct_defs, only: gravconst, molewater, potwilt, rgas, zerokelvin
 
-!*** Argument declarations ***
-      real theta, thetaw, theta80rh, soiltemp, matricpot
-!     theta      - present volumetric water content
-!     thetaw     - volumetric water content at wilt (15 bar or 1.5 MPa)
-!     theta80rh  - volumetric water content at %80 relative humidity (300 bar or 30 MPa)
-!     soiltemp   - soil temperature (C)
-!     matricpot  - matric potential (meters of water) corresponding to theta
-!                  only used if theta greater than thetaw
+      real, intent(in) :: theta     ! present volumetric water content
+      real, intent(in) :: thetaw    ! volumetric water content at wilt (15 bar or 1.5 MPa)
+      real, intent(in) :: theta80rh ! volumetric water content at %80 relative humidity (300 bar or 30 MPa)
+      real, intent(in) :: soiltemp  ! soil temperature (C)
+      real, intent(in) :: matricpot ! matric potential (meters of water) corresponding to theta
+                                    ! only used if theta greater than thetaw
 
-!*** local declarations ***
-      real relhumwilt, mintheta
-      parameter(mintheta = 1.0e-37)
+      real relhum
+
+      real :: relhumwilt
+      real, parameter :: mintheta = 1.0e-37
 
       if( theta .le. mintheta ) then
-          soilrelhum = 0.8*mintheta/theta80rh
+          relhum = 0.8*mintheta/theta80rh
       else if( theta .lt. theta80rh ) then
-          soilrelhum = 0.8*theta/theta80rh
+          relhum = 0.8*theta/theta80rh
       else if( theta .le. thetaw ) then
 !         find the relative humidity corresponding to thetaw (15 bar)
-          relhumwilt = exp( (potwilt * molewater * gravconst)           &
-     &               / (rgas * (soiltemp + zerokelvin)) )
-          soilrelhum = 0.8+(relhumwilt - 0.8)                           &
-     &               * ( (theta-theta80rh)/(thetaw-theta80rh) )
+          relhumwilt = exp( (potwilt * molewater * gravconst) / (rgas * (soiltemp + zerokelvin)) )
+          relhum = 0.8+(relhumwilt - 0.8) * ( (theta-theta80rh)/(thetaw-theta80rh) )
       else if( matricpot.le.0.0) then
-          soilrelhum = exp( (matricpot * molewater * gravconst)         &
-     &               / (rgas * (soiltemp + zerokelvin)) )
+          relhum = exp( (matricpot * molewater * gravconst) / (rgas * (soiltemp + zerokelvin)) )
       else
-          soilrelhum = 1.0
+          relhum = 1.0
       endif
-      return
+
     end function soilrelhum
 
-    real function volwatadsorb(bulkden, clayfrac, orgfrac,            &
-     &                             claygrav80rh, orggrav80rh )
-!     computes the volumetric water content of the soil at 80 percent
-!     relative humidity based on basic soil properties and the clay
-!     adsorption isotherms on clay minerals by Berge, H.F.M. ten, 1990
-!     with the addition of the organic matter isotherm from Rutherford
-!     and Chlou, 1992
+    pure function volwatadsorb(bulkden, clayfrac, orgfrac, claygrav80rh, orggrav80rh ) result(volwat)
+      ! computes the volumetric water content of the soil at 80 percent
+      ! relative humidity based on basic soil properties and the clay
+      ! adsorption isotherms on clay minerals by Berge, H.F.M. ten, 1990
+      ! with the addition of the organic matter isotherm from Rutherford
+      ! and Chlou, 1992
 
       use hydro_data_struct_defs, only: denwat
 
-!*** Argument declarations ***
-      real bulkden, clayfrac, orgfrac, claygrav80rh, orggrav80rh
-!     bulkden        - bulk density of the soil (kg/m^3)
-!     clayfrac       - fraction of the mineral soil which is clay (kg/kg)
-!     orgfrac        - fraction of the total soil which is organic (kg/kg)
-!     claygrav80rh   - Gravimetric water content of clay at 0.8 relative
-!                      humidity (parameter A in reference)
-!     orggrav80rh    - Gravimetric water content of organics at 0.8 relative
-!                      humidity (parameter A in reference)
+      real, intent(in) :: bulkden      ! bulk density of the soil (kg/m^3)
+      real, intent(in) :: clayfrac     ! fraction of the mineral soil which is clay (kg/kg)
+      real, intent(in) :: orgfrac      ! fraction of the total soil which is organic (kg/kg)
+      real, intent(in) :: claygrav80rh ! Gravimetric water content of clay at 0.8 relative
+                                       ! humidity (parameter A in reference)
+      real, intent(in) :: orggrav80rh  ! Gravimetric water content of organics at 0.8 relative
+                                       ! humidity (parameter A in reference)
 
-      volwatadsorb = (bulkden  / denwat)                                &
-     &             * ( clayfrac * (1-orgfrac)*claygrav80rh              &
-     &             + orgfrac * orggrav80rh )
-      return
+      real :: volwat
+
+      volwat = (bulkden  / denwat) * ( clayfrac * (1-orgfrac)*claygrav80rh + orgfrac * orggrav80rh )
+
     end function volwatadsorb
 
 !     not used but retained if needed
@@ -912,177 +738,131 @@ module hydro_util_mod
 !      return
 !     end
 
-    real function matricpot_from_rh( soilrh, soiltemp )
-
-!     returns: matricpot
-!     returns the matric potential in meters of water as defined by the 
-!     clay and organic matter adsorption isotherms.
+    pure function matricpot_from_rh( soilrh, soiltemp ) result(matricpot)
+      ! returns the matric potential in meters of water as defined by the 
+      ! clay and organic matter adsorption isotherms.
 
       use hydro_data_struct_defs, only: gravconst, molewater, rgas, zerokelvin
 
-!*** Argument declarations ***
-      real  soilrh, soiltemp
-!     soilrh     - relative humidity of soil air (fraction)
-!     soiltemp   - soil temperature (C)
+      real, intent(in) :: soilrh   ! relative humidity of soil air (fraction)
+      real, intent(in) :: soiltemp ! soil temperature (C)
 
-      matricpot_from_rh = rgas*(soiltemp+zerokelvin)*(log(soilrh))      &
-     &                  / (molewater * gravconst)
+      real :: matricpot
 
-      return
+      matricpot = rgas*(soiltemp+zerokelvin)*(log(soilrh)) / (molewater * gravconst)
+
     end function matricpot_from_rh
 
-    real function acplwu (awcr, awcr_crit, wup)
+    pure function acplwu (awcr, awcr_crit, wup) result(watuse)
+      ! Actual water use rate from soil layer, same units as wup
 
-!     + + + PURPOSE + + +
+      real, intent(in) :: awcr      ! Relative soil water availability, fraction (0-1.0)
+      real, intent(in) :: awcr_crit ! soil water availability ratio below which plant transpiration is reduced
+      real, intent(in) :: wup       ! Potential water use rate from soil layer (mm/day)
 
-!     acplwu - Actual water use rate from soil layer 
-!              same units as wup
+      real :: watuse
 
-!     + + + ARGUMENT DECLARATIONS + + +
-
-      real awcr
-      real awcr_crit
-      real wup
-
-!     + + + ARGUMENT DEFINITIONS + + +
-
-!     awcr   - Relative soil water availability, fraction (0-1.0)
-!     awcr_crit	- soil water availability ratio below which
-!                 plant transpiration is reduced 
-!     wup    - Potential water use rate from soil layer (mm/day)
-
-      real str_fac
-      parameter( str_fac = 100 )
-
-!     + + + END SPECIFICATIONS + + +
+      real, parameter :: str_fac = 100.0
 
 !      if (awcr .ge. awcr_crit) then
-!         acplwu = wup
+!         watuse = wup
 !      else if (awcr .gt. 0.0) then
-!         acplwu = wup * awcr/awcr_crit
+!         watuse = wup * awcr/awcr_crit
 !      else
-!         acplwu = 0.0
+!         watuse = 0.0
 !      endif
 
       if (awcr .ge. 1.0) then
-         acplwu = wup
+         watuse = wup
       else if (awcr .gt. 0.0) then
-         acplwu = wup * log10( str_fac + 1.0 - str_fac*(1.0-awcr) )     &
+         watuse = wup * log10( str_fac + 1.0 - str_fac*(1.0-awcr) )     &
      &          / log10( str_fac + 1.0 )
       else
-         acplwu = 0.0
+         watuse = 0.0
       endif
 
     end function acplwu
 
-    real function availwc (theta, thetaw, thetaf)
+    pure function availwc (theta, thetaw, thetaf) result(avail)
+      ! Available water content ratio (mm/mm)
+      ! returns a linear function from thetaw=0 to thetaf=1
 
-!     + + + PURPOSE + + +
+      real, intent(in) :: theta  ! actual water content (mm/mm)
+      real, intent(in) :: thetaw ! water content at wilting point (mm/mm)
+      real, intent(in) :: thetaf ! water content at field capacity (mm/mm)
 
-!     availwc - Available water content ratio (mm/mm)
-!     returns a linear function from thetaw=0 to thetaf=1
-
-!     + + + ARGUMENT DECLARATIONS + + +
-
-      real theta, thetaw, thetaf
-
-!     + + + ARGUMENT DEFINITIONS + + +
-
-!     theta  - actual water content (mm/mm)
-!     thetaw - water content at wilting point (mm/mm)
-!     thetaf - water content at field capacity (mm/mm)
-
-!     + + + END SPECIFICATIONS + + +
+      real :: avail
 
       if (theta .le. thetaw) then
          ! can't be negative value
-         availwc = 0.0
+         avail = 0.0
       else if (theta .ge. thetaf) then
          ! can't be greater than 1
-         availwc = 1.0
+         avail = 1.0
       else
-         availwc = (theta - thetaw) / (thetaf - thetaw)
+         avail = (theta - thetaw) / (thetaf - thetaw)
       endif
 
     end function availwc
 
-    real function depstore( ranrough, soilslope, bhzoutflow )
+    pure function depstore( ranrough, soilslope, bhzoutflow ) result(store)
+      ! returns the maximum depression storage depth (m)
+      ! equation from WEPP 4.3.4 reference to 
 
-!     + + + PURPOSE + + +
-!     returns the maximum depression storage depth (m)
-!     equation from WEPP 4.3.4 reference to 
+      real, intent(in) :: ranrough   ! random roughness of soil surface (m)
+      real, intent(in) :: soilslope  ! slope of soil surface (m/m)
+      real, intent(in) :: bhzoutflow ! height of runoff outlet above field surface (m)
 
-!     + + + KEY WORDS + + +
-!     hydrology
+      real :: store
 
-!     + + + ARGUMENT DECLARATIONS + + +
-      real ranrough, soilslope, bhzoutflow
+      real, parameter :: coef_a = 0.112
+      real, parameter :: coef_b = 3.1
+      real, parameter :: coef_c = -1.2
 
-!     + + +  ARGUMENT DEFINITIONS + + +
-!     ranrough   - random roughness of soil surface (m)
-!     soilslope  - slope of soil surface (m/m)
-!     bhzoutflow - height of runoff outlet above field surface (m)
+      store = max( bhzoutflow, ranrough * (coef_a + coef_b * ranrough + coef_c * soilslope))
 
-!     + + + LOCAL VARIABLES + + +
-      real coef_a, coef_b, coef_c
-      parameter( coef_a = 0.112 )
-      parameter( coef_b = 3.1 )
-      parameter( coef_c = -1.2 )
-
-      depstore = max( bhzoutflow, ranrough                              &
-     &         * (coef_a + coef_b * ranrough + coef_c * soilslope))
-
-      return
     end function depstore
 
-    real function unsatcond_bc(theta, thetar, thetas, ksat, lambda)
-!     returns the unsaturated hydraulic conductivity in same units as ksat as 
-!     defined by the Books and Corey function and the Mualem conductivity model
+    pure function unsatcond_bc(theta, thetar, thetas, ksat, lambda) result(unsatcond)
+      ! returns the unsaturated hydraulic conductivity in same units as ksat as 
+      ! defined by the Books and Corey function and the Mualem conductivity model
 
-!*** Argument declarations ***
-      real  theta, thetar, thetas, ksat, lambda
+      real, intent(in) :: theta  ! present volumetric water content
+      real, intent(in) :: thetar ! volumetric water content where hydraulic conductivity becomes zero
+      real, intent(in) :: thetas ! saturated volumetric water content
+      real, intent(in) :: ksat   ! Saturated hydraulic conductivity (L/T) (modify to set units returned)
+      real, intent(in) :: lambda ! Brooks and Corey pore size interaction parameter
 
-!     theta      - present volumetric water content
-!     thetar     - volumetric water content where hydraulic conductivity becomes zero
-!     thetas     - saturated volumetric water content
-!     ksat       - Saturated hydraulic conductivity (L/T) (modify to set units returned)
-!     lambda     - Brooks adn Corey pore size interaction parameter 
-
-
-!*** Local variable declarations ***
-      real  satrat, minsatrat
-      parameter( minsatrat = 1.0e-2 )
-!     satrat     - conductivity relative saturation ratio
-!     minsatrat  - used to clamp unsatcond_bc to zero and prevent underflow
+      real :: unsatcond  ! results returned
+      
+      real :: satrat  ! conductivity relative saturation ratio
+      real, parameter :: minsatrat = 1.0e-2  ! used to clamp unsatcond_bc to zero and prevent underflow
 
       satrat = min(1.0,(theta-thetar)/(thetas-thetar))
       if( satrat.lt.minsatrat ) then
-          unsatcond_bc = 0.0
+          unsatcond = 0.0
       else
-          unsatcond_bc = ksat*satrat**(2.5+2.0/lambda)
+          unsatcond = ksat*satrat**(2.5+2.0/lambda)
       endif
-      return
+
     end function unsatcond_bc
 
-    real function volwat_matpot_bc(matricpot,thetar,thetas,           &
-     &                                 airentry,lambda)
-!     computes the volumetric water content at a matric potential
+    pure function volwat_matpot_bc( matricpot, thetar, thetas, airentry, lambda ) result(volwat)
+      ! computes the volumetric water content at a matric potential
 
-!*** Argument declarations ***
-      real matricpot, thetar, thetas, airentry, lambda
-!     matricpot  - soil water matric potential (pressure units of airentry)
-!     thetar     - volumetric water content where hydraulic conductivity becomes zero
-!     thetas     - saturated volumetric water content
-!     airentry   - Van Genuchten parameter (1/pressure) (modify to set units returned)
-!     lambda     - Brooks adn Corey pore size interaction parameter 
+      real, intent(in) :: matricpot ! soil water matric potential (pressure units of airentry)
+      real, intent(in) :: thetar    ! volumetric water content where hydraulic conductivity becomes zero
+      real, intent(in) :: thetas    ! saturated volumetric water content
+      real, intent(in) :: airentry  ! Van Genuchten parameter (1/pressure) (modify to set units returned)
+      real, intent(in) :: lambda    ! Brooks adn Corey pore size interaction parameter
 
-!*** Local variable declarations ***
-      real  satrat
-!     satrat     - conductivity relative saturation ratio
+      real :: volwat
+
+      real :: satrat  ! conductivity relative saturation ratio
 
       satrat = (airentry/matricpot)**lambda
-      volwat_matpot_bc = (thetas-thetar)*satrat + thetar
-      return
+      volwat = (thetas-thetar)*satrat + thetar
+
     end function volwat_matpot_bc
 
 end module hydro_util_mod

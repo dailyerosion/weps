@@ -201,7 +201,7 @@ module mproc_cut_mod
     ! now even be harvested from decomposition pools, so it is possible
     ! to kill a crop, transfer it to a decomposition pool, harvest
     ! the grain sucessfully, and get harvest index
-    subroutine cut_pool_stand_plant ( poolcutht, grainf, cropf, &
+    pure subroutine cut_pool_stand_plant ( poolcutht, grainf, cropf, &
                  poolmstandstem, poolmstandleaflive, &
                  poolmstandleafdead, poolmstandstore, &
                  poolzht, poolgrainf, poolhyfg, &
@@ -352,7 +352,7 @@ module mproc_cut_mod
     ! now even be harvested from decomposition pools, so it is possible
     ! to kill a crop, transfer it to a decomposition pool, harvest
     ! the grain sucessfully, and get harvest index
-    subroutine cut_pool_residue ( poolcutht, grainf, cropf, &
+    pure subroutine cut_pool_residue ( poolcutht, grainf, cropf, &
                  poolmstandstem, poolmstandleaf, poolmstandstore, &
                  poolzht, poolgrainf, poolhyfg, &
                  poolmflatstem, poolmflatleaf, poolmflatstore, &

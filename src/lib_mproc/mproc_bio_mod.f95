@@ -10,7 +10,7 @@ module mproc_bio_mod
 
   contains
 
-    subroutine flatvt (fltcoef, tillf, plant, bflg)
+    pure subroutine flatvt (fltcoef, tillf, plant, bflg)
 
       ! This subroutine performs the biomass manipulation process of transferring
       ! standing biomass to flat biomass based upon a flattening coefficient.
@@ -38,10 +38,10 @@ module mproc_bio_mod
       use biomaterial, only: plant_pointer, residue_pointer
 
       !     + + + ARGUMENT DECLARATIONS + + +
-      real :: fltcoef(mnrbc)  ! flattening coefficients of implement for different residue burial classes (m^2/m^2)
-      real :: tillf           ! fraction of soil area tilled by the machine
+      real, intent(in) :: fltcoef(mnrbc)  ! flattening coefficients of implement for different residue burial classes (m^2/m^2)
+      real, intent(in) :: tillf           ! fraction of soil area tilled by the machine
       type(plant_pointer), pointer :: plant ! pointer to youngest plant data, which chains to older plant data
-      integer :: bflg  ! flag indicating what to flatten
+      integer, intent(in) :: bflg  ! flag indicating what to flatten
                        ! 0 - All standing material is flatttened (both crop and residue)
 
                        ! single subregion legacy understanding
@@ -137,7 +137,7 @@ module mproc_bio_mod
 
     end subroutine flatvt
 
-    subroutine fall_mod_vt ( rate_mult_vt, thresh_mult_vt, sel_pool, fracarea, plant)
+    pure subroutine fall_mod_vt ( rate_mult_vt, thresh_mult_vt, sel_pool, fracarea, plant)
 
       ! This subroutine modifies the stem fall rate for standing crop and
       ! residue material using a multiplier. The rate multiplier is
@@ -147,9 +147,9 @@ module mproc_bio_mod
       use biomaterial, only: plant_pointer
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real       rate_mult_vt(mnrbc)      ! standing stem fall rate multiplier
-      real       thresh_mult_vt(mnrbc)    ! standing stem fall rate multiplier
-      integer    sel_pool   ! pool to which percentages will be applied
+      real, intent(in) :: rate_mult_vt(mnrbc)      ! standing stem fall rate multiplier
+      real, intent(in) :: thresh_mult_vt(mnrbc)    ! standing stem fall rate multiplier
+      integer, intent(in) :: sel_pool   ! pool to which percentages will be applied
                             ! 0 - don't apply to anything
                             ! 1 - apply to crop pool
                             ! 2 - apply to temporary pool
@@ -168,8 +168,7 @@ module mproc_bio_mod
                        ! ....
                        ! 2**n - (n-1)th Crop/residue
 
-
-      real       fracarea   ! fraction of surface area affected by operation
+      real, intent(in) :: fracarea   ! fraction of surface area affected by operation
       type(plant_pointer), pointer :: plant ! pointer to youngest plant data, which chains to older plant data
 
       ! + + + LOCAL VARIABLES + + +
@@ -362,9 +361,9 @@ module mproc_bio_mod
       use biomaterial, only: plant_pointer, residue_pointer, residueAdd
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real    buryf(*)    ! fraction of flat material buried for
+      real, intent(in) :: buryf(*)    ! fraction of flat material buried for
                           ! different residue burial classes (m^2/m^2)
-      real    tillf       ! fraction of soil area tilled by the machine
+      real, intent(in) :: tillf       ! fraction of soil area tilled by the machine
       integer burydistflg ! distribution function to be used
                           ! 0    o uniform distribution
                           ! 1    o Mixing+Inversion Burial Distribution
@@ -372,10 +371,10 @@ module mproc_bio_mod
                           ! 3    o Inversion Burial Distribution
                           ! 4    o Lifting, Fracturing Burial Distribution
                           ! 5    o Compression
-      integer nlay        ! number of soil layers used in the operation(s)
+      integer, intent(in) :: nlay        ! number of soil layers used in the operation(s)
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant ! pointer to youngest plant data, which chains to older plant data
-      integer :: bflg  ! flag indicating what to manipulate
+      integer, intent(in) :: bflg  ! flag indicating what to manipulate
                        ! 0 - All standing material is manipulate (both crop and residue)
                        ! 1 - Crop flat is buried
                        ! 2 - 1'st residue pool biomass is buried
@@ -658,9 +657,9 @@ module mproc_bio_mod
 ! This routine adjusts the burial coefficients for operation speed
 ! and tillage depth
 
-    subroutine buryadj( burycoef,mnrbc,                               &
-     &                    speed,stdspeed,minspeed,maxspeed,             &
-     &                    depth,stddepth,mindepth,maxdepth)
+    pure subroutine buryadj( burycoef,mnrbc, &
+                             speed,stdspeed,minspeed,maxspeed, &
+                             depth,stddepth,mindepth,maxdepth)
 
       ! argument declarations
       real, intent(inout) :: burycoef(mnrbc) ! burial fraction coefficient to be adjusted
@@ -725,28 +724,22 @@ module mproc_bio_mod
 ! of layers that will be considered to be within the tillage zone for
 ! this operation.
 
-    real function burydist( lay, burydistflg, ldepth, nlay)
+    pure function burydist( lay, burydistflg, ldepth, nlay) result(newdist)
 
-!     argument declarations
-      integer lay
-      integer burydistflg
-      real    ldepth(*)
-      integer nlay
+      integer, intent(in) :: lay         ! soil layer for which fraction is returned
+      integer, intent(in) :: burydistflg ! burydistflg - distribution function to be used
+                                         ! 0    o uniform distribution
+                                         ! 1    o Mixing+Inversion Burial Distribution
+                                         ! 2    o Mixing Burial Distribution
+                                         ! 3    o Inversion Burial Distribution
+                                         ! 4    o Lifting, Fracturing Burial Distribution
+                                         ! 5    o Compression
+      real, intent(in) :: ldepth(*)  ! distance from surface to bottom of layer
+      integer, intent(in) :: nlay    ! number of soil layers affected
+      
+      real :: newdist
 
-!     argument definitions
-!     lay         - soil layer for which fraction is returned
-!     tlay        - number of soil layers affected by tillage
-!     burydistflg - distribution function to be used
-!              0    o uniform distribution
-!              1    o Mixing+Inversion Burial Distribution
-!              2    o Mixing Burial Distribution
-!              3    o Inversion Burial Distribution
-!              4    o Lifting, Fracturing Burial Distribution
-!              5    o Compression
-!     ldepth      - distance from surface to bottom of layer
-!     nlay        - number of soil layers affected
-
-!     local variable declarations
+      ! local variable declarations
       real upper, lower
       real c1exp, c2exp
       real c3brk
@@ -766,58 +759,45 @@ module mproc_bio_mod
 !     find fraction of material buried in layer LAY
       select case (burydistflg)
       case(1)
-          burydist = lower**c1exp - upper**c1exp
+          newdist = lower**c1exp - upper**c1exp
       case(2,5) ! same for compression and mixing from Nat. Agron. Manual, 508CrevisionwSTIR 071106DTL
-          burydist = lower**c2exp - upper**c2exp
+          newdist = lower**c2exp - upper**c2exp
       case(3)
           if(lower.le.c3brk) then 
-              burydist = 0.28*(exp(1.83*lower)-1.0)
+              newdist = 0.28*(exp(1.83*lower)-1.0)
           else
-              burydist = 1.0-0.441*((1.0-lower)/0.4)**1.4
+              newdist = 1.0-0.441*((1.0-lower)/0.4)**1.4
           endif
           if(upper.le.c3brk) then 
-              burydist = burydist - (0.28*(exp(1.83*upper)-1.0))
+              newdist = newdist - (0.28*(exp(1.83*upper)-1.0))
           else
-              burydist = burydist - (1.0-0.441*((1.0-upper)/0.4)**1.4)
+              newdist = newdist - (1.0-0.441*((1.0-upper)/0.4)**1.4)
           endif
       case(4)
-          burydist = lower**c1exp - upper**c1exp
+          newdist = lower**c1exp - upper**c1exp
       case default   !uniform burial distribution
-          burydist = lower - upper
+          newdist = lower - upper
       end select
       return
     end function burydist
 
-    subroutine resinit(resmass, resdepth, nlay, resarray, laythick)
+    pure subroutine resinit(resmass, resdepth, nlay, resarray, laythick)
 
-!     + + + INPUT VARIABLE DECLARATIONS + + +
-      real resmass
-      real resdepth
-      integer nlay
-      real resarray(nlay)
-      real laythick(nlay)
+      ! + + + INPUT VARIABLE DECLARATIONS + + +
+      real, intent(in) ::  resmass    ! residue mass (Kg/m^2)
+      real, intent(in) ::  resdepth   ! Depth residue is distributed in soil (mm)
+      integer, intent(in) ::  nlay    ! number of soil layers
+      real, intent(inout) ::  resarray(nlay) ! soil residue array by layer (Kg/m^2)
+      real, intent(in) ::  laythick(nlay)    ! soil layer thickness (mm)
 
-!     + + + INPUT VARIABLE DEFINITIONS + + +
-!     resmass - residue mass (Kg/m^2)
-!     resdepth - Depth residue is distributed in soil (mm)
-!     nlay - number of soil layers
-!     resarray(nlay) - soil residue array by layer (Kg/m^2)
-!     laythick(nlay) - soil layer thickness (mm)
-
-!     + + + LOCAL VARIABLE DECLARATIONS + + +
-      integer ilay
-      real    depth
-
-!     + + + LOCAL VARIABLE DEFINITIONS + + +
-!     ilay - array index
-!     depth - accumulator for depth
-!     thick - thickness of slice to which residue is to be added
+      ! + + + LOCAL VARIABLE DECLARATIONS + + +
+      integer ilay   ! array index
+      real    depth  ! accumulator for depth
 
       depth = resdepth
       do ilay = 1, nlay
           if (depth.gt.0.0) then
-              resarray(ilay) = resmass                                  &
-     &                       * min( depth,laythick(ilay)) / (resdepth)
+              resarray(ilay) = resmass * min( depth,laythick(ilay)) / (resdepth)
               depth = depth - laythick(ilay)
           else
               resarray(ilay) = 0.0

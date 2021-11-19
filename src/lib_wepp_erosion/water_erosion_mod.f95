@@ -146,7 +146,7 @@ module water_erosion_mod
 !     them now.
 !
 
-      call getfromweps(sand,silt,clay,orgmat,                           &
+      call getfromweps(isr, sand,silt,clay,orgmat,                      &
      &  thetdr,rrc,dg,st,thdp,frdp, thetfc, por, rh,                    &
      &  frctrl, frcsol, prcp, soil)
 

@@ -10,8 +10,7 @@ module WEPSleafoff_mod
   use WEPSCrop_util_mod, only: shootnum, shoot_delay, shoot_flg
   use solar_mod, only: N_fall_eqx, N_winter_sol
   use solar_mod, only: S_fall_eqx, S_winter_sol
-  use climate_input_mod, only: amalat
-  use datetime_mod, only: get_simdate_doy
+  use solar_mod, only: amalat
   implicit none
 
   type, extends(preprocess) :: WEPSleafoff
@@ -69,7 +68,7 @@ module WEPSleafoff_mod
       real(dp) :: dropfrac
 
       ! locally computed values
-      integer :: jd     ! simulation day of year
+      integer(int32) :: jd     ! simulation day of year
       integer :: fall_eqx
       integer :: winter_sol
       logical :: do_leafoff
@@ -106,9 +105,6 @@ module WEPSleafoff_mod
           .and. (bcdayleafoff .eq. 0)  ) then
           ! fall not triggered yet
 
-          ! day of year
-          jd = get_simdate_doy()
-
           ! set winter solstice based on latitude
           if( amalat .gt. 0.0d0 ) then
             fall_eqx = N_fall_eqx
@@ -117,6 +113,9 @@ module WEPSleafoff_mod
             fall_eqx = S_fall_eqx
             winter_sol = S_winter_sol
           end if
+
+          call env%state%get("day_of_year", jd, succ)
+          if( .not. check_return( trim(self%processName) , "day_of_year", succ ) ) return
 
           if( jd .ge. fall_eqx ) then
             ! at least the first day of fall

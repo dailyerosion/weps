@@ -20,7 +20,7 @@ module hydro_main_mod
                          bhzsno, bhtsno, bhfsnfrz, &
                          bhzsmt, &
                          bhrwc0, daysim, &
-                         bwudav, bhzwid, &
+                         bhzwid, &
                          bhzeasurf, &
                          soil, plant, h1et, h1bal, wp)
 
@@ -29,13 +29,12 @@ module hydro_main_mod
       ! major subprograms of the HYDROLOGY submodel.
 
       use weps_cmdline_parms, only: transpiration_depth, wepp_hydro
-      use weps_main_mod, only: init_loop, calib_loop, am0ifl
-      use datetime_mod, only: get_simdate, get_simdate_doy
+      use weps_main_mod, only: init_loop, calib_loop, am0ifl, ijday, ljday
+      use datetime_mod, only: get_psim_day, get_psim_mon, get_psim_year, get_psim_doy, get_psim_juld
       use file_io_mod, only: luohydro, luohlayers, luosurfwat, luoweather
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, biototal
       use p1unconv_mod, only: mtomm, mmtom
-      use timer_mod, only: timer, TIMHYDR, TIMDARC, TIMSTART, TIMSTOP
       use erosion_data_struct_defs, only: anemht, awzzo, awzdisp, wzoflg
       use grid_mod, only: amxsim
       use Points_Mod, only: slen
@@ -47,9 +46,9 @@ module hydro_main_mod
       use hydro_heat_mod, only: heat, addsnow
       use hydro_util_mod, only: radnet, transp, volwatadsorb
       use wepp_param_mod, only: wepp_param
-      use climate_input_mod, only: cli_tyav, cli_next, cli_today, cli_prev, amalat, amalon
+      use climate_input_mod, only: cli_tyav, cli_day, wind_day
       use air_water_mod, only: et, rel_humid
-      use solar_mod, only: dawn, daylen, beamrise
+      use solar_mod, only: dawn, daylen, beamrise, amalat, amalon
 
       ! + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -71,7 +70,7 @@ module hydro_main_mod
       real bhzsmt
       real bhrwc0(*)
       integer daysim
-      real bwudav, bhzwid
+      real bhzwid
       real bhzeasurf
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant  ! pointer to youngest plant data, which chains to older plant data
@@ -115,7 +114,6 @@ module hydro_main_mod
       ! bhzsmt   - Snow melt (mm)
       ! bhrwc0   - Hourly water content of the soil surface - darcy supplies
       ! daysim   - day of the simulation
-      ! bwudav   - Daily average wind speed at 10 meters (m/s)
       ! bhzwid   - Water infiltration depth (mm)
       ! bhzeasurf - accumulated surface evaporation since last complete rewetting (mm)
       ! cumprecip - accumulation of rainfall (mm)
@@ -129,7 +127,9 @@ module hydro_main_mod
       ! presday   - present day
 
       ! + + + LOCAL VARIABLES + + +
-      integer day, mo, yr
+      integer :: pjuld  ! present julian day for subregion
+      integer :: prevjuld  ! previous julian day for subregion
+      integer :: nextjuld  ! next julian day for subregion
       integer l, idx
       integer idoy
       !  integer theta_check
@@ -221,13 +221,15 @@ module hydro_main_mod
       !  real volwatadsorb
 
       ! + + + DATA INITIALIZATIONS + + +
+      ! set julian day (index to climate values)
+      pjuld = get_psim_juld(isr)
+
       ! Calculate hour of sunrise
-      call get_simdate(day, mo, yr)
-      idoy = get_simdate_doy()
+      idoy = get_psim_doy(isr)
       rise = dawn(amalat, amalon, idoy, beamrise)
       daylength = daylen(amalat, idoy, beamrise)
 
-      call hinit (soil%nslay, soil%asdblk, soil%asdblk0, soil%asdpart, soil%asdwblk, &
+      call hinit (soil%nslay, soil%asdblk, soil%asdblk0, soil%asdpart, &
                   soil%ahrwc, soil%ahrwcs, soil%ahrwcf, soil%ahrwcw, soil%ahrwcr, &
                   soil%ahrwca, soil%ah0cb, soil%aheaep, soil%ahrsk, soil%ahfredsat, &
                   soil%asfsan, soil%asfsil, soil%asfcla, soil%asfom, soil%asfcec, &
@@ -240,7 +242,7 @@ module hydro_main_mod
 
       ! + + + END SPECIFICATIONS + + +
       ! write headers and inital values to hydro.out
-      if(    (am0ifl .eqv. .true.) &
+      if(    (am0ifl(isr) .eqv. .true.) &
         .and.((am0hfl(isr) .eq. 1) .or. (am0hfl(isr) .eq. 3) &
         .or.  (am0hfl(isr) .eq. 5) .or. (am0hfl(isr) .eq. 7)) ) then
 
@@ -274,13 +276,13 @@ module hydro_main_mod
          !         soil%ahrsk, soil%aheaep, soil%ah0cb, soil%asfcla, soil%asfom, soil%tsav )
       end if
 
-      if( (am0ifl .eqv. .true.) .and.((am0hfl(isr) .eq. 2).or.(am0hfl(isr) .eq. 6) &
+      if( (am0ifl(isr) .eqv. .true.) .and.((am0hfl(isr) .eq. 2).or.(am0hfl(isr) .eq. 6) &
          .or. (am0hfl(isr) .eq. 3) .or. (am0hfl(isr) .eq. 7)) ) then
 
          write(luosurfwat(isr), "(a)") '# hr daysim idoy yr bhrwc0 bhrwc0/ahrwcw(1)'
 
          ! print out daily weather as used in hydro
-         write(luoweather(isr), "(a)") '# daysim idoy yr rn cli_today%tdmx cli_today%tdmn cli_today%tdpt fld_wind rise rel_humid'
+         write(luoweather(isr), "(a)") '# daysim idoy yr rn cli_day%tdmx cli_day%tdmn cli_day%tdpt fld_wind rise rel_humid'
       end if
 
       !      write(*,*) 'hydro:total 500mm',
@@ -369,14 +371,14 @@ module hydro_main_mod
 
       ! run daily precipitation and irrigation through the snow filter
       ! returned value reflects how much was left behind
-      call addsnow(dprecip, dirrig, cli_today%zdpt, h1et%zirr, bhlocirr, &
-                   cli_today%tdmn, cli_today%tdmx, cli_today%tdpt, bmzele, &
+      call addsnow(dprecip, dirrig, cli_day(pjuld)%zdpt, h1et%zirr, bhlocirr, &
+                   cli_day(pjuld)%tdmn, cli_day(pjuld)%tdmx, cli_day(pjuld)%tdpt, bmzele, &
                    bhzsno, bhtsno, bhfsnfrz, h1et%zsnd)
 
       ! Convert global to net radiation
       ! this includes residue leaf area
-      rn = radnet(bbrlai,cli_today%eirr, bhzsno, h1et%zsnd, cli_today%tdmx, cli_today%tdmn, amalat,&
-                  idoy, cli_today%tdpt, soil )
+      rn = radnet(bbrlai,cli_day(pjuld)%eirr, bhzsno, h1et%zsnd, cli_day(pjuld)%tdmx, cli_day(pjuld)%tdmn, amalat,&
+                  idoy, cli_day(pjuld)%tdpt, soil )
 
       ! partition radiation between canopy and surface
       ! added exponential to keep above zero for very low lai
@@ -399,7 +401,7 @@ module hydro_main_mod
       ! and determine snow melt (if any) or soil heat flux
       call heat( isr, soil%nslay, soil%aszlyd, soil%aszlyt, soil%theta, soil%thetas, &
                 soil%asfsan, soil%asfsil, soil%asfcla, soil%asfom, soil%asdblk, &
-                cli_today%tdmn, cli_today%tdmx, cli_tyav, rad_surf, bdmres, &
+                cli_day(pjuld)%tdmn, cli_day(pjuld)%tdmx, cli_tyav, rad_surf, bdmres, &
                 soil%tsmn, soil%tsmx, soil%tsav, soil%fice, &
                 bhzsno, bhtsno, bhfsnfrz, h1et%zsnd, &
                 bhzsmt, g_soil )
@@ -407,22 +409,22 @@ module hydro_main_mod
       ! add snowmelt to precipitation water for infiltration
       if (bhzsmt .gt. 0.0) then
           dprecip = dprecip + bhzsmt
-          durprecip = max(cli_today%durpt,6.0)!we have no entry for snowmelt duration yet
+          durprecip = max(cli_day(pjuld)%durpt,6.0)!we have no entry for snowmelt duration yet
           tptprecip = 0.5
       else
-          durprecip = cli_today%durpt
-          tptprecip = cli_today%peaktpt
+          durprecip = cli_day(pjuld)%durpt
+          tptprecip = cli_day(pjuld)%peaktpt
       endif
 
       ! replenish accumulated surface evaporation reservoir with applied suface water
       bhzeasurf = max(0.0, bhzeasurf - dprecip - dirrig)
 
       ! calculate dryness ratio
-      if (cli_today%zdpt .eq. 0.0) then
+      if (cli_day(pjuld)%zdpt .eq. 0.0) then
          h1et%drat = 10.0
        else
-         vlh = d1 - (d2*cli_today%tdav)                               !h-24
-         h1et%drat = rn / (vlh * cli_today%zdpt)
+         vlh = d1 - (d2*cli_day(pjuld)%tdav)                               !h-24
+         h1et%drat = rn / (vlh * cli_day(pjuld)%zdpt)
       end if
 
       ! find roughness length of the surface for et wind speed adjustment to 2m
@@ -437,12 +439,13 @@ module hydro_main_mod
       loc_met_height = (met_height*mtomm) + loc_zd - awzdisp
 
       ! adjust wind velocity to adjusted agrometeorology height
-      fld_wind = movewind(bwudav, anemht*mtomm, awzzo, awzdisp, &
+      fld_wind = movewind(wind_day(pjuld)%wawudav, anemht*mtomm, awzzo, awzdisp, &
                           loc_met_height, loc_zov, loc_zd)
 
       ! Calculate potential evapotranspiration using function et
       g_soil = 0.0 ! test
-      h1et%zetp = et(rn, g_soil, fld_wind, bmzele, loc_met_height, loc_zov, loc_zd)
+      h1et%zetp = et(rn, g_soil, fld_wind, bmzele, cli_day(pjuld)%tdmx, cli_day(pjuld)%tdmn, &
+                     cli_day(pjuld)%tdav, cli_day(pjuld)%tdpt, loc_met_height, loc_zov, loc_zd)
 
       if (  h1et%zetp  .le.  0.0  ) then
          h1et%zep = 0.0
@@ -486,9 +489,6 @@ module hydro_main_mod
 
       ! Calculate soil water redistribution using subroutine darcy
 
-      call timer(TIMHYDR,TIMSTOP)
-      call timer(TIMDARC,TIMSTART)
-
       soil%swc = dot_product(soil%theta(1:soil%nslay),soil%aszlyt(1:soil%nslay))
 
       ! select hydrology model for infiltration (insertion), evaporation and redistribution
@@ -496,10 +496,22 @@ module hydro_main_mod
          ! use darcy method
          numeq = soil%nslay + 6
 
+         ! set previous and next julian days (index into climate array)
+         if( pjuld .eq. ijday ) then
+             prevjuld = ljday
+         else
+             prevjuld = pjuld - 1
+         end if
+         if( pjuld .eq. ljday ) then
+             nextjuld = ijday
+         else
+             nextjuld = pjuld + 1
+         end if
+
          call darcy( isr, daysim, numeq, soil%aszlyt,soil%aszlyd,soil%asdblk, &
             soil%theta, soil%thetadmx, soil%thetas, soil%thetaf, soil%thetaw, soil%thetar, &
             soil%ahrsk, soil%aheaep, soil%ah0cb, soil%asfcla, soil%asfom, soil%tsav, &
-            cli_prev%tdmx, cli_today%tdmn, cli_today%tdmx, cli_next%tdmn, cli_today%tdpt, &
+            cli_day(prevjuld)%tdmx, cli_day(pjuld)%tdmn, cli_day(pjuld)%tdmx, cli_day(nextjuld)%tdmn, cli_day(pjuld)%tdpt, &
             rise, daylength, h1et%zep, dprecip, durprecip, tptprecip, &
             dirrig, bhdurirr, bhlocirr, bhzoutflow, &
             bbdstm, bbffcv, soil%aslrro, soil%aslrr, bmzele, bhrwc0, &
@@ -515,22 +527,19 @@ module hydro_main_mod
 
          call waterbal(soil%nslay, soil%thetas, soil%thetes, soil%thetaf, soil%thetaw, &
                         soil%aszlyt, soil%aszlyd, soil%ahrsk, &
-                        dprecip, durprecip, tptprecip, cli_today%peakipt, &
+                        dprecip, durprecip, tptprecip, cli_day(pjuld)%peakipt, &
                         dirrig, bhdurirr, bhlocirr, bhzoutflow, &
                         bhzsno, soil%aslrr, soil%amrslp, soil%asfsan, soil%asfcla, &
                         soil%asfcr, soil%asvroc, soil%asdblk, soil%asfcec, &
                         bbffcv, bbfcancov, bbzht, bcdayap, &
                         h1et%zep, soil%theta, soil%thetadmx, bhrwc0, &
                         h1et%zea, h1et%zper, h1et%zrun, bhzinf, bhzwid, &
-                        len_slope, day, mo, yr, isr, &
-                        wepp_hydro, init_loop, calib_loop, soil%fice, wp)
+                        len_slope, get_psim_day(isr), get_psim_mon(isr), get_psim_year(isr), isr, &
+                        wepp_hydro, init_loop(isr), calib_loop(isr), soil%fice, wp)
 
       end if
 
       soil%swc = dot_product(soil%theta(1:soil%nslay),soil%aszlyt(1:soil%nslay))
-
-      call timer(TIMDARC,TIMSTOP)
-      call timer(TIMHYDR,TIMSTART)
 
       ! following darcy, check total et against reduced soil surface ET
       !  h1et%zptp = min(h1et%zptp, h1et%zetp - h1et%zea)
@@ -623,14 +632,14 @@ module hydro_main_mod
 
       ! Adjust energy balance for changes in water content
       !  call heat( soil%nslay, soil%aszlyd, soil%theta, soil%asfcla, soil%asdblk, &
-      !             cli_today%tdmn, cli_today%tdmx, soil%tsmx, soil%tsmn, soil%aszlyt)
+      !             cli_day(pjuld)%tdmn, cli_day(pjuld)%tdmx, soil%tsmx, soil%tsmn, soil%aszlyt)
 
       ! update accumulated surface evaporation variable
       bhzeasurf = bhzeasurf + h1et%zea
 
       ! update cumulative variables
       soil%swc = dot_product(soil%theta(1:soil%nslay),soil%aszlyt(1:soil%nslay))
-      h1bal%cumprecip = h1bal%cumprecip + cli_today%zdpt
+      h1bal%cumprecip = h1bal%cumprecip + cli_day(pjuld)%zdpt
       h1bal%cumirrig = h1bal%cumirrig + h1et%zirr
       h1bal%cumrunoff = h1bal%cumrunoff + h1et%zrun
       h1bal%cumevap = h1bal%cumevap + h1et%zea
@@ -641,10 +650,10 @@ module hydro_main_mod
       h1bal%presday = daysim
       
       ! Added for WEPP bookeeping      
-      wp%totalPrecip = wp%totalPrecip + cli_today%zdpt
+      wp%totalPrecip = wp%totalPrecip + cli_day(pjuld)%zdpt
       wp%totalRunoff = wp%totalRunoff + h1et%zrun
       
-      if (cli_today%zdpt.gt.0) then
+      if (cli_day(pjuld)%zdpt.gt.0) then
          wp%precipEvents = wp%precipEvents + 1
       endif
       
@@ -665,14 +674,14 @@ module hydro_main_mod
             write(luohydro(isr),*)
             write(luohydro(isr),*)
         end if
-        accheck = lswc - soil%swc + lsno - bhzsno + h1et%zirr + cli_today%zdpt &
+        accheck = lswc - soil%swc + lsno - bhzsno + h1et%zirr + cli_day(pjuld)%zdpt &
                 - h1et%zea - h1et%zpta - h1et%zper - h1et%zrun
 
         write(luohydro(isr),"(1x,i6,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),1x,f7.3,10(1x,f6.2))",ADVANCE="NO") &
-            daysim,idoy,yr,h1et%zetp, h1et%zep, h1et%zptp,&
-            h1et%zea, h1et%zpta, h1et%zper, h1et%zirr, cli_today%zdpt, dprecip, h1et%zrun, &
+            daysim, idoy, get_psim_year(isr), h1et%zetp, h1et%zep, h1et%zptp,&
+            h1et%zea, h1et%zpta, h1et%zper, h1et%zirr, cli_day(pjuld)%zdpt, dprecip, h1et%zrun, &
             bhzinf, lswc, soil%swc, h1et%zsnd, bhzsno, accheck, &
-            bhrwc0(12)/soil%ahrwcw(1), cli_today%tdav, vaptrans, evaplimit, &
+            bhrwc0(12)/soil%ahrwcw(1), cli_day(pjuld)%tdav, vaptrans, evaplimit, &
             standevapredu, bbevapredu, totalevapredu, cropdp_max*mmtom, &
               plant_wat_t(0.0,cropdp_max,soil%theta(1),soil%thetaw,soil%aszlyd,soil%nslay),&
               plant_wat_t(0.0,cropdp_max,soil%thetaf,soil%thetaw,soil%aszlyd,soil%nslay)
@@ -726,18 +735,18 @@ module hydro_main_mod
          .or. (am0hfl(isr) .eq. 3) .or. (am0hfl(isr) .eq. 7)) then
          ! print out hourly surface water content values
          do idx = 1, 24
-            write(luosurfwat(isr),*) idx, daysim, idoy, yr, bhrwc0(idx), bhrwc0(idx)/soil%ahrwcw(1)
+            write(luosurfwat(isr),*) idx, daysim, idoy, get_psim_year(isr), bhrwc0(idx), bhrwc0(idx)/soil%ahrwcw(1)
          end do
 
          ! print out daily weather as used in hydro
-         write(luoweather(isr),*) daysim, idoy, yr, rn, cli_today%tdmx, cli_today%tdmn, &
-               cli_today%tdpt, fld_wind, rise, rel_humid()
+         write(luoweather(isr),*) daysim, idoy, get_psim_year(isr), rn, cli_day(pjuld)%tdmx, cli_day(pjuld)%tdmn, &
+               cli_day(pjuld)%tdpt, fld_wind, rise, rel_humid(cli_day(pjuld)%tdmx, cli_day(pjuld)%tdmn, cli_day(pjuld)%tdpt)
       end if
 
       return
     end subroutine hydro
 
-    subroutine hinit(layrsn, bsdblk, bsdblk0, bsdpart, bsdwblk, &
+    subroutine hinit(layrsn, bsdblk, bsdblk0, bsdpart, &
                      bhrwc, bhrwcs, bhrwcf, bhrwcw, bhrwcr, &
                      bhrwca, bh0cb, bheaep, bhrsk, bhfredsat, &
                      bsfsan, bsfsil, bsfcla, bsfom, bsfcec, &
@@ -770,7 +779,7 @@ module hydro_main_mod
 
       ! + + + ARGUMENT DECLARATIONS + + +
       integer layrsn
-      real bsdblk(*), bsdblk0(*), bsdpart(*), bsdwblk(*)
+      real bsdblk(*), bsdblk0(*), bsdpart(*)
       real bhrwc(*), bhrwcs(*), bhrwcf(*), bhrwcw(*), bhrwcr(*)
       real bhrwca(*), bh0cb(*), bheaep(*), bhrsk(*), bhfredsat(*)
       real bsfsan(*), bsfsil(*), bsfcla(*), bsfom(*), bsfcec(*)
@@ -782,7 +791,6 @@ module hydro_main_mod
       ! bsdblk  - Soil bulk density (Mg/m^3)
       ! bsdblk0 - Previous day soil bulk density (Mg/m^3)
       ! bsdpart - Soil particle density (Mg/m^3)
-      ! bsdwblk - Soil wet bulk density (Mg/m^3)
       ! bhrwc   - Soil water content (mg/mg)
       ! bhrwcs  - Soil water content at saturation (mg/mg)
       ! bhrwcf  - Soil water content at field capacity (mg/mg)
@@ -960,7 +968,7 @@ module hydro_main_mod
 !     output hydro
 
       use file_io_mod, only: luohlayers
-      use datetime_mod, only: get_simdate_doy, get_simdate_year
+      use datetime_mod, only: get_psim_doy, get_psim_year
       use hydro_data_struct_defs, only: claygrav80rh, orggrav80rh, gravconst
       use hydro_util_mod, only: matricpot_bc, volwatadsorb, availwc, unsatcond_bc
 
@@ -989,8 +997,9 @@ module hydro_main_mod
 !     bhtsav(*)  - daily average soil temperature (C)
 
 !     + + + LOCAL VARIABLES + + +
-      integer    idx, yr
+      integer    idx
       integer    idoy
+      integer    year
       real       availwat, temp
       real       unsatcond, matricpot, soilrh
       real       laycenter, sat_rat
@@ -998,7 +1007,6 @@ module hydro_main_mod
 
 !     + + + LOCAL DEFINITIONS + + +
 !     idx   - array index for loops
-!     yr       - year of simulation
 !     availwat  - soil plant availale water content (for output)
 !     unsatcond - unsaturated hydraulic conductivity (m/s) (for output)
 !     matricpot - soil matric potential (m) (for output)
@@ -1007,8 +1015,8 @@ module hydro_main_mod
 
 !     + + + END SPECIFICATIONS + + +
 
-      yr = get_simdate_year()
-      idoy = get_simdate_doy()
+      idoy = get_psim_doy(isr)
+      year = get_psim_year(isr)
       if( idoy .eq. 1 ) then
          ! insert double blank line to break years into blocks for graphing
          write(luohlayers(isr),*)
@@ -1032,7 +1040,7 @@ module hydro_main_mod
          laycenter = bszlyd(idx) - 0.5*bszlyt(idx)
          sat_rat = (theta(idx)-thetar(idx)) / (thetas(idx)-thetar(idx))
  2190    format(1x,i5,1x,i3,1x,i4,1x,i3,1x,16g11.3)
-         write(luohlayers(isr),2190) daysim, idoy, yr, idx, laycenter, &
+         write(luohlayers(isr),2190) daysim, idoy, year, idx, laycenter, &
                theta(idx), thetas(idx), thetaf(idx), thetaw(idx), &
                thetar(idx), availwat, sat_rat, bhtsav(idx), &
                unsatcond, -matricpot, soilrh, bulkden(idx), &

@@ -32,6 +32,7 @@ module climate_input_mod
         integer :: doy   ! julian day of year
         real :: tdav     ! Mean daily air temperature (deg C)
         real :: eirr     ! Daily global radiation (MJ/m^2)
+        real :: dair     ! Daily average air density (Kg/m^3)
     end type cligen_state
 
     type windgen_state
@@ -86,20 +87,134 @@ module climate_input_mod
     type(cligen_state) :: cli_prev
     type(cligen_state) :: cli_today
     type(cligen_state) :: cli_next
+    
+    type(cligen_state), dimension(:), allocatable :: cli_day
 
     type(windgen_state) :: wind_prev   ! previous wind data read from file
     type(windgen_state) :: wind_today  ! wind data for the requested day
     type(windgen_state) :: wind_next   ! last wind data read from file
 
-   real :: amalat  ! site latitude (degrees)
-   real :: amalon  ! site longitude (degrees)
+    type(windgen_state), dimension(:), allocatable :: wind_day
+
    real :: amzele  ! site elevation (m)
+   
+   integer :: minjuld ! minimum julian day in cligen/windgen array
+   integer :: maxjuld ! maximum julian day in cligen/windgen array
 
 contains
 
-    subroutine cliginit
+    subroutine set_cli_today( pjuld )
+        use erosion_data_struct_defs, only: awdair
+        integer, intent(in) :: pjuld   ! present julian day of the simulation run.
+
+        cli_today = cli_day(pjuld)
+        awdair = cli_today%dair
+    end subroutine set_cli_today
+
+    subroutine set_wind_today( pjuld )
+        use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn, awudav, subday, ntstep
+        integer, intent(in) :: pjuld   ! present julian day of the simulation run.
+
+        integer :: idx   ! loop index
+
+        wind_today = wind_day(pjuld)
+
+        awadir = wind_today%wwadir
+        awudmx = wind_today%wwudmx
+        awudmn = wind_today%wwudmn
+        awhrmx = wind_today%wwhrmx
+        if (wind_gen_fmt_flag == 1) then   ! original wind_gen file format
+            awudav = (awudmx + awudmn) / 2.0
+        else                               ! wind_gen2 file format
+            awudav = wind_today%wawudav
+            do idx = 1,ntstep
+                subday(idx)%awu = wind_today%wawu(idx)
+            end do
+        endif
+
+        ! call wind_print(wind_today)
+
+    end subroutine set_wind_today
+
+    subroutine create_cli_day( ijuld, ljuld )
+    
+        use datetime_mod, only: caldat
+
+        integer, intent(in) :: ijuld   ! This variable contains the initial julian day of the simulation run.
+        integer, intent(in) :: ljuld   ! This variable contains the last julian day of the simulation run.
+
+        integer :: alloc_stat  ! allocation error return value
+        integer :: idx         ! loop variable
+        integer :: day         ! day of month
+        integer :: mon         ! month on year (1-12)
+        integer :: year        ! year
+
+        ! set array bounds
+        minjuld = ijuld
+        maxjuld = ljuld
+
+        ! allocate cli_day array
+        allocate(cli_day(ijuld:ljuld), stat=alloc_stat)
+        if( alloc_stat .gt. 0 ) then
+            write(*,*) 'ERROR: unable to allocate enough memory for cli_day array'
+        end if
+
+        ! reset cli file to beginning
+        call getcli( 0, 1, 1 )
+        do idx = ijuld, ljuld
+            call caldat( idx, day, mon, year )
+            call getcli( day, mon, year )
+            cli_day(idx) = cli_today
+        end do
+
+    end subroutine create_cli_day
+    
+    subroutine create_wind_day( ijuld, ljuld )
+        use erosion_data_struct_defs, only: ntstep
+        use datetime_mod, only: caldat
+
+        integer, intent(in) :: ijuld   ! This variable contains the initial julian day of the simulation run.
+        integer, intent(in) :: ljuld   ! This variable contains the last julian day of the simulation run.
+
+        integer :: alloc_stat  ! allocation error return value
+        integer :: idx         ! loop variable
+        integer :: jdx         ! loop variable
+        integer :: day         ! day of month
+        integer :: mon         ! month on year (1-12)
+        integer :: year        ! year
+
+        ! allocate wind_day array
+        allocate(wind_day(ijuld:ljuld), stat=alloc_stat)
+        if( alloc_stat .gt. 0 ) then
+            write(*,*) 'ERROR: unable to allocate enough memory for wind_day array'
+        end if
+
+        ! reset wind file to beginning
+        call getwin( 0, 1, 1 )
+        do idx = ijuld, ljuld
+            ! allocate subdaily array for today
+            allocate(wind_day(idx)%wawu(ntstep), stat=alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+               write(*,*) 'ERROR: memory alloc., WINDGEN wind speeds'
+               stop 1
+            end if
+
+            call caldat( idx, day, mon, year )
+            call getwin( day, mon, year )
+            wind_day(idx) = wind_today
+            do jdx = 1, ntstep
+               wind_day(idx)%wawu(jdx) = wind_today%wawu(jdx)
+            end do
+        end do
+
+    end subroutine create_wind_day
+
+    subroutine cliginit( ijuld, ljuld )
         use file_io_mod, only: luicli
         use erosion_data_struct_defs, only: awzypt
+
+        integer, intent(in) :: ijuld   ! This variable contains the initial julian day of the simulation run.
+        integer, intent(in) :: ljuld   ! This variable contains the last julian day of the simulation run.
 
         integer idx
         character header*128
@@ -195,6 +310,8 @@ contains
         cli_today%day = 0
         cwrnflg = 0
 
+        call create_cli_day( ijuld, ljuld )
+        
     end subroutine cliginit
 
     ! rewinds file to beginning reads headers in preparation for reading first data line
@@ -256,6 +373,7 @@ contains
         cli_oneday%doy = dayear(cli_oneday%day,cli_oneday%month,cli_oneday%year)
         cli_oneday%tdav = (cli_oneday%tdmx + cli_oneday%tdmn) / 2.0
         cli_oneday%eirr = cli_oneday%grad * 0.04186
+        cli_oneday%dair = 348.56 * (1.013-0.1183*(amzele/1000.) + 0.0048 * (amzele/1000.)**2.) / (cli_oneday%tdav + 273.1)
         errflg = 0
     end function cli_read_next
 
@@ -263,11 +381,10 @@ contains
 
         use datetime_mod, only: isleap, julday, dayear
         use file_io_mod, only: luicli
-        use erosion_data_struct_defs, only: awdair
 
-        integer :: ccd    ! requested day of month
-        integer :: ccm    ! requested month of year
-        integer :: ccy    ! requested year
+        integer, intent(in) :: ccd    ! requested day of month
+        integer, intent(in) :: ccm    ! requested month of year
+        integer, intent(in) :: ccy    ! requested year
 
         ! + + + LOCAL VARIABLES + + +
         integer :: ioc     ! file and string read error return code
@@ -464,13 +581,13 @@ contains
             end do
         end if
 
-        ! set air density for today
-        awdair = 348.56 * (1.013-0.1183*(amzele/1000.) + 0.0048 * (amzele/1000.)**2.) / (cli_today%tdav + 273.1)
-
     end subroutine getcli
 
-    subroutine windinit
+    subroutine windinit( ijuld, ljuld )
         use erosion_data_struct_defs, only: ntstep
+
+        integer, intent(in) :: ijuld   ! This variable contains the initial julian day of the simulation run.
+        integer, intent(in) :: ljuld   ! This variable contains the last julian day of the simulation run.
 
         integer :: alloc_stat
 
@@ -495,6 +612,8 @@ contains
         ! this is a windgen intialization
         ! placed here rather than create a whole new file.
         wwrnflg = 0
+
+        call create_wind_day( ijuld, ljuld )
 
     end subroutine windinit
 
@@ -616,7 +735,6 @@ contains
 
         use datetime_mod, only: isleap
         use file_io_mod, only: luiwin
-        use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn, awudav, subday, ntstep
         use datetime_mod, only: julday, dayear
 
         integer :: cwd    ! requested day of month
@@ -819,22 +937,7 @@ contains
             end do
         end if
 
-        awadir = wind_today%wwadir
-        awudmx = wind_today%wwudmx
-        awudmn = wind_today%wwudmn
-        awhrmx = wind_today%wwhrmx
-        if (wind_gen_fmt_flag == 1) then   ! original wind_gen file format
-            awudav = (awudmx + awudmn) / 2.0
-        else                               ! wind_gen2 file format
-            awudav = wind_today%wawudav
-            do idx = 1,ntstep
-                subday(idx)%awu = wind_today%wawu(idx)
-            end do
-        endif
-
-        !call wind_print(wind_today)
-
         return
     end subroutine getwin
-
+    
 end module climate_input_mod
