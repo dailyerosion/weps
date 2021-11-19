@@ -59,18 +59,20 @@ else {
 /* add preprocessing for all builds, turn off negative zero */
 fc_flags		+= "-cpp -fno-sign-zero";
 
-fc_compile_flag		= "-c ";
+fc_compile_flag	= "-c ";
 fc_out_flag		= "-o ";
 
 fc_fixed		= "-ffixed-form";
 fc_free		= "-ffree-form";
-
+fc_free		+= "-ffree-line-length-none";  /* Set column after which characters are ignored in typical free-form lines in the source file. */
+                                                       /* The default value is 132. n may be "none", meaning that the entire line is meaningful.       */
+                                                       /* -ffree-line-length-0 means the same thing as -ffree-line-length-none.                        */
 /* default mode flags */
 fc_default		=;
 
 /* debug flags */
 fc_debug		= "-O0 -g -Wall -Wextra -fimplicit-none -fcheck=all,no-recursion -fbacktrace -ffpe-trap=invalid,zero,overflow";
-fc_debug		+= "-fno-unsafe-math-optimizations -frounding-math -fsignaling-nans -Wno-missing-include-dirs";
+fc_debug		+= "-fno-unsafe-math-optimizations -frounding-math -fsignaling-nans -Wno-missing-include-dirs -finit-real=snan";
 /*fc_debug		+= "-fopenmp";*/
 /*fc_debug		= "-Og -g -Wall -Wextra -fimplicit-none -fcheck=all -fbacktrace -ffpe-trap=zero,overflow -fdefault-real-8";*/
 
