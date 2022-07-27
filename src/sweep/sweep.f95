@@ -406,7 +406,7 @@
            call sbgrid( minht_barriers() )
          end if
 
-         ! allocate cellstate array to cover grid
+         ! allocate noerod array for subregions
          allocate(noerod(nsubr), stat=alloc_stat)
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate enough memory for noerod data array'

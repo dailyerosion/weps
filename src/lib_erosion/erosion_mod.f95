@@ -514,14 +514,12 @@ module erosion_mod
 
     subroutine erodinit( noerod )
       ! Controls calls to subroutines that:
-      ! initialize Erosion submodel output array to zero (sbigrd).
       ! calculate normalized effect of hills on friction velocity 
       ! on grid for each wind direction (not activated)
       ! initialize reporting variables that need to have a value even
       ! when erosion is not being called.
 
       ! + + + Modules Used + + +
-      use grid_mod, only: sbigrd
       use erosion_data_struct_defs, only: threshold, cellsurfacestate
 
       ! +++ ARGUMENT DECLARATIONS +++

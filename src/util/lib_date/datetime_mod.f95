@@ -322,17 +322,10 @@ contains
 
     subroutine caldat (julian, dd, mm, yyyy)
 
-!     CALDAT is taken from _Numerical_Recipes:_The_Art_of_Scientific_Computing_
-
 !     + + + PURPOSE + + +
 !     Inverse of the function JULDAY. Here 'julian' is input as a Julian Day
 !     Number, and the routine outputs the dd, mm, and yyyy on which the
 !     specified Julian Day started at noon.
-
-!     problems were found with the method above for long runs such as:
-!     - the ten missing days in 1582 (we really just need 365.25 day in each year)
-!     - after 1700, leap years return feb 31, not 29 and the wrong year
-!     - it may only be the fortran implementation and floating point problems
 
 !     Based on info from http://en.wikipedia.org/wiki/Julian_day, which references
 !     http://www.astro.uu.nl/~strous/AA/en/reken/juliaansedag.html, the code
@@ -386,13 +379,6 @@ contains
 !     All are integer variables. Positive year signifies A.D.; zero and negative, B.C.
 !     Calendar dates before 1582 will not match dates on the Julian calendar used
 !     at the time.
-
-!     JULDAY is taken from _Numerical_Recipes:_The_Art_of_Scientific_Computing_
-
-!     problems were found with the method above for long runs such as:
-!     - the ten missing days in 1582 (we really just need 365.25 day in each year)
-!     - after 1700, leap years return feb 31, not 29 and the wrong year
-!     - it may only be the fortran implementation and floating point problems
 
 !     Based on info from http://en.wikipedia.org/wiki/Julian_day, which references
 !     http://www.astro.uu.nl/~strous/AA/en/reken/juliaansedag.html, the code

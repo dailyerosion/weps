@@ -744,7 +744,8 @@ module hydro_darcy_mod
           dvwp(isr)%source_start(kindex) = 0.0
           dvwp(isr)%source_end(kindex) = 0.0
       end do
-      ! set irrigmid for later use
+      ! initialize for later use
+      irrigstart = 0.0
       irrigmid = 0.0
       ! reset parameters if irrigation is applied
       if( dirrig .gt. 0.0 ) then

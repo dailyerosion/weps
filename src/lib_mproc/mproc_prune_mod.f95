@@ -25,11 +25,11 @@ module mproc_prune_mod
       use biomaterial, only: plant_pointer, residue_pointer, residueAdd
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real, intent(in) :: stemf       ! fraction of plant stems removed (kg/kg)
-      real, intent(in) :: leaff       ! fraction of plant leaves removed (kg/kg)
-      real, intent(in) :: storef      ! fraction of storage (reproductive components) removed (kg/kg)
-      real, intent(in) :: rootstoref  ! fraction of plant storage root removed (kg/kg)
-      real, intent(in) :: rootfiberf  ! fraction of plant fibrous root removed (kg/kg)
+      real, intent(in) :: stemf       ! fraction of plant stems trimmed (kg/kg)
+      real, intent(in) :: leaff       ! fraction of plant leaves trimmed (kg/kg)
+      real, intent(in) :: storef      ! fraction of storage (reproductive components) trimmed (kg/kg)
+      real, intent(in) :: rootstoref  ! fraction of plant storage root trimmed (kg/kg)
+      real, intent(in) :: rootfiberf  ! fraction of plant fibrous root trimmed (kg/kg)
       integer, intent(in) :: nslay    ! number of soil layers
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
 

@@ -438,7 +438,9 @@ module weps_output_mod
         end do
         do idx = 1, subrsurf%npools
             if( subrsurf%brcdInput(idx)%residue ) then
-                res_height = res_height + subrsurf%brcdInput(idx)%rsai * subrsurf%brcdInput(idx)%rsai / res_rsaitot
+                if( res_rsaitot .gt. 0.0 ) then
+                    res_height = res_height + subrsurf%brcdInput(idx)%rsai * subrsurf%brcdInput(idx)%rsai / res_rsaitot
+                end if
                 res_biodrag = res_biodrag + biodrag( 0.0, 0.0, subrsurf%brcdInput(idx)%rlai, subrsurf%brcdInput(idx)%rsai, &
                               subrsurf%brcdInput(idx)%rg, subrsurf%brcdInput(idx)%xrow, &
                               subrsurf%brcdInput(idx)%zht, subrsurf%aszrgh )

@@ -878,7 +878,7 @@ module crop_growth_mod
      &                 bcmbgstemz,                                      &
      &                 bczht, bcdstm, bczrtd,              &
      &                 bcdayap, bcgrainf, bcdpop, daysim, regrowth_flg, &
-     &                 bc0shoot, bcdmaxshoot )
+     &                 bc0shoot, bcdmaxshoot, bctwarmdays )
 
           ! set trend direction for living leaf area
           trend = bcmstandleaflive - bprevstandleaflive
@@ -969,7 +969,7 @@ module crop_growth_mod
      &                 bcmbgstemz,                                      &
      &                 bczht, bcdstm, bczrtd,              &
      &                 bcdayap, bcgrainf, bcdpop, daysim, regrowth_flg, &
-     &                 bc0shoot, bcdmaxshoot )
+     &                 bc0shoot, bcdmaxshoot, bctwarmdays )
 
 !     Author : Amare Retta
 !     + + + PURPOSE + + +
@@ -1021,6 +1021,8 @@ module crop_growth_mod
       real bcgrainf, bcdpop
       integer daysim, regrowth_flg
       real bc0shoot, bcdmaxshoot
+      double precision bctwarmdays
+
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     bnslay - number of soil layers
@@ -1101,6 +1103,8 @@ module crop_growth_mod
 !     regrowth_flg - used to record changes is regrowth conditions day by day
 !     bc0shoot - mass from root storage required for each shoot (mg/shoot)
 !     bcdmaxshoot - maximum number of shoots possible from each plant
+!     bctwarmdays - number of days that the daily average temperature
+!                   has been above the minimum growth temperature with decay
 
 !     + + + LOCAL VARIABLES + + +
       double precision par, apar, arg_exp
@@ -1625,14 +1629,14 @@ module crop_growth_mod
      &                    bcgrainf, ts, bhfwsf, frst, ffa, ffw,         &
      &                    par, apar, pddm, p_rw, p_st, p_lf, p_rp,      &
      &                    stem_propor, pdiam, parea, pdiam/bc0diammax,  &
-     &                    parea*bcdpop, hu_delay, bcthardnx, temp_sai,  &
+     &                    1.0-exp(-bc0ck*trad_lai), hu_delay, bcthardnx, temp_sai,  &
      &                    temp_stmrep, regrowth_flg, temp_fliveleaf, &
-     &                    trim(bc0nam)
+     &                    bctwarmdays, trim(bc0nam)
       end if
 
  2130 format(1x,i6,1x,i3,1x,i4,1x,i5,1x,f6.3,12(1x,f7.4),1x,f7.2,       &
      & 3(1x,f7.4),8(1x,f6.3),1x,e12.3, 11(1x,f6.3),2(1x,f8.5),1x,i2,    &
-     & 1x,f6.3,1x,a)
+     & 1x,f6.3,1x,f6.2,1x,a)
 
       return
     end subroutine growth

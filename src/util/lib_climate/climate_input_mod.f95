@@ -77,7 +77,7 @@ module climate_input_mod
                                   ! 0001, 1 - not all years contained in file, rewind and run in day of year mode
                                   ! 0010, 2 - partial year at end of file, rewind and run in day of year mode
                                   ! 0100, 4 - leap year feb 29 does not match, skip or duplicate as needed
-    integer :: wwrnflg            ! flag to show or turn off date mismatch warnings
+    integer :: wwrnflg            ! binary indicator for windgen warnings (same meaning as above)
     integer :: n_header           ! number of lines in the cligen file header
 
     real :: cli_tyav              ! Average yearly air temperature (deg C) from CLIGEN header monthly average temperaure
@@ -159,8 +159,6 @@ contains
             write(*,*) 'ERROR: unable to allocate enough memory for cli_day array'
         end if
 
-        ! reset cli file to beginning
-        call getcli( 0, 1, 1 )
         do idx = ijuld, ljuld
             call caldat( idx, day, mon, year )
             call getcli( day, mon, year )
@@ -189,8 +187,6 @@ contains
             write(*,*) 'ERROR: unable to allocate enough memory for wind_day array'
         end if
 
-        ! reset wind file to beginning
-        call getwin( 0, 1, 1 )
         do idx = ijuld, ljuld
             ! allocate subdaily array for today
             allocate(wind_day(idx)%wawu(ntstep), stat=alloc_stat)
@@ -306,8 +302,9 @@ contains
             !read(luicli,*) (awtmav(idx), idx = 1,12)   ! read 12 monthly ave temps
         endif
 
-        rewind luicli
+        ! triggers first day setup
         cli_today%day = 0
+        ! error flag set to no errors
         cwrnflg = 0
 
         call create_cli_day( ijuld, ljuld )
@@ -391,17 +388,8 @@ contains
         integer :: jday    ! astronomical julian day for requested day
         integer :: doy     ! day of year for requested day
 
-        ! This code added to re-initialize the reading of a cligen file
-        ! following the "initialization" phase.  It is triggered if the
-        ! day (ccd) passed to the subroutine is set to zero - LEW
-        if (ccd == 0) then
-            cli_today%day = 0
-            rewind luicli
-            return
-        endif
-
         if (cli_today%day .eq. 0) then
-            ! restarting at beginning of the file
+            ! starting at beginning of the file
             call cli_start()
             ! reading first data line of file
             ioc = cli_read_next(cli_today)
@@ -418,6 +406,10 @@ contains
             if( julday(ccd, ccm, ccy) .lt. cli_today%jday ) then
                 ! set error flag to indicate earlier date request, will now read by day of year.
                 cwrnflg = ibset(cwrnflg,0)
+                write (0,*) 'WARNING: CLIGEN file does not contain first date requested. Date requested: ', &
+                            ccd, '/', ccm, '/', ccy, ' CLIGEN file starts on: ', &
+                            cli_today%day, '/', cli_today%month, '/', cli_today%year, &
+                            ' Now reading file by matching day of year, not exact date.'
             end if
 
             ! reading second line of file
@@ -478,7 +470,7 @@ contains
                 if (ioc .gt. 0) then
                     ! We have a failure reading or parsing the next data line in file
                     if( (ccd .eq. 31) .and. (ccm .eq. 12) ) then
-                        ! end of year, read next line from beginning of file
+                        ! end of year and end of file, read next line from beginning of file
                         call cli_start()
                         ioc = cli_read_next(cli_next)
                         if (ioc .gt. 0) then
@@ -486,6 +478,9 @@ contains
                                  cli_today%day,'/',cli_today%month,'/',cli_today%year, &
                                  ' Rewind to first day failed.'
                             call exit(1)
+                        else
+                            ! set error flag to indicate read reached end of last year in file, will now read by day of year.
+                            cwrnflg = ibset(cwrnflg,0)
                         end if
                     else
                         ! file did not end with complete year
@@ -522,6 +517,18 @@ contains
                             call exit(1)
                     end if
                 end if
+            else
+                ! check result
+                ! mode switched from exact date to day of year
+                ! julian day of year
+                doy = dayear( ccd, ccm, ccy)
+
+                if( doy .ne. cli_today%doy ) then
+                   ! switch from exact date to day of year mode not correct doy
+                   write(0,*) 'ERROR: CLIGEN: Incorrect day of year selected on switch from exact date to day of year mode.', doy, cli_today%doy
+                   write(0,*) 'ERROR: day of year requested: ', doy, 'Day of year selected: ', cli_today%doy
+                   call exit(1)
+                end if
             end if
             
         end if
@@ -531,6 +538,38 @@ contains
 
             ! julian day of year
             doy = dayear( ccd, ccm, ccy)
+
+            if( (doy .eq. 366) .and. (cli_next%doy .eq. 1) ) then
+                ! leap year request, file year is not leap year
+                ! returns end of year value for day 366
+                return
+            end if
+
+            if( (doy .eq. 1) .and. (cli_next%doy .eq. 366) ) then
+                ! non-leap year request, file year is leap year
+                ! skips day 366, reads doy 1 into cli_today
+                cli_prev = cli_today
+                cli_today = cli_next
+                ioc = cli_read_next(cli_next)
+                if (ioc .gt. 0) then
+                    ! We have a failure reading or parsing the next data line in file
+                    write (0,*) 'ERROR: CLIGEN read failed following dd/mm/yy: ', &
+                         cli_today%day,'/',cli_today%month,'/',cli_today%year, &
+                         ' Rewind to first day failed.'
+                    call exit(1)
+                end if
+                cli_prev = cli_today
+                cli_today = cli_next
+                ioc = cli_read_next(cli_next)
+                if (ioc .gt. 0) then
+                    ! missing day in file
+                    write (0,*) 'ERROR: CLIGEN read failed following dd/mm/yy: ', &
+                         cli_today%day,'/',cli_today%month,'/',cli_today%year, &
+                         ' Please create file with no missing days.'
+                    call exit(1)
+                end if
+                return
+            end if
 
             if( (doy .lt. cli_today%doy) .and. (cli_next%doy .eq. 1) ) then
                 ! read next in new year
@@ -579,6 +618,20 @@ contains
                 end if
 
             end do
+
+            ! generate one time warning of switch to day of year mode
+            if( cwrnflg .lt. 8 ) then
+                ! Set when file is shorter than simulation
+                if( (cli_prev%year .gt. cli_today%year) ) then
+                    ! set cwrnflg to not generate additional warnings
+                    cwrnflg = ibset(cwrnflg,3)
+                    ! print warning
+                    write (0,*) 'WARNING: CLIGEN file is shorter than simulation. File ends on: ', &
+                            cli_prev%day, '/', cli_prev%month, '/', cli_prev%year, &
+                            ' Rereading file using day of year as many times as needed to complete the simulation'
+                end if
+            end if
+
         end if
 
     end subroutine getcli
@@ -609,8 +662,9 @@ contains
            stop 1
         end if
 
-        ! this is a windgen intialization
-        ! placed here rather than create a whole new file.
+        ! triggers first day setup
+        wind_today%day = 0
+        ! error flag set to no errors
         wwrnflg = 0
 
         call create_wind_day( ijuld, ljuld )
@@ -747,17 +801,8 @@ contains
         integer :: doy     ! day of year for requested day
         integer :: idx     ! index for reading array values
 
-        ! This code added to re-initialize the reading of a windgen file
-        ! following the "initialization" phase.  It is triggered if the
-        ! day (cwd) passed to the subroutine is set to zero - LEW
-        if (cwd == 0) then
-            wind_today%day = 0
-            rewind luiwin
-            return
-        endif
-
         if (wind_today%day .eq. 0) then
-            ! restarting at beginning of the file
+            ! starting at beginning of the file
             call wind_start()
             ! reading first data line of file
             ioc = wind_read_next(wind_today)
@@ -773,7 +818,10 @@ contains
             if( julday(cwd, cwm, cwy) .lt. wind_today%jday ) then
                 ! set error flag to indicate earlier date request, will now read by day of year.
                 wwrnflg = ibset(wwrnflg,0)
-                write(*,*) 'Warning: WINGEN file does not contain date requested, using Day of Year mode.'
+                write (0,*) 'WARNING: WINDGEN file does not contain first date requested. Date requested: ', &
+                            cwd, '/', cwm, '/', cwy, ' WINDGEN file starts on: ', &
+                            wind_today%day, '/', wind_today%month, '/', wind_today%year, &
+                            ' Now reading file by matching day of year, not exact date.'
             end if
 
             ! reading second line of file
@@ -834,7 +882,7 @@ contains
                 if (ioc .gt. 0) then
                     ! We have a failure reading or parsing the next data line in file
                     if( (cwd .eq. 31) .and. (cwm .eq. 12) ) then
-                        ! end of year, read next line from beginning of file
+                        ! end of year and end of file, read next line from beginning of file
                         call wind_start()
                         ioc = wind_read_next(wind_next)
                         if (ioc .gt. 0) then
@@ -842,6 +890,9 @@ contains
                                  wind_today%day,'/',wind_today%month,'/',wind_today%year, &
                                  ' Rewind to first day failed.'
                             call exit(1)
+                        else
+                            ! set error flag to indicate read reached end of last year in file, will now read by day of year.
+                            wwrnflg = ibset(wwrnflg,0)
                         end if
                     else
                         ! file did not end with complete year
@@ -878,6 +929,18 @@ contains
                             call exit(1)
                     end if
                 end if
+            else
+                ! check result
+                ! mode switched from exact date to day of year
+                ! julian day of year
+                doy = dayear( cwd, cwm, cwy)
+
+                if( doy .ne. wind_today%doy ) then
+                   ! switch from exact date to day of year mode not correct doy
+                   write(0,*) 'ERROR: WINDGEN: Incorrect day of year selected on switch from exact date to day of year mode.', doy, wind_today%doy
+                   write(0,*) 'ERROR: day of year requested: ', doy, 'Day of year selected: ', wind_today%doy
+                   call exit(1)
+                end if
             end if
 
         end if
@@ -887,6 +950,38 @@ contains
 
             ! julian day of year
             doy = dayear( cwd, cwm, cwy)
+
+            if( (doy .eq. 366) .and. (wind_next%doy .eq. 1) ) then
+                ! leap year request, file year is not leap year
+                ! returns end of year value for day 366
+                return
+            end if
+
+            if( (doy .eq. 1) .and. (wind_next%doy .eq. 366) ) then
+                ! non-leap year request, file year is leap year
+                ! skips day 366, reads doy 1 into wind_today
+                wind_prev = wind_today
+                wind_today = wind_next
+                ioc = wind_read_next(wind_next)
+                if (ioc .gt. 0) then
+                    ! We have a failure reading or parsing the next data line in file
+                    write (0,*) 'ERROR: WINDGEN read failed following dd/mm/yy: ', &
+                         wind_today%day,'/',wind_today%month,'/',wind_today%year, &
+                         ' Rewind to first day failed.'
+                    call exit(1)
+                end if
+                wind_prev = wind_today
+                wind_today = wind_next
+                ioc = wind_read_next(wind_next)
+                if (ioc .gt. 0) then
+                    ! missing day in file
+                    write (0,*) 'ERROR: WINDGEN read failed following dd/mm/yy: ', &
+                         wind_today%day,'/',wind_today%month,'/',wind_today%year, &
+                         ' Please create file with no missing days.'
+                    call exit(1)
+                end if
+                return
+            end if
 
             if( (doy .lt. wind_today%doy) .and. (wind_next%doy .eq. 1) ) then
                 ! read next in new year
@@ -935,9 +1030,22 @@ contains
                 end if
 
             end do
+
+            ! generate one time warning of switch to day of year mode
+            if( wwrnflg .lt. 8 ) then
+                ! Set when file is shorter than simulation
+                if( (wind_prev%year .gt. wind_today%year) ) then
+                    ! set wwrnflg to not generate additional warnings
+                    wwrnflg = ibset(wwrnflg,3)
+                    ! print warning
+                    write (0,*) 'WARNING: WINDGEN file is shorter than simulation. File ends on: ', &
+                            wind_prev%day, '/', wind_prev%month, '/', wind_prev%year, &
+                            ' Rereading file using day of year as many times as needed to complete the simulation'
+                end if
+            end if
+
         end if
 
-        return
     end subroutine getwin
     
 end module climate_input_mod

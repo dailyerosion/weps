@@ -7,7 +7,7 @@ module grid_mod
     use Points_Mod, only: point
     use flib_sax
     use read_write_xml_mod, only: read_param
-    use erosion_data_struct_defs, only: cellstate
+    use erosion_data_struct_defs, only: create_cellsurfacestate, cellstate
 
     implicit none
 
@@ -136,7 +136,7 @@ module grid_mod
         write(*,*) "ERROR: unable to deallocate memory for Grid Tag array"
       end if
 
-    end subroutine
+    end subroutine write_grid
 
     subroutine begin_griddata_element_handler(name,attributes)
       character(len=*), intent(in)   :: name
@@ -184,14 +184,12 @@ module grid_mod
           jmax = jmax + 1
           !write(*,*) 'YGrid Index: ', jmax
 
-          ! allocate cellstate
+          ! allocate gridnum_complete
           sum_stat = 0
           allocate(gridnum_complete(imax-1,jmax-1), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
-          allocate(cellstate(0:imax,0:jmax), stat=alloc_stat)
-          sum_stat = sum_stat + alloc_stat
           if( sum_stat .gt. 0 ) then
-            Write(*,*) 'ERROR: unable to allocate enough memory for cellstate data arrays'
+            Write(*,*) 'ERROR: unable to allocate enough memory for gridnum_complete data array'
           else
             do kdx = 1, imax - 1
               do jdx = 1, jmax - 1
@@ -199,6 +197,8 @@ module grid_mod
               end do
             end do
           end if
+          ! allocate cellstate
+          call create_cellsurfacestate( imax, jmax )
         else
           write(*,*) 'SCI_YGrid attribute required for each ', trim(grid_tag(idx)%name), ' Tag.'
           call exit(1)
@@ -401,10 +401,8 @@ module grid_mod
 
       endif
 
-      allocate(cellstate(0:imax,0:jmax), stat=alloc_stat)
-      if( alloc_stat .gt. 0 ) then
-        Write(*,*) 'ERROR: unable to allocate enough memory for cellstate data array'
-      end if
+      ! allocate cellstate
+      call create_cellsurfacestate( imax, jmax )
 
       ! this only happens with old single subregion file
       ! so set to subregion 1
@@ -415,31 +413,6 @@ module grid_mod
       end do
 
     end subroutine sbgrid
-
-    subroutine sbigrd( )
-      use erosion_data_struct_defs, only: subregionsurfacestate
-
-      ! + + + PURPOSE + + +
-      ! To set the grid output arrays to zero
-
-      ! + + + LOCAL VARIABLES + + +
-      integer :: idx
-      integer :: jdx
-
-      ! + + + END SPECIFICATIONS + + +
-
-      ! Set the grid output arrays to zero
-      do jdx = 0, jmax
-         do idx = 0, imax
-            cellstate(idx,jdx)%egt = 0.0
-            cellstate(idx,jdx)%egtcs = 0.0
-            cellstate(idx,jdx)%egtss = 0.0
-            cellstate(idx,jdx)%egt10 = 0.0
-            cellstate(idx,jdx)%egt2_5 = 0.0
-         end do
-      end do
-
-    end subroutine sbigrd     
 
     subroutine init_regions_grid( )
 

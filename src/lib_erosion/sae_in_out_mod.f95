@@ -1045,16 +1045,12 @@ module sae_in_out_mod
 
 !     + + + LOCAL VARIABLES + + +
       real egavg(imax)
-      integer m, n, k, icsr
       integer yr, mo, da
-      integer i,j
+      integer i, j, k     ! do loop indexes
 
 !     outflag = 0 - print heading output, 1 - no more heading
 
 !     + + + END SPECIFICATIONS + + +
-
-!     define index of current subregions
-      icsr = 1
 
       ipd = ipd + 1
 
@@ -1300,36 +1296,29 @@ module sae_in_out_mod
 
       write (o_unit,*)
 
-!!      endif
+      ! initialize avg erosion variable
+      do j = 1, imax
+         egavg(j) = 0.0
+      end do
 
-!     set output increment
-      m = (imax - 1)/8
-      m = max0(m,1)
-      n = (jmax-1)/2
-      n = max(n,1) 
-
-!     initialize avg erosion variable
-      do 3 j = 1, imax
-        egavg(j) = 0.0
-    3 continue
-
-!     calc. avg erosion over a given field length
-       do 5  i = 1,(imax-1)
-       !average over y-direction
-       do 4  j = 1, (jmax-1)
-          egavg(i) = egavg(i) + cellstate(i,j)%egt/(jmax-1)
-    4  continue
-    5  continue
+      ! calc. avg erosion over a given field length
+      do i = 1,(imax-1)
+         !average over y-direction
+         do j = 1, (jmax-1)
+            egavg(i) = egavg(i) + cellstate(i,j)%egt/(jmax-1)
+         end do
+      end do
        !average over x-direction
-       do 6 i = 2, (imax-1)
+      do i = 2, (imax-1)
          egavg(i) = ((i-1)*(egavg(i-1))+egavg(i))/i
-    6  continue
+      end do
 
-      write (o_unit,35) (egavg(k), k=1,(imax-1))
+      write (o_unit, fmt="(a)", advance="NO") ' egavg = '
+      do k = 1, (imax-1)
+         write (o_unit, fmt="(f8.2)", advance="NO") egavg(k)
+      end do
+      write(o_unit, *)
       write (o_unit,*) '----------------------------------------------'
-
-!     output formats
-   35 format (1x, 'egavg = ', 20f6.2)
 
    end subroutine sb2out
 

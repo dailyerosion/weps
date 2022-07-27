@@ -306,9 +306,9 @@ contains
 
     param_nt(16)%ogp="P"
     param_nt(16)%id = 14
-    allocate( param_nt(16)%i_name(1), stat=alloc_stat )
+    allocate( param_nt(16)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(16)%r_name(5), stat=alloc_stat )
+    allocate( param_nt(16)%r_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(16)%s_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat

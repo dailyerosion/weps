@@ -68,7 +68,7 @@
                                           awudmx, am0eif, am0efl, subrsurf
       use wind_mod, only: anemometer_init
       use precision_mod, only: precision_init
-      use grid_mod, only: sbgrid, sbigrd, write_grid, gridfile
+      use grid_mod, only: sbgrid, write_grid, gridfile
       use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
       use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier
       use sci_soil_texture_mod, only: create_sci_soil_multiplier, destroy_sci_soil_multiplier
@@ -343,10 +343,10 @@
 
 !     check for consistency maxper, n_rot_cycles, number of years to run
       if( maxper*run_rot_cycles .ne. ly-iy+1 ) then
-          write(*,*) 'Warning: Number of rotations (',run_rot_cycles,') ',&
-     &               'times Years in rotation (',maxper,') ',           &
-     &               ' does not match Number of simulation years (',    &
-     &               ly-iy+1,') '
+          write(*,*) 'Warning: Number of rotations (',run_rot_cycles,') ', &
+                     'times Years in rotation (',maxper,') ', &
+                     ' does not match Number of simulation years (', &
+                     ly-iy+1,') '
           run_rot_cycles = (ly-iy+1) / maxper
           if( mod( (ly-iy+1), maxper ) .gt. 0 ) then
               write(*,*) 'Warning: Not simulating complete rotations'
@@ -701,9 +701,6 @@
          ! begin erosion report simulation phase
          write(*,*) "Starting erosion report phase"
          do am0jd = ijday,ljday
-
-            ! set erosion accumulators on grid to zero in preparation for next day
-            call sbigrd( )
 
             ! store day for use in simulation date routines
             call update_simulation_date(ijday, am0jd)
