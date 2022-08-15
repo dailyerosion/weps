@@ -10,7 +10,7 @@ module input_run_mod
                            clistationnum, clistationname, clielevation, winflag, winmethod, winlatitude, &
                            winlongitude, winstationnum, wincountry, winstate , winstationname, &
                            run_rot_cycles, id, im, iy, ld, lm, ly, rootp
-  use weps_cmdline_parms, only: report_info, run_erosion
+  use weps_cmdline_parms, only: report_info, run_erosion, saeinp_daysim, saeinp_jday, saeinp_all, make_runxml
 
 contains
 
@@ -91,6 +91,12 @@ contains
         else
           write(0,*) ' simulation run file not found '
           call exit(1)
+        end if
+
+        ! check flags for creation of erosion output files.
+        if( (saeinp_daysim .gt. 0) .or. (saeinp_jday .gt. 0) .or. (saeinp_all .gt. 0) ) then
+          ! erod.grdx needed for valid erod.sweep file, set flag, creation occurs later
+          make_runxml = 1
         end if
       end if
 
@@ -333,10 +339,10 @@ contains
 
          case (12)
             ! read CLIGEN file name
-            clifil = rootp(1:len_trim(rootp)) // line(1:len_trim(line))
-            write(luolog, *) 'clifil: ', clifil(1:len_trim(clifil))
+            clifil = trim(line)
+            write(luolog, *) 'clifil: ', trim(clifil)
             ! open CLIGEN run file
-            call fopenk (luicli, clifil, 'old')
+            call fopenk (luicli, trim(rootp) // clifil, 'old')
             write(luolog,*) 'opened cligen file to determine db format...'
             ! read 1st line of CLIGEN file
 
@@ -379,15 +385,15 @@ contains
             goto 130
 
             ! check for errors opening cli_gen data file here
-  190       write(*,9002) clifil, line
+  190       write(*,9002) clifil, trim(line)
             goto 80
   130       continue
 
          case (13)
             ! read WINDGEN file name
-            winfil = rootp(1:len_trim(rootp)) // line
+            winfil = trim(line)
             ! open WINDGEN file
-            call fopenk (luiwin, winfil, 'old')
+            call fopenk (luiwin, trim(rootp) // winfil, 'old')
             ! We will now check the header to determine which wind_gen data file
             ! format we are reading, either the old one (daily max and min wind
             ! speed, etc.) or the new one (24 hourly values per day).
@@ -406,7 +412,7 @@ contains
             goto 140
 
             ! check for errors opening wind_gen data file here
-  191       write(*,9002) winfil, line
+  191       write(*,9002) winfil, trim(line)
             goto 80
   140       continue
 
@@ -462,11 +468,11 @@ contains
             call manFileAlloc(nsubr)
 
             ! read in initial field conditions file name
-            soil(isr)%sinfil = rootp(1:len_trim(rootp)) // line
+            soil(isr)%sinfil = trim(line)
 
          case (16)
             ! read in management file name
-            manFile(isr)%tinfil = rootp(1:len_trim(rootp)) // line
+            manFile(isr)%tinfil = trim(line)
 
          case (17)
             ! deprecated line

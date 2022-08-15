@@ -414,6 +414,31 @@ module grid_mod
 
     end subroutine sbgrid
 
+    subroutine sbigrd( )
+      use erosion_data_struct_defs, only: subregionsurfacestate
+
+      ! + + + PURPOSE + + +
+      ! To set the grid output arrays to zero
+
+      ! + + + LOCAL VARIABLES + + +
+      integer :: idx
+      integer :: jdx
+
+      ! + + + END SPECIFICATIONS + + +
+
+      ! Set the grid output arrays to zero
+      do jdx = 0, jmax
+         do idx = 0, imax
+            cellstate(idx,jdx)%egt = 0.0
+            cellstate(idx,jdx)%egtcs = 0.0
+            cellstate(idx,jdx)%egtss = 0.0
+            cellstate(idx,jdx)%egt10 = 0.0
+            cellstate(idx,jdx)%egt2_5 = 0.0
+         end do
+      end do
+
+    end subroutine sbigrd     
+
     subroutine init_regions_grid( )
 
       ! +++ PURPOSE +++

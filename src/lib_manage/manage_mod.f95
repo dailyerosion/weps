@@ -42,7 +42,7 @@ module manage_mod
 
   contains
 
-    subroutine mfinit (sr, manFile)
+    subroutine mfinit (rootp, sr, manFile)
 !
 !     + + + PURPOSE + + +
 !     Mfinit should be called during the initialization stage of the the
@@ -69,6 +69,7 @@ module manage_mod
       use update_mod, only: am0cropupfl
 
 !     + + + ARGUMENT DECLARATIONS + + +
+      character*512 :: rootp  ! the root path from which the weps command was started.
       integer, intent(in) :: sr       ! the subregion number
       type(man_file_struct), intent(inout) :: manFile  ! management file data structure
 
@@ -90,7 +91,7 @@ module manage_mod
 
 !     read in management file
 
-      call fopenk(luimandate, trim(manFile%tinfil), 'old')
+      call fopenk(luimandate, trim(rootp) // trim(manFile%tinfil), 'old')
       read(luimandate, '(a)', iostat=read_stat) line
       if (read_stat /= 0) then
         stop "Cannot read input file"
@@ -100,7 +101,7 @@ module manage_mod
       if ( (line (1:8).ne.'Version: ') .and. (index(line, 'xml') .gt. 0) ) then
         close(luimandate)
         ! open input file
-        call open_xmlfile(trim(manFile%tinfil),fxml,read_stat)
+        call open_xmlfile(trim(rootp) // trim(manFile%tinfil),fxml,read_stat)
         if (read_stat /= 0) stop "Cannot open xml input file"
         ! read in xml based input file
         call xml_parse(fxml, &
@@ -111,7 +112,7 @@ module manage_mod
            verbose = .false.)
         call close_xmlfile(fxml)
         if (.not. manfile_complete) then
-          write(*,*) 'Management file incomplete: ', trim(manFile%tinfil)
+          write(*,*) 'Management file incomplete: ', trim(rootp) // trim(manFile%tinfil)
           call exit(1)
         end if
       else

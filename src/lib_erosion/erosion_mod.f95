@@ -18,12 +18,12 @@ module erosion_mod
 !     - calculates soil loss/deposition, suspension, PM-10 on grid
 !     - updates soil  variables changed by erosion.
 
-      use file_io_mod, only: fopenk, makenamnum, luo_erod, luo_egrd, luo_emit, luo_sgrd
+      use file_io_mod, only: fopenk, makenamnum, luo_erod, luo_egrd, luo_emit, luo_sgrd, makedir
       use erosion_data_struct_defs, only: in_sweep, cellsurfacestate, threshold, &
                                           ntstep, erod_interval, anemht, awzzo, &
                                           wzoflg, awadir, awudmx, subday, am0efl, subrsurf
       use erosion_data_struct_defs, only: initflag
-      use sae_in_out_mod, only: mksaeinp, mksaeout, daily_erodout, sb1out, sb2out, sbemit, saeinp, sweepfile, polyfile
+      use sae_in_out_mod, only: mksaeinp, mksaeout, daily_erodout, sb1out, sb2out, sbemit, saeinp, sweepfile
       use p1unconv_mod, only: SEC_PER_DAY, degtorad
       use barriers_mod, only: sbbr
       use grid_mod, only: sbdirini, gridfile
@@ -277,13 +277,13 @@ module erosion_mod
       if( mksaeinp%simday .gt. 0 ) then
           sweepfile = 'erod.sweep'
           gridfile = '../../erod.grdx'
-          polyfile = '../../erod.poly'
           call saeinp( julday, nsubr )    ! output daily erosion stuff
       end if
 
       if (btest(am0efl,2)) then
          if( luo_emit .eq. 0 ) then
             daypath = trim(mksaeout%fullpath) // makenamnum('saeros', mksaeout%simday, mksaeout%maxday,'/')
+            call makedir(daypath)
             call fopenk(luo_emit, trim(daypath) // 'erod.emit','unknown')
          end if
       end if
@@ -291,6 +291,7 @@ module erosion_mod
       if (btest(am0efl,3)) then
          if( luo_sgrd .eq. 0 ) then
             daypath = trim(mksaeout%fullpath) // makenamnum('saeros', mksaeout%simday, mksaeout%maxday,'/')
+            call makedir(daypath)
             call fopenk(luo_sgrd, trim(daypath) // 'erod.sgrd','unknown')
          end if
       end if
@@ -521,6 +522,7 @@ module erosion_mod
 
       ! + + + Modules Used + + +
       use erosion_data_struct_defs, only: threshold, cellsurfacestate
+      use grid_mod, only: sbigrd
 
       ! +++ ARGUMENT DECLARATIONS +++
       type(threshold), dimension(:), intent(inout) :: noerod                 ! report values to show which factors prevented erosion
@@ -555,6 +557,9 @@ module erosion_mod
            noerod(sr)%wzzo = 0
            noerod(sr)%sfcv = 0
       end do
+
+      ! zero out gridcell erosion totaling arrays
+      call sbigrd()
 
     end subroutine erodinit
 

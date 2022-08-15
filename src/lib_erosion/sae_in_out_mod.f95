@@ -27,7 +27,6 @@ module sae_in_out_mod
 
   character(len=512) :: infilebase  ! base name (without .in extension) of old format input file
   character(len=512) :: sweepfile  ! name of the sweep input file
-  character(len=512) :: polyfile  ! name of the polygon input file use by GUI
   type(subregion_files), dimension(:), allocatable :: subrfiles
 
   ! placed here for sharing back with hagen_plot_flag by daily_erodout
@@ -79,7 +78,7 @@ module sae_in_out_mod
         ! directory for files for this day
         daypath = trim(mksaeinp%fullpath) // makenamnum('saeros', mksaeinp%simday, mksaeinp%maxday,'/')
       else
-        ! runningn in SWEEP
+        ! running in SWEEP
         ! path for files based on old format sweep input file
         daypath = trim(mksaeinp%fullpath) // trim(infilebase) // '/'
       end if
@@ -140,7 +139,6 @@ module sae_in_out_mod
         call w_whole_tag( luo_saeinp, input_tag(SCI_YLength)%name, amxsim(2)%y )
         call w_whole_tag( luo_saeinp, input_tag(SCI_RegionAngle)%name, amasim )
         call w_whole_tag( luo_saeinp, input_tag(SCI_GridFile)%name, trim(gridfile) )
-        call w_whole_tag( luo_saeinp, input_tag(GUI_polygons)%name, trim(polyfile) )
 
         ! subregions
         call w_begin_tag( luo_saeinp, input_tag(SCI_Subregions)%name, &
@@ -322,7 +320,7 @@ module sae_in_out_mod
 !     +++  PURPOSE +++
 !     To print output desired from standalone EROSION submodel
 
-      use file_io_mod, only: fopenk, makenamnum
+      use file_io_mod, only: fopenk, makenamnum, makedir
       use datetime_mod, only: get_systime_string, caldat
       use erosion_data_struct_defs, only: cellsurfacestate, am0efl
       use grid_mod, only: imax, jmax, amasim, amxsim
@@ -462,6 +460,7 @@ module sae_in_out_mod
 
       if( o_unit .eq. 0 ) then
         daypath = trim(mksaeout%fullpath) // makenamnum('saeros', mksaeout%simday, mksaeout%maxday,'/')
+        call makedir(daypath)
         call fopenk (o_unit, trim(daypath) // 'erod.egrd','unknown')
         call caldat (mksaeout%jday,day,mon,yr)
         write(*,'(4(a,i0))') 'Made Daily Erosion grid file for: ', day,'/', mon,'/', yr,' simulation day: ', mksaeout%simday

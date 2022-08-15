@@ -325,7 +325,7 @@ module crop_mod
      &   stem   lai     eff_lai rootd  grainf tempst watstf  frost  ffa &
      &   ffw   par     apar     massinc    p_rw   p_st   p_lf   p_rp  st&
      &dflt pdiam  parea  fpdiam fparea hu_del frzhrd sai repstmd rgflg f&
-     &livelf crop')
+     &livelf warmdays crop')
  2133 format ('#    -    -   -    -    -   kg/m^2  kg/m^2  kg/m^2  kg/m^&
      &2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  meters &
      &    -    m^2/m^2 m^2/m^2 meters     -      -     -       -     -  &

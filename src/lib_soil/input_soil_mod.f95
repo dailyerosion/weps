@@ -11,7 +11,7 @@ module input_soil_mod
 
   contains
 
-    subroutine input_ifc(isr, soil, hstate)
+    subroutine input_ifc(rootp, isr, soil, hstate)
 ! ***************************************************************** wjr
 ! reads initial field conditions (IFC) file (Version: 1.0)
 
@@ -30,6 +30,7 @@ module input_soil_mod
       use hydro_util_mod, only: param_pot_bc, param_prop_bc
 
 !     + + + ARGUMENTS + + +
+      character*512 :: rootp  ! the root path from which the weps command was started.
       integer, intent(in) :: isr
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(hydro_state), intent(inout) :: hstate
@@ -49,7 +50,7 @@ module input_soil_mod
       integer linnum
       data linnum /1/
 
-      call fopenk (lui1, soil%sinfil, 'old') ! open IFC file
+      call fopenk (lui1, trim(rootp) // soil%sinfil, 'old') ! open IFC file
        
 !     Check to see if this is a "versioned" IFC file
       read (lui1,'(a)',err=901) line

@@ -1036,7 +1036,7 @@ contains
     use grid_mod, only: amasim, amxsim, sim_area
     character(len=*), intent(in) :: chunk
 
-    character(len=80) :: param_value
+    character(len=256) :: param_value
     integer :: read_stat
     real :: cligen_version
 
@@ -1101,10 +1101,10 @@ contains
 
       else if (run_tag(SCI_climateFile)%in_tag) then
         ! read CLIGEN file name
-        clifil = trim(rootp) // param_value(1:len_trim(param_value))
+        clifil = trim(param_value)
         write(luolog, *) 'clifil: ', clifil(1:len_trim(clifil))
         ! open CLIGEN run file
-        call fopenk (luicli, clifil, 'old')
+        call fopenk (luicli, trim(rootp) // clifil, 'old')
         write(luolog,*) 'opened cligen file to determine db format...'
         ! read 1st line of CLIGEN file
 
@@ -1155,9 +1155,9 @@ contains
 
       else if (run_tag(SCI_windFile)%in_tag) then
         ! read WINDGEN file name
-        winfil = trim(rootp) // param_value(1:len_trim(param_value))
+        winfil = trim(param_value)
         ! open WINDGEN file
-        call fopenk (luiwin, winfil, 'old')
+        call fopenk (luiwin, trim(rootp) // winfil, 'old')
         ! We will now check the header to determine which wind_gen data file
         ! format we are reading, either the old one (daily max and min wind
         ! speed, etc.) or the new one (24 hourly values per day).
@@ -1268,12 +1268,12 @@ contains
 
           else if (run_tag(SCI_SoilFile)%in_tag) then
             ! read in initial field conditions file name
-            soil_in(isr)%sinfil = trim(rootp) // param_value(1:len_trim(param_value))
+            soil_in(isr)%sinfil = trim(param_value)
             run_tag(SCI_SoilFile)%acquired = .true.
 
           else if (run_tag(SCI_ManageFile)%in_tag) then
             ! read in management file name
-            manFile(isr)%tinfil = trim(rootp) // param_value(1:len_trim(param_value))
+            manFile(isr)%tinfil = trim(param_value)
             run_tag(SCI_ManageFile)%acquired = .true.
 
           else if (run_tag(SCI_WaterErosionLoss)%in_tag) then

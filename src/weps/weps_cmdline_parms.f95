@@ -33,6 +33,8 @@ module weps_cmdline_parms
                               ! file will be created (used when date is input)
     integer :: saeinp_all     ! specifies that S_tand A_lone E_rosion INP_ut files will be created
                               ! on every day erosion is entered. (in a subdirectory with daysim # in file name)
+                              ! 0   ! no input files are created (unless other saeinp switches are set
+                              ! 1   ! create input files (output files created if erosion submodel flags set)
     integer :: init_cycle     ! Specifies how many man rotation cycles are done
                               ! 0   !no initialization cycle
                               ! 1   !one initialization cycle (default)

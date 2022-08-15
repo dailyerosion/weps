@@ -42,7 +42,7 @@ module weps_main_mod
     integer :: lm     ! final (last) simulation month of year
     integer :: ly     ! final (last) simulation year
 
-    character*512 :: rootp*512  ! the root path from which the weps command was started.
+    character*512 :: rootp  ! the root path from which the weps command was started.
 
     integer :: ijday   ! This variable contains the initial julian day of the simulation run.
     integer :: ljday   ! This variable contains the last julian day of the simulation run.

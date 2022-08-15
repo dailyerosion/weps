@@ -22,7 +22,7 @@
                                           ntstep, am0eif, am0efl, subrsurf, cellstate
       use barriers_mod, only: minht_barriers
       use wind_mod, only: anemometer_init
-      use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps, saeinp, infilebase, sweepfile, polyfile
+      use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps, saeinp, infilebase, sweepfile
       use p1unconv_mod, only: SEC_PER_DAY
 
 !     +++  PURPOSE +++
@@ -421,7 +421,6 @@
            gridfile = 'erod.grdx'
            subrsurf(1,1)%tinfil = trim(file_bname)
            subrsurf(1,1)%sinfil = trim(file_bname)
-           polyfile = 'erod.poly'
            call saeinp( 1, nsubr )
          end if
 

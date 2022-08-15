@@ -228,7 +228,7 @@
       ! done before allocations which use layers
       do isr = 1, nsubr 
          ! read soil file and setup layers
-         call input_ifc(isr, soil_in(isr), hstate(isr))
+         call input_ifc(rootp, isr, soil_in(isr), hstate(isr))
       end do
 
       ! allocate subregion crop and residue pool arrays
@@ -328,7 +328,7 @@
           ! each management file (one for each subregion).
 
           ! Read in management file and initialize rotation counters
-          call mfinit(isr, manFile(isr))
+          call mfinit(rootp, isr, manFile(isr))
           t_mperod(isr) = manFile(isr)%mperod
           ! initializing this to 1 or greater eliminates (random) blank line in season.out
           cprevseasonrotation(isr) = 1
@@ -690,7 +690,7 @@
          end if
 
          ! erosion submodel grid output
-         if( btest(am0efl,1) ) then
+         if( am0efl .gt. 0 ) then
             mksaeout%fullpath = trim(rootp)//'sae_in_out_files/'
             call makedir(mksaeout%fullpath)
          end if
@@ -723,6 +723,9 @@
             ! set the barrier interpolation in time
             call set_barrier_season(get_simdate_doy())
 
+            ! set plot.out indicator flags (initialization complete so cellstate unaltered)
+            call erodinit( noerod )
+
             if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
 
                ! check for creation of stand alone erosion input files on this day
@@ -751,9 +754,6 @@
                ! min_erosion_awu = 5.0 Minimum erosive wind speed (m/s) to evaluate for erosion loss
                ! SURF_UPD_FLG = 1      erosion surface updating (0 - disabled, 1 - enabled)
                call erosion( 5.0, 1, am0jd, noerod, cellstate )
-            else
-               ! set plot.out indicator flags (initialization complete so cellstate unaltered)
-               call erodinit( noerod )
             end if
 
             do isr = 1, nsubr

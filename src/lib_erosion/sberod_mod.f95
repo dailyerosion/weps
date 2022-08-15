@@ -295,17 +295,6 @@ module sberod_mod
         end do
       end do
 
-      ! Set the grid output arrays to zero including boundary output
-      do j = 0, jmax
-         do i = 0, imax
-            cellstate(i,j)%egt = 0.0
-            cellstate(i,j)%egtcs = 0.0
-            cellstate(i,j)%egtss = 0.0
-            cellstate(i,j)%egt10 = 0.0
-            cellstate(i,j)%egt2_5 = 0.0
-         end do
-      end do
-
     end subroutine sbinit
 
     subroutine sbwind( julday, wustfl, awu, ntstep, intstep, rusust, cellstate)
