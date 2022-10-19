@@ -18,7 +18,7 @@ module weps_main_mod
     character*256 :: runtype ! cycle vs date
     character*256 :: cliflag ! interface cligen flag
     character*256 :: climethod ! method used in generation
-    character*256 :: clilatitiude ! cligen latitude
+    character*256 :: clilatitude ! cligen latitude
     character*256 :: clilongitude ! cligen longitude
     character*256 :: clistateid ! cligen state id
     character*256 :: clistationnum ! cligen station number

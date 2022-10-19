@@ -7,7 +7,9 @@
 c$Header: /weru/cvs/weps/weps.src/util/date/test/tstdate2.for,v 1.1.1.1 1999-03-12 17:05:31 wagner Exp $
 c
       PROGRAM TST
-	  integer julday
+
+          use datetime_mod
+
 	  INTEGER j0,jmin, jmax, j1, j2, d1,m1,y1, d2,m2,y2,x
 	  print*, 'enter jmin, jmax, x'
 	  read*, jmin, jmax, x

@@ -301,7 +301,7 @@ contains
     write(real_str, '(g39.15)') in_val
 
     call w_spaces( luo_saeinp )
-    write(luo_saeinp,"(11a)") '<', trim(tag_name), &
+    write(luo_saeinp,"(16a)") '<', trim(tag_name), &
                         ' ', trim(attrib1), '="', trim(adjustl(attr1_str)), '"', &
                         ' ', trim(attrib2), '="', trim(adjustl(attr2_str)), '">', &
                         trim(adjustl(real_str)), &

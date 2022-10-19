@@ -40,6 +40,9 @@
 !     erosion
 !     erodout
 
+      ! build and release info, fpp created by cook
+      include 'build.inc'
+
 !     ++++ LOCAL VARIABLES +++
       character(len=21) :: rundatetime
       type(threshold), dimension(:), allocatable :: noerod                 ! report values to show which factors prevented erosion
@@ -89,6 +92,21 @@
       integer :: SURF_UPD_FLG    ! erosion surface updating (0 - disabled, 1 - enabled)
 
 !     +++ END SPECIFICATIONS +++
+
+      ! Before anything else is done, output the build date and release/version information.
+      write(*,"(a)")
+      write(*,"(a6,a)") 'WEPS ', trim(build_version)
+      write(*,"(a10,a)") 'Release: ', trim(build_release)
+      write(*,"(a11,a)") 'Built on: ', trim(build_date)
+      write(*,"(a16,a)") 'Compiled with: ', trim(build_compiler)
+      write(*,"(a17,a)") 'Compiled flags: ', trim(build_compiler_options)
+      write(*,"(a16,a)") 'Built by user: ', trim(build_user)
+      write(*,"(a17,a)") 'Repository URL: ', trim(build_svn_repo_url)
+      write(*,"(a26,a)") 'SVN repository Revision: ', trim(build_svn_repo_revision)
+      write(*,"(a22,a)") 'SVN update Revision: ', trim(build_svn_updt_revision)
+      write(*,"(a30,a)") 'Local and SVN Modfied Files: ', trim(build_cnt_mods)
+      write(*,"(a)")
+
       ! indicates running stand alone erosion
       in_sweep = .true.
 
@@ -402,8 +420,8 @@
       ! Grid is initialized at least once.
       if (am0eif .eqv. .true.) then
          if( .not. allocated(cellstate) ) then
-           ! did not read grid file, so create cellstate array
-           call sbgrid( minht_barriers() )
+           ! did not read grid file, so create cellstate array, elevation set lower than to below lowest point below sea level
+           call sbgrid( minht_barriers(), -999.0 )
          end if
 
          ! allocate noerod array for subregions

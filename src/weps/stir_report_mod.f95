@@ -511,7 +511,7 @@ module stir_report_mod
 
         if( .not. stircum(isr)%phop(idx)%phop_skip ) then
           ! print this line
-          write(luostir(isr),"(i2,'/',i2,'/',i4,3(' | ',a),2(' | ',f8.2),2(' | ',i1) )") &
+          write(luostir(isr),"(i2,'/',i2,'/',i4,3(' | ',a),2(' | ',f8.2),2(' | ',i0) )") &
                         stircum(isr)%phop(idx)%phopday, stircum(isr)%phop(idx)%phopmon, &
                         stircum(isr)%phop(idx)%phopyr, &
                         trim(stircum(isr)%phop(idx)%stir_opname), &

@@ -1056,7 +1056,7 @@ module report_update_vars_mod
 
   END SUBROUTINE update_yrly_update_vars
 
-  SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, &
+  SUBROUTINE update_yrly_report_vars(start_year, cur_year, nrot_years, &
                   yrly_update, yrot_update, yr_update, yrly_report, yr_report, yrly_dates)
 
     USE pd_dates_vars, only: pd_dates_type
@@ -1065,8 +1065,9 @@ module report_update_vars_mod
 
     IMPLICIT NONE
 
-    INTEGER, INTENT (IN) :: nrot_years
+    INTEGER, INTENT (IN) :: start_year
     INTEGER, INTENT (IN) :: cur_year
+    INTEGER, INTENT (IN) :: nrot_years
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrly_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrot_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yr_update
@@ -1076,10 +1077,12 @@ module report_update_vars_mod
 
     INTEGER :: i        ! local loop variables
     INTEGER :: rot_y    ! local variables
+    INTEGER :: rep_yr 
 
     REAL, PARAMETER :: m2_to_ha = 10000.0  ! m^2 in a ha
 
-    rot_y = mod(cur_year-1,nrot_years)+1
+    rot_y = mod((cur_year-start_year), nrot_years)+1
+    rep_yr = cur_year - start_year + 1
 
     !variables averaged for reporting period
     DO i = Min_cli_vars, Max_cli_vars
@@ -1200,50 +1203,50 @@ module report_update_vars_mod
 
     !year by year variables averaged for reporting period
     DO i = Min_cli_vars, Max_cli_vars
-       CALL run_ave (yr_report(i,cur_year), yr_update(i)%val, 1)
+       CALL run_ave (yr_report(i,rep_yr), yr_update(i)%val, 1)
     END DO
     DO i = Min_eave_vars, Max_eave_vars
-       CALL run_ave (yr_report(i,cur_year), yr_update(i)%val, 1)
+       CALL run_ave (yr_report(i,rep_yr), yr_update(i)%val, 1)
     END DO
 
     ! If we have saltating loss, add the area and fraction info
     ! else only "running ave" the Salt_loss2 rate
     DO i = Min_lave_vars, Max_lave_vars
       IF (yr_update(Salt_loss2)%cnt > 0) THEN 
-            CALL run_ave (yr_report(i,cur_year), yr_update(i)%val, 1)
+            CALL run_ave (yr_report(i,rep_yr), yr_update(i)%val, 1)
       ELSE !Don't change the area and fract values
          IF (i == Salt_loss2) THEN
-            CALL run_ave (yr_report(i,cur_year), yr_update(i)%val, 1)
+            CALL run_ave (yr_report(i,rep_yr), yr_update(i)%val, 1)
          END IF
       END IF
     END DO
-    IF (yr_report(Salt_loss2_area,cur_year)%val > 0.0) THEN
-       yr_report(Salt_loss2_rate,cur_year)%val =              &
-          yr_report(Salt_loss2_mass,cur_year)%val /           &
-          (yr_report(Salt_loss2_area,cur_year)%val * m2_to_ha)
-       yr_report(Salt_loss2_rate,cur_year)%cnt = yr_report(Salt_loss2_rate,cur_year)%cnt + 1;
+    IF (yr_report(Salt_loss2_area,rep_yr)%val > 0.0) THEN
+       yr_report(Salt_loss2_rate,rep_yr)%val =              &
+          yr_report(Salt_loss2_mass,rep_yr)%val /           &
+          (yr_report(Salt_loss2_area,rep_yr)%val * m2_to_ha)
+       yr_report(Salt_loss2_rate,rep_yr)%cnt = yr_report(Salt_loss2_rate,rep_yr)%cnt + 1;
     END IF
 
     ! If we have deposition, add the area and fraction info
     DO i = Min_dave_vars, Max_dave_vars
       IF (yr_update(Salt_dep2)%cnt > 0) THEN 
-         CALL run_ave (yr_report(i,cur_year), yr_update(i)%val, 1 )
+         CALL run_ave (yr_report(i,rep_yr), yr_update(i)%val, 1 )
       ELSE
          IF (i == Salt_dep2) THEN
-            CALL run_ave (yr_report(i,cur_year), yr_update(i)%val, 1 )
+            CALL run_ave (yr_report(i,rep_yr), yr_update(i)%val, 1 )
          END IF
       END IF
     END DO
-    IF (yr_report(Salt_dep2_area,cur_year)%val > 0.0) THEN  !Ever had any deposition during this year
-       yr_report(Salt_dep2_rate,cur_year)%val =               &
-          yr_report(Salt_dep2_mass,cur_year)%val /            &
-          (yr_report(Salt_dep2_area,cur_year)%val * m2_to_ha)
+    IF (yr_report(Salt_dep2_area,rep_yr)%val > 0.0) THEN  !Ever had any deposition during this year
+       yr_report(Salt_dep2_rate,rep_yr)%val =               &
+          yr_report(Salt_dep2_mass,rep_yr)%val /            &
+          (yr_report(Salt_dep2_area,rep_yr)%val * m2_to_ha)
     END IF
 
     ! If we have salt loss, then we may have some transp cap
     DO i = Min_tave_vars, Max_tave_vars
       IF (yr_update(Salt_loss2)%cnt > 0) THEN 
-         CALL run_ave (yr_report(i,cur_year), yr_update(i)%val, 1 )
+         CALL run_ave (yr_report(i,rep_yr), yr_update(i)%val, 1 )
       END IF
     END DO
 

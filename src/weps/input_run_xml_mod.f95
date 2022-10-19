@@ -26,7 +26,12 @@ module input_run_xml_mod
   use decomp_data_struct_defs, only: am0dfl, am0ddb
   use input_soil_mod, only: soil_def, soil_in
   use Points_Mod, only: point
-  use weps_main_mod
+  use weps_main_mod, only: farmid, fieldid, rootp, run_rot_cycles, runtype, siteid, tractid, usrnam
+  use weps_main_mod, only: clifil, clielevation, cliflag, clilatitude, clilongitude
+  use weps_main_mod, only: climethod, clistateid, clistationname, clistationnum
+  use weps_main_mod, only: winfil, winflag, wincountry, winlatitude, winlongitude
+  use weps_main_mod, only: winmethod, winstate, winstationname, winstationnum
+  use weps_main_mod, only: id, im, iy, ld, lm, ly
   use barriers_mod, only: create_barrier, barrier, barseas
   use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate
   use read_write_xml_mod, only: read_param
@@ -1411,7 +1416,7 @@ contains
       call w_whole_tag( luo_xml, run_tag(GUI_Site)%name, trim(siteid) )
       call w_whole_tag( luo_xml, run_tag(GUI_cligenFlag)%name, trim(cliflag) )
       call w_whole_tag( luo_xml, run_tag(GUI_cligenMethod)%name, trim(climethod) )
-      call w_whole_tag( luo_xml, run_tag(GUI_cligenLatitude)%name, trim(clilatitiude) )
+      call w_whole_tag( luo_xml, run_tag(GUI_cligenLatitude)%name, trim(clilatitude) )
       call w_whole_tag( luo_xml, run_tag(GUI_cligenLongitude)%name, trim(clilongitude) )
       call w_whole_tag( luo_xml, run_tag(GUI_cligenStateId)%name, trim(clistateid) )
       call w_whole_tag( luo_xml, run_tag(GUI_cligenStationNum)%name, trim(clistationnum) )

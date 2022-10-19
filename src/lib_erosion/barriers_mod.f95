@@ -314,7 +314,7 @@ contains
       end if
     end do
 
-    if (am0efl.gt.0) then
+    if( (am0efl .gt. 0) .and. (size(barseas) .gt. 0) ) then
       if( get_simdate_daysim() .eq. 1 ) then
         ! write header to barrier daily output file
         do bdx = 1, size(barrier)

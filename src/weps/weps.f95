@@ -82,7 +82,7 @@
       use hydro_darcy_mod, only: deallocate_lsoda_stoc, deallocate_dvolw_param
       use report_hydrobal_mod, only: h1bal
       use wepp_param_mod, only: wepp_param, create_wepp_param, destroy_wepp_param
-      use climate_input_mod, only: cliginit, windinit, set_cli_today, set_wind_today
+      use climate_input_mod, only: cliginit, windinit, set_cli_today, set_wind_today, amzele
       use input_run_mod, only: input
       use input_run_xml_mod, only: write_run_xml
       use lcm_mod, only: lcm_n
@@ -375,7 +375,7 @@
       ! Grid is created at least once.
       if (am0eif .eqv. .true.) then
          if( old_run_file ) then
-           call sbgrid( minht_barriers() )
+           call sbgrid( minht_barriers(), amzele )
            if( make_runxml .gt. 0 ) then
              ! create new weps.runx
              gridfile = 'erod.grdx'
@@ -794,7 +794,7 @@
             call update_yrly_update_vars( isr, am0jd, rep_update(isr)%yrly_update, &
                                           rep_update(isr)%yrot_update, rep_update(isr)%yr_update )
             if ( (cmon(isr) == 12) .and. (cday(isr) == 31) ) then          ! end of current year
-               call update_yrly_report_vars(cyear(isr), mandatbs(isr)%mperod, rep_update(isr)%yrly_update, &
+               call update_yrly_report_vars(iy, cyear(isr), mandatbs(isr)%mperod, rep_update(isr)%yrly_update, &
                                             rep_update(isr)%yrot_update, rep_update(isr)%yr_update, &
                                             rep_report(isr)%yrly_report, rep_report(isr)%yr_report, &
                                             rep_dates(isr)%yrly)

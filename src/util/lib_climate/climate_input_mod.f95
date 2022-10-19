@@ -100,6 +100,9 @@ module climate_input_mod
    
    integer :: minjuld ! minimum julian day in cligen/windgen array
    integer :: maxjuld ! maximum julian day in cligen/windgen array
+   
+   logical :: cli_warn_only ! if true, CLIGEN file reading errors generate warning, not error and exit
+   logical :: win_warn_only ! if true, WINDGEN file reading errors generate warning, not error and exit
 
 contains
 
@@ -159,6 +162,14 @@ contains
             write(*,*) 'ERROR: unable to allocate enough memory for cli_day array'
         end if
 
+        call caldat( ijuld, day, mon, year )
+        if( (day .eq. 1) .and. (mon .eq. 1) .and. (year .eq. 1) ) then
+            ! likely running simulated data, not real data. Allow switch to day of year mode as needed (with warnings)
+            cli_warn_only = .true.
+        else
+            cli_warn_only = .false.
+        end if
+
         do idx = ijuld, ljuld
             call caldat( idx, day, mon, year )
             call getcli( day, mon, year )
@@ -185,6 +196,14 @@ contains
         allocate(wind_day(ijuld:ljuld), stat=alloc_stat)
         if( alloc_stat .gt. 0 ) then
             write(*,*) 'ERROR: unable to allocate enough memory for wind_day array'
+        end if
+
+        call caldat( ijuld, day, mon, year )
+        if( (day .eq. 1) .and. (mon .eq. 1) .and. (year .eq. 1) ) then
+            ! likely running simulated data, not real data. Allow switch to day of year mode as needed (with warnings)
+            win_warn_only = .true.
+        else
+            win_warn_only = .false.
         end if
 
         do idx = ijuld, ljuld
@@ -298,7 +317,7 @@ contains
             !do idx = 1, 3       ! Skip the first 3 lines
             !    read(luicli,'(a128)') header
             !end do
-            !read(luicli,*) junk1, junk2, cli_tyav        ! skip lat/lon and get yearly ave temp
+            !read(luicli,*) junk1, junk2, cli_tyav      ! skip lat/lon and get yearly ave temp
             !read(luicli,*) (awtmav(idx), idx = 1,12)   ! read 12 monthly ave temps
         endif
 
@@ -331,47 +350,69 @@ contains
     end subroutine cli_start
 
     ! reads the next data line from the cligen file
-    function cli_read_next( cli_oneday ) result( errflg )
+    function cli_read_next( ) result( cli_oneday )
 
         use file_io_mod, only: luicli     ! file unit number
-        use datetime_mod, only: julday, dayear
+        use datetime_mod, only: julday, dayear, ckdate
 
         type(cligen_state) :: cli_oneday  ! structure for cligen data line values
-        integer :: errflg                 ! returns error result of read
-                                          ! 0 - no error
-                                          ! 1 - failure to read from file
-                                          ! 2 - failure to parse line
 
         ! + + + LOCAL VARIABLES + + +
         character :: line*256             ! data line read from file
         integer :: ioc                    ! error return from read statement
+        integer :: errflg                 ! 0 - no error
+                                          ! 1 - read from file failed, restarted from beginning
         real :: dummy
 
-        ! read line from file
-        read (luicli,'(a)',iostat=ioc) line
-        if (ioc .ne. 0) then
-            ! failure reading data line from file
-            errflg = 1
-            return
-        end if
-
-        ! parse the line read from file
-        read(line, *, iostat=ioc) cli_oneday%day, cli_oneday%month, cli_oneday%year, &
-            cli_oneday%zdpt, cli_oneday%durpt, cli_oneday%peaktpt, cli_oneday%peakipt, &
-            cli_oneday%tdmx, cli_oneday%tdmn, cli_oneday%grad, dummy, dummy, cli_oneday%tdpt
-        if (ioc .ne. 0) then
-            ! We have a failure parsing the data line
-            errflg = 2
-            return
-        end if
-
-        ! populate derived values in cligen data record
-        cli_oneday%jday = julday(cli_oneday%day,cli_oneday%month,cli_oneday%year)
-        cli_oneday%doy = dayear(cli_oneday%day,cli_oneday%month,cli_oneday%year)
-        cli_oneday%tdav = (cli_oneday%tdmx + cli_oneday%tdmn) / 2.0
-        cli_oneday%eirr = cli_oneday%grad * 0.04186
-        cli_oneday%dair = 348.56 * (1.013-0.1183*(amzele/1000.) + 0.0048 * (amzele/1000.)**2.) / (cli_oneday%tdav + 273.1)
         errflg = 0
+        do while(.true.)
+            ! look for a valid line in the file
+
+            ! read line from file
+            read (luicli,'(a)',iostat=ioc) line
+            if (ioc .ne. 0) then
+                ! failure reading data line from file
+                errflg = 1
+                ! try resetting to beginning of file
+                call cli_start()
+                read (luicli,'(a)',iostat=ioc) line
+                if (ioc .ne. 0) then
+                    write(0,*) 'Unable to read cligen file after rewind'
+                    call exit(1)
+                end if
+            end if
+
+            ! successfull read from file, parse the line
+            read(line, *, iostat=ioc) cli_oneday%day, cli_oneday%month, cli_oneday%year, &
+                cli_oneday%zdpt, cli_oneday%durpt, cli_oneday%peaktpt, cli_oneday%peakipt, &
+                cli_oneday%tdmx, cli_oneday%tdmn, cli_oneday%grad, dummy, dummy, cli_oneday%tdpt
+            if (ioc .eq. 0) then
+
+                ! check that day, month, year values are a valid date
+                if( ckdate( cli_oneday%day,cli_oneday%month,cli_oneday%year ) ) then
+                    ! populate derived values in cligen data record
+                    cli_oneday%jday = julday(cli_oneday%day,cli_oneday%month,cli_oneday%year)
+                    cli_oneday%doy = dayear(cli_oneday%day,cli_oneday%month,cli_oneday%year)
+                    cli_oneday%tdav = (cli_oneday%tdmx + cli_oneday%tdmn) / 2.0
+                    cli_oneday%eirr = cli_oneday%grad * 0.04186
+                    cli_oneday%dair = 348.56 * (1.013-0.1183*(amzele/1000.) + 0.0048 * (amzele/1000.)**2.) / (cli_oneday%tdav+273.1)
+                    exit
+                else
+                    write(0,"(6(a,i0),a)") 'WARNING: Date in file: ', cli_oneday%day, '/', cli_oneday%month, '/', cli_oneday%year, &
+                                ' Is not a valid date. This line is skipped.'
+                end if
+                !write(*,*) 'READ:   ', cli_oneday%doy, cli_oneday%day, cli_oneday%month, cli_oneday%year, cli_oneday%tdmx
+
+            else
+                errflg = errflg + 1
+                if( errflg .gt. 2 ) then
+                    write(0,*) 'Unable to parse cligen file line after rewind'
+                    call exit(1)
+                end if
+            end if
+
+        end do
+        
     end function cli_read_next
 
     subroutine getcli(ccd, ccm, ccy)
@@ -384,7 +425,6 @@ contains
         integer, intent(in) :: ccy    ! requested year
 
         ! + + + LOCAL VARIABLES + + +
-        integer :: ioc     ! file and string read error return code
         integer :: jday    ! astronomical julian day for requested day
         integer :: doy     ! day of year for requested day
 
@@ -392,44 +432,28 @@ contains
             ! starting at beginning of the file
             call cli_start()
             ! reading first data line of file
-            ioc = cli_read_next(cli_today)
-            if( ioc .eq. 1) then
-                ! We have a failure reading the first data line in file
-                write (0,*) 'ERROR: CLIGEN failed to read first data line. Check file.'
-                call exit(1)
-            else if(ioc .eq. 2) then
-                ! We have a failure parsing the first data line in file
-                write (0,*) 'ERROR: CLIGEN failed to parse first data line. Check file format.'
-                call exit(1)
-            end if
+            cli_today = cli_read_next()
 
             if( julday(ccd, ccm, ccy) .lt. cli_today%jday ) then
-                ! set error flag to indicate earlier date request, will now read by day of year.
-                cwrnflg = ibset(cwrnflg,0)
-                write (0,*) 'WARNING: CLIGEN file does not contain first date requested. Date requested: ', &
+                if( cli_warn_only ) then
+                    ! set error flag to indicate earlier date request, will now read by day of year.
+                    cwrnflg = ibset(cwrnflg,0)
+                    write (0,"(6(a,i0),a)") 'WARNING: CLIGEN file does not contain first date requested. Date requested: ', &
                             ccd, '/', ccm, '/', ccy, ' CLIGEN file starts on: ', &
                             cli_today%day, '/', cli_today%month, '/', cli_today%year, &
                             ' Now reading file by matching day of year, not exact date.'
+                else
+                    ! exit, missing day, all days required
+                    write (0,"(6(a,i0),a)") 'ERROR: CLIGEN file does not contain first date requested. Date requested: ', &
+                            ccd, '/', ccm, '/', ccy, ' CLIGEN file starts on: ', &
+                            cli_today%day, '/', cli_today%month, '/', cli_today%year, &
+                            ' Exact days are required to run simulation.'
+                    call exit(1)
+                end if
             end if
 
             ! reading second line of file
-            ioc = cli_read_next(cli_next)
-            if (ioc .eq. 1) then
-                ! We have a failure reading the second data line in file
-                write (0,*) 'ERROR: CLIGEN failed to read second data line. Check file.'
-                call exit(1)
-            else if (ioc .eq. 2) then
-                ! We have a failure parsing the second data line in file
-                write (0,*) 'ERROR: CLIGEN failed to parse second data line. Check file format.'
-                call exit(1)
-            end if
-
-            ! check that next day is one day after today
-            if( cli_next%jday .ne. (cli_today%jday + 1) ) then
-                ! first two days in file are not consecutive
-                write (0,*) 'ERROR: CLIGEN days not consecutive in first two data lines. Check file.'
-                call exit(1)
-            end if
+            cli_next = cli_read_next()
 
             ! set cli_prev to the same values as cli_today
             cli_prev = cli_today
@@ -441,96 +465,47 @@ contains
 
             ! astronomical julian day requested
             jday = julday( ccd, ccm, ccy)
-        
-            if( (jday .lt. cli_today%jday) .and. (jday .ge. cli_next%jday) ) then
-                ! file reset to beginning, read next day
-                ! set cli_prev to cli_today
-                cli_prev = cli_today
-                ! set cli_today to cli_next
-                cli_today = cli_next
-                ! retrieve line for cli_next
-                ioc = cli_read_next(cli_next)
-                if (ioc .gt. 0) then
-                    write (0,*) 'ERROR: CLIGEN read failed following dd/mm/yy: ', &
-                         cli_today%day,'/',cli_today%month,'/',cli_today%year, &
-                         ' Rewind to first day failed.'
-                    call exit(1)
-                end if
-            end if
 
-            do while( (jday .gt. cli_today%jday) .and. (cwrnflg .eq. 0 ) )
-                ! day requested is later than position in file, scan forward
-
-                ! set cli_prev to cli_today
-                cli_prev = cli_today
-                ! set cli_today to cli_next
-                cli_today = cli_next
-                ! retrieve line for cli_next
-                ioc = cli_read_next(cli_next)
-                if (ioc .gt. 0) then
-                    ! We have a failure reading or parsing the next data line in file
-                    if( (ccd .eq. 31) .and. (ccm .eq. 12) ) then
-                        ! end of year and end of file, read next line from beginning of file
-                        call cli_start()
-                        ioc = cli_read_next(cli_next)
-                        if (ioc .gt. 0) then
-                            write (0,*) 'ERROR: CLIGEN read failed following dd/mm/yy: ', &
-                                 cli_today%day,'/',cli_today%month,'/',cli_today%year, &
-                                 ' Rewind to first day failed.'
-                            call exit(1)
-                        else
-                            ! set error flag to indicate read reached end of last year in file, will now read by day of year.
-                            cwrnflg = ibset(cwrnflg,0)
-                        end if
-                    else
-                        ! file did not end with complete year
-                        ! set error flag to indicate incomplete year
-                        cwrnflg = ibset(cwrnflg,1)
-                        ! reset file to beginning
-                        call cli_start()
-                        write (0,*) 'WARNING: CLIGEN file ended on dd/mm/yy: ', &
-                            cli_today%day,'/',cli_today%month,'/',cli_today%year, &
-                            ' searching for correct day of year from beginning of file.'
-                    end if
-                end if
-            end do
-
-            if( cwrnflg .eq. 0 ) then
-                ! check result
-                if( cli_today%jday .ne. (cli_next%jday-1) ) then
-                    ! days in file are not consecutive
-                    if( (ccd .eq. 31) .and. (ccm .eq. 12) ) then
-                        ! end of last year, no action required
-                    else if( (( (ccd .eq. 28) .or. (ccd .eq. 29) ) .and. (ccm .eq. 2)) &
-                        .or. ((ccd .eq. 1) .and. (ccm .eq. 3)) ) then
-                        ! leap year mismatch problem, set error flag
-                        ! this should now run in day of year mode, agnostic to leap day
-                        cwrnflg = ibset(cwrnflg,2)
-                        write (0,*) 'WARNING: CLIGEN file leap year mismatch on dd/mm/yy: ', &
-                            cli_today%day,'/',cli_today%month,'/',cli_today%year, &
-                            ' Using day of year and not searching for years.'
-                    else
-                        ! missing day in file
-                        write (0,*) 'ERROR: CLIGEN read failed following dd/mm/yy: ', &
-                             cli_today%day,'/',cli_today%month,'/',cli_today%year, &
-                             ' Please create file with no missing days.'
-                            call exit(1)
-                    end if
-                end if
+            if( jday .eq. cli_today%jday ) then
+                return
             else
-                ! check result
-                ! mode switched from exact date to day of year
-                ! julian day of year
-                doy = dayear( ccd, ccm, ccy)
+                do while( jday .ne. cli_today%jday )
+                    ! file day is earlier than day requested, scan forward in file
+                    cli_prev = cli_today
+                    cli_today = cli_next
+                    cli_next = cli_read_next()
 
-                if( doy .ne. cli_today%doy ) then
-                   ! switch from exact date to day of year mode not correct doy
-                   write(0,*) 'ERROR: CLIGEN: Incorrect day of year selected on switch from exact date to day of year mode.', doy, cli_today%doy
-                   write(0,*) 'ERROR: day of year requested: ', doy, 'Day of year selected: ', cli_today%doy
-                   call exit(1)
-                end if
+                    !write(*,*) 'JDAY: ', jday, cli_today%jday, ccd,cli_today%day, ccm,cli_today%month, ccy,cli_today%year
+
+                    if( jday .eq. cli_today%jday ) then
+                        return
+                    elseif( jday .lt. cli_today%jday ) then
+                        if( cli_warn_only ) then
+                            cwrnflg = ibset(cwrnflg,0)
+                            write (0,"(3(a,i0),a)") 'WARNING: Date requested: ', ccd, '/', ccm, '/', ccy, &
+                                ' CLIGEN file is missing this date. Now reading file by matching day of year, not exact date.'
+                            exit
+                        else
+                            write (0,"(3(a,i0),a)") 'ERROR: Date requested: ', ccd, '/', ccm, '/', ccy, &
+                                ' CLIGEN file is missing this date. Simulation terminated with error.'
+                            call exit(1)
+                        end if
+                    elseif( cli_today%jday .lt. cli_prev%jday ) then
+                        if( cli_warn_only ) then
+                            cwrnflg = ibset(cwrnflg,0)
+                            write (0,"(6(a,i0),a)") 'WARNING: Date requested: ', ccd, '/', ccm, '/', ccy, &
+                                ' CLIGEN file ended: ', cli_prev%day,'/',cli_prev%month,'/',cli_prev%year, &
+                                ' Now reading file by matching day of year, not exact date.'
+                            exit
+                        else
+                            write (0,"(6(a,i0),a)") 'ERROR: Date requested: ', ccd, '/', ccm, '/', ccy, &
+                                ' CLIGEN file ended: ', cli_prev%day,'/',cli_prev%month,'/',cli_prev%year, &
+                                ' Simulation terminated with error.'
+                            call exit(1)
+                        end if
+                    end if
+                end do
             end if
-            
         end if
           
         if( cwrnflg .gt. 0 ) then
@@ -539,85 +514,25 @@ contains
             ! julian day of year
             doy = dayear( ccd, ccm, ccy)
 
-            if( (doy .eq. 366) .and. (cli_next%doy .eq. 1) ) then
-                ! leap year request, file year is not leap year
-                ! returns end of year value for day 366
+            if( doy .eq. cli_today%doy ) then
                 return
-            end if
-
-            if( (doy .eq. 1) .and. (cli_next%doy .eq. 366) ) then
-                ! non-leap year request, file year is leap year
-                ! skips day 366, reads doy 1 into cli_today
-                cli_prev = cli_today
-                cli_today = cli_next
-                ioc = cli_read_next(cli_next)
-                if (ioc .gt. 0) then
-                    ! We have a failure reading or parsing the next data line in file
-                    write (0,*) 'ERROR: CLIGEN read failed following dd/mm/yy: ', &
-                         cli_today%day,'/',cli_today%month,'/',cli_today%year, &
-                         ' Rewind to first day failed.'
-                    call exit(1)
-                end if
-                cli_prev = cli_today
-                cli_today = cli_next
-                ioc = cli_read_next(cli_next)
-                if (ioc .gt. 0) then
-                    ! missing day in file
-                    write (0,*) 'ERROR: CLIGEN read failed following dd/mm/yy: ', &
-                         cli_today%day,'/',cli_today%month,'/',cli_today%year, &
-                         ' Please create file with no missing days.'
-                    call exit(1)
-                end if
+            elseif( (doy .eq. 366) .and. (cli_next%doy .lt. cli_today%doy) ) then
+                ! leap year request, file not leap year
+                ! return previous value
                 return
-            end if
-
-            if( (doy .lt. cli_today%doy) .and. (cli_next%doy .eq. 1) ) then
-                ! read next in new year
-                ! set cli_prev to cli_today
-                cli_prev = cli_today
-                ! set cli_today to cli_next
-                cli_today = cli_next
-                ! retrieve line for cli_next
-                ioc = cli_read_next(cli_next)
-                if (ioc .gt. 0) then
-                    ! We have a failure reading or parsing the next data line in file
-                    write (0,*) 'ERROR: CLIGEN read failed following dd/mm/yy: ', &
-                         cli_today%day,'/',cli_today%month,'/',cli_today%year, &
-                         ' Rewind to first day failed.'
-                    call exit(1)
-                end if
-            end if
-
-            do while( doy .gt. cli_today%doy )
-                ! day requested is later than position in file, scan forward
-
-                ! set cli_prev to cli_today
-                cli_prev = cli_today
-                ! set cli_today to cli_next
-                cli_today = cli_next
-                ! retrieve line for cli_next
-                ioc = cli_read_next(cli_next)
-                if (ioc .gt. 0) then
-                    ! We have a failure reading or parsing the next data line in file
-                    ! read next line from beginning of file
-                    call cli_start()
-                    ioc = cli_read_next(cli_next)
-                    if (ioc .gt. 0) then
-                        write (0,*) 'ERROR: CLIGEN read failed following dd/mm/yy: ', &
-                             cli_today%day,'/',cli_today%month,'/',cli_today%year, &
-                             ' Rewind to first day failed.'
-                        call exit(1)
+            else
+                ! read file until doy found in file
+                ! Note: skips day 366, reads doy 1 into cli_today
+                do while( doy .ne. cli_today%doy )
+                    ! file day is not the day requested, scan forward in file
+                    cli_prev = cli_today
+                    cli_today = cli_next
+                    cli_next = cli_read_next()
+                    if( doy .eq. cli_today%doy ) then
+                        return
                     end if
-                end if
-
-                if( doy .eq. 366 ) then
-                    if( (cli_next%doy .eq. 1) .and. (cli_today%doy .eq. 365) ) then
-                        ! leap years out of sync, just reuse day 365
-                        exit
-                    end if
-                end if
-
-            end do
+                end do
+            end if
 
             ! generate one time warning of switch to day of year mode
             if( cwrnflg .lt. 8 ) then
@@ -626,7 +541,7 @@ contains
                     ! set cwrnflg to not generate additional warnings
                     cwrnflg = ibset(cwrnflg,3)
                     ! print warning
-                    write (0,*) 'WARNING: CLIGEN file is shorter than simulation. File ends on: ', &
+                    write (0,"(3(a,i0),a)") 'WARNING: CLIGEN file is shorter than simulation. File ends on: ', &
                             cli_prev%day, '/', cli_prev%month, '/', cli_prev%year, &
                             ' Rereading file using day of year as many times as needed to complete the simulation'
                 end if
@@ -690,87 +605,108 @@ contains
     end subroutine wind_start
 
     ! subroutine to read in one day from windgen file
-    function wind_read_next( wind_oneday ) result( errflg )
+    subroutine wind_read_next( wind_oneday )
 
         use file_io_mod, only: luiwin     ! file unit number
         use erosion_data_struct_defs, only: ntstep
-        use datetime_mod, only: julday, dayear
+        use datetime_mod, only: julday, dayear, ckdate
 
         type(windgen_state) :: wind_oneday  ! structure for windgen data line values
-        integer :: errflg                 ! returns error result of read
-                                          ! 0 - no error
-                                          ! 1 - failure to read from file
-                                          ! 2 - failure to parse line
 
         ! + + + LOCAL VARIABLES + + +
         character :: line*1024            ! data line read from file
         integer :: ioc                    ! error return from read statement
+        integer :: errflg                 ! returns error result of read
+                                          ! 0 - no error
+                                          ! 1 - failure to read from file
         integer :: idx                    ! index for reading array values
         integer, dimension(1) :: tmp_hrmax   ! tmp array for hour of max wind speed
         real tmp_array(ntstep)               ! tmp array for hrly wind speed
 
-        ! read single line from file
-        read (luiwin,'(a)',iostat=ioc) line
-        if (ioc .ne. 0) then
-            ! failure reading data line from file
-            errflg = 1
-            return
-        end if
-
-        if (wind_gen_fmt_flag == 1) then   ! original wind_gen file format
-            read(line, *, iostat=ioc) wind_oneday%day, wind_oneday%month, wind_oneday%year, wind_oneday%wwadir, &
-                                      wind_oneday%wwudmx, wind_oneday%wwudmn, wind_oneday%wwhrmx
-            if( ioc .ne. 0 ) then
-                ! error reading individual line
-                errflg = 2
-                return
-            end if
-        else                               ! wind_gen2 file format
-            read(line, *, iostat=ioc) wind_oneday%day, wind_oneday%month, wind_oneday%year, wind_oneday%wwadir, &
-                                      (wind_oneday%wawu(idx), idx=1,ntstep)
-            if( ioc .ne. 0 ) then
-                ! error reading individual line
-                errflg = 2
-                return
-            end if
-
-            if (wind_max_flag == 1) then   ! Cap winds greater than specified maximum
-                do idx = 1, ntstep
-                    wind_oneday%wawu(idx) = min(wind_oneday%wawu(idx), wind_max_value)
-                end do
-            end if
-
-            ! compute the total wind energy for the day
-            wind_oneday%twe = 0.0
-            do idx = 1, ntstep
-                wind_oneday%twe = wind_oneday%twe + 0.5 * (wind_oneday%wawu(idx)**3.0) * (86400./ntstep) / 1000.0
-            end do
-
-            ! compute the average wind speed to generate the total wind energy for the day
-            ! (this is not the same as daily average wind speed)
-            wind_oneday%wewudav = (wind_oneday%twe/ntstep) * 2.0 * 1000.0/(86400./ntstep)
-            wind_oneday%wewudav = (wind_oneday%wewudav)**(1.0/3.0)
-
-            ! Determine the "old" variable values needed within the model
-            ! Some of these may not be 100% correct, but they are the best
-            ! have come up with for the time being. Modified to remove the ntstep=24 assumption
-            do idx = 1, ntstep
-                tmp_array(idx) = wind_oneday%wawu(idx)
-            end do
-            tmp_hrmax = maxloc(tmp_array)
-            wind_oneday%wwhrmx = nint(tmp_hrmax(1)*24.0/ntstep)
-            wind_oneday%wawudav = sum(tmp_array)/ntstep
-            wind_oneday%wwudmx = maxval(tmp_array)
-            wind_oneday%wwudmn = wind_oneday%wwudmx - wind_oneday%wawudav
-        end if
-
-        ! populate derived values in windgen data record
-        wind_oneday%jday = julday(wind_oneday%day,wind_oneday%month,wind_oneday%year)
-        wind_oneday%doy = dayear(wind_oneday%day,wind_oneday%month,wind_oneday%year)
 
         errflg = 0
-        return
-    end function wind_read_next
+        do while(.true.)
+            ! look for a valid line in the file
+
+            ! read single line from file
+            read (luiwin,'(a)',iostat=ioc) line
+            if (ioc .ne. 0) then
+                ! failure reading data line from file
+                errflg = 1
+                ! try resetting to beginning of file
+                call wind_start()
+                read (luiwin,'(a)',iostat=ioc) line
+                if (ioc .ne. 0) then
+                    write(0,*) 'Unable to read windgen file after rewind'
+                    call exit(1)
+                end if
+            end if
+
+            ! successfull read from file, parse the line
+            if (wind_gen_fmt_flag == 1) then   ! original wind_gen file format
+                read(line, *, iostat=ioc) wind_oneday%day, wind_oneday%month, wind_oneday%year, wind_oneday%wwadir, &
+                                          wind_oneday%wwudmx, wind_oneday%wwudmn, wind_oneday%wwhrmx
+                ! populate derived values in windgen data record
+                wind_oneday%jday = julday(wind_oneday%day,wind_oneday%month,wind_oneday%year)
+                wind_oneday%doy = dayear(wind_oneday%day,wind_oneday%month,wind_oneday%year)
+                exit
+            else                               ! wind_gen2 file format
+                read(line, *, iostat=ioc) wind_oneday%day, wind_oneday%month, wind_oneday%year, wind_oneday%wwadir, &
+                                          (wind_oneday%wawu(idx), idx=1,ntstep)
+            end if
+            
+            if( ioc .eq. 0 ) then
+                ! check that day, month, year values are a valid date
+                if( ckdate( wind_oneday%day,wind_oneday%month,wind_oneday%year ) ) then
+                    if (wind_gen_fmt_flag .ne. 1) then    ! wind_gen2 file format
+                        if (wind_max_flag == 1) then   ! Cap winds greater than specified maximum
+                            do idx = 1, ntstep
+                                 wind_oneday%wawu(idx) = min(wind_oneday%wawu(idx), wind_max_value)
+                            end do
+                        end if
+
+                        ! compute the total wind energy for the day
+                        wind_oneday%twe = 0.0
+                        do idx = 1, ntstep
+                            wind_oneday%twe = wind_oneday%twe + 0.5 * (wind_oneday%wawu(idx)**3.0) * (86400./ntstep) / 1000.0
+                        end do
+
+                        ! compute the average wind speed to generate the total wind energy for the day
+                        ! (this is not the same as daily average wind speed)
+                        wind_oneday%wewudav = (wind_oneday%twe/ntstep) * 2.0 * 1000.0/(86400./ntstep)
+                        wind_oneday%wewudav = (wind_oneday%wewudav)**(1.0/3.0)
+        
+                        ! Determine the "old" variable values needed within the model
+                        ! Some of these may not be 100% correct, but they are the best
+                        ! have come up with for the time being. Modified to remove the ntstep=24 assumption
+                        do idx = 1, ntstep
+                            tmp_array(idx) = wind_oneday%wawu(idx)
+                        end do
+                        tmp_hrmax = maxloc(tmp_array)
+                        wind_oneday%wwhrmx = nint(tmp_hrmax(1)*24.0/ntstep)
+                        wind_oneday%wawudav = sum(tmp_array)/ntstep
+                        wind_oneday%wwudmx = maxval(tmp_array)
+                        wind_oneday%wwudmn = wind_oneday%wwudmx - wind_oneday%wawudav
+                        ! populate derived values in windgen data record
+                        wind_oneday%jday = julday(wind_oneday%day,wind_oneday%month,wind_oneday%year)
+                        wind_oneday%doy = dayear(wind_oneday%day,wind_oneday%month,wind_oneday%year)
+                        exit
+                    end if
+                else
+                    write(0,"(6(a,i0),a)") 'WARNING: Date in file: ', wind_oneday%day, '/', wind_oneday%month, '/', wind_oneday%year, &
+                                ' Is not a valid date. This line is skipped.'
+                end if
+            else
+                errflg = errflg + 1
+                if( errflg .gt. 2 ) then
+                    write(0,*) 'Unable to parse windgen file line after rewind'
+                    call exit(1)
+                end if
+            end if
+
+        end do
+        
+    end subroutine wind_read_next
 
     subroutine wind_print(wind_oneday)
         use erosion_data_struct_defs, only: ntstep
@@ -796,7 +732,6 @@ contains
         integer :: cwy    ! requested year
 
         ! + + + LOCAL VARIABLES + + +
-        integer :: ioc     ! file and string read error return code
         integer :: jday    ! astronomical julian day for requested day
         integer :: doy     ! day of year for requested day
         integer :: idx     ! index for reading array values
@@ -805,43 +740,29 @@ contains
             ! starting at beginning of the file
             call wind_start()
             ! reading first data line of file
-            ioc = wind_read_next(wind_today)
-            if( ioc .eq. 1) then
-                ! We have a failure reading the first data line in file
-                write (0,*) 'ERROR: WINDGEN failed to read first data line. Check file.'
-                call exit(1)
-            else if(ioc .eq. 2) then
-                ! We have a failure parsing the first data line in file
-                write (0,*) 'ERROR: WINDGEN failed to parse first data line. Check file format.'
-                call exit(1)
-            end if
+            call wind_read_next( wind_today )
+
             if( julday(cwd, cwm, cwy) .lt. wind_today%jday ) then
-                ! set error flag to indicate earlier date request, will now read by day of year.
-                wwrnflg = ibset(wwrnflg,0)
-                write (0,*) 'WARNING: WINDGEN file does not contain first date requested. Date requested: ', &
+                if( win_warn_only ) then
+                    ! set error flag to indicate earlier date request, will now read by day of year.
+                    wwrnflg = ibset(wwrnflg,0)
+                    write (0,"(6(a,i0),a)") 'WARNING: WINDGEN file does not contain first date requested. Date requested: ', &
                             cwd, '/', cwm, '/', cwy, ' WINDGEN file starts on: ', &
                             wind_today%day, '/', wind_today%month, '/', wind_today%year, &
                             ' Now reading file by matching day of year, not exact date.'
+                else
+                    ! exit, missing day, all days required
+                    write (0,"(6(a,i0),a)") 'ERROR: WINDGEN file does not contain first date requested. Date requested: ', &
+                            cwd, '/', cwm, '/', cwy, ' CLIGEN file starts on: ', &
+                            wind_today%day, '/', wind_today%month, '/', wind_today%year, &
+                            ' Exact days are required to run simulation.'
+                    call exit(1)
+
+                end if
             end if
 
             ! reading second line of file
-            ioc = wind_read_next(wind_next)
-            if (ioc .eq. 1) then
-                ! We have a failure reading the second data line in file
-                write (0,*) 'ERROR: WINDGEN failed to read second data line. Check file.'
-                call exit(1)
-            else if (ioc .eq. 2) then
-                ! We have a failure parsing the second data line in file
-                write (0,*) 'ERROR: WINDGEN failed to parse second data line. Check file format.'
-                call exit(1)
-            end if
-
-            ! check that next day is one day after today
-            if( wind_next%jday .ne. (wind_today%jday + 1) ) then
-                ! first two days in file are not consecutive
-                write (0,*) 'ERROR: WINDGEN days not consecutive in first two data lines. Check file.'
-                call exit(1)
-            end if
+            call wind_read_next( wind_next )
 
             ! set wind_prev to the same values as wind_today
             wind_prev = wind_today
@@ -854,95 +775,46 @@ contains
             ! astronomical julian day requested
             jday = julday( cwd, cwm, cwy)
         
-            if( (jday .lt. wind_today%jday) .and. (jday .ge. wind_next%jday) ) then
-                ! file reset to beginning, read next day
-                ! set wind_prev to wind_today
-                wind_prev = wind_today
-                ! set wind_today to wind_next
-                wind_today = wind_next
-                ! retrieve line for wind_next
-                ioc = wind_read_next(wind_next)
-                if (ioc .gt. 0) then
-                    write (0,*) 'ERROR: WINDGEN read failed following dd/mm/yy: ', &
-                         wind_today%day,'/',wind_today%month,'/',wind_today%year, &
-                         ' Rewind to first day failed.'
-                    call exit(1)
-                end if
-            end if
-
-            do while( (jday .gt. wind_today%jday) .and. (wwrnflg .eq. 0 ) )
-                ! day requested is later than position in file, scan forward
-
-                ! set wind_prev to wind_today
-                wind_prev = wind_today
-                ! set wind_today to wind_next
-                wind_today = wind_next
-                ! retrieve line for wind_next
-                ioc = wind_read_next(wind_next)
-                if (ioc .gt. 0) then
-                    ! We have a failure reading or parsing the next data line in file
-                    if( (cwd .eq. 31) .and. (cwm .eq. 12) ) then
-                        ! end of year and end of file, read next line from beginning of file
-                        call wind_start()
-                        ioc = wind_read_next(wind_next)
-                        if (ioc .gt. 0) then
-                            write (0,*) 'ERROR: WINDGEN read failed following dd/mm/yy: ', &
-                                 wind_today%day,'/',wind_today%month,'/',wind_today%year, &
-                                 ' Rewind to first day failed.'
-                            call exit(1)
-                        else
-                            ! set error flag to indicate read reached end of last year in file, will now read by day of year.
-                            wwrnflg = ibset(wwrnflg,0)
-                        end if
-                    else
-                        ! file did not end with complete year
-                        ! set error flag to indicate incomplete year
-                        wwrnflg = ibset(wwrnflg,1)
-                        ! reset file to beginning
-                        call wind_start()
-                        write (0,*) 'WARNING: WINDGEN file ended on dd/mm/yy: ', &
-                            wind_today%day,'/',wind_today%month,'/',wind_today%year, &
-                            ' searching for correct day of year from beginning of file.'
-                    end if
-                end if
-            end do
-
-            if( wwrnflg .eq. 0 ) then
-                ! check result
-                if( wind_today%jday .ne. (wind_next%jday-1) ) then
-                    ! days in file are not consecutive
-                    if( (cwd .eq. 31) .and. (cwm .eq. 12) ) then
-                        ! end of last year, no action required
-                    else if( (( (cwd .eq. 28) .or. (cwd .eq. 29) ) .and. (cwm .eq. 2)) &
-                        .or. ((cwd .eq. 1) .and. (cwm .eq. 3)) ) then
-                        ! leap year mismatch problem, set error flag
-                        ! this should now run in day of year mode, agnostic to leap day
-                        wwrnflg = ibset(wwrnflg,2)
-                        write (0,*) 'WARNING: WINDGEN file leap year mismatch on dd/mm/yy: ', &
-                            wind_today%day,'/',wind_today%month,'/',wind_today%year, &
-                            ' Using day of year and not searching for years.'
-                    else
-                        ! missing day in file
-                        write (0,*) 'ERROR: WINDGEN read failed following dd/mm/yy: ', &
-                             wind_today%day,'/',wind_today%month,'/',wind_today%year, &
-                             ' Please create file with no missing days.'
-                            call exit(1)
-                    end if
-                end if
+            if( jday .eq. wind_today%jday ) then
+                return
             else
-                ! check result
-                ! mode switched from exact date to day of year
-                ! julian day of year
-                doy = dayear( cwd, cwm, cwy)
+                do while( jday .ne. wind_today%jday )
+                    ! file day is earlier than day requested, scan forward in file
+                    wind_prev = wind_today
+                    wind_today = wind_next
+                    call wind_read_next( wind_next )
 
-                if( doy .ne. wind_today%doy ) then
-                   ! switch from exact date to day of year mode not correct doy
-                   write(0,*) 'ERROR: WINDGEN: Incorrect day of year selected on switch from exact date to day of year mode.', doy, wind_today%doy
-                   write(0,*) 'ERROR: day of year requested: ', doy, 'Day of year selected: ', wind_today%doy
-                   call exit(1)
-                end if
+                    if( jday .eq. wind_today%jday ) then
+                        return
+                    elseif( jday .lt. wind_today%jday ) then
+                        if( win_warn_only ) then
+                            ! set error flag to indicate earlier date request, will now read by day of year.
+                            wwrnflg = ibset(wwrnflg,0)
+                            write (0,"(3(a,i0),a)") 'WARNING: Date requested: ', cwd, '/', cwm, '/', cwy, &
+                                  ' WINDGEN file is missing this date. Now reading file by matching day of year, not exact date.'
+                            exit
+                        else
+                            ! exit, missing day, all days required
+                            write (0,"(3(a,i0),a)") 'ERROR: Date requested: ', cwd, '/', cwm, '/', cwy, &
+                                  ' WINDGEN file is missing this date. Simulation terninated with error.'
+                            call exit(1)
+                        end if
+                    elseif( wind_today%jday .lt. wind_prev%jday ) then
+                        if( win_warn_only ) then
+                            wwrnflg = ibset(wwrnflg,0)
+                            write (0,"(6(a,i0),a)") 'WARNING: Date requested: ', cwd, '/', cwm, '/', cwy, &
+                                ' WINDGEN file ended: ', wind_prev%day,'/',wind_prev%month,'/',wind_prev%year, &
+                                ' Now reading file by matching day of year, not exact date.'
+                            exit
+                        else
+                            write (0,"(6(a,i0),a)") 'ERROR: Date requested: ', cwd, '/', cwm, '/', cwy, &
+                                ' CLIGEN file ended: ', wind_prev%day,'/',wind_prev%month,'/',wind_prev%year, &
+                                ' Simulation terminated with error.'
+                            call exit(1)
+                        end if
+                    end if
+                end do
             end if
-
         end if
 
         if( wwrnflg .gt. 0 ) then
@@ -951,85 +823,25 @@ contains
             ! julian day of year
             doy = dayear( cwd, cwm, cwy)
 
-            if( (doy .eq. 366) .and. (wind_next%doy .eq. 1) ) then
-                ! leap year request, file year is not leap year
-                ! returns end of year value for day 366
+            if( doy .eq. wind_today%doy ) then
                 return
-            end if
-
-            if( (doy .eq. 1) .and. (wind_next%doy .eq. 366) ) then
-                ! non-leap year request, file year is leap year
-                ! skips day 366, reads doy 1 into wind_today
-                wind_prev = wind_today
-                wind_today = wind_next
-                ioc = wind_read_next(wind_next)
-                if (ioc .gt. 0) then
-                    ! We have a failure reading or parsing the next data line in file
-                    write (0,*) 'ERROR: WINDGEN read failed following dd/mm/yy: ', &
-                         wind_today%day,'/',wind_today%month,'/',wind_today%year, &
-                         ' Rewind to first day failed.'
-                    call exit(1)
-                end if
-                wind_prev = wind_today
-                wind_today = wind_next
-                ioc = wind_read_next(wind_next)
-                if (ioc .gt. 0) then
-                    ! missing day in file
-                    write (0,*) 'ERROR: WINDGEN read failed following dd/mm/yy: ', &
-                         wind_today%day,'/',wind_today%month,'/',wind_today%year, &
-                         ' Please create file with no missing days.'
-                    call exit(1)
-                end if
+            elseif( (doy .eq. 366) .and. (wind_next%doy .lt. wind_today%doy) ) then
+                ! leap year request, file not leap year
+                ! return previous value
                 return
-            end if
-
-            if( (doy .lt. wind_today%doy) .and. (wind_next%doy .eq. 1) ) then
-                ! read next in new year
-                ! set wind_prev to wind_today
-                wind_prev = wind_today
-                ! set wind_today to wind_next
-                wind_today = wind_next
-                ! retrieve line for wind_next
-                ioc = wind_read_next(wind_next)
-                if (ioc .gt. 0) then
-                    ! We have a failure reading or parsing the next data line in file
-                    write (0,*) 'ERROR: WINDGEN read failed following dd/mm/yy: ', &
-                         wind_today%day,'/',wind_today%month,'/',wind_today%year, &
-                         ' Rewind to first day failed.'
-                    call exit(1)
-                end if
-            end if
-
-            do while( doy .gt. wind_today%doy )
-                ! day requested is later than position in file, scan forward
-
-                ! set wind_prev to wind_today
-                wind_prev = wind_today
-                ! set wind_today to wind_next
-                wind_today = wind_next
-                ! retrieve line for wind_next
-                ioc = wind_read_next(wind_next)
-                if (ioc .gt. 0) then
-                    ! We have a failure reading or parsing the next data line in file
-                    ! read next line from beginning of file
-                    call wind_start()
-                    ioc = wind_read_next(wind_next)
-                    if (ioc .gt. 0) then
-                        write (0,*) 'ERROR: WINDGEN read failed following dd/mm/yy: ', &
-                             wind_today%day,'/',wind_today%month,'/',wind_today%year, &
-                             ' Rewind to first day failed.'
-                        call exit(1)
+            else
+                ! read file until doy found in file
+                ! Note: skips day 366, reads doy 1 into cli_today
+                do while( doy .ne. wind_today%doy )
+                    ! file day is not the day requested, scan forward in file
+                    wind_prev = wind_today
+                    wind_today = wind_next
+                    call wind_read_next( wind_next )
+                    if( doy .eq. wind_today%doy ) then
+                        return
                     end if
-                end if
-
-                if( doy .eq. 366 ) then
-                    if( (wind_next%doy .eq. 1) .and. (wind_today%doy .eq. 365) ) then
-                        ! leap years out of sync, just reuse day 365
-                        exit
-                    end if
-                end if
-
-            end do
+                end do
+            end if
 
             ! generate one time warning of switch to day of year mode
             if( wwrnflg .lt. 8 ) then
@@ -1038,7 +850,7 @@ contains
                     ! set wwrnflg to not generate additional warnings
                     wwrnflg = ibset(wwrnflg,3)
                     ! print warning
-                    write (0,*) 'WARNING: WINDGEN file is shorter than simulation. File ends on: ', &
+                    write (0,"(3(a,i0),a)") 'WARNING: WINDGEN file is shorter than simulation. File ends on: ', &
                             wind_prev%day, '/', wind_prev%month, '/', wind_prev%year, &
                             ' Rereading file using day of year as many times as needed to complete the simulation'
                 end if

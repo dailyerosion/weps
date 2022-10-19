@@ -5,11 +5,14 @@
 
 module input_run_mod
 
-  use weps_main_mod, only: old_run_file, clifil, runfil, subfil, winfil, usrnam, farmid, tractid, fieldid, &
-                           siteid, runtype, cliflag, climethod, clilatitiude, clilongitude, clistateid, &
-                           clistationnum, clistationname, clielevation, winflag, winmethod, winlatitude, &
-                           winlongitude, winstationnum, wincountry, winstate , winstationname, &
-                           run_rot_cycles, id, im, iy, ld, lm, ly, rootp
+  use weps_main_mod, only: old_run_file, runfil, subfil
+  use weps_main_mod, only: farmid, fieldid, rootp, run_rot_cycles, runtype, siteid, tractid, usrnam
+  use weps_main_mod, only: clifil, clielevation, cliflag, clilatitude, clilongitude
+  use weps_main_mod, only: climethod, clistateid, clistationname, clistationnum
+  use weps_main_mod, only: winfil, winflag, wincountry, winlatitude, winlongitude
+  use weps_main_mod, only: winmethod, winstate, winstationname, winstationnum
+  use weps_main_mod, only: id, im, iy, ld, lm, ly
+
   use weps_cmdline_parms, only: report_info, run_erosion, saeinp_daysim, saeinp_jday, saeinp_all, make_runxml
 
 contains
@@ -264,7 +267,7 @@ contains
             line = trim(adjustl(line(index(line,"|")+1:)))
             climethod = trim(line(:index(line,"|")-1))
             line = trim(adjustl(line(index(line,"|")+1:)))
-            clilatitiude = trim(line(:index(line,";")-1))
+            clilatitude = trim(line(:index(line,";")-1))
             line = trim(adjustl(line(index(line,";")+1:)))
             clilongitude = trim(line(:index(line,"|")-1))
             line = trim(adjustl(line(index(line,"|")+1:)))

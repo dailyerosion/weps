@@ -40,6 +40,8 @@ module grid_mod
     character(len=512) :: gridfile  ! name of the grid input file
     logical :: griddata_complete
     logical, dimension(:,:), allocatable :: gridnum_complete
+    logical, dimension(:,:), allocatable :: subrnum_complete
+    logical, dimension(:,:), allocatable :: elevnum_complete
     integer :: igx       ! index for grid x direction
     integer :: jgy       ! index for grid y direction
     integer :: count_complete
@@ -59,9 +61,10 @@ module grid_mod
     integer, parameter :: gridData = 1
     integer, parameter :: SCI_XGrid = 2 
     integer, parameter :: SCI_YGrid = 3
-    integer, parameter :: SCI_SubrNum = 4
-    integer, parameter :: SCI_Xindex = 5
-    integer, parameter :: SCI_Yindex = 6
+    integer, parameter :: SCI_Xindex = 4
+    integer, parameter :: SCI_Yindex = 5
+    integer, parameter :: SCI_SubrNum = 6
+    integer, parameter :: SCI_Elevation = 7
 
   contains
 
@@ -70,7 +73,7 @@ module grid_mod
       integer :: idx
       integer :: alloc_stat
 
-      max_tags = 6   ! count of unique tags needed from all dtd files
+      max_tags = 7   ! count of unique tags needed from all dtd files
       allocate( grid_tag(max_tags), stat=alloc_stat)
       if( alloc_stat .gt. 0 ) then
         write(*,*) 'ERROR: memory alloc., grid_tag'
@@ -87,9 +90,10 @@ module grid_mod
       grid_tag(1)%name = "gridData"
       grid_tag(2)%name = "SCI_XGrid"
       grid_tag(3)%name = "SCI_YGrid"
-      grid_tag(4)%name = "SCI_SubrNum"
-      grid_tag(5)%name = "SCI_Xindex"
-      grid_tag(6)%name = "SCI_Yindex"
+      grid_tag(4)%name = "SCI_Xindex"
+      grid_tag(5)%name = "SCI_Yindex"
+      grid_tag(6)%name = "SCI_SubrNum"
+      grid_tag(7)%name = "SCI_Elevation"
 
     end subroutine init_grid_xml
 
@@ -123,6 +127,10 @@ module grid_mod
                                     grid_tag(SCI_Xindex)%name, idx-1, &
                                     grid_tag(SCI_Yindex)%name, jdy-1, &
                                     cellstate(idx,jdy)%csr-1 )
+            call w_whole_tag( luo_saeinp, grid_tag(SCI_Elevation)%name, &
+                                    grid_tag(SCI_Xindex)%name, idx-1, &
+                                    grid_tag(SCI_Yindex)%name, jdy-1, &
+                                    cellstate(idx,jdy)%elevation )
           end do
         end do
       call w_end_tag( luo_saeinp, grid_tag(gridData)%name )
@@ -188,12 +196,18 @@ module grid_mod
           sum_stat = 0
           allocate(gridnum_complete(imax-1,jmax-1), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
+          allocate(subrnum_complete(imax-1,jmax-1), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(elevnum_complete(imax-1,jmax-1), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
           if( sum_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate enough memory for gridnum_complete data array'
           else
             do kdx = 1, imax - 1
               do jdx = 1, jmax - 1
                 gridnum_complete(kdx,jdx) = .false.
+                subrnum_complete(kdx,jdx) = .false.
+                elevnum_complete(kdx,jdx) = .false.
               end do
             end do
           end if
@@ -204,7 +218,29 @@ module grid_mod
           call exit(1)
         end if
 
-      else if ( idx .eq.SCI_SubrNum ) then
+      else if ( idx .eq. SCI_SubrNum ) then
+        if ( has_key(attributes, grid_tag(SCI_Xindex)%name) ) then
+          call get_value(attributes, grid_tag(SCI_Xindex)%name, param_value, ret_stat)
+          call read_param(grid_tag(SCI_Xindex)%name, param_value, igx)
+          ! adjust from 0 based array to 1 based array
+          igx = igx + 1
+          !write(*,*) 'SubrNum Xindex: ', igx
+        else
+          write(*,*) 'SCI_Xindex attribute required for each ', trim(grid_tag(idx)%name), ' Tag.'
+          call exit(1)
+        end if
+        if ( has_key(attributes, grid_tag(SCI_Yindex)%name) ) then
+          call get_value(attributes, grid_tag(SCI_Yindex)%name, param_value, ret_stat)
+          call read_param(grid_tag(SCI_Yindex)%name, param_value, jgy)
+          ! adjust from 0 based array to 1 based array
+          jgy = jgy + 1
+          !write(*,*) 'SubrNum Yindex: ', jgy
+        else
+          write(*,*) 'SCI_Yindex attribute required for each ', trim(grid_tag(idx)%name), ' Tag.'
+          call exit(1)
+        end if
+
+      else if ( idx .eq. SCI_Elevation ) then
         if ( has_key(attributes, grid_tag(SCI_Xindex)%name) ) then
           call get_value(attributes, grid_tag(SCI_Xindex)%name, param_value, ret_stat)
           call read_param(grid_tag(SCI_Xindex)%name, param_value, igx)
@@ -235,6 +271,7 @@ module grid_mod
       integer :: idx
       integer :: jdx
       integer :: kdx
+      integer :: sum_stat
       integer :: dealloc_stat
 
       do idx = 1, size(grid_tag)
@@ -248,20 +285,37 @@ module grid_mod
             count_complete = 0
             do kdx = 1, imax - 1
               do jdx = 1, jmax - 1
-                if (gridnum_complete(kdx,jdx)) then
-                  count_complete = count_complete + 1
+                if (subrnum_complete(kdx,jdx)) then
+!                  if  (elevnum_complete(kdx,jdx)) then
+                    gridnum_complete(kdx,jdx) = .true.
+!                  else
+!                    write(*,'(3a,i0,a,i0,a)') 'Tag ', trim(grid_tag(SCI_Elevation)%name), &
+!                                    ' SCI_Xindex="', kdx-1, &
+!                                    ' SCI_Yindex="', jdx-1, ' is missing from input file.'
+!                  end if
                 else
-                  write(*,'(3a)') 'Tag ', trim(grid_tag(SCI_SubrNum)%name), &
+                  write(*,'(3a,i0,a,i0,a)') 'Tag ', trim(grid_tag(SCI_SubrNum)%name), &
                                   ' SCI_Xindex="', kdx-1, &
                                   ' SCI_Yindex="', jdx-1, ' is missing from input file.'
+                end if
+                
+
+                if (gridnum_complete(kdx,jdx)) then
+                  count_complete = count_complete + 1
                 end if
               end do
             end do
             ! deallocate _complete array
+            sum_stat = 0
             deallocate(gridnum_complete, stat=dealloc_stat)
-            if( dealloc_stat .gt. 0 ) then
+            sum_stat = sum_stat + dealloc_stat
+            deallocate(subrnum_complete, stat=dealloc_stat)
+            sum_stat = sum_stat + dealloc_stat
+            deallocate(elevnum_complete, stat=dealloc_stat)
+            sum_stat = sum_stat + dealloc_stat
+            if( sum_stat .gt. 0 ) then
               ! deallocation failed
-              write(*,*) "ERROR: unable to deallocate memory for gridnum_complete array"
+              write(*,*) "ERROR: unable to deallocate memory for gridnum_complete arrays"
             end if
 
             if( count_complete .eq. (imax-1)*(jmax-1) ) then
@@ -275,12 +329,19 @@ module grid_mod
               ! deallocation failed
               write(*,*) "ERROR: unable to deallocate memory for Tag array"
             end if
-          else if (idx .eq. SCI_SubrNum) then
+          else if( (idx .eq. SCI_SubrNum) ) then
             if ( grid_tag(SCI_SubrNum)%acquired ) then
               grid_tag(SCI_SubrNum)%acquired = .false.
-              gridnum_complete(igx,jgy) = .true.
+              subrnum_complete(igx,jgy) = .true.
             else
-              gridnum_complete(igx,jgy) = .false.
+              subrnum_complete(igx,jgy) = .false.
+            end if
+          else if( (idx .eq. SCI_Elevation) ) then
+            if ( grid_tag(SCI_Elevation)%acquired ) then
+              grid_tag(SCI_Elevation)%acquired = .false.
+              elevnum_complete(igx,jgy) = .true.
+            else
+              elevnum_complete(igx,jgy) = .false.
             end if
           end if
 
@@ -305,12 +366,16 @@ module grid_mod
           cellstate(igx,jgy)%csr = cellstate(igx,jgy)%csr + 1
           !write(*,*) 'Subregion igx, iy, Number: ', igx, iy, cellstate(igx,jgy)%csr
           grid_tag(SCI_SubrNum)%acquired = .true.
+        else if (grid_tag(SCI_Elevation)%in_tag) then
+          call read_param(grid_tag(SCI_Elevation)%name, param_value, cellstate(igx,jgy)%elevation)
+          !write(*,*) 'Subregion igx, iy, Number: ', igx, iy, cellstate(igx,jgy)%elevation
+          grid_tag(SCI_Elevation)%acquired = .true.
         end if
       end if
 
     end subroutine pcdata_griddata_chunk_handler
 
-    subroutine sbgrid( minht )
+    subroutine sbgrid( minht, elevation )
 
       ! +++ PURPOSE +++
       ! to calculate grid size and spacing for EROSION.
@@ -321,6 +386,7 @@ module grid_mod
 
       ! +++ ARGUMENTS +++
       real :: minht    ! minimum height of barrier along it's length.
+      real :: elevation ! elevation of simulation region
 
       ! +++ LOCAL VARIABLES +++
       integer :: ngdpt ! number of grid points along a direction
@@ -405,10 +471,12 @@ module grid_mod
       call create_cellsurfacestate( imax, jmax )
 
       ! this only happens with old single subregion file
-      ! so set to subregion 1
+      ! set to subregion 1
+      ! set elevation to cligen elevation
       do jdx = 1, jmax-1
         do idx = 1, imax-1
           cellstate(idx,jdx)%csr = 1
+          cellstate(idx,jdx)%elevation = elevation
         end do
       end do
 

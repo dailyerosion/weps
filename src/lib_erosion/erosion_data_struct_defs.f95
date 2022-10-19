@@ -14,6 +14,7 @@ module erosion_data_struct_defs
      integer :: csr       ! index of current subregion at grid point x,y
      integer :: car       ! index of current accounting region at grid point x,y
      integer :: surflay   ! index of the soil layer at the surface (0 indicates deposition horizon)
+     real :: elevation    ! elevation of the cell surface at the cell centroid
      real :: surfthk      ! thickness of the soil layer at the surface (mm) (could be thinner than original layer)
      real :: sf1          ! soil mass fraction in surface layer < 0.01 mm
      real :: sf10         ! soil mass fraction in surface layer < 0.1 mm
