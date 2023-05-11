@@ -581,9 +581,9 @@ module grid_mod
       if (awa .lt. 0.0 ) awa = awa + 360.0
       if (awa .gt. 360.0) awa = awa - 360.0
 
-      sin_awa = sin(awa*degtorad)
-      cos_awa = cos(awa*degtorad)
-      tan_awa = tan(awa*degtorad)
+      sin_awa = sin(dble(awa)*degtorad)
+      cos_awa = cos(dble(awa)*degtorad)
+      tan_awa = tan(dble(awa)*degtorad)
 
 !     find wind quadrant relative to sim region & select sweep sequence
 

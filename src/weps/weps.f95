@@ -21,7 +21,7 @@
       use, intrinsic :: iso_fortran_env, only : OUTPUT_UNIT
       use weps_cmdline_parms, only: calibrate_crops, calibrate_rotcycles, &
                                    init_cycle, calc_confidence, hb_freq, &
-                                   report_info, report_debug, run_erosion,&
+                                   report_debug, run_erosion, &
                                    saeinp_all, saeinp_daysim, saeinp_jday, wepp_hydro, &
                                    make_runxml
       use weps_main_mod, only: old_run_file, run_rot_cycles, id, im, iy, ld, lm, ly, rootp, &
@@ -49,7 +49,7 @@
       use report_print_mod, only: print_report_vars, print_yr_report_vars, print_mandate_output
       use print_ui1_output_mod, only: print_ui1_output
       use barriers_mod, only: barrier, barseas, minht_barriers, destroy_barrier, set_barrier_season
-      use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir, fopenk, luolog
+      use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir, fopenk
       use input_soil_mod, only: input_ifc, soil_in
       use soil_data_struct_defs, only: soil_def, allocate_soil, deallocate_soil, print_soil
       use crop_mod, only: cprevseasonrotation
@@ -86,10 +86,13 @@
       use input_run_mod, only: input
       use input_run_xml_mod, only: write_run_xml
       use lcm_mod, only: lcm_n
-      use asd_mod, only: asdini
+      use asd_mod, only: asdini, msieve
       use decomp_out_mod, only: decopen
       use water_erosion_mod, only: water_erosion, weppsum
       use confidence_interval_mod, only: confidence_interval
+      use binomial_mod, only: init_buffer
+
+      external init_wepp
 
 !      use omp_lib
       
@@ -180,12 +183,6 @@
 
       ! Read command line arguments and options
       call cmdline()
-
-      ! Open the WEPS log file, etc.
-      call fopenk (luolog, trim(rootp) // 'logfil.txt', 'unknown')
-      if (report_info >= 1) then
-        write(luolog, *) 'Using ', trim(rootp), ' as the simulation input directory'
-      end if
 
       ! open input files and read run files
       ! The argument soil_in is only accessed when reading the leagacy run file
@@ -343,10 +340,10 @@
 
 !     check for consistency maxper, n_rot_cycles, number of years to run
       if( maxper*run_rot_cycles .ne. ly-iy+1 ) then
-          write(*,*) 'Warning: Number of rotations (',run_rot_cycles,') ', &
-                     'times Years in rotation (',maxper,') ', &
-                     ' does not match Number of simulation years (', &
-                     ly-iy+1,') '
+          write(*,'(4(a,i0,a,1x))') 'Warning: Number of rotations (',run_rot_cycles,')', &
+                     'times Years in rotation (',maxper,')', &
+                     'does not match Number of simulation years (', &
+                     ly-iy+1,')'
           run_rot_cycles = (ly-iy+1) / maxper
           if( mod( (ly-iy+1), maxper ) .gt. 0 ) then
               write(*,*) 'Warning: Not simulating complete rotations'
@@ -392,6 +389,7 @@
       end do
 
       call asdini()     ! calculates sieve cut parameters, does not set values
+      call init_buffer(msieve)  ! intialize binomial coefficients (mproc/crush uses)
 
 !     calculate first and last Julian dates for simulation
       ijday = julday(id, im, iy)
@@ -456,7 +454,7 @@
 
 !$omp parallel do schedule(static)
 
-      do  isr = 1, nsubr   
+      do  isr = 1, nsubr
 
        do ! initialization (Calibration) loop
 
@@ -482,7 +480,7 @@
           if( get_psim_doy(isr) .eq. 1 ) then
             simyrs = (ly - beg_init_y + 1)
             if( (hb_freq .eq. 0) .or. (mod(get_psim_year(isr), hb_freq) .eq. 0) ) then
-               write(*,*) 'Subregion ', isr, 'Year', get_psim_year(isr), ' of', simyrs, '(initialization)'
+               write(*,'(a,3(1x,i0,2x,a))') 'Subregion', isr, 'Year', get_psim_year(isr), 'of', simyrs, '(initialization)'
             end if
             call flush(OUTPUT_UNIT)
           end if
@@ -512,7 +510,7 @@
   
         ! set initialization flag to .false. if initialization was skipped
         if (am0ifl(isr)) am0ifl(isr) = .false.
-        write(*,*) 'Subregion ', isr, 'Finished initialization stage'
+        write(*,'(a,1x,i0,2x,a)') 'Subregion', isr, 'Finished initialization stage'
         ! End of "initialization" section
 
         ! Start of "calibrate" section
@@ -520,7 +518,7 @@
 
         if( (calibrate_crops > 0) .and. (.not. calib_done(isr)) .and. (calib_cycle(isr) < calibrate_crops) ) then
            calib_cycle(isr) = calib_cycle(isr) + 1
-           write(*,*) 'Subregion ', isr, 'Starting calibrate phase'
+           write(*,'(a,1x,i0,2x,a)') 'Subregion', isr, 'Starting calibrate phase'
            lcaljday = ljday
            if (calibrate_rotcycles .lt. run_rot_cycles) then
                !calculate last julian date for single calibration cycle
@@ -537,7 +535,7 @@
              if( get_psim_doy(isr) .eq. 1 ) then
                simyrs = (ly - beg_init_y + 1)
                if( (hb_freq .eq. 0) .or. (mod(get_psim_year(isr), hb_freq) .eq. 0) ) then
-                  write(*,*) 'Subregion ', isr, 'Year', get_psim_year(isr), ' of', maxper*calibrate_rotcycles, &
+                  write(*,'(a,5(1x,i0,2x,a))') 'Subregion ', isr, 'Year', get_psim_year(isr), 'of', maxper*calibrate_rotcycles, &
                              '(calibrating',calib_cycle(isr),'/', calibrate_crops,')'
                end if
                call flush(OUTPUT_UNIT)
@@ -602,7 +600,7 @@
              if( get_psim_doy(isr) .eq. 1 ) then
                simyrs = (ly - iy + 1)
                if( (hb_freq .eq. 0) .or. (mod(cyear(isr), hb_freq) .eq. 0) ) then
-                  write(*,*) 'Subregion ', isr, 'Year', cyear(isr), ' of', simyrs
+                  write(*,'(a,2(1x,i0,2x,a),1x,i0)') 'Subregion', isr, 'Year', cyear(isr), 'of', simyrs
                end if
                call flush(OUTPUT_UNIT)
             end if
@@ -699,7 +697,7 @@
          in_weps = .true.
 
          ! begin erosion report simulation phase
-         write(*,*) "Starting erosion report phase"
+         write(*,"(a)") "Starting erosion report phase"
          do am0jd = ijday,ljday
 
             ! store day for use in simulation date routines
@@ -710,7 +708,7 @@
              if( get_simdate_doy() .eq. 1 ) then
                simyrs = (ly - iy + 1)
                if( (hb_freq .eq. 0) .or. (mod(cyear(0), hb_freq) .eq. 0) ) then
-                  write(*,*) 'Erosion Year', cyear(0), ' of', simyrs
+                  write(*,"(a,1x,i0,1x,a,1x,i0)") 'Erosion Year', cyear(0), 'of', simyrs
                end if
                call flush(OUTPUT_UNIT)
             end if

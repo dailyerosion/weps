@@ -125,8 +125,8 @@ module process_mod
         qi_tcap   = qo          !no abrasion when no transport edit 8-30-06
         ct   = 1.0         !traps all incoming saltation discharge
         fancan = 0.0
-        qsso = qssi*exp(-cdp*lx)
-        q10o = q10i*exp(-c10dp*lx)
+        qsso = qssi*exp(-cdp*dble(lx))
+        q10o = q10i*exp(-c10dp*dble(lx))
         go to 90
       elseif (qen .le. qi) then
         ! this is a saltation trapping region with suspension emission
@@ -164,7 +164,7 @@ module process_mod
         else
           srrg = 1.0
         endif
-        ci = 0.005*srrg*(1 - exp(-0.5*brsai/bzht))*(1 - exp(-50*bzht)) !LH 8-29-05
+        ci = 0.005*srrg*(1 - exp(-0.5d0*brsai/bzht))*(1 - exp(-50.0d0*bzht)) !LH 8-29-05
       endif
 
       ! Calc. abrasion params. for saltation/creep
@@ -172,10 +172,10 @@ module process_mod
       sfsn = 1
 
       ! fraction of saltation abrading clods, crust and loose
-      fan = (exp(- 4.0*bffcv))*(exp(-3*svroc))*sfsn
-      fan = max(fan,0.)
+      fan = (exp(- 4.0d0*bffcv))*(exp(-3.0d0*svroc))*sfsn
+      fan = max(fan,0.0)
       ! fraction abrading aggregates
-      fanag = (1. - sf84)*(1. - sfcr)*fan
+      fanag = (1.0 - sf84)*(1.0 - sfcr)*fan
       ! fraction abrading crust
       fancr = (sfcr - sflos*sfcr)*fan
       ! sum
@@ -183,7 +183,11 @@ module process_mod
                                     !test3
       if (fancan .lt. 0.0001) fancan = 0.0001
       ! calc fraction of abraded of suspension size
-      sfssan =  (0.4 - 4.83*sfcla + 27.18*sfcla**2 - 53.7*sfcla**3 + 42.25*sfcla**4 - 10.7*sfcla**5)
+      sfssan = 0.4 - 4.83*sfcla &
+                   + 27.18*sfcla*sfcla &
+                   - 53.7*sfcla*sfcla*sfcla &
+                   + 42.25*sfcla*sfcla*sfcla*sfcla &
+                   - 10.7*sfcla*sfcla*sfcla*sfcla*sfcla
 
       ! set upper limit on sfssan for high sand content
       sfssan = min(sfssan, (1.0 - (sfsan-sfvfs)))
@@ -193,39 +197,39 @@ module process_mod
 
       ! calc total trap coef.
       if ((qcp .lt. qen) .and. ((slrr .gt. 10.) .or. (szrgh .gt. 50.))) then
-        ct = (1. - sfssen)*cen*ctf*(qen - qcp)/qen
+        ct = (1.0d0 - sfssen)*cen*ctf*(qen - qcp)/qen
       else
         ct = 0.
       endif
 
       ! assemble composite params. for saltation/creep
-      a = cen *(1. - sfssen)*qen
-      b = (1. - sfssan)*fancan - (1. - sfssen)*cen - cbk - ci - ct
-      c = (1. - sfssan)*fancan*1./qen
+      a = cen *(1.0 - sfssen)*qen
+      b = (1.0 - sfssan)*fancan - (1.0 - sfssen)*cen - cbk - ci - ct
+      c = (1.0 - sfssan)*fancan*1.0/qen
 
       ! solve for saltation/creep out
       ! collect variables
-      s = sqrt(4.*a*c + b**2.)
-      p = (-2.*c*qi_tcap + b)/s
+      s = sqrt(4.0d0*a*c + dble(b)*b)
+      p = (-2.0d0*c*qi_tcap + b)/s
 
-      pa1 = 1. + p
-      ps1 = 1. - p
+      pa1 = 1.0 + p
+      ps1 = 1.0 - p
       ! change p-values that are out of range, math range restriction: (-1 < p < 1) edit 7-18-01 LH
       if (pa1 .le. 0.0) then
          t1 = -20
       elseif (ps1 .le. 0.0) then
          t1 = 20
       else
-         t1 = (s/2.0)*(-lx) + 0.5*(log(pa1)-log(ps1))
+         t1 = (s/2.0d0)*(-lx) + 0.5d0*(log(dble(pa1))-log(dble(ps1)))
       endif
 
       ! calculate atanh
-      qo = (s/(2.*c))*(-tanh(t1) + b/s)
+      qo = (s/(2.0*c))*(-tanh(dble(t1)) + b/s)
 
       ! assemble composite params. for suspension
       f = sfssen*cen*qen*(1.0 - 0.1*brsai)    !edit 8-29-05 for suspension interception
       ! added last term to intercept some ss LH edit  6-11-01, changed 8-29-05
-      g = (sfssan*fancan - sfssen*cen + cbk + cm)*(1 - 0.1*brsai)
+      g = (sfssan*fancan - sfssen*cen + cbk + cm)*(1.0 - 0.1*brsai)
 
       ! trap to prevent over range of exp
       if ((s*lx) .gt. 40.0) then
@@ -235,27 +239,27 @@ module process_mod
       ! solve for suspension out
       ! collect variables
       if( p .gt. 1.0 ) then
-         t2 = alog(2.0)
+         t2 = log(2.0d0)
       else if( p .lt. -1 ) then
-         t2 = alog(exp(s*lx)*2.0)
+         t2 = log(exp(s*dble(lx))*2.0d0)
       else
-         t2 = alog(exp(s*lx)*(1.-p)+ p + 1.)
+         t2 = log(exp(s*dble(lx))*(1.0d0-p)+ p + 1.0d0)
       end if
-      qsso=qssi+(1./(2.*c))*((-g*s+g*b+2.*f*c)*lx+2.*g*(-alog(2.0)+t2))
+      qsso=qssi+(1.0/(2.0*c))*((-g*s+g*b+2.0*f*c)*lx+2.0*g*(-log(2.0d0)+t2))
 
       ! assemble composite params. for PM-10
       h = sf10en*f
       k = sf10an*sfssan*fancan - sf10en*sfssen*cen + sf10bk*cbk + sf10en*cm
 
       ! solve for PM-10 out (similar to suspension out)
-      q10o=q10i+(1./(2.*c))*((-k*s+k*b+2.*h*c)*lx+2.*k*(-alog(2.0)+t2))
+      q10o=q10i+(1.0/(2.0*c))*((-k*s+k*b+2.0*h*c)*lx+2.0*k*(-log(2.0d0)+t2))
 
       ! assemble composite params. for PM-2.5
       h = sf2_5en*f
       k = sf2_5an*sfssan*fancan - sf2_5en*sfssen*cen + sf2_5bk*cbk + sf2_5en*cm
 
       ! solve for PM-2.5 out (similar to suspension out)
-      q2_5o=q2_5i+(1./(2.*c))*((-k*s+k*b+2.*h*c)*lx+2.*k*(-alog(2.0)+t2))
+      q2_5o=q2_5i+(1.0/(2.0*c))*((-k*s+k*b+2.0*h*c)*lx+2.*k*(-log(2.0d0)+t2))
 
       ! SURFACE UPDATE EQUATIONS
 
@@ -304,9 +308,9 @@ module process_mod
 !     + + + END SPECIFICATIONS + + +
 
       ! calculate threshold (wusto) of bare, smooth surface with sf84ic for use in sbaglos edit 6-27-06 LH
-      b1 = -0.179 + 0.225*(log(1.5))**0.891  ! approx -0.078337
-      b2 = 0.3 + 0.06*0.5**1.2               ! approx  0.3261165
-      wusto = 1.7 - 1.35 * exp( -b1 - b2*( (1-sf84ic)*(1-asvroc) + asvroc )**2 )
+      b1 = -0.179 + 0.225*(log(1.5d0))**0.891d0  ! approx -0.078337
+      b2 = 0.3 + 0.06*0.5**1.2d0               ! approx  0.3261165
+      wusto = 1.7 - 1.35 * exp( -b1 - b2*( (1.0d0-sf84ic)*(1.0d0-asvroc) + asvroc )**2 )
 
       ! calc fraction bare surface that does not emit
       sfcv = fraction_area_noemit( sf84, sfcr, sflos, svroc )
@@ -316,10 +320,10 @@ module process_mod
       ! check for total cover.
       !  if (sfcv < 1.0) then
       !   calculate bare surface static threshold friction velocity
-      b1 = -0.179 + 0.225*(alog(1 + wzzo))**0.891
-      b2 = 0.3 + 0.06*wzzo**1.2
-      wubsts = 1.7 - 1.35*exp(-b1-b2*sfcv**2)
-      wusp   = 1.7 - 1.35*exp(-b1-b2*0.4**2)
+      b1 = -0.179 + 0.225*(log(1.0d0 + wzzo))**0.891d0
+      b2 = 0.3 + 0.06*wzzo**1.2d0
+      wubsts = 1.7 - 1.35*exp(-dble(b1)-b2*sfcv**2)
+      wusp   = 1.7 - 1.35*exp(-dble(b1)-b2*0.4d0**2)
       ! else
       !    wubsts = 1.85
       !    wusp   = 1.80
@@ -328,9 +332,9 @@ module process_mod
       ! edit 07-17-01
       ! calc change in threshold with flat cover
       if (bffcv .gt. 0) then
-         wucsts = (1 - exp(-1.2*bffcv))*(exp(-0.3*sfcv))
+         wucsts = (1.0 - exp(-1.2d0*bffcv))*(exp(-0.3d0*sfcv))
       else
-         wucsts = 0.
+         wucsts = 0.0
       endif
 
       ! calc change in threshold vel with wetness
@@ -349,7 +353,7 @@ module process_mod
           ! values of wet_rat > 1.307674238
           ! wucwts = 1.0 / (11.906541 - 10.41204 * wet_rat**0.5)
           !!!! this function is better behaved
-          wucwts = 0.58 * (exp(wet_rat) - 1.0 - 0.7*wet_rat*wet_rat)
+          wucwts = 0.58 * (exp(dble(wet_rat)) - 1.0 - 0.7d0*wet_rat*wet_rat)
       else
           wucwts = 0.
       endif
@@ -364,7 +368,7 @@ module process_mod
       !correct for ag density, (use constant sdagd=1.8, 5/28/03 LH)
       ! wucdts = -0.05275  !adjustment value if sdagd == 1.8
 
-      wucdts = 0.3*(sqrt(sdagd/2.65)-1.0)
+      wucdts = 0.3*(sqrt(sdagd/2.65d0)-1.0)
 
 
       ! calc final static threshold friction velocity
@@ -393,7 +397,7 @@ module process_mod
 
       real :: ratio ! silt/clay^2
       real :: cla   ! fraction clay with restricted range
-      real :: lnc   ! alog (cla)
+      real :: lnc   ! log (cla)
       real :: sfsil ! soil fraction silt
       real :: ppt   ! annual average precip restricted to 100-800 mm
 
@@ -416,9 +420,9 @@ module process_mod
       sf10en = 0.0067 + 0.0000487*ratio - 0.0000044*awzypt
 
       cla = min(0.42,max(0.017,sfcla))  !restrict clay range
-      lnc = alog(cla)
+      lnc = log(dble(cla))
       ppt = min(800.0,max(100.0,awzypt))    !restrict precip range
-      sf10bk = -0.201-(0.52+(0.422+(0.1395+0.0156*lnc)*lnc)*lnc)*lnc + 0.131*exp(-ppt/175.6)
+      sf10bk = -0.201-(0.52+(0.422+(0.1395+0.0156d0*lnc)*lnc)*lnc)*lnc + 0.131*exp(-ppt/175.6d0)
 
       ! Tatarko, J., Kucharski, M., Li, H., Li, H., 2020. PM2.5 and PM10 emissions by abrasion of
       ! agricultural soils. Soil Tillage Res. 200, 104601
@@ -443,7 +447,7 @@ module process_mod
       ! + + +  END SPECIFICATIONS + + +
 
       ! calc. abrasion coefficients
-      coef_abr = exp(-2.07-0.077*stability**2.5-0.119*alog(stability))
+      coef_abr = exp(-2.07 - 0.077*stability**2.5d0 - 0.119*log(dble(stability)))
 
     end function coef_abrasion
 
@@ -476,7 +480,7 @@ module process_mod
       ! edit LH 6-26-06
       ! calc. max mobile soil at wus = 0.75 m/s for bare, smooth surface
       ! sf84 is assumed = 0 after this mass removal.
-      smaglosmx = exp(2.708 - 7.603*((1-sf84ic)*(1-asvroc) + asvroc))
+      smaglosmx = exp(2.708 - 7.603*((1.0d0-sf84ic)*(1.0d0-asvroc) + asvroc))
 
       ! reduce max mobile soil for roughness, cover, etc.
       smaglos = smaglosmx * (wus - wust) / (0.75 - min(wusto,wust))
@@ -496,11 +500,11 @@ module process_mod
 
     end subroutine sbaglos
 
+    ! calc soil mass fraction (sfdi) < diameter (sldi)
+    ! given modified lognormal distribution parameters
     pure subroutine sbsfdi (slagm, s0ags, slagn, slagx, sldi, sfdi)
 
-!     +++ PURPOSE +++
-!     calc soil mass fraction (sfdi) < diameter (sldi)
-!     given modified lognormal distribution parameters
+      use erf_mod, only: erf1
 
 !     +++ ARGUMENT DECLARATIONS +++
       real, intent(in) :: slagm ! aggregate distribution geometric mean diameter (mm).
@@ -510,19 +514,12 @@ module process_mod
       real, intent(in) :: sldi  ! soil diameter in distribution (mm)
       real, intent(out) :: sfdi  ! soil mass fraction < sldi
 
-!     +++ LOCAL VARIABLES +++
       real slt
 
-!     +++ FUNCTIONS CALLED+++
-      real erf
-
-!     +++ END SPECIFICATIONS +++
-
-!     calc soil mass < sldi
-
       if (sldi .lt. slagx .and. sldi .gt. slagn) then
+        ! calc soil mass < sldi
         slt = ((sldi - slagn)*(slagx - slagn))/((slagx - sldi)*slagm)
-        sfdi = 0.5*(1 + erf(alog(slt)/(sqrt(2.0)*alog(s0ags))))
+        sfdi = 0.5*(1 + erf1(log(dble(slt))/(sqrt(2.0d0)*log(dble(s0ags)))))
       elseif (sldi .ge. slagx) then
         sfdi = 1.0
       else
@@ -543,14 +540,14 @@ module process_mod
       double precision :: sfrr12   ! sheltered soil fraction for random roughness
 
       sarrc = 2.3 * sqrt (slrr)
-      sfrr12 = exp(-(12.0/sarrc)**0.77)
+      sfrr12 = exp(-(12.0d0/sarrc)**0.77d0)
       if ((sxprg .gt. 10.0) .and. (szrgh .gt. 1.0)) then
-         sargc = 65.4*(szrgh/sxprg)**0.65
-         sfrg12 = exp(-(12.0/sargc)**0.77)
+         sargc = 65.4*(szrgh/sxprg)**0.65d0
+         sfrg12 = exp(-(12.0/sargc)**0.77d0)
       else
           sfrg12 = 0.0
       endif
-      sfa12 = (1.0 - sfrg12)*(sfrr12) + sfrg12
+      sfa12 = (1.0d0 - sfrg12)*(sfrr12) + sfrg12
 
     end function frac_area_sheltered
 
@@ -567,13 +564,13 @@ module process_mod
       if (smlos > 0) then
         ! coef. for cover of loose mass (same as SOIL eq. s-24,2-25)
         sz = max(szrgh, 4.0*slrr)
-        crlos = exp(-0.08*sz**0.5)
+        crlos = exp(-0.08d0*sz**0.5d0)
 
-        tmp = 3.5*smlos**1.5
+        tmp = 3.5*smlos**1.5d0
         if(tmp.gt.80.) then       !test and prevent underflow condition
           sflos = crlos
         else
-          sflos = (1.0 - exp(-tmp))*crlos
+          sflos = (1.0 - exp(dble(-tmp)))*crlos
         endif
       else
         sflos = 0
@@ -588,7 +585,7 @@ module process_mod
       real, intent(in) :: svroc        ! soil fraction rock >2.0 mm by volume
       real :: sfcv     ! soil fraction clod & crust cover
 
-      sfcv = ((1.-sfcr)*(1.-sf84) + sfcr - sflos*sfcr)*(1.-svroc) + svroc
+      sfcv = ((1.0d0-sfcr)*(1.0d0-sf84) + sfcr - sflos*sfcr)*(1.0d0-svroc) + svroc
 
     end function fraction_area_noemit
 
@@ -606,7 +603,7 @@ module process_mod
       ! fraction emission coef. reduction by flat biomass
       renv = 0.075 + 0.934*exp(-bffcv/0.149)
       ! edit 7-17-01  LH
-      renb = (-0.051 + 1.051*exp(-sfcv/0.33050512))*(1 - sfa12)
+      renb = (-0.051 + 1.051*exp(-sfcv/0.33050512d0))*(1.0d0 - sfa12)
       cen = ceno*renv*renb
       ! if (cen .lt. 0.0001) cen = 0.0
 
@@ -618,11 +615,11 @@ module process_mod
       real, intent(in) :: sfa12        ! soil fraction area with shelter angle > 12 deg.
       real :: qcap      ! transport capacity using threshold (kg/m*s)
 
-      real :: fracd    ! dynamic threshold adjustment - added per LH's suggestions
-      real, parameter :: cs = 0.3      ! saltation transport coef. (kg*s^2/m^4)
+      double precision :: fracd                 ! dynamic threshold adjustment - added per LH's suggestions
+      double precision, parameter :: cs = 0.3d0 ! saltation transport coef. (kg*s^2/m^4)
 
       ! calc. change to dynamic transport ! edit ljh 1-24-05
-      fracd = 0.05 * (1.0 - sfa12)
+      fracd = 0.05d0 * (1.0d0 - sfa12)
 
       ! calc. transport cap. for emission edit 5/30/01 LH
       qcap = cs * wus * wus * (wus - (wusthr - fracd))
@@ -686,7 +683,7 @@ module process_mod
       ! execute this section if crust present
       if (sfcr .gt. 0.01) then
         ! increase loss per unit area crust if non-emitting aggregate sfc.
-        if (dmtlos .lt. 0 .and. sf84 .le. sf84mn) then   !edit LH 2-28-05
+        if (dmtlos .lt. 0.0 .and. sf84 .le. sf84mn) then   !edit LH 2-28-05
            dmtlos = dmtlos*(1.0/sfcr)
         endif
 
@@ -717,8 +714,8 @@ module process_mod
           sfcr = max(0.0, sfcr)
         endif
       else
-        smlos = 0.
-        sflos = 0.
+        smlos = 0.0
+        sflos = 0.0
       endif
 
       ! execute this section if clods are present
@@ -743,7 +740,7 @@ module process_mod
 
         ! update rock cover based on dmt (soil loss(-) or gain(+))
         if (asvroc .gt. 0.0 .and. asvroc .lt. 1.0) then
-          svroc = svroc - 7.5*((1-svroc)/(1-asvroc)) * (dmt/(1200*(1.001-svroc)))
+          svroc = svroc - 7.5*((1.0-svroc)/(1.0-asvroc)) * (dmt/(1200*(1.001-svroc)))
           svroc = min( 1.0, max(svroc, 0.0) )
         endif
 

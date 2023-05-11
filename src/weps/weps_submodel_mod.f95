@@ -75,7 +75,6 @@ module weps_submodel_mod
       call decomp( isr, soil, plant, decompfac, hstate, h1et )
       call plantupdate( isr, soil, plant, croptot, restot, biotot )
 
-      return
     end subroutine submodels
 
     subroutine erodsubr_update( manFile, soil, plant, biotot, hstate, h1et, subrsurf )
@@ -217,6 +216,8 @@ module weps_submodel_mod
 
         subrsurf%bsl(idx)%ahrwcw = soil%ahrwcw(idx)
         subrsurf%bsl(idx)%ahrwca = soil%ahrwca(idx)
+
+        subrsurf%bsl(idx)%tsav = soil%tsav(idx)
 
       end do
 

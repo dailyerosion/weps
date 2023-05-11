@@ -165,6 +165,9 @@ contains
       do iseas = 1, barr%ntm
         barr%dst(iseas)%st_desc = 'fixed'
         barr%dst(iseas)%doy = 0
+        if( barr%seas_flg .eq. 2 ) then
+          barr%clim(iseas)%beg_accum = 0.0
+        end if
       end do
     end if 
   end subroutine create_barrier_seasonal
@@ -247,7 +250,6 @@ contains
 
         select case (barseas(bdx)%seas_flg)
         case (0)  ! do interpolation between all time points
-          ! set high time mark index and find interpolation fraction
           if( low_tm .lt. hi_tm ) then
             ! find fraction of distance in time between time marks
             frac_tm = (real(doy) - barseas(bdx)%dst(low_tm)%doy) &
@@ -293,6 +295,7 @@ contains
           end if
           ! find fraction of state transition
           frac_tm = state_transition( barseas(bdx)%clim(low_tm) )
+
           ! interpolate barrier params in time, copying into fixed barrier structure
           do pdx = 1, barseas(bdx)%np
             barrier(bdx)%param(pdx)%amzbr = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%amzbr, &
@@ -335,8 +338,8 @@ contains
 
       ! insert double blank lines to demarcate years
       if( doy .eq. 1 ) then
-          write (luo_barr,*)
-          write (luo_barr,*)
+          write (luo_barr,'(a)')
+          write (luo_barr,'(a)')
       end if
     
       max_ntm = 0
@@ -493,6 +496,8 @@ contains
       real :: zbr_interp  ! value of barrier height interpolated along barrier
       real :: pbr_interp  ! value of barrier porosity interpolated along barrier
       real :: xbrw_interp  ! value of barrier width interpolated along barrier
+      real, dimension(:), allocatable :: bar_tint ! temporary array for call to lin_interp
+      integer :: alloc_stat  ! return status of memory allocation, deallocation
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -512,6 +517,12 @@ contains
             ! find number of points in barrier for interpolations
             npt = size(barrier(n)%param)
 
+            allocate( bar_tint(npt), stat=alloc_stat )
+            if ( alloc_stat .gt. 0 ) then
+              write(*,*) 'Unable to allocate memory for Barrier interpolation'
+              call exit(1)
+            end if
+
             ! look for barrier up wind
             if( pl_intersect( pnt_grid, awa, barrier(n)%points, loc_intersect ) ) then
               ! intersection point found (it is minimum distance for this barrier)
@@ -519,12 +530,15 @@ contains
 
               ! barrier influence calculated down wind of barrier
               ! interpolate height along barrier segment
-              zbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%amzbr )
+              bar_tint = barrier(n)%param(1:npt)%amzbr
+              zbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, bar_tint )
               if (dist .le. 35*zbr_interp) then
                 ! distance is close enough for effect
                 ! interpolate parameters along barrier segment
-                xbrw_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%amxbrw )
-                pbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%ampbr )
+                bar_tint = barrier(n)%param(1:npt)%amxbrw
+                xbrw_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, bar_tint )
+                bar_tint = barrier(n)%param(1:npt)%ampbr
+                pbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, bar_tint )
 
                 ! find shelter effect
                 w0br_min = min(w0br_min, fu( dist, zbr_interp, xbrw_interp, pbr_interp ) )
@@ -538,17 +552,27 @@ contains
 
               ! barrier influence calculated down wind of barrier
               ! interpolate height along barrier segment
-              zbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%amzbr )
+              bar_tint = barrier(n)%param(1:npt)%amzbr
+              zbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, bar_tint )
               if (dist .lt. 5*zbr_interp) then
                 ! distance is close enough for effect
                 ! interpolate parameters along barrier segment
-                xbrw_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%amxbrw )
-                pbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%ampbr )
+                bar_tint = barrier(n)%param(1:npt)%amxbrw
+                xbrw_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, bar_tint )
+                bar_tint = barrier(n)%param(1:npt)%ampbr
+                pbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, bar_tint )
 
                 ! find shelter effect (on upwind side of barrier use negative distance for correct function value)
                 w0br_min = min(w0br_min, fu( -dist, zbr_interp, xbrw_interp, pbr_interp ) )
               end if
             end if
+
+            deallocate( bar_tint, stat=alloc_stat )
+            if ( alloc_stat .gt. 0 ) then
+              write(*,*) 'Unable to deallocate memory for Barrier interpolation'
+              call exit(1)
+            end if
+
           end do
 
           ! assign minimum value to grid cell

@@ -1160,7 +1160,7 @@ module sweep_io_mod
         write(luo1,202)
        ! write(luo1,*)((ycharin(i),i=1,yplot),(xcharin(i),i=1,xplot))
         write(luo1,*)  ycharin(1:yplot), xcharin(1:xplot)
-        write(luo1,*)
+        write(luo1,'(a)')
         close(UNIT=luo1)
       endif
 

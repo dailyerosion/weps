@@ -180,6 +180,8 @@ contains
   ! Compute the mass fractions in each sieve cut when given gmdx,gsdx,minf,mnot values
   SUBROUTINE asd2mf (gmdx, gsdx, mnot, minf, mfr, mfr_cum)
 
+    use erf_mod, only: erf1
+
     REAL, INTENT (IN) :: gmdx, gsdx
     REAL, INTENT (IN) :: mnot, minf
     REAL, INTENT (OUT):: mfr(*), mfr_cum(*)
@@ -222,7 +224,7 @@ contains
       IF (sdia(i) .le. mnot) THEN
         this = 1.0
       ELSE IF (sdia(i) .lt. minf) THEN
-        this = 0.5 -0.5*erf((log(trsdia(i)) - lngmdx) / lngsdx)
+        this = 0.5 -0.5*erf1((log(trsdia(i)) - lngmdx) / lngsdx)
       ELSE
         this = 0.0
       END IF

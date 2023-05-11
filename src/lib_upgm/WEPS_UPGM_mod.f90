@@ -1454,6 +1454,11 @@ module WEPS_UPGM_mod
           r_setter = cli_day(pjuld)%tdmx
           call plant%env%state%replace("tmax", r_setter, success)
         case ("WEPSwinterAnnSpring")
+          ! environmental variables
+          r_setter = daylen(amalat, jd-1, civilrise)
+          call plant%env%state%replace("hrlty", r_setter, success)
+          r_setter = daylen(amalat, jd, civilrise)
+          call plant%env%state%replace("hrlt", r_setter, success)
           ! plant database
           ! tverndel
 
@@ -1959,7 +1964,7 @@ module WEPS_UPGM_mod
         call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%get("stagegdd", stagegdd, success)
 
         success = .false.
-        write(*,*) 'Day of Year', jd, 'Degree Days: ', stagegdd, ' Phase Completed: ', &
+        write(*,'(a,1x,i0,2x,a,F7.1,2a)') 'Day of Year', jd, 'Degree Days: ', stagegdd, ' Phase Completed: ', &
                    trim(plant%upgm_grow%plant%phaseCurrent%ptr%phaseLabel)
 
         success = .false.
@@ -2555,10 +2560,10 @@ module WEPS_UPGM_mod
         if(plant%growth%am0cif) then
           if (am0cfl(isr) .ge. 1) then
             ! put double blank lines in daily files to create growth blocks
-            write(luocrop(isr),*)   ! crop.out
-            write(luocrop(isr),*)   ! crop.out
-            write(luoshoot(isr),*)   ! shoot.out
-            write(luoshoot(isr),*)   ! shoot.out
+            write(luocrop(isr),'(a)')   ! crop.out
+            write(luocrop(isr),'(a)')   ! crop.out
+            write(luoshoot(isr),'(a)')   ! shoot.out
+            write(luoshoot(isr),'(a)')   ! shoot.out
           end if
           ! turn off initialization flag
           plant%growth%am0cif = .false.
@@ -2607,7 +2612,7 @@ module WEPS_UPGM_mod
 
               if (am0cfl(isr) .ge. 1) then
                   ! single blank line to separate shoot growth periods
-                  write(luoshoot(isr),*)  ! shoot.out
+                  write(luoshoot(isr),'(a)')  ! shoot.out
               end if
               ! last day of shoot grow, set shoot_huiy so shoot grow stops after shoot grow phase is completed.
               shoot_huiy = 1.0_dp

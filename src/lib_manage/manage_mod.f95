@@ -693,7 +693,7 @@ module manage_mod
           print*, 'SR',sr,' Skip operation', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
       else
           if (report_info >= 1) then
-            print*, 'SR',sr,' Do operation  ', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
+            write(*,'(a,1x,i0,2x,a,1x,i0,2x,a)') 'SR',sr,'Do operation', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
           end if
       end if
 
@@ -2957,8 +2957,12 @@ module manage_mod
 !        call getManVal(manFile%proc, 'tbas', plant%database%tmin)           ! setup (days to maturity)
 !        call getManVal(manFile%proc, 'topt', plant%database%topt)           ! setup (days to maturity)
 !        call getManVal(manFile%proc, 'thudf', plant%database%thudf)         ! setup (days to maturity)
+        ! flag must be set for plant_setup
+        plant%database%thudf = 1                                            ! find days to maturity from heat units
 !        call getManVal(manFile%proc, 'dtm', plant%database%tdtm)            ! setup (days to maturity)
 !        call getManVal(manFile%proc, 'thum', plant%database%thum)           ! setup (days to maturity)
+        ! need Heat Units to maturity for plant_setup
+        plant%database%thum = 2000                                          ! temporary fix looking for solution
         call getManVal(manFile%proc, 'bceff', plant%database%bceff)         ! growth
         call getManVal(manFile%proc, 'ssaa', plant%database%ssa)            ! growth, report
         call getManVal(manFile%proc, 'ssab', plant%database%ssb)            ! growth, report
@@ -4690,8 +4694,6 @@ module manage_mod
       ! all management operations complete
       ! Check for new UPGM plants and set CurrentStage to initial stage
       call set_start_UPGM( sr, plant )
-
-      return
 
     end subroutine manage
 

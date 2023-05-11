@@ -104,12 +104,10 @@ MODULE calib_plant_mod
       INTEGER,intent(in) :: unit
       TYPE (calib_crop_type),intent(in) :: var
 
-      WRITE(unit,*)                                        &
-        var%idx, var%crop_name(1:len_trim(var%crop_name)), &
-        " plant(d/m/ry) ",                                 &
-        var%plant_day, var%plant_month, var%plant_rotyear, &
-        " harv(d/m/ry) ",                                  &
-        var%harv_day, var%harv_month, var%harv_rotyear,    &
+      WRITE(unit,"(1x,i0,1x,a,2(2x,a,1x,i0,a,i0,a,i0),2(F12.8))") &
+        var%idx, trim(var%crop_name), &
+        "plant(d/m/ry)", var%plant_day, '/', var%plant_month, '/', var%plant_rotyear, &
+        "harv(d/m/ry)", var%harv_day, '/', var%harv_month, '/', var%harv_rotyear,    &
         var%bio_adj_val, var%target_yield
       RETURN
     END SUBROUTINE print_calib_crop
@@ -176,13 +174,13 @@ MODULE calib_plant_mod
              CLink = LI_Get_Head(Calib_Crop_List)
              DO WHILE (LI_Associated(CLink))
                 Calib_Crop = TRANSFER(CLink, Calib_Crop)
-                WRITE (6,fmt='(a4,i3)',ADVANCE='no') " idx", Calib_Crop%CP%CData%Index
+                WRITE (6,fmt='(a,1x,i0)',ADVANCE='no') "Calib Crop", Calib_Crop%CP%CData%Index
                 CALL print_calib_crop(6,Calib_Crop%CP%CData%calib_crop_info)
                 CLink = LI_Get_Next(CLink)
              END DO
 
              got_all_calib_crops = .TRUE.  ! Set flag to signify that we have found all crops requiring calibration
-             print *, "Got all calibration crops identified (flag,cnt)", got_all_calib_crops, calib_crop_cnt
+             write(*,"(a,1x,L1,1x,i0)") "All calibration crops identified (flag,cnt)", got_all_calib_crops, calib_crop_cnt
              RETURN
        END IF
        CLink = LI_Get_Next(CLink)
@@ -207,7 +205,7 @@ MODULE calib_plant_mod
 
     ! CALL print_calib_crop(6,Calib_Crop%CP%CData%calib_crop_info)
 
-    print *, "Found another crop to calibrate, total so far is: ", calib_crop_cnt
+    write(*,"(a,1x,i0)") "Found another crop to calibrate, total so far is:", calib_crop_cnt
 
     RETURN
   END SUBROUTINE get_calib_crops
@@ -277,7 +275,7 @@ MODULE calib_plant_mod
 
     no_get_calib_yield_call = no_get_calib_yield_call + 1
 
-    print *, "(get_calib_yield) no_get_calib_yield_call, calib_crop_cnt: ", &
+    write(*,"(a,2(1x,i0))") "(get_calib_yield) no_get_calib_yield_call, calib_crop_cnt: ", &
              no_get_calib_yield_call, calib_crop_cnt
 
     IF (no_get_calib_yield_call == 1) THEN
@@ -285,11 +283,12 @@ MODULE calib_plant_mod
 
         ! Doing a check here for info purposes
         IF (got_all_calib_crops) THEN
-           print *, "All crops identified for calibration in first get_calib_yield call (flag,cnt): ", &
+           write(*,"(a,1x,L1,1x,i0)") "All crops identified for calibration in first get_calib_yield call (flag,cnt): ", &
                     got_all_calib_crops, calib_crop_cnt
         ELSE
-           print *, "Don't yet have all crops identified for calibration in first get_calib_yield call (flag,cnt): ", &
-                    got_all_calib_crops, calib_crop_cnt
+           write(*,"(a,1x,L1,1x,i0)") &
+                   "Don't yet have all crops identified for calibration in first get_calib_yield call (flag,cnt): ", &
+                   got_all_calib_crops, calib_crop_cnt
         END IF
     END IF
 
@@ -301,10 +300,11 @@ MODULE calib_plant_mod
 !   ELSE
 
     IF ( (no_get_calib_yield_call >= 1) .and. (.not. got_all_calib_crops) ) THEN 
-           print *, "Don't yet have all crops identified for calibration yet: ", &
-                     "got_all_calib_crops flag", got_all_calib_crops,            &
-                     "# crops", calib_crop_cnt, "rot #", rotation_no,            &
-                     "# get_calib_yield calls", no_get_calib_yield_call
+           write(*,"(a,1x,L1,1x,a,1x,L1,3(2x,a,1x,i0))") &
+                   "Don't yet have all crops identified for calibration yet:", &
+                   "got_all_calib_crops flag", got_all_calib_crops,            &
+                   "# crops", calib_crop_cnt, "rot #", rotation_no,            &
+                   "# get_calib_yield calls", no_get_calib_yield_call
     END IF
 
 !       IF (.not. got_all_calib_crops) THEN 
@@ -521,23 +521,23 @@ MODULE calib_plant_mod
        END DO
        est_adj(c_no,calib_cycle(sr)) = est_adj(c_no,calib_cycle(sr))/n
        est_yield(c_no,calib_cycle(sr)) = est_yield(c_no,calib_cycle(sr))/n
-       PRINT *, "estimated adj and yield", est_adj(c_no,calib_cycle(sr)),est_yield(c_no,calib_cycle(sr))
+       write(*,"(a,2(F12.8))") "estimated adj and yield", est_adj(c_no,calib_cycle(sr)),est_yield(c_no,calib_cycle(sr))
 
        ! Quit playing around if we are within tolerance
        IF (abs(est_yield(c_no,calib_cycle(sr)) - t_yld) <= (t_yld * 0.05)) THEN
           new_adj(c_no) = est_adj(c_no,calib_cycle(sr))
-          print *, "Done calibrating Crop no: ", c_no
+          write(*,"(a,1x,i0)") "Done calibrating Crop no:", c_no
           crop_calib_done(c_no) = .TRUE.
           ! Check to see if all crops have been calibrated yet.  If so, set global "calib_done" flag
           calib_done = .TRUE.
           DO i = 1, calib_crop_cnt
-             print *, "calib done flags (i,calib_crop_cnt,crop_calib_done(i),calib_done): ", &
+             write(*,"(a,2(1x,i0),2(1x,L1))") "calib done flags (i,calib_crop_cnt,crop_calib_done(i),calib_done): ", &
                       i, calib_crop_cnt, crop_calib_done(i), calib_done
              IF (.not. crop_calib_done(i)) THEN
                  calib_done = .FALSE.
              END IF
           END DO
-          IF (calib_done(sr)) write(6,*) "Done calibrating all crops!"
+          IF (calib_done(sr)) write(6,"(a)") "Done calibrating all crops!"
           RETURN 
        END IF
 
@@ -546,12 +546,14 @@ MODULE calib_plant_mod
        IF (calib_cycle(sr) < 2) THEN
           IF ( (est_yield(c_no,calib_cycle(sr)) < t_yld) ) THEN
              new_adj(c_no) = est_adj(c_no,calib_cycle(sr)) * FACTOR      ! Initial guess for 2nd calibration cycle run
-             print *, "Cycle 1: Crop no: ",c_no,"Est. Yield ", est_yield(c_no,calib_cycle(sr)), &
-                      "is low (",t_yld,"), reset acbaf from: ", plant%database%baf,"to: ", new_adj(c_no)
+             write(*,"(a,1x,i0,2x,a,F12.8,2x,a,F12.8,a,F12.8,2x,a,F12.8)") &
+                     "Cycle 1: Crop no: ",c_no,"Est. Yield ", est_yield(c_no,calib_cycle(sr)), &
+                     "is low (",t_yld,"), reset acbaf from: ", plant%database%baf,"to: ", new_adj(c_no)
           ELSE
              new_adj(c_no) = est_adj(c_no,calib_cycle(sr)) / FACTOR      ! Initial guess for 2nd calibration cycle run
-             print *, "Cycle 1: Crop no: ",c_no,"Est. Yield ", est_yield(c_no,calib_cycle(sr)), &
-                      "is high (",t_yld,"), reset acbaf from: ", plant%database%baf,"to: ", new_adj(c_no)
+             write(*,"(a,1x,i0,2x,a,F12.8,2x,a,F12.8,a,F12.8,2x,a,F12.8)") &
+                     "Cycle 1: Crop no: ",c_no,"Est. Yield ", est_yield(c_no,calib_cycle(sr)), &
+                     "is high (",t_yld,"), reset acbaf from: ", plant%database%baf,"to: ", new_adj(c_no)
           END IF
 
        ELSE IF (.not. yield_bracketed(c_no)) THEN
@@ -568,7 +570,8 @@ MODULE calib_plant_mod
                ( (est_yield(c_no,calib_cycle(sr)-1) < t_yld) .and. (est_yield(c_no,calib_cycle(sr)) > t_yld) ) ) THEN
              yield_bracketed(c_no) = .TRUE.
              first_bisection(c_no) = .TRUE.
-             print *, "Cycle ", calib_cycle(sr),": Crop no: ", c_no, ": Yield has now been bracketed!", &
+             write(*,"(a,1x,i0,2x,a,1x,i0,2x,a,1x,a,3F12.8,a)") &
+                     "Cycle ", calib_cycle(sr),"Crop no: ", c_no, "Yield has now been bracketed!", &
                       "[",est_yield(c_no,calib_cycle(sr)), t_yld, est_yield(c_no,calib_cycle(sr)-1),"]" 
 
           ELSE IF ( (est_yield(c_no,calib_cycle(sr)) < t_yld) .and. (est_yield(c_no,calib_cycle(sr)-1) < t_yld) ) THEN
@@ -611,11 +614,11 @@ MODULE calib_plant_mod
           !"yield_bracketed(c_no)" flag back to false and do whatever is required to re-bracket
           !the yield again for this crop.
 
-          print *, "Cycle ", calib_cycle(sr),": Yield has previously been bracketed (checking to ensure it still is)"
+          write(*,"(a,1x,i0,2x,a)") "Cycle", calib_cycle(sr),"Yield has previously been bracketed (checking to ensure it still is)"
 
           IF (abs(est_yield(c_no,calib_cycle(sr)) - t_yld) <= (t_yld * 0.05)) THEN
              crop_calib_done(c_no) = .TRUE.
-             print *, "Already or still 'calibrated'!"
+             write(*,"(a)") "Already or still 'calibrated'!"
              goto 90 !already_calibrated
           ELSE
              crop_calib_done(c_no) = .FALSE.
@@ -682,17 +685,17 @@ MODULE calib_plant_mod
        END IF
        
        IF (yield_bracketed(c_no)) THEN
-           print *, "In bracketing code"
+           write(*,"(a)") "In bracketing code"
            IF (first_bisection(c_no)) THEN
-             print *, "In first_bisection"
+             write(*,"(a)") "In first_bisection"
              IF (est_yield(c_no,calib_cycle(sr)) < t_yld) THEN
-                 print *, "Case A"
+                 write(*,"(a)") "Case A"
                  bracket_adj(c_no)%low_ptr => est_adj(c_no,calib_cycle(sr))
                  bracket_adj(c_no)%high_ptr => est_adj(c_no,calib_cycle(sr)-1)
                  bracket_yield(c_no)%low_ptr => est_yield(c_no,calib_cycle(sr))
                  bracket_yield(c_no)%high_ptr => est_yield(c_no,calib_cycle(sr)-1)
              ELSE
-                 print *, "Case B"
+                 write(*,"(a)") "Case B"
                  bracket_adj(c_no)%high_ptr => est_adj(c_no,calib_cycle(sr))
                  bracket_adj(c_no)%low_ptr => est_adj(c_no,calib_cycle(sr)-1)
                  bracket_yield(c_no)%high_ptr => est_yield(c_no,calib_cycle(sr))
@@ -700,21 +703,21 @@ MODULE calib_plant_mod
              END IF
              first_bisection(c_no) = .FALSE.
            ELSE
-             print *, "Not in first_bisection"
+             write(*,"(a)") "Not in first_bisection"
                 ! Check to see if 
              IF (est_yield(c_no,calib_cycle(sr)) < t_yld) THEN !(est_yield(c_no,calib_cycle(sr)) > bracket(c_no)%low_ptr)
-                 print *, "Case C"
+                 write(*,"(a)") "Case C"
                  bracket_adj(c_no)%low_ptr => est_adj(c_no,calib_cycle(sr))
                  bracket_yield(c_no)%low_ptr => est_yield(c_no,calib_cycle(sr))
              ELSE IF (est_yield(c_no,calib_cycle(sr)) > t_yld) THEN !(est_yield(c_no,calib_cycle(sr)) < bracket(c_no)%high_ptr) 
-                 print *, "Case D"
+                 write(*,"(a)") "Case D"
                  bracket_adj(c_no)%high_ptr => est_adj(c_no,calib_cycle(sr))
                  bracket_yield(c_no)%high_ptr => est_yield(c_no,calib_cycle(sr))
              END IF
            END IF
            dx = bracket_adj(c_no)%high_ptr - bracket_adj(c_no)%low_ptr 
            new_adj(c_no) = bracket_adj(c_no)%low_ptr + (dx * 0.5)
-           print *, "High, Low, New: ", bracket_adj(c_no)%high_ptr, &
+           write(*,"(a,3(F12.8))") "High, Low, New:", bracket_adj(c_no)%high_ptr, &
                     bracket_adj(c_no)%low_ptr, new_adj(c_no)
        END IF      
 
@@ -766,8 +769,9 @@ MODULE calib_plant_mod
              IF (.not. ALLOCATED (first_full_cycle)) RETURN  ! Obviously can't be done with cycle 1 yet
              IF (.not. first_full_cycle(c_no)) RETURN 
 
-             print *, "Found calibration crop to adjust at planting time"
-             print *, "Setting crop no: ",c_no,"bio_adj value from: ",plant%database%baf,"to: ",new_adj(c_no)
+             write(*,"(a)") "Found calibration crop to adjust at planting time"
+             write(*,"(a,1x,i0,2x,a,F12.8,2x,a,F12.8)") &
+                     "Setting crop no: ",c_no,"bio_adj value from:",plant%database%baf,"to:",new_adj(c_no)
              plant%database%baf = new_adj(c_no)
              RETURN
        END IF

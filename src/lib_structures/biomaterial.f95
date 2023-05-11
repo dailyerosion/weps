@@ -1079,28 +1079,28 @@ contains
      ! print mass values
      totburied = 0.0
      if ( associated(residuePntr) ) then
-       write(*,*) 'Residue stand: ', residuePntr%standstem, residuePntr%standleaf, residuePntr%standstore
+       write(*,"(a,1x,30(ES18.10))") 'Residue stand: ', residuePntr%standstem, residuePntr%standleaf, residuePntr%standstore
        totstand = residuePntr%standstem + residuePntr%standleaf + residuePntr%standstore
 
-       write(*,*) 'Residue  flat: ', residuePntr%flatstem, residuePntr%flatleaf, residuePntr%flatstore, &
-                                   residuePntr%flatrootstore, residuePntr%flatrootfiber
+       write(*,"(a,1x,30(ES18.10))") 'Residue  flat: ', residuePntr%flatstem, residuePntr%flatleaf, residuePntr%flatstore, &
+                                  residuePntr%flatrootstore, residuePntr%flatrootfiber
        totflat = residuePntr%flatstem + residuePntr%flatleaf + residuePntr%flatstore &
                + residuePntr%flatrootstore + residuePntr%flatrootfiber
 
        do idx = 1, nsoillay
          layersum = residuePntr%stemz(idx) + residuePntr%leafz(idx) + residuePntr%storez(idx) &
-                           + residuePntr%rootstorez(idx) + residuePntr%rootfiberz(idx)
-         write(*,*) 'RESID BY LAY: ', idx, residuePntr%stemz(idx), residuePntr%leafz(idx), residuePntr%storez(idx), &
-                                           residuePntr%rootstorez(idx), residuePntr%rootfiberz(idx), layersum
+                  + residuePntr%rootstorez(idx) + residuePntr%rootfiberz(idx)
+         write(*,"(a,1x,30(ES18.10))") 'RESID BY LAY: ', idx, residuePntr%stemz(idx), residuePntr%leafz(idx), &
+                                      residuePntr%storez(idx), residuePntr%rootstorez(idx), residuePntr%rootfiberz(idx), layersum
          totburied = totburied + layersum
 
        end do
 
        totmass = totstand + totflat + totburied
-       write(*,*) 'RESID TOTALS: ', totmass, totstand, totflat, totburied, residuePntr%deriv%m, residuePntr%zht
+       write(*,"(a,1x,30(ES18.10))") 'RESID TOTALS: ', totmass, totstand, totflat, totburied, residuePntr%deriv%m, residuePntr%zht
 
      else
-       write(*,*) 'No Residue'
+       write(*,"(a)") 'No Residue'
      end if
         
   end subroutine residuePrint

@@ -959,6 +959,7 @@ module mproc_soil_mod
     subroutine crush (alpha, beta,nlay,mf)
 
       use asd_mod, only: msieve, nsieve, mdia
+      use binomial_mod, only: bino
 
 !     + + + PURPOSE + + +
 !     This subroutine  performs the crushing or breaking down of
@@ -988,20 +989,14 @@ module mproc_soil_mod
 !
 !     mdia   - array containing geometric mean diameters of sieve cuts
 !     nsieve - number of sieves used
-!
-!     + + + PARAMETERS + + +
-!
-!     + + + LOCAL VARIABLES + + +
-!
+
       real     pmat(msieve+1,msieve+1)
       real     dratio
       real     prob
       real     chk
       integer  i, j, k, m
       real     predmf(msieve+1)
-!
-!     + + + LOCAL VARIABLE DEFINITIONS + + +
-!     
+
 !     pmat   - probability matrix
 !     dratio - ratio of sieve cut d to maximum sieve cut d
 !     prob   - probability value
@@ -1011,18 +1006,13 @@ module mproc_soil_mod
 !     k      - loop variable for sieve cut probabilities
 !     predmf - local array to hold predicted mass fractions
 !              before updating mf
-!
-!     + + + FUNCTIONS CALLED + + +
-      real     bino
-
-!     + + + END SPECIFICATIONS + + +
 
 !     for each soil layer
       do 500 j=1,nlay
 !         compute transition matrix
           do 100 i=1,nsieve+1
               dratio = mdia(i)/mdia(nsieve+1)
-              prob = 1.0 - exp(-alpha+dratio*beta)
+              prob = 1.0d0 - exp(-dble(alpha)+dratio*dble(beta))
               chk = 0.0
               do 50 k=1,i
                   pmat(i,k) = bino(i-1,k-1,prob)

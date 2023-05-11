@@ -52,6 +52,8 @@ module WEPSwinterAnnSpring_mod
       real(dp) :: bctverndel ! thermal delay coefficient pre-vernalization
 
       ! environment
+      real(dp) :: hrlty  ! length of day (hours) yesterday
+      real(dp) :: hrlt   ! length of day (hours) today
 
       ! plant state
       real(dp) :: bczgrowpt ! depth in the soil of the growing point (m)
@@ -77,8 +79,16 @@ module WEPSwinterAnnSpring_mod
       spring_flg = -1
       do_spring = .false.
       if( can_regrow ) then
-        ! check winter annuals for completion of vernalization,
-        ! warming and spring day length 
+
+        ! environment variables
+        call env%state%get("hrlty", hrlty, succ)
+        if( .not. check_return( trim(self%processName) , "hrlty", succ ) ) return
+        call env%state%get("hrlt", hrlt, succ)
+        if( .not. check_return( trim(self%processName) , "hrlt", succ ) ) return
+
+        ! check winter annuals for spring season, completion of vernalization, warming
+        if( (hrlty .lt. hrlt) .and. (hrlt .gt. 12.0) ) then
+          ! day length increasing and daylength greater than 12 hours (past spring equinox)
 
         ! plant state
         call plnt%state%get("zgrowpt", bczgrowpt, succ)
@@ -92,45 +102,46 @@ module WEPSwinterAnnSpring_mod
           call plnt%state%get("chill_unit_cum", bctchillucum, succ)
           if( .not. check_return( trim(self%processName) , "chill_unit_cum", succ ) ) return
 
-          if( bctchillucum .ge. chilluv ) then
-            spring_flg = 2
+            if( bctchillucum .ge. chilluv ) then
+              spring_flg = 2
 
-            ! plant database
-            call plnt%pars%get("tverndel", bctverndel, succ)
-            if( .not. check_return( trim(self%processName) , "tverndel", succ ) ) return
-
-            ! plant state
-            call plnt%state%get("warmdays", bctwarmdays, succ)
-            if( .not. check_return( trim(self%processName) , "warmdays", succ ) ) return
-
-            if( bctwarmdays .ge. shoot_delay*bctverndel/verndelmax) then
-              spring_flg = 3
+              ! plant database
+              call plnt%pars%get("tverndel", bctverndel, succ)
+              if( .not. check_return( trim(self%processName) , "tverndel", succ ) ) return
 
               ! plant state
-              call plnt%state%get("harden_index", bcthardnx, succ)
-              if( .not. check_return( trim(self%processName) , "harden_index", succ ) ) return
+              call plnt%state%get("warmdays", bctwarmdays, succ)
+              if( .not. check_return( trim(self%processName) , "warmdays", succ ) ) return
 
-              !if( huiy .gt. spring_trig ) then
-              !if( bcthardnx .le. 0.0 ) then
-              if( bcthardnx .lt. hard_spring ) then
-                spring_flg = 4
+              if( bctwarmdays .ge. shoot_delay*bctverndel/verndelmax) then
+                spring_flg = 3
 
                 ! plant state
-                call plnt%state%get("dayspring", dayspring, succ)
-                if( .not. check_return( trim(self%processName) , "dayspring", succ ) ) return
+                call plnt%state%get("harden_index", bcthardnx, succ)
+                if( .not. check_return( trim(self%processName) , "harden_index", succ ) ) return
 
-                ! vernalized and ready to grow in spring
-                if( dayspring .eq. 0 ) then
-                  ! value is not set, so set it
-                  call env%state%get("day_of_year", dayspring, succ)
-                  if( .not. check_return( trim(self%processName) , "day_of_year", succ ) ) return
-                  ! should only be triggered once
-                  do_spring = .true.
+                !if( huiy .gt. spring_trig ) then
+                !if( bcthardnx .le. 0.0 ) then
+                if( bcthardnx .lt. hard_spring ) then
+                  spring_flg = 4
 
-                  ! update plant state values
-                  call plnt%state%replace("dayspring", dayspring, succ)
+                  ! plant state
+                  call plnt%state%get("dayspring", dayspring, succ)
                   if( .not. check_return( trim(self%processName) , "dayspring", succ ) ) return
 
+                  ! vernalized and ready to grow in spring
+                  if( dayspring .eq. 0 ) then
+                    ! value is not set, so set it
+                    call env%state%get("day_of_year", dayspring, succ)
+                    if( .not. check_return( trim(self%processName) , "day_of_year", succ ) ) return
+                    ! should only be triggered once
+                    do_spring = .true.
+
+                    ! update plant state values
+                    call plnt%state%replace("dayspring", dayspring, succ)
+                    if( .not. check_return( trim(self%processName) , "dayspring", succ ) ) return
+
+                  end if
                 end if
               end if
             end if

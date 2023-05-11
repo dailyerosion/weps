@@ -280,7 +280,7 @@ module crop_mod
               .and. (thisPlant%database%fstem2stor .le. 0.0) &
               .and. (thisPlant%database%fstor2stor .le. 0.0) ) then
              if (report_info >= 1) then
-                write(UNIT=6,FMT="(1x,3(a),i0,'/',i0,'/',i0,a,f5.1,a,a)") &
+                write(UNIT=6,FMT="(3(a),i0,'/',i0,'/',i0,a,f5.1,a,a)") &
                  'Warning: ', &
                  thisPlant%bname(1:len_trim(thisPlant%bname)), &
                  ' harvested ', &

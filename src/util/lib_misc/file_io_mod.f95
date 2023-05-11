@@ -10,8 +10,6 @@ module file_io_mod
     integer :: luicli          ! reading cligen input
     integer :: luiwin          ! reading windgen input
 
-    integer :: luolog          ! write logfil.txt for cmdline and inprun
-
     integer :: luo_egrd        ! For daily erosion grid
     integer :: luo_erod        ! For daily erosion summary
     integer :: luo_emit        ! For subdaily erosion summary

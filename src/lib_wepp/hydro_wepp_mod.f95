@@ -7,7 +7,7 @@ module hydro_wepp_mod
 
   contains
 
-    subroutine waterbal(layrsn, thetas, thetes, thetaf, thetaw,       &
+    subroutine waterbal( layrsn, thetas, thetes, thetaf, thetaw, &
      &                   bszlyt, bszlyd, satcond,                       &
      &                   dprecip, bwdurpt, bwpeaktpt, bwpeakipt,        &
      &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
@@ -302,7 +302,7 @@ module hydro_wepp_mod
           ! field capacity for current layer (m)
           fc(idx) = (thetaf(idx) - thetaw(idx)) * layth(idx)
           ! Used in PERC to adjust sat. hyd. cond. on non-saturated soils.
-          hk(idx) = -2.655 / alog10(fc(idx) / ul(idx))
+          hk(idx) = -2.655d0 / log10( dble(fc(idx)) / dble(ul(idx)) )
           ! check for increase above saturation from settling outside hydro
           if( st(idx) .gt. ul(idx) ) then
                ! accumulate the excess water to be inserted lower in soil
@@ -453,9 +453,9 @@ module hydro_wepp_mod
 !          end if
 
           ! call infiltration
-          call grna( ninf, depsto, train, rrain, rr, ks, sm,            &
-     &         ns, tf, rcum, f, ff, re, recum, tp,                      &
-     &         rprint, ddepsto, runoff, durexr, effint, effdrr, it )
+          call grna( ninf, depsto, train, rrain, rr, ks, sm, &
+               ns, tf, rcum, f, ff, re, recum, tp, &
+               rprint, ddepsto, runoff, durexr, effint, effdrr, it )
 
 !      write(*,*) 'it', it
 !      if( it .gt. 60 ) then
@@ -723,7 +723,7 @@ module hydro_wepp_mod
 
       ! find actual evaporation amount
       potenevap = bhzep * mmtom
-      if( (tottew - totwfevp + potenevap) .le. totrew ) then
+     if( (tottew - totwfevp + potenevap) .le. totrew ) then
           ! all evaporative demand satisfied by Readily Available Water
           evap = potenevap
       else if( (tottew - totwfevp) .le. totrew ) then
@@ -1027,7 +1027,7 @@ module hydro_wepp_mod
       real, intent(in) :: avsatin, rescov, cancov, canhgt
       real, intent(in) :: rrc, dsnow, prcp, rkecum
       integer, intent(in) :: bcdayap
-      real, intent(inout) :: ks, sm
+      real, intent(out) :: ks, sm
       real, intent(in) :: frzw(*),frdp
 
 !     temporary declarations
@@ -1218,10 +1218,11 @@ module hydro_wepp_mod
       tmpvr3 = avsand ** 2
       tmpvr4 = avpor ** 2
 
-      sf = 0.01 * exp( 6.531 - 7.33*avpor + 15.8*tmpvr2 + 3.81*tmpvr4   &
-     &   + avsand * (3.4*avclay - 4.98*avpor)                           &
-     &   + tmpvr4 * (16.1*tmpvr3 + 16.0*tmpvr2) - 14.0*tmpvr3*avclay    &
-     &   - avpor * (34.8*tmpvr2 + 8.0*tmpvr3) )
+      sf = 0.01 * exp( 6.531d0 - 7.33d0*avpor + 15.8d0*tmpvr2 + 3.81d0*tmpvr4 &
+         + avsand * (3.4d0*avclay - 4.98d0*avpor) &
+         + tmpvr4 * (16.1d0*tmpvr3 + 16.0d0*tmpvr2) - 14.0d0*tmpvr3*avclay &
+         - avpor * (34.8d0*tmpvr2 + 8.0d0*tmpvr3) )
+
       if (sf.gt.0.5) sf = 0.5
 
 !     *** L0 IF ***
@@ -1253,7 +1254,7 @@ module hydro_wepp_mod
 !       cf = 1.0 + cancov
 
 ! ------ macroporosity adjustment factor for sat. hydraulic conductivity
-        a = exp(6.10-(10.3*avsand)-(3.7*avclay))
+        a = exp(6.10d0 - (10.3d0*avsand) - (3.7d0*avclay))
         if (a.lt.1.0) a = 1.0
         if (a.gt.10.0) a = 10.0
 
@@ -1329,7 +1330,7 @@ module hydro_wepp_mod
         bbbb = -cke * rkecum * (1-rra/0.04)
         if (bbbb.lt.-25.0) bbbb = -25.0
 !       Calculate crusting/tillage adjustment
-        crstad = crust + (1-crust) * exp(bbbb)
+        crstad = crust + (1-crust) * exp(dble(bbbb))
       else
         crstad = 1.0
       end if
@@ -1350,7 +1351,7 @@ module hydro_wepp_mod
         scovef = rescov
       else
         ! Adjust the effectiveness of canopy cover by canopy height
-        ccovef = cancov * exp(-0.3358*canhgt/2.0)
+        ccovef = cancov * exp(-0.3358d0*canhgt/2.0d0)
 
         ! Calculate the total effective surface cover
         scovef = ccovef + rescov - ccovef * rescov

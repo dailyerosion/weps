@@ -230,44 +230,44 @@ module hydro_util_mod
 
           ! Brooks-Corey air entry potential
           ! original expression is in cm, multiply by 0.01 to get meters
-          airentry = - 0.01 * exp( 5.3396738 &
-              + 0.1845038  * per_clay &
-              - 2.48394546 * adj_por &
-              - 0.00213853 * per_clay * per_clay &
-              - 0.04356349 * per_sand * adj_por &
-              - 0.61745089 * per_clay * adj_por &
-              + 0.00143598 * per_sand * per_sand * adj_por * adj_por &
-              - 0.00855375 * per_clay * per_clay * adj_por * adj_por &
-              - 0.00001282 * per_sand * per_sand * per_clay &
-              + 0.00895359 * per_clay * per_clay * adj_por &
-              - 0.00072472 * per_sand * per_sand * adj_por &
-              + 0.00000540 * per_clay * per_clay * per_sand &
-              + 0.50028060 * adj_por * adj_por * per_clay)
+          airentry = - 0.01 * exp( 5.3396738d0 &
+              + 0.1845038d0  * per_clay &
+              - 2.48394546d0 * adj_por &
+              - 0.00213853d0 * per_clay * per_clay &
+              - 0.04356349d0 * per_sand * adj_por &
+              - 0.61745089d0 * per_clay * adj_por &
+              + 0.00143598d0 * per_sand * per_sand * adj_por * adj_por &
+              - 0.00855375d0 * per_clay * per_clay * adj_por * adj_por &
+              - 0.00001282d0 * per_sand * per_sand * per_clay &
+              + 0.00895359d0 * per_clay * per_clay * adj_por &
+              - 0.00072472d0 * per_sand * per_sand * adj_por &
+              + 0.00000540d0 * per_clay * per_clay * per_sand &
+              + 0.50028060d0 * adj_por * adj_por * per_clay)
 
           ! Brooks-Corey pore size interaction paramter
-          lambda = exp( -0.7842831 &
-              + 0.0177544  * per_sand &
-              - 1.062498   * adj_por &
-              - 0.00005304 * per_sand * per_sand &
-              - 0.00273493 * per_clay * per_clay &
-              + 1.11134946 * adj_por * adj_por &
-              - 0.03088295 * per_sand * adj_por &
-              + 0.00026587 * per_sand * per_sand * adj_por * adj_por &
-              - 0.00610522 * per_clay * per_clay * adj_por * adj_por &
-              - 0.00000235 * per_sand * per_sand * per_clay &
-              + 0.00798746 * per_clay * per_clay * adj_por &
-              - 0.00674491 * adj_por * adj_por * per_clay)
+          lambda = exp( -0.7842831d0 &
+              + 0.0177544d0  * per_sand &
+              - 1.062498d0   * adj_por &
+              - 0.00005304d0 * per_sand * per_sand &
+              - 0.00273493d0 * per_clay * per_clay &
+              + 1.11134946d0 * adj_por * adj_por &
+              - 0.03088295d0 * per_sand * adj_por &
+              + 0.00026587d0 * per_sand * per_sand * adj_por * adj_por &
+              - 0.00610522d0 * per_clay * per_clay * adj_por * adj_por &
+              - 0.00000235d0 * per_sand * per_sand * per_clay &
+              + 0.00798746d0 * per_clay * per_clay * adj_por &
+              - 0.00674491d0 * adj_por * adj_por * per_clay)
 
       !      thetar = (0.2+ 0.1*per_om + 0.25*per_clay*cec_rat**0.45) &
       ! &        * bsdblk(lay) / 100.0
 
-          thetar = -0.0182482 + 0.00087269 * per_sand &
-              + 0.00513488 * per_clay + 0.02939286 * adj_por &
-              - 0.00015395 * per_clay * per_clay &
-              - 0.0010827 * per_sand * adj_por &
-              - 0.00018233 * per_clay * per_clay * adj_por * adj_por &
-              + 0.00030703 * per_clay * per_clay * adj_por &
-              - 0.0023584 * adj_por * adj_por * per_clay
+          thetar = -0.0182482d0 + 0.00087269d0 * per_sand &
+              + 0.00513488d0 * per_clay + 0.02939286d0 * adj_por &
+              - 0.00015395d0 * per_clay * per_clay &
+              - 0.0010827d0 * per_sand * adj_por &
+              - 0.00018233d0 * per_clay * per_clay * adj_por * adj_por &
+              + 0.00030703d0 * per_clay * per_clay * adj_por &
+              - 0.0023584d0 * adj_por * adj_por * per_clay
 
           thetas = adj_por                          ! saturation
 
@@ -301,7 +301,7 @@ module hydro_util_mod
           eff_por = adj_por - thetaf
 
           ! result is in mm/hour
-          k_sat = 1930.0 * eff_por ** (3.0 - lambda)
+          k_sat = 1930.0d0 * eff_por ** (3.0d0 - lambda)
 
           ! update values for global variables
           bhrwcs(lay) = thetas / bsdblk(lay)        ! saturation
@@ -406,23 +406,23 @@ module hydro_util_mod
       real :: netrad
 
       real :: albt  ! composite albedo value (snow, plant, soil)
-      real :: tmink ! temperatures converted from degrees C to degrees K
-      real :: tmaxk ! temperatures converted from degrees C to degrees K
+      double precision :: tmink ! temperatures converted from degrees C to degrees K
+      double precision :: tmaxk ! temperatures converted from degrees C to degrees K
       real :: rna   ! net radiation term a
       real :: rnb   ! net radiation term b
       real :: ra    ! extraterrestrial radiation
       real :: rso   ! terrestrial clear sky radiation
       real :: a     ! coefficients proportioning long wave and short wave
                     ! radiation exchange based on actual to clear sky ratio
-      real :: b
-      real :: a1    ! intermediate calculations
-      real :: e
-      real :: rno
+      double precision :: b
+      double precision :: a1    ! intermediate calculations
+      double precision :: e
+      double precision :: rno
 
-      real, parameter :: sbc = 4.903e-9  ! stefan-boltzmann constant, mj/m^2/day
+      double precision, parameter :: sbc = 4.903d-9  ! stefan-boltzmann constant, mj/m^2/day
 
-      tmaxk = bwtdmx + 273.15         !prereq h-17
-      tmink = bwtdmn + 273.15         !prereq h-17
+      tmaxk = bwtdmx + 273.15d0         !prereq h-17
+      tmink = bwtdmn + 273.15d0         !prereq h-17
 
       ra = radext(idoy, bmalat)
       rso = 0.75*ra            !h-19
@@ -435,9 +435,9 @@ module hydro_util_mod
             a = 1.017
             b = -0.06
           end if
-          a1 = 0.26 + 0.1*exp(-((0.0154*(idoy - 180))**2))   !h-18
-          e = exp((16.78*bwtdpt - 117)/(bwtdpt + 237.3))
-          rno = (sbc*(tmaxk**4+tmink**4)/2)*(a1 - 0.139 * sqrt(e)) !h-17(b)
+          a1 = 0.26d0 + 0.1d0*exp(-((0.0154d0*(idoy - 180))**2))   !h-18
+          e = exp((16.78d0*bwtdpt - 117d0)/(bwtdpt + 237.3d0))
+          rno = (sbc * (tmaxk**4+tmink**4) / 2.0d0) * (a1 - 0.139d0 * sqrt(e)) !h-17(b)
 
           albt = albedo (bcrlai, snwc, sndp, soil)
 
@@ -529,7 +529,7 @@ module hydro_util_mod
          else
              goto 999  !we are done with layers having root mass
          endif
-         wup_fac(k) = (1.0 - exp(-wud*depth/rootd)) / (1.0 - exp(-wud))
+         wup_fac(k) = (1.0d0 - exp(-wud*dble(depth)/rootd)) / (1.0d0 - exp(-dble(wud)))
          wup = potwu * (wup_fac(k)-(1.0-wuc)*wup_fac(k-1)) - wuc*actwu
 
          ! volumetric soil water content based approach
@@ -586,6 +586,7 @@ module hydro_util_mod
              end if
              actwu = actwu + wua
           end if
+
       end do
 
 999   continue
@@ -775,8 +776,8 @@ module hydro_util_mod
       if (awcr .ge. 1.0) then
          watuse = wup
       else if (awcr .gt. 0.0) then
-         watuse = wup * log10( str_fac + 1.0 - str_fac*(1.0-awcr) )     &
-     &          / log10( str_fac + 1.0 )
+         watuse = wup * log10( str_fac + 1.0d0 - str_fac*(1.0d0-awcr) ) &
+                / log10( str_fac + 1.0d0 )
       else
          watuse = 0.0
       endif
@@ -858,9 +859,9 @@ module hydro_util_mod
 
       real :: volwat
 
-      real :: satrat  ! conductivity relative saturation ratio
+      double precision :: satrat  ! conductivity relative saturation ratio
 
-      satrat = (airentry/matricpot)**lambda
+      satrat = (dble(airentry)/dble(matricpot))**dble(lambda)
       volwat = (thetas-thetar)*satrat + thetar
 
     end function volwat_matpot_bc

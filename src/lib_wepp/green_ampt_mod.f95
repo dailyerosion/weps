@@ -10,8 +10,8 @@ module green_ampt_mod
 
   contains
 
-    SUBROUTINE grna( NF, DEPSTO, TR, R, RR, KS, SM,                   &
-     &     NS, TF, RCUM, F, FF, RE, RECUM, TP,                          &
+    SUBROUTINE grna( NF, DEPSTO, TR, R, RR, KS, SM, &
+     &     NS, TF, RCUM, F, FF, RE, RECUM, TP, &
      &     RPRINT, DDEPSTO, RUNOFF, DUREXR, EFFINT, EFFDRR, IT )
 
 !     + + + PURPOSE + + +
@@ -76,42 +76,35 @@ module green_ampt_mod
       PARAMETER (MXTIME = 1500, MXPOND = 1000)
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      INTEGER, intent(in) :: NF
-      REAL, intent(in) :: DEPSTO, TR(MXTIME), R(MXTIME), RR(MXTIME),    &
-     &     KS, SM
-      INTEGER, intent(inout) :: NS
-      REAL, intent(inout) :: TF(MXTIME), RCUM(MXTIME),                  &
-     &     F(MXTIME), FF(MXTIME), RE(MXTIME), RECUM(MXTIME), TP(MXPOND),&
-     &     RPRINT(MXTIME), DDEPSTO(MXTIME),                             &
-     &     RUNOFF, DUREXR, EFFINT, EFFDRR
+      INTEGER, intent(in) :: NF       ! number of values in infiltration arrays
+      REAL, intent(in) :: DEPSTO      ! Depression Storage (L)
+      REAL, intent(in) :: TR(MXTIME)  ! time values in rainfall breakpoint array (T)
+      REAL, intent(in) :: R(MXTIME)   ! rainfall rate (L/T)
+      REAL, intent(in) :: RR(MXTIME)  ! precalculated rainfall rate accumulation array (L)
+      REAL, intent(in) :: KS          ! saturated conductivity (L/T)
+      REAL, intent(in) :: SM          ! effective matric potential (L)
+      INTEGER, intent(out) :: NS      ! number of element for end of runoff arrays
+      REAL, intent(out) :: TF(MXTIME)   ! time values in infiltration/rainfall excess/depression storage array (T)
+      REAL, intent(out) :: RCUM(MXTIME) ! accumulated rainfall depth (L)
+      REAL, intent(out) :: F(MXTIME)    ! infiltration rate (L/T)
+      REAL, intent(out) :: FF(MXTIME)   ! accumulated infiltration depth (L)
+      REAL, intent(out) :: RE(MXTIME)   ! rainfall excess rate (L/T)
+      REAL, intent(out) :: RECUM(MXTIME) ! accumulated rainfall excess depth (L)
+      REAL, intent(out) :: TP(MXPOND)    ! time of ponding (T)
+      REAL, intent(out) :: RPRINT(MXTIME)
+      REAL, intent(out) :: DDEPSTO(MXTIME) ! depth of depression storage at infiltration timestep (L)
+      REAL, intent(out) :: RUNOFF   ! RUNOFF DEPTH (L)
+      REAL, intent(out) :: DUREXR   ! DURATION OF RAINFALL EXCESS (T)
+      REAL, intent(out) :: EFFINT   ! EFFECTIVE RAINFALL INTENSITY
+      REAL, intent(out) :: EFFDRR   ! EFFECTIVE RAINFALL DURATION
       INTEGER, intent(out) :: IT
      
-!     + + + ARGUMENT DEFINITIONS + + +
-!     DEPSTO  - Depression Storage (L)
-!     TR      - time values in rainfall breakpoint array (T)
-!     TF      - time values in infiltration/rainfall excess/depression storage array (T)
-!     R       - rainfall rate (L/T)
-!     RCUM    - accumulated rainfall depth (L)
-!     F       - infiltration rate (L/T)
-!     FF      - accumulated infiltration depth (L)
-!     RE      - rainfall excess rate (L/T)
-!     RECUM   - accumulated rainfall excess depth (L)
-!     RR      - precalculated rainfall rate accumulation array (L)
-!     NF      - number of values in infiltration arrays
-!     KS      - saturated conductivity (L/T)
-!     SM      - effective matric potential (L)
-!     TP      - time of ponding (T)
-!     NS      - number of element for end of runoff arrays
-!     RPRINT  -
-!     DDEPSTO - depth of depression storage at infiltration timestep (L)
-!     RUNOFF  - RUNOFF DEPTH (L)
-!     DUREXR  - DURATION OF RAINFALL EXCESS (T)
-!     EFFINT  - EFFECTIVE RAINFALL INTENSITY
-!     EFFDRR  - EFFECTIVE RAINFALL DURATION
-
 !     + + + LOCAL VARIABLES + + +
-!      INTEGER I, K, POND, IT, NP, NT
-      INTEGER I, K, POND, NP, NT
+      INTEGER :: I
+      INTEGER :: K
+      INTEGER :: POND
+      INTEGER :: NP
+      INTEGER :: NT
       REAL RTEMP(MXTIME), DTIME
       REAL DURRE, SUMINT, KSM, TT, TS, CU, CP, FSUM
       REAL PT(MXPOND), PRECUM(MXPOND)

@@ -4,7 +4,7 @@
 !$HeadURL$
 
 module plantcycle_mod
-    use constants, only: dp, int32
+    use constants, only: dp, int32, precision_init
     use plant_mod
     use Preprocess_mod
     use Process_Factory
@@ -54,6 +54,8 @@ module plantcycle_mod
       nullify(pcycle%phases%ptr)
       nullify(pcycle%phaseCurrent%ptr)
       nullify(pcycle%phaseCurrentSub%ptr)
+      ! initialize UPGM specific math precision constants
+      call precision_init()
     end function newplantcycle
 
     subroutine allProcesses(self, env)

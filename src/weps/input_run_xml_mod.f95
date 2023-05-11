@@ -13,7 +13,7 @@ module input_run_xml_mod
   use flib_sax
   use datetime_mod, only: lstday, difdat
   use Polygons_Mod, only: polygon, create_polygon, destroy_polygon, set_area_polygon
-  use file_io_mod, only: fopenk, luicli, luiwin, luolog
+  use file_io_mod, only: fopenk, luicli, luiwin
   use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag
   use climate_input_mod, only: amzele
   use solar_mod, only: amalat, amalon
@@ -1107,19 +1107,15 @@ contains
       else if (run_tag(SCI_climateFile)%in_tag) then
         ! read CLIGEN file name
         clifil = trim(param_value)
-        write(luolog, *) 'clifil: ', clifil(1:len_trim(clifil))
         ! open CLIGEN run file
         call fopenk (luicli, trim(rootp) // clifil, 'old')
-        write(luolog,*) 'opened cligen file to determine db format...'
-        ! read 1st line of CLIGEN file
-
         read(luicli,fmt="(a)",iostat=read_stat) param_value
         if (read_stat .gt. 0) then
           write(*,*) 'Error in file ', clifil, ' reading: ', param_value
           call exit(1)
         end if
-        if (report_info >=1) then
-          write(6,*) '1st cligen output line is: ', param_value
+        if (report_info >=2) then
+          write(6,*) '1st cligen output line is: ', trim(param_value)
         end if
 
         ! I think this is pretty messy.  It was working with the Lahey compiler
@@ -1142,18 +1138,24 @@ contains
           end if
         end if
 
-        write(luolog,"(a17,f8.5)") 'cligen version: ', cligen_version
         if (report_info >=1) then
           write(6,"(a17,f8.5)") 'cligen version: ', cligen_version
         end if
         if (cligen_version >= 5.110) then
           cli_gen_fmt_flag = 3
+          if (report_info >=2) then
+            write(6,*) 'cligen_version >= 5.110 db format'
+          end if
         else if (cligen_version >= 5.101) then
           cli_gen_fmt_flag = 2
-          write(luolog,*) 'Forest Service cligen db format'
+          if (report_info >=2) then
+            write(6,*) 'Forest Service cligen db format'
+          end if
         else
           cli_gen_fmt_flag = 1
-          write(luolog,*) '3.1 version cligen db format'
+          if (report_info >=2) then
+            write(6,*) '3.1 version cligen db format'
+          end if
         endif
         rewind luicli
         run_tag(SCI_climateFile)%acquired = .true.

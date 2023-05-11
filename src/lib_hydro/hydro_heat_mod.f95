@@ -61,33 +61,29 @@ module hydro_heat_mod
 
       ! + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
-      integer layrsn
-      real bszlyd(*), bszlyt(*), theta(0:*), thetas(*)
-      real bsfsan(*), bsfsil(*), bsfcla(*), bsfom(*), bsdblk(*)
-      real bwtdmn, bwtdmx, bwtyav, rad_net, bdmres
-      real bhtsmn(*), bhtsmx(*), bhtsav(*), bhfice(*)
+      integer, intent(in) :: layrsn  ! Number of soil layers used in the simulation
+      real, intent(in) :: bszlyd(*)  ! distance from surface to bottom of layer (mm)
+      real, intent(in) :: bszlyt(*)  ! Layer thickness (mm)
+      real, intent(in) :: theta(0:*) ! volumetric soil water content
+      real, intent(in) :: thetas(*)  ! volumetric saturated soil water content
+      real, intent(in) :: bsfsan(*)  ! sand fraction of mineral soil content by layer (Mg sand/Mg soil mineral)
+      real, intent(in) :: bsfsil(*)  ! silt fraction of mineral soil content by layer (Mg silt/Mg soil mineral)
+      real, intent(in) :: bsfcla(*)  ! clay fraction of mineral soil content by layer (Mg clay/Mg soil mineral)
+      real, intent(in) :: bsfom(*)   ! organic matter fraction of soil content by layer (Mg organic/Mg soil solids)
+      real, intent(in) :: bsdblk(*)  ! Soil bulk density by layer (Mg/m^3)
+      real, intent(in) :: bwtdmn  ! Daily minimum air temperature (C)
+      real, intent(in) :: bwtdmx  ! Daily maximum air temperature (C)
+      real, intent(in) :: bwtyav  ! Average yearly air temperature (deg C)
+      real, intent(in) :: rad_net ! net radiation onto surface (Mj/m^2/day)
+      real, intent(in) :: bdmres  ! plant residue on the soil surface (kg/m^2)
+      real, intent(out) :: bhtsmn(*) ! Daily minimum soil temperature by layer (C)
+      real, intent(out) :: bhtsmx(*) ! Daily maximum soil temperature by layer (C)
+      real, intent(inout) :: bhtsav(*) ! Daily average soil temperature by layer (C)
+      real, intent(inout) :: bhfice(*) ! fraction of water in soil layer which is frozen
       real bhzsno, bhtsno, bhfsnfrz, bhzsnd
       real bhzsmt, soil_heat_flux
 
       ! + + + ARGUMENT DEFINITIONS + + +
-      ! layrsn  - Number of soil layers used in the simulation
-      ! bszlyd  - distance from surface to bottom of layer (mm)
-      ! bszlyt  - Layer thickness (mm)
-      ! theta   - volumetric soil water content
-      ! thetas  - volumetric saturated soil water content
-      ! bsfsan  - sand fraction of mineral soil content by layer (Mg sand/Mg soil mineral)
-      ! bsfsil  - silt fraction of mineral soil content by layer (Mg silt/Mg soil mineral)
-      ! bsfcla  - clay fraction of mineral soil content by layer (Mg clay/Mg soil mineral)
-      ! bsfom   - organic matter fraction of soil content by layer (Mg organic/Mg soil solids)
-      ! bsdblk  - Soil bulk density by layer (Mg/m^3)
-      ! bwtdmn  - Daily minimum air temperature (C)
-      ! bwtdmx  - Daily maximum air temperature (C)
-      ! bwtyav  - Average yearly air temperature (deg C)
-      ! rad_net - net radiation onto surface (Mj/m^2/day)
-      ! bdmres  - plant residue on the soil surface (kg/m^2)
-      ! bhtsmn  - Daily minimum soil temperature by layer (C)
-      ! bhtsmx  - Daily maximum soil temperature by layer (C)
-      ! bhfice  - fraction of water in soil layer which is frozen
       ! bhzsno  - depth of water contained in snow layer (mm)
       ! bhtsno  - temperature of snow layer (C)
       ! bhfsnfrz  - fraction of snow layer water content which is frozen
@@ -260,8 +256,7 @@ module hydro_heat_mod
                    bsfsan(lay), bsfsil(lay), bsfcla(lay), bsfom(lay))
           heat_cap_froz = heatcap(bsdblk(lay), theta(lay), 1.0, &
                    bsfsan(lay), bsfsil(lay), bsfcla(lay), bsfom(lay))
-          call energy_bal(bhtsav(lay), nt_lay(lay), bhfice(lay), &
-               nf_ice(lay), &
+          call energy_bal(bhtsav(lay), nt_lay(lay), bhfice(lay), nf_ice(lay), &
                t_surf_end, nt_lay(bly), thermt_up, thermt_dn, &
                heat_cap_thaw, heat_cap_froz, theta(lay), bszlyt(lay), &
                SEC_PER_DAY, rad_val, soil_val )
@@ -347,7 +342,7 @@ module hydro_heat_mod
       freq = (2*pi)/SEC_PER_DAY
 
       ! calculate diurnal damping depth
-      zdamp= sqrt((2*(thermk/vsheat))/freq)
+      zdamp= sqrt((2d0*(thermk/vsheat))/freq)
 
       ! begin simulating heat flow for each day of the simulation period
       ! calculate mean temperature and amplitude temperature at the
@@ -382,7 +377,6 @@ module hydro_heat_mod
               (bhtsmn(lay), bhtsmx(lay), lay=1,layrsn)
       end if
 
-      return
     end subroutine heat
 
     subroutine statt(tsoil, bhtsmx, bhtsmn, k, nlay, hrday)
@@ -476,57 +470,46 @@ module hydro_heat_mod
       return
     end function heatcap
 
-    real function heatcond(bsdblk, theta, thetas, bhtsav, bhfice, &
-                             bsfsan, bsfsil, bsfcla, bsfom)
+    pure function heatcond(bsdblk, theta, thetas, bhtsav, bhfice, bsfsan, bsfsil, bsfcla, bsfom) result(heat_cond)
 
-      ! + + + PURPOSE + + +
       ! This function returns the volumetrically based thermal conductivity of the soil
       ! given mass fractions of the soil constituents. (J/s m C) or (W/m C)
-
-      ! + + + KEYWORDS + + +
-      ! soil heat capacity
 
       use soilden_mod, only: den_ice, den_quartz, den_organic
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real bsdblk, theta, thetas, bhtsav, bhfice
-      real bsfsan, bsfsil, bsfcla, bsfom
-
-      ! + + + ARGUMENT DEFINITIONS + + +
-      ! bsdblk  - Soil bulk density (Mg/m^3)
-      ! theta   - soil layer water content (m^3/m^3 bulk soil)
-      ! thetas  - soil water content at saturation (m^3/m^3 bulk soil)
-      ! bhtsav  - soil layer average daily temperature (C)
-      ! bhfice  - mass fraction of soil water which is ice (kg ice/kg water)
-      ! bsfsan  - Sand mass fractions (kg clay/kg soil mineral)
-      ! bsfsil  - Silt mass fractions (kg clay/kg soil mineral)
-      ! bsfcla  - Clay mass fractions (kg clay/kg soil mineral)
-      ! bsfom   - Organic matter fraction (kg organic matter/kg soil)
+      real, intent(in) :: bsdblk  ! Soil bulk density (Mg/m^3)
+      real, intent(in) :: theta   ! soil layer water content (m^3/m^3 bulk soil)
+      real, intent(in) :: thetas  ! soil water content at saturation (m^3/m^3 bulk soil)
+      real, intent(in) :: bhtsav  ! soil layer average daily temperature (C)
+      real, intent(in) :: bhfice  ! mass fraction of soil water which is ice (kg ice/kg water)
+      real, intent(in) :: bsfsan  ! Sand mass fractions (kg clay/kg soil mineral)
+      real, intent(in) :: bsfsil  ! Silt mass fractions (kg clay/kg soil mineral)
+      real, intent(in) :: bsfcla  ! Clay mass fractions (kg clay/kg soil mineral)
+      real, intent(in) :: bsfom   ! Organic matter fraction (kg organic matter/kg soil)
+      real :: heat_cond ! calculated thermal conductivity
 
       ! + + + LOCAL VARIABLES + + +
-      !real fac_a, fac_b, fac_c, fac_d, fac_e
-      real kersten, deg_sat, cond_dry, cond_sat
-      real volf_quartz, volf_organic
-      !real volf_mineral, volf_solid
-      real cond_soil, cond_water, volf_liq_water
+      double precision :: kersten       ! kersten number to proportion thermal conductivity between dry and saturated values
+      double precision :: deg_sat       ! degree of soil saturation with water
+      double precision :: cond_dry      ! dry soil thermal conductivity (J/s m C) or (W/m C)
+      double precision :: cond_sat      ! saturated soil thermal conductivity (J/s m C) or (W/m C)
+      double precision :: volf_quartz   ! volumetric fraction of soil which is quartz (m^3/m^3 bulk soil)
+      double precision :: volf_organic  ! volumetric fraction of soil which is organic (m^3/m^3 bulk soil)
+      double precision :: cond_soil     ! soil solids thermal conductivity (J/s m C) or (W/m C)
+      double precision :: cond_water    ! liquid water thermal conductivity (J/s m C) or (W/m C)
+      double precision :: volf_liq_water ! volumetric fraction of liquid water (m^3/m^3 bulk soil)
 
       ! + + + LOCAL VARIABLE DEFINITION + + +
+      !real fac_a, fac_b, fac_c, fac_d, fac_e
+      !real volf_mineral, volf_solid
       ! fac_a - sub calculation
       ! fac_b - sub calculation
       ! fac_c - sub calculation
       ! fac_d - sub calculation
       ! fac_e - sub calculation
-      ! kersten - kersten number to proportion thermal conductivity between dry and saturated values
-      ! deg_sat - degree of soil saturation with water
-      ! cond_dry - dry soil thermal conductivity (J/s m C) or (W/m C)
-      ! cond_sat - saturated soil thermal conductivity (J/s m C) or (W/m C)
-      ! volf_quartz - volumetric fraction of soil which is quartz (m^3/m^3 bulk soil)
       ! volf_mineral - volumetric fraction of soil which is remaining mineral (m^3/m^3 bulk soil)
-      ! volf_organic - volumetric fraction of soil which is organic (m^3/m^3 bulk soil)
       ! volf_solid - volumetric fraction of soil which is solid (excluding organic) (m^3/m^3 bulk soil)
-      ! cond_soil - soil solids thermal conductivity (J/s m C) or (W/m C)
-      ! cond_water - liquid water thermal conductivity (J/s m C) or (W/m C)
-      ! volf_liq_water - volumetric fraction of liquid water (m^3/m^3 bulk soil)
 
       ! + + + END SPECIFICATIONS + + +
 
@@ -559,8 +542,7 @@ module hydro_heat_mod
       !  fac_d = 0.03 + 0.7 * volf_solid * volf_solid
       !  fac_e = 4.0
 
-      !  heatcond = fac_a + fac_b*theta &
-      ! &         - (fac_a - fac_d) * exp(-(fac_c*theta)**fac_e)
+      !  heat_cond = fac_a + fac_b*theta - (fac_a - fac_d) * exp(-(fac_c*theta)**fac_e)
 
 !========================================
 ! alternate method accounting for soil freezing
@@ -614,8 +596,8 @@ module hydro_heat_mod
       deg_sat = max( 0.0, min(1.0, theta / thetas) )
 
       ! kersten number for unfrozen soil
-      if( deg_sat .gt. 10**(-1.0/(1.0 - 0.3*bsfsan)) ) then
-          kersten = (1.0 - 0.3*bsfsan) * log10(deg_sat) + 1.0
+      if( deg_sat .gt. 10d0**(-1.0d0/(1.0d0 - 0.3d0*bsfsan)) ) then
+          kersten = (1.0d0 - 0.3d0*bsfsan) * log10(dble(deg_sat)) + 1.0d0
       else
           kersten = 0.0
       end if
@@ -623,21 +605,18 @@ module hydro_heat_mod
       kersten = kersten * (1.0-bhfice) + deg_sat*bhfice
 
       ! thermal conductivity is between dry and saturated
-      heatcond = kersten * (cond_sat - cond_dry) + cond_dry
+      heat_cond = kersten * (cond_sat - cond_dry) + cond_dry
 
-      return
     end function heatcond
 
     real function snowcond( snow_den )
 
       ! returns the average thermal conductivity of the snow layer (J/(s m C))
 
-      ! + + + ARGUMENT DECLARATIONS + + +
-      real snow_den
+      real, intent(in) :: snow_den ! snow density (kg/m^3)
 
-      ! + + + ARGUMENT DEFINITIONS + + +
-      ! snow_den - snow density (kg/m^3)
-
+      real :: conv_den
+      
       ! + + + END SPECIFICATIONS + + +
 
       ! density calculation taken from: Alaska Lake Ice and Snow Observatory Network
@@ -656,14 +635,16 @@ module hydro_heat_mod
       ! curve was noted to cross twice, so break point was moved to second crossing.
       ! thermal conductivity approaches that of liquid water, not ice in upper limit
 
-      if( snow_den .lt. 230.3858 ) then
-          snowcond = 0.023 + 0.234e-3 * snow_den
-      else
-          snowcond = 0.138 - 1.01e-3*snow_den + 3.233e-6*snow_den**2
-      end if
+!      if( snow_den .lt. 230.3858 ) then
+!          snowcond = 0.023 + 0.234e-3 * snow_den
+!      else
+!          snowcond = 0.138 - 1.01e-3*snow_den + 3.233e-6*snow_den**2
+!      end if
 
       ! try SHAW conductivity taken from Anderson, 1976
-      snowcond = 0.021 + 2.51 * (snow_den/1000.0)**2.0
+!      snowcond = 0.021 + 2.51 * (snow_den/1000.0)**2.0
+      conv_den = snow_den/1000.0
+      snowcond = 0.021 + 2.51 * conv_den**2
 
       return
     end function snowcond
@@ -916,26 +897,19 @@ module hydro_heat_mod
       use air_water_mod, only: wetbulb
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real dprecip, dirrig, bwzdpt, bhzirr, bhlocirr
-      real bwtdmn, bwtdmx, bwtdpt, bmzele
-      real bhzsno, bhtsno, bhfsnfrz, bhzsnd
-
-      ! + + + ARGUMENT DEFINITIONS + + +
-      ! dprecip - depth of precipitation reaching soil surface through snow (mm)
-      ! dirrig  - depth of irrigation reaching soil surface through snow (mm)
-      ! bwzdpt  - depth of precipitation added (mm)
-      ! bhzirr  - depth of irrigation added (mm)
-      ! bhlocirr - location of irrigation emitter (mm)
-      ! bwtdmn  - Daily minimum air temperature (C)
-      ! bwtdmx  - Daily maximum air temperature (C)
-      ! bwtdpt  - dew point temperature (C)
-      ! bmzele  - elevation (m)
-      ! bhzsno  - depth of water contained in snow layer (mm)
-      ! bhtsno  - temperature of snow layer (C)
-      ! bhfsnfrz  - fraction of snow layer water content which is frozen
-      ! bhzsnd  - actual thickness of snow layer (mm)
-
-      ! + + + PARAMETERS + + +
+      real, intent(out) :: dprecip ! depth of precipitation reaching soil surface through snow (mm)
+      real, intent(out) :: dirrig  ! depth of irrigation reaching soil surface through snow (mm)
+      real, intent(in) :: bwzdpt   ! depth of precipitation added (mm)
+      real, intent(in) :: bhzirr   ! depth of irrigation added (mm)
+      real, intent(in) :: bhlocirr ! location of irrigation emitter (mm)
+      real, intent(in) :: bwtdmn   ! Daily minimum air temperature (C)
+      real, intent(in) :: bwtdmx   ! Daily maximum air temperature (C)
+      real, intent(in) :: bwtdpt   ! dew point temperature (C)
+      real, intent(in) :: bmzele   ! elevation (m)
+      real, intent(inout) :: bhzsno ! depth of water contained in snow layer (mm)
+      real, intent(inout) :: bhtsno ! temperature of snow layer (C)
+      real, intent(inout) :: bhfsnfrz ! fraction of snow layer water content which is frozen
+      real, intent(inout) :: bhzsnd ! actual thickness of snow layer (mm)
 
       ! + + + LOCAL VARIABLES + + +
       real t_air, t_wb
@@ -1002,7 +976,7 @@ module hydro_heat_mod
               ! units: kg/m^2 / kg/m^3 = m * mtomm = mm
               if( t_wb .gt. -14.99 ) then
                   if( t_wb .lt. 0.0 ) then
-                      snow_den = min_snow_den + 1.723*(t_wb+14.99)**1.5
+                      snow_den = min_snow_den + 1.723d0*(dble(t_wb)+14.99d0)**1.5d0
                   else
                       snow_den = 150.0
                   end if
@@ -1175,18 +1149,14 @@ module hydro_heat_mod
       ! snow depth, determines the new snow state and any water drainage.
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real dh2o, new_mass, new_energy, new_depth
-      real bhzsno, bhtsno, bhfsnfrz, bhzsnd
-
-      ! + + + ARGUMENT DEFINITIONS + + +
-      ! dh2o - depth of water reaching soil surface through snow (mm)
-      ! new_energy - energy content of new snow (J/m^2)
-      ! new_mass - mass of new snow (kg/m^2)
-      ! new_depth - depth associated with new snow (mm) (indirect density)
-      ! bhzsno  - depth of water contained in snow layer (mm)
-      ! bhtsno  - temperature of snow layer (C)
-      ! bhfsnfrz  - fraction of snow layer water content which is frozen
-      ! bhzsnd  - actual thickness of snow layer (mm)
+      real, intent(out) :: dh2o      ! depth of water reaching soil surface through snow (mm)
+      real, intent(in) :: new_mass   ! mass of new snow (kg/m^2)
+      real, intent(in) :: new_energy ! energy content of new snow (J/m^2)
+      real, intent(in) :: new_depth  ! depth associated with new snow (mm) (indirect density)
+      real, intent(inout) :: bhzsno  ! depth of water contained in snow layer (mm)
+      real, intent(inout) :: bhtsno  ! temperature of snow layer (C)
+      real, intent(inout) :: bhfsnfrz ! fraction of snow layer water content which is frozen
+      real, intent(inout) :: bhzsnd  ! actual thickness of snow layer (mm)
 
       ! + + + LOCAL VARIABLES + + +
       real old_energy, old_mass, tot_energy, tot_mass

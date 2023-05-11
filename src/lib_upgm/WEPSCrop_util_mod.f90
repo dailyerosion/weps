@@ -5,7 +5,7 @@
 
 module WEPSCrop_util_mod
 
-    use constants, only: dp, int32, u_pi, u_mgtokg, u_hatom2, u_max_arg_exp, u_max_real, u_mmtom, precision_init
+    use constants, only: dp, int32, u_pi, u_mgtokg, u_hatom2, u_max_arg_exp, u_max_real, u_mmtom
     implicit none
 
     real(dp), parameter :: chilluv = 50.0_dp     ! total of chill units require for vernalization (deg C)

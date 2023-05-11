@@ -96,7 +96,6 @@ module soil_mod
                      ! and random roughness decrease as a result of rain.
       real :: szlyd(bslay)     ! depth to bottom of each soil layer, mm
       real :: laycenter(bslay) ! depth to middle of each soil layer, mm
-      real :: bsmls0  ! prior value of bsmlos before update by SOIL, kg/m^2
       real :: dcump   ! total rain + sprinkler + snow-melt for current day.
       integer :: yr   ! current year of simulation for output.
       integer :: idoy ! day of year for output
@@ -150,7 +149,7 @@ module soil_mod
         ! CRUST SECTION:
         call  cru( soil%aszcr, cumpa, soil%asfcla(1), dcump, &
                    soil%asfcr, bhzsmt, soil%asmlos, soil%asfom(1), soil%asfcce(1), &
-                   soil%asfsan(1), bsmls0, soil%aszrgh, soil%aslrr, soil%asflos)
+                   soil%asfsan(1), soil%aszrgh, soil%aslrr, soil%asflos)
 
       endif
 
@@ -214,12 +213,12 @@ module soil_mod
              write(luosoillay(isr),2300)
          end if
          ! insert single blank line to break layer blocks for graphing
-         write(luosoillay(isr),*)
+         write(luosoillay(isr),'(a)')
          ! insert additional blank line (make double) to break years into blocks for graphing
          if( idoy .eq. 1 ) then
-             write(luosoilsurf(isr),*)
-             write(luosoilsurf(isr),*)
-             write(luosoillay(isr),*)
+             write(luosoilsurf(isr),'(a)')
+             write(luosoilsurf(isr),'(a)')
+             write(luosoillay(isr),'(a)')
          end if
 
          write(luosoilsurf(isr), 2200) daysim,idoy,yr, soil%cump, dcump, &

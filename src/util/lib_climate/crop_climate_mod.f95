@@ -402,8 +402,7 @@ module crop_climate_mod
           ! stage 1 hardening
           if( tavg .le. tbase + t1max ) then
               ! add stage 1 amount to index, minus deduction for being on either side of optimum
-              bcthardnx = bcthardnx + hardinc1                          &
-     &                  - ((tavg - (tbase + t1opt))**2d0)/506.0d0
+              bcthardnx = bcthardnx + hardinc1 - ((tavg - (tbase + t1opt))**2)/506.0d0
               if( bcthardnx .ge. hs1 ) then
                   ! stage 1 complete, into stage 2
                   if( tavg .le. tbase + t2max ) then

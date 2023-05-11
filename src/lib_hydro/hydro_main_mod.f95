@@ -377,13 +377,13 @@ module hydro_main_mod
 
       ! Convert global to net radiation
       ! this includes residue leaf area
-      rn = radnet(bbrlai,cli_day(pjuld)%eirr, bhzsno, h1et%zsnd, cli_day(pjuld)%tdmx, cli_day(pjuld)%tdmn, amalat,&
+      rn = radnet(bbrlai,cli_day(pjuld)%eirr, bhzsno, h1et%zsnd, cli_day(pjuld)%tdmx, cli_day(pjuld)%tdmn, amalat, &
                   idoy, cli_day(pjuld)%tdpt, soil )
 
       ! partition radiation between canopy and surface
       ! added exponential to keep above zero for very low lai
-      epart = 1.0 - exp(-0.398*bbrlai)
-      epart = max( epart, min( 1.0, (-0.21 + 0.7 * (bbrlai**0.5)) ) )
+      epart = 1.0d0 - exp(-0.398d0*bbrlai)
+      epart = max( epart, min( 1.0d0, (-0.21d0 + 0.7d0 * (bbrlai**0.5d0)) ) )
       ! check for snow
       if( bhzsno .gt. 0.0 ) then
           ! snow present, all net rad goes on the surface
@@ -394,10 +394,10 @@ module hydro_main_mod
       end if
 
       ! recalculate partitioning to acount for non transpiring leaf surface
-      epart = 1.0 - exp(-0.398*bbrlailive)
-      epart = max( epart, min( 1.0, (-0.21 + 0.7 * (bbrlailive**0.5)) ) )
+      epart = 1.0 - exp(-0.398d0*bbrlailive)
+      epart = max( epart, min( 1.0d0, (-0.21d0 + 0.7d0 * (bbrlailive**0.5d0)) ) )
 
-      ! Do energy balance for soil and cover temperatures 
+      ! Do energy balance for soil and cover temperatures
       ! and determine snow melt (if any) or soil heat flux
       call heat( isr, soil%nslay, soil%aszlyd, soil%aszlyt, soil%theta, soil%thetas, &
                 soil%asfsan, soil%asfsil, soil%asfcla, soil%asfom, soil%asdblk, &
@@ -478,7 +478,7 @@ module hydro_main_mod
          ! standing residue
          ! estimated from McMaster et al. 2000. Optimizing wheat harvest cutting
          ! height for harvest efficiency and soil and water conservation. Agronomy J. 92:1104-1108
-         standevapredu = exp(-1.7*brcd**0.4)
+         standevapredu = exp(-1.7d0 * dble(brcd)**0.4d0)
          ! flat residue
          ! taken from Steiner, 1989. Tillage and Surface Residue Effects on Evaporation from soils.
          ! Soil Sci Soc Am J. 53:911-916. Data was refit to an exponential 
@@ -488,7 +488,6 @@ module hydro_main_mod
       endif
 
       ! Calculate soil water redistribution using subroutine darcy
-
       soil%swc = dot_product(soil%theta(1:soil%nslay),soil%aszlyt(1:soil%nslay))
 
       ! select hydrology model for infiltration (insertion), evaporation and redistribution
@@ -525,7 +524,7 @@ module hydro_main_mod
          ! use a representative slope length as half of the simregion diagonal distance
          len_slope = slen(amxsim(1), amxsim(2)) / 2.0
 
-         call waterbal(soil%nslay, soil%thetas, soil%thetes, soil%thetaf, soil%thetaw, &
+         call waterbal( soil%nslay, soil%thetas, soil%thetes, soil%thetaf, soil%thetaw, &
                         soil%aszlyt, soil%aszlyd, soil%ahrsk, &
                         dprecip, durprecip, tptprecip, cli_day(pjuld)%peakipt, &
                         dirrig, bhdurirr, bhlocirr, bhzoutflow, &
@@ -592,14 +591,16 @@ module hydro_main_mod
             else
               cropdp = thisPlant%deriv%ztranspdepth * mtomm
             end if
+
             ! partition potential transpiration based on proportion of living leaf area in canopy leaf area
             thisPlant%growth%ptp = h1et%zptp * ((thisPlant%deriv%fliveleaf * thisPlant%deriv%rlai) / bbrlailive)
-            call transp (soil%nslay, 1, soil%aszlyd, soil%aszlyt, cropdp, &
-                       soil%theta, soil%thetas, soil%thetaf, soil%thetaw, &
-                       theta80rh, soil%thetar, airentry, lambda, &
-                       soil%ahrsk, soil%tsav, thisPlant%growth%ptp, thisPlant%growth%pta, thisPlant%growth%fwsf)
+            call transp( soil%nslay, 1, soil%aszlyd, soil%aszlyt, cropdp, &
+                         soil%theta, soil%thetas, soil%thetaf, soil%thetaw, &
+                         theta80rh, soil%thetar, airentry, lambda, &
+                         soil%ahrsk, soil%tsav, thisPlant%growth%ptp, thisPlant%growth%pta, thisPlant%growth%fwsf)
             ! sum actual transpiration
             h1et%zpta = h1et%zpta + thisPlant%growth%pta
+
           end if
           ! point to next older plant
           thisPlant => thisPlant%olderPlant
@@ -671,8 +672,8 @@ module hydro_main_mod
         .or.(am0hfl(isr) .eq. 5) .or. (am0hfl(isr) .eq. 7)) then
         ! insert double blank line to break years into blocks for graphing
         if( idoy .eq. 1 ) then
-            write(luohydro(isr),*)
-            write(luohydro(isr),*)
+            write(luohydro(isr),'(a)')
+            write(luohydro(isr),'(a)')
         end if
         accheck = lswc - soil%swc + lsno - bhzsno + h1et%zirr + cli_day(pjuld)%zdpt &
                 - h1et%zea - h1et%zpta - h1et%zper - h1et%zrun
@@ -1019,11 +1020,11 @@ module hydro_main_mod
       year = get_psim_year(isr)
       if( idoy .eq. 1 ) then
          ! insert double blank line to break years into blocks for graphing
-         write(luohlayers(isr),*)
-         write(luohlayers(isr),*)
+         write(luohlayers(isr),'(a)')
+         write(luohlayers(isr),'(a)')
       else
          ! print a single blank line to separate layer blocks
-         write(luohlayers(isr),*)
+         write(luohlayers(isr),'(a)')
       end if
       do idx=1,layrsn
          lambda = 1.0 / bh0cb(idx)
@@ -1144,9 +1145,9 @@ module hydro_main_mod
 
 !     + + + END SPECIFICATIONS + + +
 
-      movewind = meas_wind * ( log( (loc_za - loc_zd) / loc_zo )        &
-     &         / log( (meas_za - meas_zd) / meas_zo ) )                 &
-     &         * ( (loc_zo / meas_zo)**0.067 )
+      movewind = meas_wind * ( log( (dble(loc_za) - loc_zd) / loc_zo ) &
+               / log( (dble(meas_za) - meas_zd) / meas_zo ) ) &
+               * ( (loc_zo / meas_zo)**0.067d0 )
 
       return
     end function movewind

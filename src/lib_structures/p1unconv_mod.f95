@@ -15,7 +15,7 @@ module p1unconv_mod
 !     These parameter values may be consulted from within any sections
 !     of the WERM code if this file has been included.
 
-      real             pi
+      double precision pi
       real             MgtoN
       real             mtomm
       real             mmtom

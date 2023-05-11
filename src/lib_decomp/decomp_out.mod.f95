@@ -235,7 +235,7 @@ module decomp_out_mod
           else
             write(luoddb(isr),"('**',1x,2(i2,'/'),i4,'    Before call to DECOMP       Subregion No. ',i3)") cd,cm,cy,isr
           end if
-          write(luoddb(isr),*)
+          write(luoddb(isr),'(a)')
 
           ! header
           write(luoddb(isr), &
@@ -297,11 +297,11 @@ module decomp_out_mod
          write (luod_above(isr),*)                                      &
      &         'Above Ground Residue Decomposition Output File'
          write (luod_above(isr),*) 'Standing and Surface Residues'
-         write (luod_above(isr),*) '  '
+         write (luod_above(isr),'(a)')
          write (luod_above(isr),2030)
          write (luod_above(isr),2035)
          write (luod_above(isr),2040)
-         write (luod_above(isr),*) '  '
+         write (luod_above(isr),'(a)')
       end if
 
 !     write headers for below ground residues file if requested
@@ -310,7 +310,7 @@ module decomp_out_mod
      &         'Below Ground Residue Decomposition Output File'
          write (luod_below(isr),*)                                      &
      &         'Data by soil layer for age pools 1 and 2'
-         write (luod_below(isr),*) '  '
+         write (luod_below(isr),'(a)')
          write (luod_below(isr),*) '     day/mo/year '
       end if
 

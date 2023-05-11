@@ -462,33 +462,33 @@ module sae_in_out_mod
          call fopenk (o_unit, trim(daypath) // 'erod.egrd','unknown')
          call caldat (mksaeout%jday,day,mon,yr)
          write(*,'(4(a,i0))') 'Made Daily Erosion grid file for: ', day,'/', mon,'/', yr,' simulation day: ', mksaeout%simday
-         write(o_unit, "('# WEPS erosion day mon yr',2(1x,i2),2x,i4)") day, mon, yr
-         write (o_unit,*)
+         write(o_unit, "('# WEPS erosion day mon yr daysim',4(1x,i0))") day, mon, yr, mksaeout%simday
+         write (o_unit,'(a)')
          write (o_unit,*) 'Grid cell output from WEPS run'
-         write (o_unit,*)
+         write (o_unit,'(a)')
       else
          ! write header to files
-         write (o_unit,*)
-         write (o_unit,*)
+         write (o_unit,'(a)')
+         write (o_unit,'(a)')
          write (o_unit,*) 'Grid cell output from SWEEP run'
-         write (o_unit,*)
+         write (o_unit,'(a)')
       end if
 
       ! Print date of Run
       rundatetime = get_systime_string() ! with Lahey f95, had to assign to variable first
       write(o_unit,"(1x,'Date of run: ',a21)") rundatetime
-      write(o_unit,*)
+      write(o_unit,'(a)')
 
       write(o_unit,fmt="(1x,a)") "<field dimensions>"
       write(o_unit,fmt="(1x,5f10.2)") amasim, amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
       write(o_unit,fmt="(1x,a)") "</field dimensions>"
-      write(o_unit,*)
-      write (o_unit,*) 'Total grid size: (', imax+1,',', jmax+1, ')   ',&
-                       'Inner grid size: (', imax-1,',', jmax-1, ')'
+      write(o_unit,'(a)')
+      write (o_unit,'(a,i0,a,i0,2a,i0,a,i0,a)') 'Total grid size: (', imax+1,',', jmax+1, ')   ', &
+                                                'Inner grid size: (', imax-1,',', jmax-1, ')'
 
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit,fmt="(1x,'  Passing Border Grid Cells - Total  egt(kg/m)')")
-      write (o_unit,*) '  top(i=1,imax-1,j=jmax) ', &
+      write (o_unit,'(4a)') '  top(i=1,imax-1,j=jmax) ', &
                        'bottom(i=1,imax-1,j=0) ', &
                        'right(i=imax,j=1,jmax-1) ', &
                        'left(i=0, j=1,jmax-1) '
@@ -497,9 +497,9 @@ module sae_in_out_mod
       write (o_unit,10)  (cellstate(imax,j)%egt, j = 1, jmax-1)
       write (o_unit,10)  (cellstate(0,j)%egt, j = 1, jmax-1)
 
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit,fmt="(1x,'  Passing Border Grid Cells - Salt/Creep egtcs(kg/m)')")
-      write (o_unit,*) '  top(i=1,imax-1,j=jmax) ', &
+      write (o_unit,'(4a)') '  top(i=1,imax-1,j=jmax) ', &
                        'bottom(i=1,imax-1,j=0) ', &
                        'right(i=imax,j=1,jmax-1) ', &
                        'left(i=0, j=1,jmax-1) '
@@ -508,9 +508,9 @@ module sae_in_out_mod
       write (o_unit,10)  (cellstate(imax,j)%egtcs, j = 1, jmax-1)
       write (o_unit,10)  (cellstate(0,j)%egtcs, j = 1, jmax-1)
 
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit,fmt="(1x,'  Passing Border Grid Cells - Suspension egtss(kg/m)')")
-      write (o_unit,*) '  top(i=1,imax-1,j=jmax) ', &
+      write (o_unit,'(4a)') '  top(i=1,imax-1,j=jmax) ', &
                        'bottom(i=1,imax-1,j=0) ', &
                        'right(i=imax,j=1,jmax-1) ', &
                        'left(i=0, j=1,jmax-1) '
@@ -519,9 +519,9 @@ module sae_in_out_mod
       write (o_unit,10)  (cellstate(imax,j)%egtss, j = 1, jmax-1)
       write (o_unit,10)  (cellstate(0,j)%egtss, j = 1, jmax-1)
 
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit,fmt="(1x,'  Passing Border Grid Cells - PM10       egt10(kg/m)')")
-      write (o_unit,*) '  top(i=1,imax-1,j=jmax) ', &
+      write (o_unit,'(4a)') '  top(i=1,imax-1,j=jmax) ', &
                        'bottom(i=1,imax-1,j=0) ', &
                        'right(i=imax,j=1,jmax-1) ', &
                        'left(i=0,j=1,jmax-1) '
@@ -530,9 +530,9 @@ module sae_in_out_mod
       write (o_unit,11)  (cellstate(imax,j)%egt10, j = 1, jmax-1)
       write (o_unit,11)  (cellstate(0,j)%egt10, j = 1, jmax-1)
 
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit,fmt="(1x,'  Passing Border Grid Cells - PM2_5      egt2_5(kg/m)')")
-      write (o_unit,*) '  top(i=1,imax-1,j=jmax) ', &
+      write (o_unit,'(4a)') '  top(i=1,imax-1,j=jmax) ', &
                        'bottom(i=1,imax-1,j=0) ', &
                        'right(i=imax,j=1,jmax-1) ', &
                        'left(i=0,j=1,jmax-1) '
@@ -541,48 +541,48 @@ module sae_in_out_mod
       write (o_unit,11)  (cellstate(imax,j)%egt2_5, j = 1, jmax-1)
       write (o_unit,11)  (cellstate(0,j)%egt2_5, j = 1, jmax-1)
 
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit,fmt="(' <grid data> | ',3('|',a))") 'Total Soil Loss', 'soil loss', '(kg/m^2)'
       do j = jmax-1, 1, -1
          write (o_unit,10)  (cellstate(i,j)%egt, i = 1, imax-1)
       end do
       write (o_unit,fmt="(' </grid data>')")
 
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit,fmt="(' <grid data> | ',3('|',a))") 'Saltation/Creep Soil Loss', 'salt/creep soil loss', '(kg/m^2)'
       do j = jmax-1, 1, -1
          write (o_unit,10)  (cellstate(i,j)%egtcs, i = 1, imax-1)
       end do
       write (o_unit,fmt="(' </grid data>')")
 
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit,fmt="(' <grid data> | ',3('|',a))") 'Suspension Soil Loss', 'suspension soil loss', '(kg/m^2)'
       do j = jmax-1, 1, -1
          write (o_unit,10)  (cellstate(i,j)%egtss, i = 1, imax-1)
       end do
       write (o_unit,fmt="(' </grid data>')")
 
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit,fmt="(' <grid data> | ',3('|',a))") 'PM10 Soil Loss', 'PM10 soil loss', '(kg/m^2)'
       do j = jmax-1, 1, -1
          write (o_unit,11)  (cellstate(i,j)%egt10, i = 1, imax-1)
       end do
       write (o_unit,fmt="(' </grid data>')")
 
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit,fmt="(' <grid data> | ',3('|',a))") 'PM2_5 Soil Loss', 'PM2_5 soil loss', '(kg/m^2)'
       do j = jmax-1, 1, -1
          write (o_unit,11)  (cellstate(i,j)%egt2_5, i = 1, imax-1)
       end do
       write (o_unit,fmt="(' </grid data>')")
 
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit,*) '**Averages - Field'
       write (o_unit,*) '     Total    salt/creep      susp       PM10        PM2.5'
       write (o_unit,*) '     egt                      egtss      egt10       egt2_5'
       write (o_unit,*) '   -----------------------kg/m^2---------------------------'
       write (o_unit,fmt="(1x, 3(f12.4,2x), 2(f12.6,2x))")    aegt, aegtcs, aegtss, aegt10, aegt2_5
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit,*) '**Averages - Crossing Boundaries '
       write (o_unit,*) 'Location      Total  Salt/Creep   Susp    PM10     PM2_5'
       write (o_unit,*) '-------------------------kg/m---------------------------'
@@ -590,7 +590,7 @@ module sae_in_out_mod
       write (o_unit,fmt="(1x, 'bottom', 1x, 5(f9.2,1x))") bott, botcs, botss, bot10, bot2_5
       write (o_unit,fmt="(1x, 'right ', 1x, 5(f9.2,1x))") ritt, ritcs, ritss, rit10, rit2_5
       write (o_unit,fmt="(1x, 'left  ', 1x, 5(f9.2,1x))") lftt, lftcs, lftss, lft10, lft2_5
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit,*) '   Comparison of interior & boundary loss'
       write (o_unit,*) '      interior       boundary    int/bnd ratio'
       if( totbnd.gt.1.0e-9 ) then
@@ -601,7 +601,7 @@ module sae_in_out_mod
       end if
 
 !     additional output statements for easy shell script parsing
-      write (o_unit,*)
+      write (o_unit,'(a)')
 !     write losses as positive numbers
       write (o_unit,fmt="(' repeat of total, salt/creep, susp, PM10, PM2.5:', 3f12.4,3f12.6)") &
                                     -aegt, -aegtcs, -aegtss, -aegt10, -aegt2_5
@@ -610,7 +610,7 @@ module sae_in_out_mod
 !     output formats
    10 format (1x, 500f12.4)
    11 format (1x, 500f12.6)
-   16 format (1x, 2(f13.4,2x),2x, f13.4)
+   16 format (1x, 2(f15.4,2x),2x, f13.4)
 
       end if !if (btest(am0efl,1)) then
 
@@ -621,7 +621,7 @@ module sae_in_out_mod
             call caldat (mksaeout%jday,day,mon,yr)
             write(*,'(4(a,i0))') 'Wrote to Daily Erosion summary file: ', day,'/', mon,'/', yr,' simulation day: ', mksaeout%simday
             write (UNIT=o_E_unit,FMT="(5(f12.6),' ')",ADVANCE="NO") -aegt, -aegtcs, -aegtss, -aegt10, -aegt2_5
-            write (UNIT=o_E_unit,FMT="('# WEPS erosion day mon yr',2(1x,i2),2x,i4)",ADVANCE="NO") day, mon, yr
+            write (UNIT=o_E_unit,FMT="('# WEPS erosion day mon yr',4(1x,i0))",ADVANCE="NO") day, mon, yr, mksaeout%simday
             write (UNIT=o_E_unit,FMT="(A)",ADVANCE="YES") ' (loss values are positive - deposition values are negative)'
          else
             write (UNIT=o_E_unit,FMT="(5(f12.6),' ')",ADVANCE="NO") -aegt, -aegtcs, -aegtss, -aegt10, -aegt2_5
@@ -633,13 +633,13 @@ module sae_in_out_mod
       !Duplicate Erosion summary info for the *.sgrd file so "sweep" interface
       ! can display this info on graphical report window
       if (btest(am0efl,3) .and. (sgrd_u .ge. 0) ) then
-         write (sgrd_u,*)
+         write (sgrd_u,'(a)')
          write (sgrd_u,*) '**Averages - Field'
          write (sgrd_u,*) '     Total    salt/creep      susp       PM10        PM2.5'
          write (sgrd_u,*) '     egt                      egtss      egt10       egt2_5'
          write (sgrd_u,*) '   -----------------------kg/m^2---------------------------'
          write (sgrd_u,fmt="(1x, 3(f12.4,2x), 2(f12.6,2x))")    aegt, aegtcs, aegtss, aegt10, aegt2_5
-         write (sgrd_u,*)
+         write (sgrd_u,'(a)')
          write (sgrd_u,*) '**Averages - Crossing Boundaries '
          write (sgrd_u,*) 'Location      Total  Salt/Creep   Susp    PM10     PM2_5'
          write (sgrd_u,*) '--------------------------kg/m--------------------------'
@@ -647,7 +647,7 @@ module sae_in_out_mod
          write (sgrd_u,fmt="(1x, 'bottom', 1x, 5(f9.2,1x))") bott, botcs, botss, bot10, bot2_5
          write (sgrd_u,fmt="(1x, 'right ', 1x, 5(f9.2,1x))") ritt, ritcs, ritss, rit10, rit2_5
          write (sgrd_u,fmt="(1x, 'left  ', 1x, 5(f9.2,1x))") lftt, lftcs, lftss, lft10, lft2_5
-         write (sgrd_u,*)
+         write (sgrd_u,'(a)')
          write (sgrd_u,*) '   Comparison of interior & boundary loss'
          write (sgrd_u,*) '      interior       boundary    int/bnd ratio'
          if( totbnd.gt.1.0e-9 ) then
@@ -698,19 +698,19 @@ module sae_in_out_mod
 
         call caldat( mksaeout%jday, da, mo, yr) ! Set day, month and year
 
-        write (o_unit,*)
+        write (o_unit,'(a)')
         write (o_unit,*) 'OUT PUT from sb1out'
-        write (o_unit,*)
+        write (o_unit,'(a)')
 
         ! Print date of Run
         rundatetime = get_systime_string() ! with Lahey f95, had to assign to variable first
         write(o_unit,"(1x,'Date of run: ',a21)") rundatetime
-        write(o_unit,*)
+        write(o_unit,'(a)')
 
         write (unit=o_unit,fmt="(a,f5.2,a2,a,i1)") ' anemht = ', anemht, 'm', '    wzoflg = ', wzoflg
         write (unit=o_unit,fmt="(a,f6.2,a4)") ' wind direction = ', wdir, 'deg'
         write (unit=o_unit,fmt="(a,f6.2,a4)") ' wind direction relative to field orientation = ', awa, 'deg'
-        write (o_unit,*)
+        write (o_unit,'(a)')
 
         ! this section inserted for compatibility with previous output version
         if (wdir .ge. 337.5 .or. wdir .lt. 22.5) then
@@ -731,13 +731,13 @@ module sae_in_out_mod
           kbr = 8
         endif
         write (unit=o_unit,fmt="(a,i1)") ' wind quadrant = ', kbr
-        write (o_unit,*)
+        write (o_unit,'(a)')
         ! end inserted section
 
         write (o_unit,*) 'orientation and dimensions of sim region'
         write (o_unit,*) 'amasim(deg)  amxsim - (x1,y1) (x2,y2)'
         write(o_unit,fmt="(1x,5f8.2)") amasim, amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
-        write (o_unit,*)
+        write (o_unit,'(a)')
 
         write (o_unit,*) "Surface properties"
         write (o_unit,fmt="(a,f8.2,a)") "Ridge spacing parallel to wind direction", subrsurf%sxprg, " (mm)"
@@ -747,22 +747,22 @@ module sae_in_out_mod
         write (o_unit,fmt="(a,f5.2,a)") "Biomass flat cover", subrsurf%abffcv, " (m^2/m^2)"
 
         write (o_unit,fmt="(a,f8.2,a)") "Average yearly total precipitation ", awzypt, " (mm)"
-        write (o_unit,*)
+        write (o_unit,'(a)')
 
         write(o_unit,fmt="(1x,a)") "<field dimensions>"
         write(o_unit,fmt="(1x,5f10.2)")amasim, amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
         write(o_unit,fmt="(1x,a)") "</field dimensions>"
 
-        write (o_unit,*)
+        write (o_unit,'(a)')
       endif
 
       call caldat( mksaeout%jday, da, mo, yr) ! Set day, month and year
 
       write (o_unit, fmt="(a, i5, 2(i3), f7.3, 4(i4))") ' yr mon day hr upd_pd jj nn(subpd) npd (sbqout 1)', &
                                                           yr,mo, da, hr, ipd,  jj, nn,      npd
-      write (o_unit,*)
+      write (o_unit,'(a)')
       write (o_unit, fmt="(a, f5.2, 2(f7.2))") ' pd wind speed, dir and dir rel to field ', ws, wdir, awa
-      write (o_unit,*)
+      write (o_unit,'(a)')
 
       write (o_unit,*) "Surface layer properties"
       write (o_unit,fmt="(a,f5.2,a)") "Surface course fragments", subrsurf%bsl(1)%asvroc, " (m^3/m^3)"
@@ -798,7 +798,7 @@ module sae_in_out_mod
           write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%wusp, i = 1, imax-1)
         end do
         write(o_unit,fmt="(' </grid data>')")
-        write (o_unit,*)
+        write (o_unit,'(a)')
 
         ! Emissions
         write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
@@ -855,7 +855,7 @@ module sae_in_out_mod
           write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%svroc, i = 1, imax-1)
         end do
         write(o_unit,fmt="(' </grid data>')")
-        write (o_unit,*)
+        write (o_unit,'(a)')
 
         write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
             'Soil Agg. Size < 0.01','mass fraction < 0.01 mm size','(fract.)'
@@ -925,7 +925,7 @@ module sae_in_out_mod
           write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%smlos, i = 1, imax-1)
         end do
         write(o_unit,fmt="(' </grid data>')")
-        write (o_unit,*)
+        write (o_unit,'(a)')
 
         ! input fluxes
         write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
@@ -1073,7 +1073,7 @@ module sae_in_out_mod
         write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%wusp, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
-      write (o_unit,*)
+      write (o_unit,'(a)')
 
       ! Emissions
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
@@ -1130,7 +1130,7 @@ module sae_in_out_mod
         write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%svroc, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
-      write (o_unit,*)
+      write (o_unit,'(a)')
 
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))") yr, mo, da, hr, &
             'Soil Agg. Size < 0.01','mass fraction < 0.01 mm size','(fract.)'
@@ -1288,7 +1288,7 @@ module sae_in_out_mod
       end do
       write(o_unit,fmt="(' </grid data>')")
 
-      write (o_unit,*)
+      write (o_unit,'(a)')
 
       ! initialize avg erosion variable
       do j = 1, imax
@@ -1311,7 +1311,7 @@ module sae_in_out_mod
       do k = 1, (imax-1)
          write (o_unit, fmt="(f8.2)", advance="NO") egavg(k)
       end do
-      write(o_unit, *)
+      write(o_unit,'(a)')
       write (o_unit,*) '----------------------------------------------'
 
    end subroutine sb2out
@@ -1373,16 +1373,16 @@ module sae_in_out_mod
 
           write (ounit,*) 'SBEMIT output'
 !          write (ounit,*) 'Suspended emissions < 0.10 mm dia.'
-          write (ounit,*)
+          write (ounit,'(a)')
 
           ! Print date of Run
           rundatetime = get_systime_string() ! with Lahey f95, had to assign to variable first
           write(ounit,"(1x,'Date of run: ',a21)") rundatetime
-          write (ounit,*)
+          write (ounit,'(a)')
 
           write (ounit,100)
           write (ounit,110) 
-          write (ounit,*)
+          write (ounit,'(a)')
 
           ! init prev erosion hr values to zero if this is new erosion day
           first_emit = .false.

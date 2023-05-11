@@ -374,19 +374,19 @@ module soil_processes_mod
          gmd1 = gmd0 + se1
       elseif ((se0 .gt. 1.0) .and. (se1 .le. 1.0)) then   !thaw
          ! se1 may be puddled, all freeze dried or between these states
-         gmd1 = 1 - exp(-(se1/c4p)**2)
+         gmd1 = 1 - exp(-(dble(se1)/c4p)**2)
 
       elseif ((se0 .eq. 1.0).and.(se1 .eq. 1.0) ) then 
          ! no freeze; calculate gmd1
-         gmd_avg1 = (1 - exp(-(se1/c4p)**2))*(1-c4f) + c4f
+         gmd_avg1 = (1 - exp(-(dble(se1)/c4p)**2))*(1-c4f) + c4f
          gmd1 = (gmd_avg1 + gmd0)/2.0
 
       elseif (se0 .eq. se1) then
-           gmd_avg1 = (1 - exp(-(se1/c4p)**2))*(1-c4f) + c4f
+           gmd_avg1 = (1 - exp(-(dble(se1)/c4p)**2))*(1-c4f) + c4f
            gmd1 = gmd_avg1*0.2 + gmd0*0.8
       else                              
-          gmd_avg0 = (1 - exp(-(se0/c4p)**2))*(1-c4f) + c4f
-          gmd_avg1 = (1 - exp(-(se1/c4p)**2))*(1-c4f) + c4f
+          gmd_avg0 = (1 - exp(-(dble(se0)/c4p)**2))*(1-c4f) + c4f
+          gmd_avg1 = (1 - exp(-(dble(se1)/c4p)**2))*(1-c4f) + c4f
 
           slp0 = (gmd_avg1 - gmd0)/(se1 - se0)
           slp_avg = (gmd_avg1 - gmd_avg0)/(se1 - se0)
@@ -411,11 +411,11 @@ module soil_processes_mod
       ! cs0ags = 1.0 / (0.0203 + 0.00193  *cslagm + 0.074 / sqrt(cslagm))
       ! this replacement equation is asmytotic to 1 and is very close
       ! to the original where the gsd was greater than 1
-      cs0ags = 1.0 + 1.0 / (0.012448 + 0.002463*cslagm + 0.093467/sqrt(cslagm))
+      cs0ags = 1.0 + 1.0 / (0.012448 + 0.002463*cslagm + 0.093467/sqrt(dble(cslagm)))
 
       ! calculate max. aggregate diameter (cslagx)
-      c4p = 1.52 * cslagm**(-0.449)
-      cslagx = (cs0ags**c4p) * cslagm
+      c4p = 1.52d0 * cslagm**(-0.449d0)
+      cslagx = (dble(cs0ags)**c4p) * cslagm
 
     end subroutine asd
 
@@ -461,7 +461,7 @@ module soil_processes_mod
         wsdblk = csdblk
         do j = 1,nj
           if (wsdblk .lt. 0.97 * csdsblk) then
-            wsdblk = min( csdsblk, wsdblk+0.75 * (1-(wsdblk/(0.97 * csdsblk)))**1.5 )
+            wsdblk = min( csdsblk, wsdblk+0.75 * (1.0d0 - (wsdblk/(0.97d0 * csdsblk)))**1.5d0 )
           else
             exit
           endif
@@ -498,7 +498,7 @@ module soil_processes_mod
     end subroutine den
 
     pure subroutine cru( bszcr, cumpa, csfcla, dcump, bsfcr, bhzsmt, &
-                    bsmlos, csfom, csfcce, csfsan, bsmls0, bszrgh, bszrr, bsflos)
+                    bsmlos, csfom, csfcce, csfsan, bszrgh, bszrr, bsflos)
 
       ! calculates 4 crust variables:
       ! crust thickness, mm
@@ -517,20 +517,20 @@ module soil_processes_mod
       real, intent(in) :: csfom
       real, intent(in) :: csfcce
       real, intent(in) :: csfsan
-      real, intent(out) :: bsmls0
       real, intent(in) :: bszrgh
       real, intent(in) :: bszrr
       real, intent(out) :: bsflos 
 
 !     + + + LOCAL VARIABLES + + +
-      real :: sz    ! maximum of ridge height and 4 times random roughness
-      real :: cflos ! correction factor for decease of fraction loose cover
-                    ! area on crust caused by roughness
-      real :: temp  ! 
+      real :: sz     ! maximum of ridge height and 4 times random roughness
+      real :: cflos  ! correction factor for decease of fraction loose cover
+                     ! area on crust caused by roughness
+      real :: bsmls0 ! prior value of bsmlos before update by SOIL, kg/m^2
+      real :: temp   ! 
 
       ! calc. apparent precip. (eq. S-14)
       if( bszcr .ge. 7.6 ) bszcr = 7.599
-      cumpa = -(alog(1.0-bszcr/7.6)) / (0.0705-0.0687*csfcla**0.146)
+      cumpa = -(log(1.0d0-dble(bszcr)/7.6d0)) / (0.0705d0-0.0687d0*dble(csfcla)**0.146d0)
 
       ! check for threshold precip.
       ! ie. check to see if a H2O addition exceeding 10mm has been made
@@ -541,18 +541,18 @@ module soil_processes_mod
       end if
 
       ! calc. crust thickness (eq. S-16, *** sb S-15)
-      temp = (0.0705 - 0.0687*csfcla**0.146)*(cumpa + dcump)
-      if( temp .gt. 20.0 ) then                !check to avoid underflow
+      temp = (0.0705d0 - 0.0687d0*csfcla**0.146d0)*(cumpa + dcump)
+      if( temp .gt. 20.0 ) then                ! check to avoid underflow
           bszcr = 7.6
       else
-          bszcr = 7.6*(1.0 - exp(-temp))
+          bszcr = 7.6*(1.0 - exp(-dble(temp)))
       endif
 
       ! calc. apparent precip (eq. S-17 *** sb S-16)
       if( bsfcr .lt. 1.0 ) then
-          cumpa = -(alog(1.0 - bsfcr))/0.045
+          cumpa = -(log(1.0d0 - dble(bsfcr)))/0.045d0
           ! calc. crust cover fraction (eq. S-18, *** sb S-17)
-          bsfcr = 1.0 - exp(- 0.045*(cumpa + dcump))
+          bsfcr = 1.0 - exp(- 0.045d0*(cumpa + dcump))
       end if
 
       ! loose erodible material on crust
@@ -560,9 +560,9 @@ module soil_processes_mod
       if( bhzsmt .eq. 0.0 ) then
          ! no snow melt
          if( csfcla .eq. 0.0 ) then
-            bsmlos = 0.1*exp(-0.57 + 0.22 * 999. + 7.0 * csfcce - csfom)
+            bsmlos = 0.1*exp(-0.57d0 + 0.22d0 * 999.0d0 + 7.0d0 * csfcce - csfom)
          else
-            bsmlos = 0.1*exp(-0.57 + 0.22 * csfsan / csfcla + 7.0 * csfcce - csfom)
+            bsmlos = 0.1*exp(-0.57d0 + 0.22d0 * csfsan / csfcla + 7.0d0 * csfcce - csfom)
          end if
          ! set upper limit on loose mass (eq. S-21, *** sb S-20)
          if( bsmlos .gt. 3.0 ) then
@@ -584,15 +584,15 @@ module soil_processes_mod
       endif
 
       ! fraction cover of loose erodible material (eq. S-24, S-25, sb S-23,24)
-      sz = amax1(4.0*bszrr, bszrgh)
+      sz = max(4.0*bszrr, bszrgh)
       ! *** cflos = sqrt(bsmlos)/(0.24*sz)
       ! *** debugging fix
-      cflos = exp(-0.08*sz**0.5)
+      cflos = exp(-0.08d0*sz**0.5d0)
       ! *** eodf
       if (cflos .gt. 1.0) then
          cflos = 1.0
       end if
-      bsflos = (1.0 - exp(-3.5*bsmlos**1.5))*cflos
+      bsflos = (1.0 - exp(-3.5d0*bsmlos**1.5d0))*cflos
 
     end subroutine cru
 
@@ -614,7 +614,7 @@ module soil_processes_mod
 
       ! calc. reg. coefficients (eq. S-12, S-13)
       arr = 91.08 + 765.8 * csfsil
-      crr = 0.53 + 4.66 * csfsan - 3.8 * csfsan**1.5-1.22*(csfsan)**0.5
+      crr = 0.53 + 4.66 * csfsan - 3.8 * csfsan**1.5d0 - 1.22 * (csfsan)**0.5d0
 
       ! calc. apparent precip. (eq. S-11 is S-14 solved for a bare surface)
       ! changed * to ** to conform to equ S-10
@@ -623,7 +623,7 @@ module soil_processes_mod
          cumpa = 0.0
          bszrro = bszrr
       else
-         cumpa = arr * (-log(bszrr / bszrro)) ** (1.0 / crr)
+         cumpa = dble(arr) * (-log(dble(bszrr) / dble(bszrro))) ** (1.0d0 / dble(crr))
       end if
 
       ! update random roughness (eq. S-14)
@@ -636,7 +636,8 @@ module soil_processes_mod
       else
       ! *** end of debugging fix
       ! ***      write(*,*) ' crr ', crr
-         bszrr = bszrro * exp(-((cumpa + (1.0 - csvroc) * cf2cov*dcump) /arr)**crr)
+         bszrr = dble(bszrro) * exp(-((dble(cumpa) &
+               + (1.0d0 - dble(csvroc)) * dble(cf2cov) * dble(dcump)) / dble(arr))**dble(crr))
       endif
       if ( bszrr .lt. 2.0) then
          bszrr = 2.0
@@ -665,11 +666,12 @@ module soil_processes_mod
       ! if ridge height is zero, skip ridge update
       if (bszrgh .ne. 0.0) then
          ! calc. ridge scale factor (eq. S-8)
-         cf1rg = (348.0 / bsxrgs)**0.3
+         cf1rg = (348.0d0 / dble(bsxrgs))**0.3d0
          ! calculate apparent cum. precip. (eq. S-5)
-         cumpa = ((1. - bszrgh/bszrho)/(0.034*cf1rg))**2.
+         cumpa = ((1. - bszrgh/bszrho)/(0.034*cf1rg))**2
          ! update ridge height (eq. S-6)
-         bszrgh = bszrho * (1.0 - 0.034 * sqrt(cumpa + dcump * cf2cov * (1.0 - bsvroc(1)))*cf1rg)
+         bszrgh = bszrho * (1.0d0 &
+                - 0.034d0 * sqrt(dble(cumpa) + dble(dcump) * dble(cf2cov) * (1.0d0 - dble(bsvroc(1)))) *dble(cf1rg))
 
          ! check to see that minimum bszrgh/bszrho > 0.05 if not then set
          ! the ratio to 0.05.

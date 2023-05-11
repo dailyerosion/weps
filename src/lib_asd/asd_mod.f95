@@ -5,57 +5,58 @@
 
 module asd_mod
 
-  integer, parameter :: msieve = 26
-  real, parameter :: mingsd = 2.0
+  integer, parameter :: msieve = 26  ! NOTE: values greater than 67 will fail in mproc_soil_mod/crush
+                                     ! The binomial distribution will return nonsense values.
+  double precision, parameter :: mingsd = 2.0d0
 
-  real             sdia(msieve)   ! array containing sieve size diameters
-  real             mnsize         ! minimum (imaginary) sieve size to use for computing
-                                  ! lower sieve cut geometric mean diameter
-  real             mxsize         ! maximum (imaginary) sieve size to use for computing
-                                  ! upper sieve cut geometric mean diameter
-  real             mdia(msieve+1) ! array containing gmd sieve cut diameters
-  integer          nsieve         ! number of sieves used
-  integer          logcas         ! flag to represent which lognormal case to apply
+  double precision :: sdia(msieve) ! array containing sieve size diameters
+  double precision :: mnsize       ! minimum (imaginary) sieve size to use for computing
+                                   ! lower sieve cut geometric mean diameter
+  double precision :: mxsize       ! maximum (imaginary) sieve size to use for computing
+                                   ! upper sieve cut geometric mean diameter
+  double precision :: mdia(msieve+1) ! array containing gmd sieve cut diameters
+  integer :: nsieve  ! number of sieves used
+  integer :: logcas  ! flag to represent which lognormal case to apply
 
 
   contains
 
     subroutine asdini()
 
-!     + + + PURPOSE + + +
-!     This subroutine  performs the initialization of the asd/sieve
-!     variables which include the number of sieves and their sizes,
-!     the geometric mean diameter of each sieve cut and specifies which
-!     lognormal case will be used to represent aggregate size distributions
-!     in WERM/WEPS.
+      ! + + + PURPOSE + + +
+      ! This subroutine  performs the initialization of the asd/sieve
+      ! variables which include the number of sieves and their sizes,
+      ! the geometric mean diameter of each sieve cut and specifies which
+      ! lognormal case will be used to represent aggregate size distributions
+      ! in WERM/WEPS.
 
-!     The routine decides which lognormal case to apply based on the
-!     value of logcas:
+      ! The routine decides which lognormal case to apply based on the
+      ! value of logcas:
 
-!     logcas = 0 --> "normal" lognormal case (mnot = 0, minf = infinity)
-!     logcas = 1 --> "abnormal" lognormal case (mnot != 0, minf = infinity)
-!     logcas = 2 --> "abnormal" lognormal case (mnot = 0, minf != infinity)
-!     logcas = 3 --> "abnormal" lognormal case (mnot != 0, minf != infinity)
+      ! logcas = 0 --> "normal" lognormal case (mnot = 0, minf = infinity)
+      ! logcas = 1 --> "abnormal" lognormal case (mnot != 0, minf = infinity)
+      ! logcas = 2 --> "abnormal" lognormal case (mnot = 0, minf != infinity)
+      ! logcas = 3 --> "abnormal" lognormal case (mnot != 0, minf != infinity)
 
-!     + + + KEYWORDS + + +
-!     aggregate size distribution, asd, sieves, mass fractions
+      ! + + + KEYWORDS + + +
+      ! aggregate size distribution, asd, sieves, mass fractions
 
-!     + + + LOCAL VARIABLES + + +
+      ! + + + LOCAL VARIABLES + + +
       integer :: i  ! loop variable for sieve diameters
 
-!     + + + END SPECIFICATIONS + + +
+      ! + + + END SPECIFICATIONS + + +
 
       ! NOTE: using this method generates slightly different sieve sizes
       ! between debug and optimized compile switches. (and possibly between
       ! different compilers) To minimize these differences, we should return
       ! to exactly defined sieve sizes
 
-! specificiations brought here from BLKDAT (see revision 1.4 comment below)
-!      data logcas / 3 /
-!      data nsieve / 13 /
-!      data sdia / 0.018, 0.037, 0.075, 0.15, 0.42, 0.84, 2.0,
-!     &            6.35, 19.05, 44.45, 76.2, 150.4, 300.8 /
-!      data mnsize, mxsize / 0.009, 601.2 /
+      ! specificiations brought here from BLKDAT (see revision 1.4 comment below)
+      !  data logcas / 3 /
+      !  data nsieve / 13 /
+      !  data sdia / 0.018, 0.037, 0.075, 0.15, 0.42, 0.84, 2.0,
+      ! &            6.35, 19.05, 44.45, 76.2, 150.4, 300.8 /
+      !  data mnsize, mxsize / 0.009, 601.2 /
 
       logcas = 3
       nsieve = msieve - 1
@@ -63,81 +64,47 @@ module asd_mod
       mxsize = 1000.0
 
       do i = 1, nsieve
-          sdia(i) = exp(log(mnsize)                                     &
-     &            + i*(log(mxsize)-log(mnsize))/(nsieve+1))
+          sdia(i) = exp(log(mnsize) + i*(log(mxsize)-log(mnsize))/(nsieve+1))
+          !write(*,"(a, i0, 1x, ES24.17)") 'ASDINI: ', i, sdia(i)
       end do
 
-!     compute geometric mean dia. for each sieve cut
+      ! compute geometric mean dia. for each sieve cut
       mdia(1) = sqrt(mnsize*sdia(1))
-      do 5 i = 2, nsieve
+      do i = 2, nsieve
            mdia(i) = sqrt(sdia(i)*sdia(i-1))
-5     continue
+      end do
       mdia(nsieve+1) = sqrt(mxsize*sdia(nsieve))
-
-      return
 
     end subroutine asdini
 
+    ! This subroutine  performs the inverse of subroutine m2asd.
+    ! asd2m computes the mass fractions for each sieve cut from the
+    ! lognormal representation of the soil aggregate size distribution.
     pure subroutine asd2m (mnot, minf, gmd, gsd, nlay, mf)
 
-!     + + + PURPOSE + + +
-!     This subroutine  performs the inverse of subroutine m2asd.
-!     asd2m computes the mass fractions for each sieve cut from the
-!     lognormal representation of the soil aggregate size distribution.
+      use erf_mod, only: erf1
 
-!     The routine decides which lognormal case to apply based on the
-!     value of logcas:
+      real, intent(in) :: mnot(*) ! minimum size aggregate (assumed value is known)
+      real, intent(in) :: minf(*) ! maximum size aggregate (assumed value is known)
+      real, intent(in) :: gmd(*)  ! geometric mean diameter of aggregate size distribution
+                                  ! (or transformed asd for "modified" lognormal cases)
+      real, intent(in) :: gsd(*)  ! geometric standard deviation of aggregate size distribution
+                                  ! (or transformed asd for "modified" lognormal cases)
+      integer, intent(in) :: nlay ! number of soil layers used
+      real, dimension(msieve+1,*), intent(out) :: mf ! mass fractions of aggregates within sieve cuts
+                                                     ! (sum of all mass fractions are expected to = 1.0)
 
-!     logcas = 0 --> "normal" lognormal case (mnot = 0, minf = infinity)
-!     logcas = 1 --> "abnormal" lognormal case (mnot != 0, minf = infinity)
-!     logcas = 2 --> "abnormal" lognormal case (mnot = 0, minf != infinity)
-!     logcas = 3 --> "abnormal" lognormal case (mnot != 0, minf != infinity)
-!
-!     + + + KEYWORDS + + +
-!     aggregate size distribution, asd, sieves, mass fractions
-
-!     + + + ARGUMENT DECLARATIONS + + +
-      real, intent(in) :: mnot(*), minf(*)
-      real, intent(in) :: gmd(*), gsd(*)
-      integer, intent(in) :: nlay
-      real, dimension(msieve+1,*), intent(out) :: mf
-
-!     + + + ARGUMENT DEFINITIONS + + +
-!     mnot   - minimum size aggregate (assumed value is known)
-!     minf   - maximum size aggregate (assumed value is known)
-!     gmd    - geometric mean diameter of aggregate size distribution
-!              (or transformed asd for "modified" lognormal cases)
-!     gsd    - geometric standard deviation of aggregate size distribution
-!              (or transformed asd for "modified" lognormal cases)
-!     nlay   - number of soil layers used
-!     mf     - mass fractions of aggregates within sieve cuts
-!              (sum of all mass fractions are expected to = 1.0)
-
-!     + + + LOCAL VARIABLES + + +
-
-      real     d(msieve+1)
-      real     lngmd, lngsd
-      real     prev, this
-      integer  i, j
-
-!     + + + FUNCTION DEFINITIONS + + +
-      real     erf
-
-!     + + + LOCAL VARIABLE DEFINITIONS + + +
-!
-!     d      - transformed sieve dia. values
-!              (if "abnormal" lognormal cases)
-!     lngmd - natural log of gmd
-!     lngsd - natural log of gsd
-!     prev   - contain previous sieve dia. cumulative prob
-!     this   - contain this sieve dia. cumulative prob
-!     i      - loop variable for sieve sizes
-!     j      - loop variable for soil layers
-!
-!     + + + END SPECIFICATIONS + + +
+      double precision :: d(msieve+1) ! transformed sieve dia. values
+                                      ! (if "abnormal" lognormal cases)
+      double precision :: lngmd ! natural log of gmd
+      double precision :: lngsd ! natural log of gsd
+      double precision :: prev  ! contain previous sieve dia. cumulative prob
+      double precision :: this  ! contain this sieve dia. cumulative prob
+      integer :: i  ! loop variable for sieve sizes
+      integer :: j  ! loop variable for soil layers
 
       do j = 1, nlay
-!         compute transformed sieve dia. sizes
+          ! compute transformed sieve dia. sizes
           if (logcas .eq. 3) then
               do i = 1, nsieve
                   if(sdia(i).lt.minf(j)) then
@@ -159,8 +126,8 @@ module asd_mod
                    d(i) = sdia(i)
               end do
           endif
-          lngmd= log(gmd(j))
-          lngsd= sqrt(2.0) * log(max(mingsd,gsd(j)))
+          lngmd = log(dble(gmd(j)))
+          lngsd = sqrt(2.0) * log(max(mingsd,dble(gsd(j))))
           prev= 1.0
 
           ! compute each dia. cumulative probability
@@ -168,7 +135,7 @@ module asd_mod
               if (sdia(i) .le. mnot(j)) then
                  this = 1.0
               else if (sdia(i) .lt. minf(j)) then
-                 this = 0.5 -0.5*erf((alog(d(i)) - lngmd) / lngsd)
+                 this = 0.5 -0.5*erf1(sngl((log(d(i)) - lngmd) / lngsd))
               else
                  this = 0.0
               end if
@@ -200,61 +167,31 @@ module asd_mod
       return
     end subroutine asd2m
 
+    ! This subroutine  performs the inverse of subroutine asd2m.
+    ! m2asd computes the geometric mean & standard deviation for the
+    ! lognormal representation of the soil aggregate size distribution
+    ! from mf(i,j).
     pure subroutine m2asd (mf, nlay, mnot, minf, gmd, gsd)
+      real, dimension(msieve+1,*), intent(in) :: mf ! mass fractions of aggregates within sieve cuts
+                                                    ! (sum of all mass fractions are expected to = 1.0)
+      integer, intent(in) :: nlay ! number of soil layers used
+      real, intent(in) :: mnot(*) ! minimum size aggregate (assumed value is known)
+      real, intent(in) :: minf(*) ! maximum size aggregate (assumed value is known)
+      real, intent(out) :: gmd(*) ! geometric mean diameter of aggregate size distribution
+                                  ! (or transformed asd for "modified" lognormal cases)
+      real, intent(out) :: gsd(*) ! geometric standard deviation of aggregate size distribution
+                                  ! (or transformed asd for "modified" lognormal cases)
 
-!     + + + PURPOSE + + +
-!     This subroutine  performs the inverse of subroutine asd2m.
-!     m2asd computes the geometric mean & standard deviation for the
-!     lognormal representation of the soil aggregate size distribution
-!     from mf(i,j).
-
-!     The routine decides which lognormal case to apply based on the
-!     value of logcas:
-
-!     logcas = 0 --> "normal" lognormal case (mnot = 0, minf = infinity)
-!     logcas = 1 --> "abnormal" lognormal case (mnot != 0, minf = infinity)
-!     logcas = 2 --> "abnormal" lognormal case (mnot = 0, minf != infinity)
-!     logcas = 3 --> "abnormal" lognormal case (mnot != 0, minf != infinity)
-
-!     + + + KEYWORDS + + +
-!     aggregate size distribution, asd, sieves, mass fractions
-
-!     + + + ARGUMENT DECLARATIONS + + +
-      real, dimension(msieve+1,*), intent(in) :: mf
-      integer, intent(in) :: nlay
-      real, intent(in) :: mnot(*), minf(*)
-      real, intent(out) :: gmd(*), gsd(*)
-
-!     + + + ARGUMENT DEFINITIONS + + +
-!     mf     - mass fractions of aggregates within sieve cuts
-!              (sum of all mass fractions are expected to = 1.0)
-!     nlay   - number of soil layers used
-!     mnot   - minimum size aggregate (assumed value is known)
-!     minf   - maximum size aggregate (assumed value is known)
-!     gmd    - geometric mean diameter of aggregate size distribution
-!              (or transformed asd for "modified" lognormal cases)
-!     gsd    - geometric standard deviation of aggregate size distribution
-!              (or transformed asd for "modified" lognormal cases)
-
-!     + + + LOCAL VARIABLES + + +
-      real     tmd(msieve+1)
-      real     alpha, beta
-      real     mdia_istart, mdia_istop, sdia_temp
-      integer  i, j
-
-      integer  istart, istop
-
-!     + + + LOCAL VARIABLE DEFINITIONS + + +
-!
-!     tmd    - transformed md (later log(tmd))
-!     alpha  - internal summation variable
-!     beta   - internal summation variable
-!     i      - loop variable for sieve diameters
-!     istart - loop start variable for sieve diameters
-!     istop  - loop stop variable for sieve diameters
-!     j      - loop variable for soil layers
-
-!     + + + END SPECIFICATIONS + + +
+      double precision :: tmd(msieve+1) ! transformed md (later log(tmd))
+      double precision :: alpha       ! internal summation variable
+      double precision :: beta        ! internal summation variable
+      double precision :: mdia_istart ! temp variable, avoid changing mdia array for logcas 1,3
+      double precision :: mdia_istop  ! temp variable, avoid changing mdia array for logcas 2,3
+      double precision :: sdia_temp   ! temp variable
+      integer i      ! loop variable for sieve diameters
+      integer j      ! loop variable for soil layers
+      integer istart ! loop start variable for sieve diameters
+      integer istop  ! loop stop variable for sieve diameters
 
       ! for each soil layer
       do j = 1, nlay
@@ -299,7 +236,7 @@ module asd_mod
                     istop = i+1
                  end if
               end do
-!             set size of upper sieve in top bin
+              ! set size of upper sieve in top bin
               if( istop.eq.nsieve+1 ) then
                   sdia_temp = mxsize
               else
@@ -365,12 +302,12 @@ module asd_mod
            end if
 
            ! restore modified geometric mean bin diameters
-!           if (logcas .eq. 1 .or. logcas .eq. 3) then
-!               mdia(istart) = mdia_istart
-!           end if
-!           if (logcas .ge. 2) then
-!               mdia(istop) = mdia_istop
-!           end if
+           ! if (logcas .eq. 1 .or. logcas .eq. 3) then
+           !   mdia(istart) = mdia_istart
+           ! end if
+           ! if (logcas .ge. 2) then
+           !   mdia(istop) = mdia_istop
+           ! end if
 
       end do
       return

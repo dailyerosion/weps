@@ -69,7 +69,7 @@ module decomp_process_mod
 !  These data initializations are being done every day.  Need to make
 !  sure that when a harvest takes place that all the decomp pools are
 !  updated correctly.
-!
+
       pjuld = get_psim_juld(isr)
 
       ! set the number of soil layers from previously allocated structure

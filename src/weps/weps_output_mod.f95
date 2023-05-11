@@ -135,8 +135,8 @@ module weps_output_mod
 
           ! insert double blank lines to demarcate years
           if( doy .eq. 1 ) then
-              write (luocrp1(isr),*)
-              write (luocrp1(isr),*)
+              write (luocrp1(isr),'(a)')
+              write (luocrp1(isr),'(a)')
           end if
 
           ! NOTE: tf=temperature factor, wf=water factor, dd=decomposition day
@@ -229,8 +229,8 @@ module weps_output_mod
                 ' height repstemdia stemstandm leafstandm storstandm', &
                 ' stemflatm leafflatm storflatm rstorflatm rfiberflatm',&
                 ' stembgm leafbgm storbgm rstorgbm rfibergbm name'
-              write(thisResidue%bout%luo,*) ''
-              write(thisResidue%bout%luo,*) ''
+              write(thisResidue%bout%luo,'(a)')
+              write(thisResidue%bout%luo,'(a)')
             end if
 
 2355        format (i6,1x,i5,1x,i4,1x,i3,1x,i4,1x,i2,30(1x,f10.5),1x,a30)
@@ -414,8 +414,8 @@ module weps_output_mod
 
         ! insert double blank lines to demarcate years
         if( doy .eq. 1 ) then
-            write (luoplt(isr),*)
-            write (luoplt(isr),*)
+            write (luoplt(isr),'(a)')
+            write (luoplt(isr),'(a)')
         end if
 
         ! sum leaf /stem areas accross crop and residue pools
@@ -1016,11 +1016,7 @@ module weps_output_mod
          if (am0ddb(idx) .eq. 1) close(luoddb(idx))
       end do
 
-      ! files opened in cmdline.for
-      close(luolog)
-
-!     these files are opened at all times
-
+      ! these files are opened at all times
       if( .not. old_run_file .or. (nsubr .gt. 1) ) then
          close(luogui1(0))
          close(luomandate(0))

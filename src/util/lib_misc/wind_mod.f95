@@ -74,10 +74,10 @@ module wind_mod
 
       ! calculate roughness length of canopy ( in mm)
       if (brcd .gt. 0.1) then
-        wzzov = bht * 1/(17.27-(1.254*alog(brcd)/brcd)-(3.714/brcd))
+        wzzov = bht * 1/(17.27-(1.254*log(dble(brcd))/brcd)-(3.714/brcd))
       else if( (bht .gt. 5.0) .and. (brcd .gt. 0.001) ) then
-          ! wzzov = bht*exp(alog(wzzo/bht) + (alog(0.11*bht/wzzo) * alog(brcd/0.01))/2.3) ! caused Simon's instability
-        wzzov = bht*(wzzo/bht+((0.11-wzzo/bht)/4.60517)*alog(brcd/0.001))
+          ! wzzov = bht*exp(alog(wzzo/bht) + (alog(0.11*bht/wzzo) * log(dble(brcd)/0.01))/2.3) ! caused Simon's instability
+        wzzov = bht*(wzzo/bht+((0.11-wzzo/bht)/4.60517)*log(dble(brcd)/0.001))
       else
           wzzov = 0.0
       endif
@@ -123,7 +123,7 @@ module wind_mod
       wusst = awu*0.4/alog(anemht*1000./awzzo)
 
       ! calc subregion friction velocity
-      wus = wusst * (wzzov/awzzo)**0.067
+      wus = wusst * (wzzov/awzzo)**0.067d0
 
       ! if standing biomass, calculate wus below canopy
       if (brcd .gt. 0.0001 ) then
@@ -131,9 +131,9 @@ module wind_mod
 
         ! calculate friction velocity below canopy
         if( brcd.gt.2.56) then       !check to avoid underflow
-            wus = wusv * 0.25*exp(-brcd/0.356)
+            wus = wusv * 0.25*exp(-brcd/0.356d0)
         else
-            wus = wusv*(0.86*exp(-brcd/0.0298)+0.25*exp(-brcd/0.356))
+            wus = wusv*(0.86*exp(-brcd/0.0298d0)+0.25*exp(-brcd/0.356d0))
         endif
         wus = min(wus,wusv)
       endif
@@ -267,7 +267,7 @@ module wind_mod
       red_sai = red_sai + bdrsai
 
       ! streamline effect for total leaf area
-      red_lai = red_lai * 0.2 * (1.0 - exp(-red_lai))
+      red_lai = red_lai * 0.2 * (1.0 - exp(-dble(red_lai)))
 
       ! final result
       bio_drag = red_lai + red_sai

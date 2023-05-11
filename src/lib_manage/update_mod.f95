@@ -141,14 +141,14 @@ module update_mod
           thisPlant%deriv%rcd = biodrag(0.0, 0.0, thisPlant%deriv%rlai, sngl(thisPlant%deriv%rsai), &
                      thisPlant%geometry%rg, thisPlant%geometry%xrow, thisPlant%geometry%zht, soil%aszrgh)
           ! surface cover
-          thisPlant%deriv%ffcv = 1.0 - exp( -thisPlant%database%covfact * thisPlant%deriv%mf )
+          thisPlant%deriv%ffcv = 1.0 - exp( -thisPlant%database%covfact * dble(thisPlant%deriv%mf) )
           ! cover from standing stems  !!! should this really use geometry%xstmrep for consistency ???
-          thisPlant%deriv%fscv = thisPlant%geometry%dstm * pi * (thisPlant%geometry%xstmrep/2.0)**2.0
+          thisPlant%deriv%fscv = thisPlant%geometry%dstm * pi * (thisPlant%geometry%xstmrep/2.0)**2
           if (thisPlant%deriv%fscv > 1.0) thisPlant%deriv%fscv = 1.0
           thisPlant%deriv%ftcv = thisPlant%deriv%fscv + thisPlant%deriv%ffcv !no overlap
           if (thisPlant%deriv%ftcv > 1.0) thisPlant%deriv%ftcv = 1.0
           ! crop leaf interception area (canopy cover)
-          thisPlant%deriv%fcancov = 1.0 - exp( - thisPlant%database%ck * thisPlant%deriv%rlai)
+          thisPlant%deriv%fcancov = 1.0 - exp( - thisPlant%database%ck * dble(thisPlant%deriv%rlai) )
           ! transpiration depth as a function of furrow cut depth and root depth
           thisPlant%deriv%ztranspdepth = transpdepth(thisPlant%geometry%zrtd, thisPlant%geometry%zfurcut, &
                                          thisPlant%geometry%ztransprtmin, thisPlant%geometry%ztransprtmax)
@@ -232,15 +232,15 @@ module update_mod
 
           ! cover from flat mass estimated using Gregory, 1982. Trans. ASAE 25:1333-1337
           ! fraction (m2/m2) modified to take overlap into account.
-          thisResidue%deriv%ffcv = 1.0 - exp( -thisPlant%database%covfact * thisResidue%deriv%mf )
+          thisResidue%deriv%ffcv = 1.0 - exp( -thisPlant%database%covfact * dble(thisResidue%deriv%mf) )
           ! cover from standing stems  !!! should this really use geometry%xstmrep for consistency ???
-          thisResidue%deriv%fscv = thisResidue%dstm * pi * ( thisResidue%xstmrep/2.0 )**2.0
+          thisResidue%deriv%fscv = thisResidue%dstm * pi * ( thisResidue%xstmrep/2.0 )**2
           if (thisResidue%deriv%fscv > 1.0) thisResidue%deriv%fscv = 1.0
           ! total cover (flat + standing)
           thisResidue%deriv%ftcv = thisResidue%deriv%ffcv + thisResidue%deriv%fscv !no overlap
           if (thisResidue%deriv%ftcv > 1.0) thisResidue%deriv%ftcv = 1.0
           ! residue leaf interception area (canopy cover)
-          thisResidue%deriv%fcancov = 1.0 - exp( - thisPlant%database%ck * thisResidue%deriv%rlai)
+          thisResidue%deriv%fcancov = 1.0 - exp( - thisPlant%database%ck * dble(thisResidue%deriv%rlai) )
 
           ! header
           !write(*, &
@@ -709,7 +709,7 @@ module update_mod
 !     coeff_b - coefficient b of ratio = exp( a * biomass ** b ) for this biomass
 
 !     LOCAL VARIABLES
-      real pseudo_biomass
+      double precision :: pseudo_biomass
 
 !     LOCAL VARIABLE DEFINITIONS
 !     pseudo_biomass - an amount of biomass that would result in the prev_redu_ratio
@@ -718,7 +718,7 @@ module update_mod
         ! zero value results in error taking log  below. This only happens
         ! with very large amounts of residue in multiple residue pools.
         if( (coeff_a .ne. 0.0) .and. (coeff_b .ne. 0.0) ) then
-          pseudo_biomass =(log(prev_redu_ratio)/coeff_a )**(1.0/coeff_b)
+          pseudo_biomass =(log(dble(prev_redu_ratio))/coeff_a )**(1.0d0/coeff_b)
         else
           pseudo_biomass = 0.0
         end if

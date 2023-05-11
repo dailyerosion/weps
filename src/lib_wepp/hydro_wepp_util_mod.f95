@@ -27,7 +27,7 @@ module hydro_wepp_util_mod
 !     + + + ARGUMENT DECLARATIONS + + +
       INTEGER NR
       REAL TRF(*), RF(*), P, DURD, TPD, IP
-      
+
 !     + + + ARGUMENT DEFINITIONS + + +
 !     NR       - INTEGER VALUE FOR RAINFALL ARRAY DIMENSION
 !     TRF      - REAL VALUE FOR TIME OF RAINFALL VALUE TO BEGIN (TIME)
@@ -198,9 +198,9 @@ module hydro_wepp_util_mod
          FQ = FLOAT(I) * DELTFQ
 
          IF (FQ.LE.tpd_loc) THEN
-            TIMEDL(I+1) = (1.0/B) * LOG(1.0+(B/A)*FQ)
+            TIMEDL(I+1) = (1.0/B) * LOG(1.0d0+(B/A)*FQ)
          ELSE
-            TIMEDL(I+1)=tpd_loc-(1.0/D)*LOG(1.0-(D/ip_loc)*(FQ-tpd_loc))
+            TIMEDL(I+1)=tpd_loc-(1.0/D)*LOG(1.0d0-(D/ip_loc)*(FQ-tpd_loc))
          END IF
 
       END DO 
@@ -683,12 +683,13 @@ module hydro_wepp_util_mod
       integer, intent(in) :: nsl
       real, intent(in)  :: fc(*),ul(*), hk(*), ssc(*)
 
-      real, intent(inout) :: st(*), sep
+      real, intent(inout) :: st(*)
+      real, intent(out) :: sep
 
 !     + + + LOCAL VARIABLES + + +
       real vv, sepsav
       integer k1, k2
-!
+
 !     + + + LOCAL DEFINITIONS + + +
 !     vv     - Water excess beyond field capacity for the current
 !              soil layer.
@@ -746,7 +747,7 @@ module hydro_wepp_util_mod
       integer, intent(in) :: k1, nsl
       real, intent(in) :: vv, st(*), ul(*), hk, ssc
 
-      real, intent(inout) :: sep
+      real, intent(out) :: sep
 
 !**********************************************************************
 !   vv -  Water excess beyond field capacity for the current soil layer (m)
@@ -972,123 +973,110 @@ module hydro_wepp_util_mod
       return
     end subroutine saxfun
 
-    subroutine saxpar(sand,clay,orgmat,nsl,saxwp,saxfc,saxenp,saxpor, &
-     &                  saxA,saxB,saxks)
+    subroutine saxpar(sand, clay, orgmat, nsl, &
+                      saxwp, saxfc, saxenp, saxpor, saxA, saxB, saxks)
+      ! Estimate Saxton&Rawl equation parameters for a soil
 
-!     + + + PURPOSE + + +
+      ! Called from: SR WINIT
+      ! Author(s): Shuhui Dun, WSU
+      ! Reference in User Guide: Saxton K.E. and Rawls W.J., 2006. 
+      ! Soil water characteristics estimates by texture and organic matter for hydraologic solution.
+      ! Soil SCI. SOC. AM. J., 70, 1569--1578
 
-!     Estimate Saxton&Rawl equation parameters for a soil
+      ! After viewing the web page by Saxton http://hrsl.ba.ars.usda.gov/soilwater/Index.htm
+      ! the minimum clay content modeled is around 5%, making the maximum sand content around 95%
+      ! It also shows the maximum clay content to be around 60%. Clamping the input values to
+      ! remain within these ranges, and adjusting the other components accordingly would prevent
+      ! out of range errors such as wilting point becoming less than zero, but does not answer the
+      ! question of what the values really should be for these extremes. For now, the wilting point
+      ! value is prevented from going to zero.
 
-!     Called from: SR WINIT
-!     Author(s): Shuhui Dun, WSU
-!     Reference in User Guide: Saxton K.E. and Rawls W.J., 2006. 
-!     Soil water characteristics estimates by texture and organic matter for hydraologic solution.
-!     Soil SCI. SOC. AM. J., 70, 1569--1578
-
-!     After viewing the web page by Saxton http://hrsl.ba.ars.usda.gov/soilwater/Index.htm
-!     the minimum clay content modeled is around 5%, making the maximum sand content around 95%
-!     It also shows the maximum clay content to be around 60%. Clamping the input values to
-!     remain within these ranges, and adjusting the other components accordingly would prevent
-!     out of range errors such as wilting point becoming less than zero, but does not answer the
-!     question of what the values really should be for these extremes. For now, the wilting point
-!     value is prevented from going to zero.
-
-!     Version: 2008.
-!     Date recoded: Febuary 19, 2008
-!     Verified by: Joan Wu, WSU 
+      ! Version: 2008.
+      ! Date recoded: Febuary 19, 2008
+      ! Verified by: Joan Wu, WSU 
 
       real, intent(in) :: sand(*),clay(*),orgmat(*)
       integer, intent(in) :: nsl
-      real, intent(out) :: saxwp(*),saxfc(*),saxenp(*)
-      real, intent(out) :: saxpor(*),saxA(*),saxB(*),saxks(*)
+      real, intent(out) :: saxwp(*)  ! 1500 kpa soil water content (wilting point)
+      real, intent(out) :: saxfc(*)  ! 33 kpa soil water content (field capacity)
+      real, intent(out) :: saxenp(*) ! air entry pressure (kpa)
+      real, intent(out) :: saxpor(*) ! saturated water content
+      real, intent(out) :: saxA(*)   ! moisture tension equation coefficient A
+      real, intent(out) :: saxB(*)   ! moisture tension equation coefficient B
+      real, intent(out) :: saxks(*)  ! saturated hydraulic conductivity (m/s)
       
-!     Saxton K.E. and Rawls W.J., 2006. Soil water characteristics estimates 
-!     by texture and organic matter for hydraologic solution.
-!     Soil SCI. SOC. AM. J., 70, 1569--1578
+      ! Saxton K.E. and Rawls W.J., 2006. Soil water characteristics estimates 
+      ! by texture and organic matter for hydraologic solution.
+      ! Soil SCI. SOC. AM. J., 70, 1569--1578
 
-!     saxwp: 1500 kpa soil water content (wilting point)
-!     saxfc: 33 kpa soil water content (field capacity)
-!     saxpor: saturated water content
-!     saxenp: air entry pressure (kpa) 
-!     saxA, saxB : moisture tension equition coefficients
-!     saxks: saturated hydraulic conductivity (m/s) 
-      
-!     + + + LOCAL VARIABLES + + +
       integer i
-      real sw1500, sw33, sws33, s33, spaen
+      double precision :: sw1500 ! first solution 1500 kpa soil moisture
+      double precision :: sw33   ! first solution 33 kpa soil moisture
+      double precision :: sws33  ! first solution SAT-33 kpa soil moisture
+      double precision :: s33    ! moisture SAT-33 kpa, normal density
+      double precision :: spaen  ! first solution air entry tension, kpa
 
-!     + + + LOCAL DEFINITIONS + + +
-!     sw1500: first solution 1500 kpa soil moisture
-!     sw33: first solution 1500 kpa soil moisture
-!     sws33:first solution SAT-33 kpa soil moisture
-!     s33:  moisture SAT-33 kpa, normal density
-!      spaen: first solution air entry tension, kpa
+      do i = 1, nsl
+         ! eqation 1 
+         sw1500 = - 0.024d0*sand(i) &
+                + 0.487d0*clay(i) &
+                + 0.006d0*orgmat(i) &
+                + 0.005d0*sand(i)*orgmat(i) &
+                - 0.013d0*clay(i)*orgmat(i) &
+                + 0.068d0*sand(i)*clay(i) &
+                + 0.031d0
 
-!     + + + END SPECIFICATIONS + + +
+          saxwp(i) = max( 1.0e-5, (sw1500 + 0.14d0*sw1500 - 0.02d0) )
 
-      do 10 i = 1, nsl
-!      eqation 1 
-         sw1500 = - 0.024*sand(i)                                       &
-     &            + 0.487*clay(i)                                       &
-     &            + 0.006*orgmat(i)                                     &
-     &            + 0.005*sand(i)*orgmat(i)                             &
-     &            - 0.013*clay(i)*orgmat(i)                             &
-     &            + 0.068*sand(i)*clay(i)                               &
-     &            + 0.031
+         ! equation 2
+         sw33 = - 0.251d0*sand(i) &
+              + 0.195d0*clay(i) &
+              + 0.011d0*orgmat(i) &
+              + 0.006d0*sand(i)*orgmat(i) &
+              - 0.027d0*clay(i)*orgmat(i) &
+              + 0.452d0*sand(i)*clay(i) &
+              + 0.299d0
 
-          saxwp(i) = max( 1.0e-5, (sw1500 + 0.14*sw1500 - 0.02) )
+          saxfc(i) = sw33 + 1.283d0*sw33**2 - 0.374d0*sw33 - 0.015d0
 
-!      equation 2
-         sw33 =   - 0.251*sand(i)                                       &
-     &            + 0.195*clay(i)                                       &
-     &            + 0.011*orgmat(i)                                     &
-     &            + 0.006*sand(i)*orgmat(i)                             &
-     &            - 0.027*clay(i)*orgmat(i)                             &
-     &            + 0.452*sand(i)*clay(i)                               &
-     &            + 0.299
+         ! equation 3
+         sws33 = 0.278d0*sand(i) &
+               + 0.034d0*clay(i) &
+               + 0.022d0*orgmat(i) &
+               - 0.018d0*sand(i)*orgmat(i) &
+               - 0.027d0*clay(i)*orgmat(i) &
+               - 0.584d0*sand(i)*clay(i) &
+               + 0.078d0
 
-          saxfc(i) = sw33 + 1.283*sw33**2 - 0.374*sw33 - 0.015
+          s33 = sws33 + 0.636d0*sws33 - 0.107d0
 
-!      equation 3
-         sws33 =  + 0.278*sand(i)                                       &
-     &            + 0.034*clay(i)                                       &
-     &            + 0.022*orgmat(i)                                     &
-     &            - 0.018*sand(i)*orgmat(i)                             &
-     &            - 0.027*clay(i)*orgmat(i)                             &
-     &            - 0.584*sand(i)*clay(i)                               &
-     &            + 0.078
+          ! eqation 4
+          spaen = - 21.67d0*sand(i) &
+                - 27.93d0*clay(i) &
+                - 81.97d0*s33 &
+                + 71.12d0*sand(i)*s33 &
+                +  8.29d0*clay(i)*s33 &
+                + 14.05d0*sand(i)*clay(i) &
+                + 27.16d0
 
-          s33 = sws33 + 0.636*sws33 - 0.107
+          saxenp(i) = spaen + 0.02d0*spaen**2 - 0.113d0*spaen - 0.70d0
 
-!      eqation 4
-          spaen =  - 21.67*sand(i)                                      &
-     &            - 27.93*clay(i)                                       &
-     &            - 81.97*s33                                           &
-     &            + 71.12*sand(i)*s33                                   &
-     &            +  8.29*clay(i)*s33                                   &
-     &            + 14.05*sand(i)*clay(i)                               &
-     &            + 27.16
+          ! equation 5
+          saxpor(i) = saxfc(i) + s33 - 0.097d0*sand(i) + 0.043d0
 
-          saxenp(i) = spaen + 0.02*spaen**2 - 0.113*spaen - 0.70
+          ! eqation 14
+          saxB(i) = (log(1500.0d0) - log(33.0d0))/ &
+                    (log(dble(saxfc(i))) - log(dble(saxwp(i))))
+          ! eqation 15
+          saxA(i) = exp (log(33.0d0) + saxB(i)*log(dble(saxfc(i))))
 
-!     equation 5
-          saxpor(i) = saxfc(i) + s33                                    &
-     &                       - 0.097*sand(i) + 0.043
+          ! equation 16
+          ! The unit of the original saxton ans Rawls is mm/hr.
+          ! The factor 1./3.6e+6 converts mm/hr to m/s
+          saxks(i) = 1930.0d0*(saxpor(i) &
+                   - saxfc(i))**(3.0d0 - 1.0d0/saxB(i))*1.0d0/3.6E+6
+      end do
 
-!     eqation 14 and 15
-            saxB(i) = (log(1500.) - log(33.))/                          &
-     &                     (log(saxfc(i)) - log(saxwp(i)))
-            saxA(i) = exp (log(33.) +                                   &
-     &                          saxB(i)*log(saxfc(i)))
-
-!     equation 16
-!     The unit of the original saxton ans Rawls is mm/hr.
-!     The factor 1./3.6e+6 converts mm/hr to m/s
-          saxks(i) = 1930.*(saxpor(i) - saxfc(i))                       &
-     &                      **(3. - 1./saxB(i))*1.0/3.6E+6
-10    continue
-
-      return
     end subroutine saxpar
 
     subroutine usdatx( sand, clay, class)

@@ -65,7 +65,7 @@ module mproc_bio_mod
       ! set tflg bits correctly for "all" pools if bflg=0
       if (bflg .eq. 0) then
         tflg = 0
-        do idy = 0, (bit_size(tflg) - 2)
+        do idy = 0, (bit_size(tflg) - 1)
            tflg = ibset(tflg, idy)
         end do
       else
@@ -73,7 +73,7 @@ module mproc_bio_mod
         ! pad values to end so all residue pools after third are flattened if 3rd is flattened
         tflg = bflg
         if (BTEST(tflg,3)) then
-          do idy = 4, (bit_size(tflg) - 2)
+          do idy = 4, (bit_size(tflg) - 1)
             tflg = ibset(tflg, idy)
           end do
         end if
@@ -109,7 +109,7 @@ module mproc_bio_mod
           thisResidue => thisPlant%residue
           do while( associated(thisResidue) )
             idy = idy + 1
-            if (BTEST(tflg,idy)) then
+            if (BTEST(tflg,min(idy,31))) then
               if( flatfrac .gt. 0.0 ) then
                 ! increase flat pools
                 thisResidue%flatstem = thisResidue%flatstem + thisResidue%standstem * flatfrac
@@ -187,7 +187,7 @@ module mproc_bio_mod
       idx = 0
       thisPlant => plant
       do while( associated(thisPlant) )
-        if( BTEST(sel_pool,idx) ) then
+        if( BTEST(sel_pool,min(idx,31)) ) then
           ! Adjust for proper residue burial class
           thisPlant%database%dkrate(5) = thisPlant%database%dkrate(5) * area_adj_rate_mult(thisPlant%database%rbc)
           thisPlant%database%ddsthrsh = thisPlant%database%ddsthrsh * area_adj_thresh_mult(thisPlant%database%rbc)
@@ -249,7 +249,7 @@ module mproc_bio_mod
       idy = 0
       thisPlant => plant
       do while( associated(thisPlant) )
-        if (BTEST(tflg,idy)) then
+        if (BTEST(tflg,min(idy,31))) then
           ! flag indicates to lift biomass for this plant
           if( (thisPlant%database%rbc .ge. 1) .and. (thisPlant%database%rbc .le. mnrbc) ) then
             ! residue burial class indexes are within range
@@ -415,7 +415,7 @@ module mproc_bio_mod
       idy = 0
       thisPlant => plant
       do while( associated(thisPlant) )
-        if (BTEST(tflg,idy)) then
+        if (BTEST(tflg,min(idy,31))) then
           ! flag indicates to bury biomass for this plant
           if( (thisPlant%database%rbc.ge.1).and.(thisPlant%database%rbc.le.mnrbc) ) then
             ! residue burial class indexes are within range

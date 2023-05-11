@@ -85,7 +85,7 @@ subroutine confidence_interval(ci, nrot_yrs, ncycles, ci_year, yrly_report, yr_r
     nzero = 0
     ngtz = 0
 
-    write(*,*) "nrot_yrs, ncycles ", nrot_yrs, ncycles
+    write(*,'(a,2(2x,i0))') "nrot_yrs, ncycles ", nrot_yrs, ncycles
     do idy = 1, nrot_yrs*ncycles
 
        if (yr_report(N_eros_events,idy)%val > 0.0) then
@@ -128,7 +128,7 @@ subroutine confidence_interval(ci, nrot_yrs, ncycles, ci_year, yrly_report, yr_r
     end do
 
     call ci_select(eros_rot, ncycles, ci, mean, ci_hi, ci_low)
-    write(*,*) ci*100,"% Confidence Interval: ", ci_low, ci_hi
+    write(*,'(F5.2,a,2(F18.10))') ci*100,"% Confidence Interval: ", ci_low, ci_hi
     !ci_hi = min( ci_hi, 99999999.0 )
     write(UNIT=luoci,FMT="(f12.5,a,f12.5,a,g16.5,a)",ADVANCE="NO") -yrly_report(Eros_loss,0)%val, " | ", ci_low, " | ", ci_hi, " | "
 !    write(UNIT=luoci,FMT="(f6.2,a,f10.5,f10.5)",ADVANCE="NO") ci*100,"% Confidence Interval: ", ci_low, ci_hi

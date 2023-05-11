@@ -144,7 +144,7 @@ module erosion_mod
 
           ! calc. ridge spacing parallel the wind
           if (subrsurf(julday,icsr)%aszrgh > 5.0) then
-            sina = abs(sin(degtorad*abs(subday(idx)%awdir - subrsurf(julday,icsr)%asargo)))
+            sina = abs(sin(dble(degtorad)*abs(subday(idx)%awdir - subrsurf(julday,icsr)%asargo)))
             sina = max(0.10, sina)
             subrsurf(julday,icsr)%sxprg = subrsurf(julday,icsr)%asxrgs/sina
               if (subrsurf(julday,icsr)%asxdks > subrsurf(julday,icsr)%asxrgs/3.) then

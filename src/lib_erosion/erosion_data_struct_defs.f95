@@ -87,6 +87,7 @@ module erosion_data_struct_defs
      real :: aseags    ! aseags(l,s), R, Soil layer agg stability ln(J/kg)
      real :: ahrwcw    ! ahrwcw(l,s), R, (h1db1.inc) Soil layer wilting point water content (Mg/Mg)
      real :: ahrwca    ! ahrwca(l,s), R, (h1db1.inc) Soil layer water content (Mg/Mg)
+     real :: tsav      ! Mean daily soil temperature (deg C)
   end type by_soil_layer
 
   type subregionsurfacestate
@@ -136,7 +137,6 @@ module erosion_data_struct_defs
      real :: sfd10      ! soil fraction less than 0.1 mm diameter
      real :: sfd84      ! soil fraction less than 0.84 mm diameter
      real :: sfd200     ! soil fraction less than 2.0 mm diameter
-
   end type subregionsurfacestate
 
   type threshold
@@ -159,7 +159,6 @@ module erosion_data_struct_defs
      real :: asvroc  ! fraction of the surface matherial greater than 2 mm in diameter
      real :: wzzo    ! aerodynamic roughness length of the soil surface below canopy (mm)
      real :: sfcv    ! fraction of soil surface which is non emitting
-
   end type threshold
 
   type subdailyvalues

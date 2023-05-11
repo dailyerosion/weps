@@ -246,7 +246,7 @@ module weps_main_mod
 
       ! Always print out the full  command line
       call GET_COMMAND(argv, ll, ss)
-      write(6,*) 'WEPS cmdline: ',trim(argv)
+      write(6,'(a)') 'WEPS cmdline: ',trim(argv)
 
       ! 'report_info' not set yet, so we can't control it here (default value is 1)
 !      i = 0
@@ -922,8 +922,8 @@ module weps_main_mod
       endif
 
       if (report_info >= 1) then
-        write(*,*) 'rootp is: ', trim(rootp)
-        write(*,*) 'wc_type: ',wc_type, ' ifc_format: ', ifc_format
+        write(*,'(a)') 'rootp is: ', trim(rootp)
+        write(*,'(a,1x,i0,2x,a,1x,i0)') 'wc_type:', wc_type, 'ifc_format:', ifc_format
       end if
 
       return

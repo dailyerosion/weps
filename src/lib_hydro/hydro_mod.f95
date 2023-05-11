@@ -10,7 +10,6 @@ module hydro_mod
     subroutine hydrinit(isr, soil, hstate, h1et, h1bal, wp)
 
       use datetime_mod, only: get_psim_daysim
-      use hydro_wepp_util_mod, only: saxpar
       use soil_data_struct_defs, only: soil_def
       use hydro_data_struct_defs, only: hydro_derived_et, hydro_state, hhrs
       use report_hydrobal_mod, only: hydro_balance
@@ -26,7 +25,6 @@ module hydro_mod
 
       integer idx
       real ltheta(soil%nslay)
-      real sand(soil%nslay),clay(soil%nslay),orgmat(soil%nslay)
 
       do idx = 1, soil%nslay
         ! Initialize the water holding capacity variable
@@ -88,18 +86,6 @@ module hydro_mod
           soil%tsmn(idx) = 0.0
       end do
 
-      do idx = 1, soil%nslay
-          ! Soil layer sand content (Mg/Mg)
-          sand(idx) = soil%asfsan(idx)
-          ! Soil layer clay content (Mg/Mg)		
-          clay(idx) = soil%asfcla(idx)
-          ! Soil layer organic matter content (Mg/Mg)		
-          orgmat(idx) = soil%asfom(idx)
-      end do
-	
-      call saxpar(sand,clay,orgmat,soil%nslay,wp%saxwp,wp%saxfc,        &
-     &    wp%saxenp,wp%saxpor,wp%saxA, wp%saxB,wp%saxks)
-
       ! Added for WEPP bookeeping      
       wp%totalPrecip = 0.0
       wp%totalRunoff = 0.0
@@ -140,6 +126,7 @@ module hydro_mod
       use report_hydrobal_mod, only: hydro_balance
       use wepp_param_mod, only: wepp_param
       use climate_input_mod, only: amzele
+      use hydro_wepp_util_mod, only: saxpar
 
       !  + + + ARGUMENT DECLARATIONS + + +
       integer daysim
@@ -160,6 +147,9 @@ module hydro_mod
       if (am0hdb(isr) .eq. 1) then
          call hdbug(.false., isr, soil, croptot, restot, hstate, h1et)
       end if
+
+      call saxpar(soil%asfsan,soil%asfcla,soil%asfom,soil%nslay, &
+                  wp%saxwp, wp%saxfc, wp%saxenp, wp%saxpor, wp%saxA, wp%saxB, wp%saxks)
 
       call hydro( isr, biotot%rcdtot, biotot%zht_ave, &
                  biotot%rlaitot, croptot%zmht, croptot%dayap, &

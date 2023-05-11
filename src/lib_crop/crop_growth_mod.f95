@@ -352,13 +352,26 @@ module crop_growth_mod
       if (bm0cif) then
           if (am0cfl(isr) .ge. 1) then
               ! put double blank lines in daily files to create growth blocks
-              write(luocrop(isr),*)   ! crop.out
-              write(luocrop(isr),*)   ! crop.out
-              write(luoshoot(isr),*)  ! shoot.out
-              write(luoshoot(isr),*)  ! shoot.out
+              write(luocrop(isr),'(a)')   ! crop.out
+              write(luocrop(isr),'(a)')   ! crop.out
+              write(luoshoot(isr),'(a)')  ! shoot.out
+              write(luoshoot(isr),'(a)')  ! shoot.out
           end if
 
           bm0cif = .false.  !turn off after initialization is complete
+      end if
+
+      ! set seasons based on latitude
+      if( amalat .gt. 0.0d0 ) then
+        spring_eqx = N_spring_eqx
+        summer_sol = N_summer_sol
+        fall_eqx = N_fall_eqx
+        winter_sol = N_winter_sol
+      else
+        spring_eqx = S_spring_eqx
+        summer_sol = S_summer_sol
+        fall_eqx = S_fall_eqx
+        winter_sol = S_winter_sol
       end if
 
       ! calculate day length
@@ -435,33 +448,35 @@ module crop_growth_mod
         .or. (bcfstor2stor .gt. 0.0) ) then
 
         if( (bc0idc.eq.2) .or. (bc0idc.eq.5) ) then
-          ! check winter annuals for completion of vernalization,
-          ! warming and spring day length 
-          if( bczgrowpt .le. 0.0 ) then
-           ! remember, negative number means above ground
-           regrowth_flg = 1
-           if( bctchillucum .ge. chilluv ) then
-            regrowth_flg = 2
-            if( bctwarmdays .ge. shoot_delay*bctverndel/verndelmax) then
-             regrowth_flg = 3
-             if( bcthardnx .lt. hard_spring ) then
-              regrowth_flg = 4
-              ! vernalized and ready to grow in spring
-              bcthu_shoot_beg = huiy
-              bcthu_shoot_end = huiy + bc0hue
-              call shootnum(shoot_flg, bnslay, bc0idc, bcdpop, bc0shoot, &
-                   bcdmaxshoot, u_bcmtotshoot, bcmrootstorez, u_bcdstm )
-              ! eliminate diversion of biomass to crown storage
-              bcfleaf2stor = 0.0
-              bcfstem2stor = 0.0
-              bcfstor2stor = 0.0
-              ! turn off freeze hardening
-              bcthardnx = 0.0d0
-              ! set day of year on which transition took place
-              bcdayspring = jd
-             end if
+          ! check winter annuals for spring season, completion of vernalization, warming
+          if( (hrlty .lt. hrlt) .and. (hrlt .gt. 12.0) ) then
+            ! day length increasing and daylength greater than 12 hours (past spring equinox)
+            if( bczgrowpt .le. 0.0 ) then
+              ! remember, negative number means above ground
+              regrowth_flg = 1
+              if( bctchillucum .ge. chilluv ) then
+                regrowth_flg = 2
+                if( bctwarmdays .ge. shoot_delay*bctverndel/verndelmax) then
+                  regrowth_flg = 3
+                  if( bcthardnx .lt. hard_spring ) then
+                    regrowth_flg = 4
+                    ! vernalized and ready to grow in spring
+                    bcthu_shoot_beg = huiy
+                    bcthu_shoot_end = huiy + bc0hue
+                    call shootnum(shoot_flg, bnslay, bc0idc, bcdpop, bc0shoot, &
+                         bcdmaxshoot, u_bcmtotshoot, bcmrootstorez, u_bcdstm )
+                    ! eliminate diversion of biomass to crown storage
+                    bcfleaf2stor = 0.0
+                    bcfstem2stor = 0.0
+                    bcfstor2stor = 0.0
+                    ! turn off freeze hardening
+                    bcthardnx = 0.0d0
+                    ! set day of year on which transition took place
+                    bcdayspring = jd
+                  end if
+                end if
+              end if
             end if
-           end if
           end if
 
         else if( bc0idc.eq.7 ) then
@@ -475,19 +490,6 @@ module crop_growth_mod
           ! 10 - Conifer
           ! 11 - mixed Deciduous and Conifer
           ! 12 - Deciduous with stump regrowth
-
-          ! set winter solstice based on latitude
-          if( amalat .gt. 0.0d0 ) then
-            spring_eqx = N_spring_eqx
-            summer_sol = N_summer_sol
-            fall_eqx = N_fall_eqx
-            winter_sol = N_winter_sol
-          else
-            spring_eqx = S_spring_eqx
-            summer_sol = S_summer_sol
-            fall_eqx = S_fall_eqx
-            winter_sol = S_winter_sol
-          end if
 
           ! check for regrowth from a stump
           if( bc0idc.eq.12 ) then
@@ -854,7 +856,7 @@ module crop_growth_mod
               bczgrowpt = ( - bczloc_regrow )
               if (am0cfl(isr) .ge. 1) then
                   ! single blank line to separate shoot growth periods
-                  write(luoshoot(isr),*)  ! shoot.out
+                  write(luoshoot(isr),'(a)')  ! shoot.out
               end if
           end if
 
@@ -1263,7 +1265,7 @@ module crop_growth_mod
       par=0.5d0 * dble(cli_day(pjuld)%eirr)                    ! MJ/m^2   ! C-4
 
 !     calculate intercepted PAR, which is the good stuff less what hits the ground
-      apar=par*(1.0d0-exp(-bc0ck*eff_lai))                                             ! C-4
+      apar = par * (1.0d0 - exp(-dble(bc0ck)*eff_lai))                    ! C-4
 
 !     calculate potential biomass conversion (kg/plant/day) using
 !     biomass conversion efficiency at ambient co2 levels
@@ -1375,9 +1377,9 @@ module crop_growth_mod
       ! when a plant has freeze hardened halfway into stage 1, divert any growth to storage
       if( bcthardnx .gt. 0.0d0 ) then
           if( bcthardnx .lt. 0.5d0 ) then
-              adjleaf2stor=bcfleaf2stor+(1.0d0-bcfleaf2stor)*(bcthardnx)*2.0d0
-              adjstem2stor=bcfstem2stor+(1.0d0-bcfstem2stor)*(bcthardnx)*2.0d0
-              adjstor2stor=bcfstor2stor+(1.0d0-bcfstor2stor)*(bcthardnx)*2.0d0
+              adjleaf2stor=bcfleaf2stor+(1.0d0-bcfleaf2stor)*(bcthardnx)*2
+              adjstem2stor=bcfstem2stor+(1.0d0-bcfstem2stor)*(bcthardnx)*2
+              adjstor2stor=bcfstor2stor+(1.0d0-bcfstor2stor)*(bcthardnx)*2
           else
               adjleaf2stor = 1.0d0
               adjstem2stor = 1.0d0

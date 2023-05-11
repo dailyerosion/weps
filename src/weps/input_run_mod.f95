@@ -48,7 +48,7 @@ contains
         old_run_file = .false.
 
         ! open simulation run file
-        write (*,*) 'runfil is ', '>>', trim(runfil), '<<'
+        write (*,'(a)') 'runfil is: ', trim(runfil)
         call open_xmlfile(trim(runfil),fxml,iostat)
         if (iostat /= 0) stop "Cannot open runfil"
         ! read in xml based run file
@@ -92,7 +92,7 @@ contains
           ! read in old fixed format run file
           call inprun(soil)
         else
-          write(0,*) ' simulation run file not found '
+          write(0,'(a)') 'Simulation run file (weps.run) not found!'
           call exit(1)
         end if
 
@@ -120,7 +120,7 @@ contains
       use datetime_mod, only: lstday
       use Polygons_Mod, only: create_polygon, set_area_polygon
       use subregions_mod, only: acct_poly, subr_poly
-      use file_io_mod, only: fopenk, luicli, luiwin, luolog
+      use file_io_mod, only: fopenk, luicli, luiwin
       use erosion_data_struct_defs, only: subday, ntstep, am0efl
       use barriers_mod, only: create_barrier, barrier, barseas
       use grid_mod, only: amasim, amxsim, sim_area
@@ -177,7 +177,7 @@ contains
       typidx = 0
  
       ! open simulation run file
-      write (*,*) 'runfil is ', '>>', trim(runfil), '<<'
+      write (*,'(a)') 'runfil is: ', trim(runfil)
       call fopenk (lui1, trim(runfil), 'old')
 
       ! check for version number at top of file
@@ -343,14 +343,14 @@ contains
          case (12)
             ! read CLIGEN file name
             clifil = trim(line)
-            write(luolog, *) 'clifil: ', trim(clifil)
             ! open CLIGEN run file
             call fopenk (luicli, trim(rootp) // clifil, 'old')
-            write(luolog,*) 'opened cligen file to determine db format...'
-            ! read 1st line of CLIGEN file
 
+            ! read 1st line of CLIGEN file
             read(luicli,fmt="(a)",err=190) line
-            write(6,"(a30,a)") 'First cligen output line is: ', trim(line)
+            if (report_info >=2) then
+              write(6,"(a30,a)") 'First cligen output line is: ', trim(line)
+            end if
 
             ! I think this is pretty messy.  It was working with the Lahey compiler
             ! with a "73x,f" format but the Sun F95 compiler didn't like that, so
@@ -364,12 +364,12 @@ contains
                read(line,fmt="(f8.5)",err=190) cligen_version
             end if
 
-            write(luolog,"(a17,f8.5)") 'cligen version: ', cligen_version
-            write(6,"(a17,f8.5)") 'cligen version: ', cligen_version
+            if (report_info >=1) then
+              write(6,"(a17,f8.5)") 'cligen version: ', cligen_version
+            end if
 
             ! I assume this is where I read the old cligen's version info
             ! read(luicli,fmt="(73x,f)",err=190) cligen_version
-            ! write(luolog,*) 'cligen version: ', cligen_version
 
             ! We will now check the header to determine which cligen data file
             ! format we are reading, either the old one or the new one.
@@ -377,12 +377,19 @@ contains
 
             if (cligen_version >= 5.110) then
                cli_gen_fmt_flag = 3
+               if (report_info >=2) then
+                 write(6,*) 'cligen_version >= 5.110 db format'
+            end if
             else if (cligen_version >= 5.101) then
                cli_gen_fmt_flag = 2
-               write(luolog,*) 'Forest Service cligen db format'
+               if (report_info >=2) then
+                 write(6,*) 'Forest Service cligen db format'
+               end if
             else
                cli_gen_fmt_flag = 1
-               write(luolog,*) '3.1 version cligen db format'
+               if (report_info >=2) then
+                 write(6,*) '3.1 version cligen db format'
+               end if
             endif
             rewind luicli
             goto 130

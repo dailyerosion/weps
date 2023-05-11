@@ -328,6 +328,9 @@ subroutine ci_lognozeros(in_val, nval, prob, mean, ci_hi, ci_low)
 end subroutine
 
 double precision function norm_z_stat(prob)
+
+    use normal_mod, only: cdfnor
+
     double precision, intent(in) :: prob      ! confidence level desired
 
     integer :: st_sel     ! select which value will be calculated by cdfnor

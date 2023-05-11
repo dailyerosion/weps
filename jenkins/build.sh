@@ -18,11 +18,11 @@ case $compiler in
 				case $arch in
 					"x86" )
 						echo "Calling ia32"
-						source /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh ia32
+						source /opt/intel/oneapi/setvars.sh ia32
 						;;
 					"x86_64" )
 						echo "Calling intel64"
-						source /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh intel64
+						source /opt/intel/oneapi/setvars.sh intel64
 						;;
 					* )
 						echo "Bad value, ARCH=$arch";

@@ -336,7 +336,7 @@ module air_water_mod
       real, parameter :: a2 = 35702.8022
       real, parameter :: a3 = -607945000.
 
-      pres_lapse = a1 * exp(((elevation + a2)**2.) / a3)
+      pres_lapse = a1 * exp(((dble(elevation) + a2)**2) / a3)
 
       return
     end function preslaps
@@ -440,7 +440,7 @@ module air_water_mod
       end if
 
       bp = preslaps( bmzele )
-      svpg0 = b1 * exp(((tdavadj-b2)**2.) / b3)
+      svpg0 = b1 * exp(((dble(tdavadj)-b2)**2) / b3)
       svpg = svpg0*(101.325/bp)
       vlh = d1 - (d2*tdavadj)
       term1 = svpg * ((rn-g_soil)/vlh)
@@ -468,8 +468,8 @@ module air_water_mod
       ! as height above the ground minus zero plane displacement.
       ! (meteorological height adjusted to account for crop (residue) height in
       ! hydro before call)
-      ttc = (arho * e * (vk**2.) * vel_wind * 86400.0) &
-     &    / (bp * (log( (loc_za - loc_zd) / zo_v) )**2.)
+      ttc = (arho * e * (vk**2) * vel_wind * 86400.0) &
+          / (bp * (log( (dble(loc_za) - dble(loc_zd)) / zo_v) )**2)
 
       term2 = vpd*ttc
       term3 = svpg + 1.0
