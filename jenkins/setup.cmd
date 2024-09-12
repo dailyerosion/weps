@@ -5,6 +5,8 @@ SETLOCAL ENABLEEXTENSIONS
 set arch=%1
 set compiler=%2
 set mode=%3
+set version=$4
+set release=$5
 
 if "%arch%"=="x86" (
 	echo Calling ia32 windows
@@ -21,6 +23,8 @@ if "%arch%"=="x86" (
 echo "ARCH = " %arch%
 echo "COMPILER = " %compiler%
 echo "MODE = " %mode%
+echo "VERSION = " %version%
+echo "RELEASE = " %release%
 
 bash jenkins/dobuild.sh
 

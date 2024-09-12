@@ -4,6 +4,8 @@
 echo "ARCH is set to:" $arch
 echo "COMPILER is set to:" $compiler
 echo "MODE is set to:" $mode
+echo "VERSION is set to:" $version
+echo "RELEASE is set to:" $release
 
 echo Ready to build...
 echo BUILD_NUMBER : $BUILD_NUMBER
@@ -48,6 +50,6 @@ esac
 
 cook -NL configure fc=$compiler mode=$mode
 cook -NL clean
-cook -NL show weps sweep
+cook -NL version=$version release=$release show weps sweep
 exit 0
 

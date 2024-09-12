@@ -18,7 +18,7 @@ rm -rfv [fpp.dir];
 	result 	+=	"      character *(16) build_cnt_mods";
 
 	result 	+=	"      data build_date/ '"[collect_lines date]"'/";
-	result 	+=	"      data build_version/ '"1.0"'/";
+	result 	+=	"      data build_version/ \""[defined-or-default version 1.0]"\"/";
 	result 	+=	"      data build_release/ \""[defined-or-default release development]"\"/";
 	result 	+=	"      data build_compiler/ \""[fc_version]"\"/";
 	result 	+=	"      data build_compiler_options/ \""[mode]"\"/";

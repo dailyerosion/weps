@@ -1,15 +1,19 @@
 #!/bin/bash
 
-# the required command arguments from the jenkins environment in 1-2-3-4 order
+# the required command arguments from the jenkins environment in 1-2-3-4-5-6 order
 os=$1
 arch=$2
 compiler=$3
 mode=$4
+version=$5
+release=$6
 
 echo "OS:" $1
 echo "ARCH:" $2
 echo "COMPILER:" $3
 echo "MODE:" $4
+echo "VERSION:" $5
+echo "RELEASE:" $6
 
 case $compiler in
 	"ifort" )
@@ -34,7 +38,7 @@ case $compiler in
 				# this then must call dobuild.sh as a subprocess
 				# to preserve the environment needed to do the build
 				echo "WINDOWS";
-				cmd.exe /c jenkins\\setup.cmd $arch $compiler $mode;
+				cmd.exe /c jenkins\\setup.cmd $arch $compiler $mode $version $release;
 				;;
 		esac
 		;;

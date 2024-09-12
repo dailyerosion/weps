@@ -766,7 +766,7 @@ module crop_growth_mod
             end if
           end if
 
-        else
+        else  ! bc0idc 1, 3, 4, 6
           ! check summer annuals and perennials for removal of all (most) leaf mass
           ! perennials with staged crown release also exhibit tuber dormancy
           ! so we really need to wait for spring and not regrow immediately
@@ -783,17 +783,14 @@ module crop_growth_mod
             if( bctwarmdays .ge. shoot_delay ) then
              ! enough warm days to start regrowth
              regrowth_flg = 3
-             if( (huiy .ge. bc0hue) &
+             if( (huiy .ge. bc0hue) ) then
               ! heat units past emergence
-              .or.((bc0idc.eq.8).and.(bcstemmasstrend.lt.0.0)) ) then
-              ! staged crown release will regrow without full emergence, but only if stem removed ie harvest
               regrowth_flg = 4
               if( (huiy .lt. 1.0d0) &
                ! not yet mature
                .or. ((bc0idc.eq.3) .or. (bc0idc.eq.6)) &
                ! perennial
-               .or. ((bc0idc.eq.8) .and. (hrlty .lt. hrlt)) ) then
-               ! staged crown release and days lengthening (ie. spring)
+               ) then
                regrowth_flg = 5
                ! find out how much root store could be released for regrowth
                call shootnum(shoot_flg, bnslay, bc0idc, bcdpop, bc0shoot, &

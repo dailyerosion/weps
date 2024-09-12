@@ -1126,7 +1126,7 @@ contains
        do idx = 1, nsoillay
          layersum = residuePntr%stemz(idx) + residuePntr%leafz(idx) + residuePntr%storez(idx) &
                   + residuePntr%rootstorez(idx) + residuePntr%rootfiberz(idx)
-         write(*,"(a,1x,30(ES18.10))") 'RESID BY LAY: ', idx, residuePntr%stemz(idx), residuePntr%leafz(idx), &
+         write(*,"(a,1x,1x,i0,30(ES18.10))") 'RESID BY .LAY: ', idx, residuePntr%stemz(idx), residuePntr%leafz(idx), &
                                       residuePntr%storez(idx), residuePntr%rootstorez(idx), residuePntr%rootfiberz(idx), layersum
          totburied = totburied + layersum
 
