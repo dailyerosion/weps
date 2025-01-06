@@ -2,40 +2,11 @@
 	   GFORTRAN COOK OPTIONS
  **********************************/
 
-/*if the target platform for gfortran has not been set then figure it out*/
-if [not [defined gfortran_arch]] then{
-        if [in [os machine] x86 i386 i686] then{
-                gfortran_arch = 32;
-        }
-	/* Not sure why Cygwin is returning i686 for the 32 bit version */
-	/* Or, is it implying that the OS is 64 bit? */
-        /* else if [in [os machine] x86_64 i686] then{ */
-        else if [in [os machine] x86_64] then{
-                gfortran_arch = 64;
-        }
-        else{
-                function print ****************************************************;
-                function print "INVALID GFORTRAN COMPILER CONFIGURATION";
-                function print "Unknown machine type:" [os machine];
-                function print ****************************************************;
-                fail;
-        }
-}
-else if [not [in [gfortran_arch] 32 64]] then{
-        function print ****************************************************;
-        function print "INVALID GFORTRAN COMPILER CONFIGURATION";
-        function print "gfortran_arch="[gfortran_arch];
-        function print "Valid values: 32|64";
-        function print ****************************************************;
-        fail;
-}
-
 function print "OS type:" [os];
 function print "OS system:" [os system];
 function print "OS release:" [os release];
 function print "machine type:" [os machine];
 function print "machine name:" [os name];
-function print "gfortran_arch:" [gfortran_arch];
 
 /**********************************
 	    	  COMPILER
@@ -43,21 +14,11 @@ function print "gfortran_arch:" [gfortran_arch];
 
 fc			= gfortran;
 fc_version 		= [collect_lines [fc] --version | head -1];
-skip_mods		= "omp_lib"; /* skip omp module file in dependency checks, etc. */
-
-/* Setup the correct default architecture configuration based upon the system the compiler is running on. */
-if [ matches [gfortran_arch] 32 ] then {
-	fc_flags	= "-m32";
-}
-else if [ matches [gfortran_arch] 64 ] then {
-	fc_flags	= "-m64";
-}
-else {
-	fc_flags	= "";
-}
+/*skip_mods		= "omp_lib";*/ /* skip omp module file in dependency checks, etc. */
+skip_mods		= "";
 
 /* add preprocessing for all builds, turn off negative zero */
-fc_flags		+= "-cpp -fno-sign-zero";
+fc_flags		= "-cpp -fno-sign-zero";
 
 fc_compile_flag	= "-c ";
 fc_out_flag		= "-o ";
@@ -73,15 +34,17 @@ fc_default		=;
 /* debug flags */
 fc_debug		= "-O0 -g -Wall -Wextra -fimplicit-none -fcheck=all,no-recursion -fbacktrace -ffpe-trap=invalid,zero,overflow";
 fc_debug		+= "-fno-unsafe-math-optimizations -frounding-math -fsignaling-nans -Wno-missing-include-dirs -finit-real=snan";
-/*fc_debug		+= "-fopenmp";*/
 /*fc_debug		= "-Og -g -Wall -Wextra -fimplicit-none -fcheck=all -fbacktrace -ffpe-trap=zero,overflow -fdefault-real-8";*/
 
+/* OpenMP parallelization flags */
+fc_omp		="-fopenmp -O3 -flto";
+
 /* optimization flags */
-/*fc_optimize		= "-g -O3 -ffpe-trap=invalid,zero,overflow -fno-omit-frame-pointer";*/
-fc_optimize		= "-O3";
+fc_optimize		= "-g -O3 -ffpe-trap=invalid,zero,overflow -fno-omit-frame-pointer";
+/*fc_optimize		= "-O3";*/
 
 /*release flags	*/
-fc_release		= "-O3";
+fc_release		= [fc_optimize];
 
 /* includes */
 fc_inc_flag		= "-I ";
@@ -102,33 +65,19 @@ function print "fc_flags are: " [fc_flags];
 ld			= [fc]; /*gcc;*/
 ld_version		= [fc_version]; /*[collect_lines [ld] --version | head -1];*/
 
-/* Setup the correct default architecture configuration based upon the system the compiler (linker) is running on. */
-if [ matches [gfortran_arch] 32 ] then {
-	ld_flags = "-m32";
-}
-else if [ matches [gfortran_arch] 64 ] then {
-	ld_flags = "-m64";
-}
-else {
-	ld_flags =;
-}
-
-/* #if [or [in [os system] Linux ] [in [os system] SunOS ] ]	*/
-/*	ld_flags		+= "-static";			*/
-/* #else							*/
-/*	ld_flags		+= ; */	/* Windows PC's (Cygwin) won't link with the "-static" option for some reason - LEW */
-/* #endif							*/
-/* works fine in TDM-GCC-64 version of gcc/gfortran (it is not a cygwin install) */
-ld_flags		+= "-static";
-/*ld_flags		+= "-fopenmp";*/
+ld_flags		=;
 
 ld_out_flag		= "-o ";
 
 /* debug flags */
-ld_debug		=;
+ld_debug		= "-static";
+
+/* omp flags */
+/*ld_omp			= "-fopenmp";*/
+ld_omp			= "-fopenmp -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive";
 
 /* optimization flags */
-ld_optimize		=;
+ld_optimize		= "-static";
 
 /* includes */
 ld_inc_flag		= [fc_inc_flag];

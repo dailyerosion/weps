@@ -16,7 +16,7 @@ echo "VERSION:" $5
 echo "RELEASE:" $6
 
 case $compiler in
-	"ifort" )
+	"ifx" )
 		case $os in
 			"linux" )
 				case $arch in

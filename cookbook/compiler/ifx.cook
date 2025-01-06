@@ -1,0 +1,244 @@
+/**********************************
+	   INTEL COOK OPTIONS
+ **********************************/
+
+/*required reentry of the cook process to setup the environment*/
+#include [cookbook]/reentry.cook
+
+function print "OS type:" [os];
+function print "OS system:" [os system];
+function print "OS release:" [os release];
+function print "machine type:" [os machine];
+function print "machine name:" [os name];
+
+/**********************************
+	    	  COMPILER
+ **********************************/
+
+fc			= ifx;
+skip_mods		= "omp_lib"; /* skip omp module file in dependency checks, etc. */
+
+if [is_windows] then {
+	fc_compile_flag		= "/c /Tf ";
+	fc_out_flag		= "-o ";
+
+	fc_flags		= "/nologo";
+	/* use old Fortran std for printing out zeros */
+	fc_flags		+= "/assume:nominus0 /assume:nostd_minus0_rounding";
+
+	/* add preprocessing for all builds */
+	fc_flags		+= "/fpp";
+}
+else {
+	fc_compile_flag		= "-c -Tf ";
+	fc_out_flag		= "-o ";
+
+	fc_flags		= "-nologo";
+	/* use old Fortran std for printing out zeros */
+	fc_flags		+= "-assume nominus0 -assume nostd_minus0_rounding";
+
+	/* add preprocessing for all builds */
+	fc_flags		+= "-fpp";
+}
+
+
+if [is_windows] then {
+	fc_version 	= [collect_lines [fc] -what |& head -1];
+}
+else {
+	fc_version 	= [collect_lines [fc] --version | head -1];
+}
+
+if [is_windows] then { /* setup for specifying linker to use within ifx */
+
+	/* Determine which version of MS Visual Studio is being used */
+	if [and [not [defined target_vs]] [strlen [getenv TARGET_VS]]] then {
+		target_vs = [getenv TARGET_VS];
+		function print "target_vs: " [target_vs];
+	}
+	else {
+		function print "no TARGET_VS env variable found: " [getenv TARGET_VS];
+		target_vs = "";
+		function print "target_vs being set to: " [target_vs];
+	}
+
+	/* Test for MS Visual Studio 2017 */
+	if [matches "vs2017" [target_vs]] then {
+
+		if [and [not [defined vctoolsinstalldir]] [strlen [getenv VCToolsInstallDir]]] then {
+			vctoolsinstalldir = [getenv VCToolsInstallDir];
+			function print "vctoolsinstalldir: " [vctoolsinstalldir];
+			vctoolsinstalld = [shell cygpath -ams '"`echo -n $VCToolsInstallDir`"'];
+			function print "vctoolsinstalld: " [vctoolsinstalld];
+			Cvctoolsinstalld = [shell cygpath -ams '"`echo -n $VCToolsInstallDir`"' | cygpath -uf -];
+			function print "Cvctoolsinstalld: " [Cvctoolsinstalld];
+
+			if [and [not [defined target_vs_arch]] [strlen [getenv TARGET_VS_ARCH]]] then {
+				target_vs_arch = [getenv TARGET_VS_ARCH];
+				function print "target_vs_arch: " [target_vs_arch];
+				if [matches "amd64" [target_vs_arch]] then {
+					HostX = "HostX64";
+				}
+				else {
+					HostX = "HostX86";
+				}
+				function print "HostX: " [HostX];
+				vs_linkdir = [vctoolsinstalld]/bin/[HostX]/x64;
+				function print "vs_linkdir: " [vs_linkdir];
+			}
+		}
+	}
+	/* Test for earlier versions of MS Visual Studio (2013 tested) */
+	else if [and [not [defined vcinstalldir]] [strlen [getenv VCINSTALLDIR]]] then {
+		vcinstalldir = [getenv VCINSTALLDIR];
+		function print "vcinstalldir: " [vcinstalldir];
+		vcinstalld = [shell cygpath -ams '"`echo -n $VCINSTALLDIR`"'];
+		function print "vcinstalld: " [vcinstalld];
+		Cvcinstalld = [shell cygpath -ams '"`echo -n $VCINSTALLDIR`"' | cygpath -uf -];
+		function print "Cvcinstalld: " [Cvcinstalld];
+
+		vs_linkdir = [vcinstalld]/Bin;
+		function print "vs_linkdir: " [vs_linkdir];
+	}
+	else {
+		fail "Cannot find valid linker path.";
+	}
+
+	/* Checks to see if "link.exe" is actually in the discovered directory (tested with VS 2017 and VS 2013)*/
+	if [exists [vs_linkdir]] then {
+		function print "link.exe file exists here: " [vs_linkdir];
+        }
+	else {
+		fail "link.exe file doesn't exist here: " [vs_linkdir];
+	}
+
+	fc_flags	+=-Qlocation,link,[vs_linkdir];
+	function print "fc_flags: " [fc_flags];
+}
+
+fc_fixed		="";
+fc_free			= "-free";
+
+/* default mode flags */
+if [is_windows] then {
+	fc_default		="-Od";
+	fc_mod_out_flag		= "-module:";
+}
+else { /* Linux */
+	fc_default		="-O0";
+	fc_mod_out_flag		= "-module ";
+}
+
+/* debug flags */
+if [is_windows] then {
+	fc_debug		="/debug /warn:all /gen-interfaces";
+	/*fc_debug		="/debug /warn:all /gen-interfaces /r8";*/
+}
+else { /* Linux */
+	/* fc_debug		="-g -ftrapuv -debug-parameters -debug"; */
+	fc_debug		="-g -debug-parameters -debug -traceback -warn all -init=snan -static-intel";
+
+}
+
+/* OpenMP parallelization flags (for Intel Fortran compiler) */
+if [is_windows] then {  /* Not yet setup/tested - LEW */
+	fc_omp		="/Qopenmp /O2 /Qipo-separate";
+}
+else { /* Linux */
+/*	fc_omp		="-qopenmp -O2 -ipo -pthread"; */
+	fc_omp		="-qopenmp -qopenmp-link=static -O2 -flto -pthread";
+}
+
+/* optimization flags */
+fc_optimize		="-O3";
+
+/*release flags	*/
+fc_release		= [fc_optimize];
+
+/* includes */
+fc_inc_flag		= "-I ";
+fc_inc_join		= [false];		/*if true, the includes are joined into a single argument with the separator */
+fc_inc_sep		= ;
+
+fc_mod_inc_flag		= "-I ";			
+
+/* Case of the module names: lower, upper or mixed*/
+fc_mod_case	= lower;;
+
+/**********************************
+	    	  LINKER
+ **********************************/
+if [is_windows] then {
+	/* This fixes the issue with the linker not running with the correct args from ifx. */
+	/*ld			= [vs_linkdir]/link.exe;
+	ld_version 		= [collect [ld] | head -1];
+
+	ld_flags		="";*/
+
+	ld_out_flag		= "-o ";
+
+	/* debug flags */
+	ld_debug		= "";
+
+
+	/* omp flags */
+	ld_omp		= "/Qstatic" [fc_omp];
+
+	/* optimization flags */
+	ld_optimize		= "";
+
+	/* includes */
+	ld_inc_flag		= [fc_inc_flag];
+	ld_inc_join		= [fc_inc_join];		/*if true, the includes are joined into a single argument with the separator */
+	ld_inc_sep		= [fc_inc_sep];
+
+	ld_lib_prefix	= "";
+	ld_lib_suffix	= "";
+}
+else {
+	ld			= [fc];
+	ld_version		= [fc_version];
+
+	ld_link_flag		= "";
+	ld_out_flag		= "-o ";
+
+	/* debug flags */
+	ld_debug		= [fc_debug];
+
+	/* omp flags */
+/*	ld_omp			="-qopenmp -O2 -ipo"; */
+	ld_omp			= "-static" [fc_omp];
+
+	/* optimization flags */
+	ld_optimize		="-O3 -static";
+
+	/* includes */
+	ld_inc_flag		= [fc_inc_flag];
+	ld_inc_join		= [fc_inc_join];		/*if true, the includes are joined into a single argument with the separator */
+	ld_inc_sep		= [fc_inc_sep];
+
+	ld_lib_prefix	= "-Xlinker --start-group ";
+	ld_lib_suffix	= " -Xlinker --end-group";
+
+	/*do not use libs*/
+	ld_use_libs		= [false];
+}
+
+/**********************************
+	    	  ARCHIVER
+ **********************************/
+if [is_windows] then {
+	ar		= lib;
+	/* ar		= [vs_linkdir]/lib.exe; */
+
+	ar_flags	= "-nologo";
+	ar_flags	+= "-out:";
+
+	ar_version	= [collect [ar] -verbose | head -1];
+}
+else { /* Linux */
+/*	ar		= llvm-ar;*/
+	ar		= xi-ar;
+	ar_version	= ?;
+	ar_flags	= "-cq ";
+}

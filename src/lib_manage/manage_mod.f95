@@ -2386,7 +2386,7 @@ module manage_mod
         end if
 
       case (65)  ! add residue process
-        ! New residue is place in new plant created by G03
+        ! New residue is placed in new plant created by G03
 
         ! create residue pool in new plant (inintializes all values)
         plant%residue => residueAdd(plant%residue, plant%residueIndex, soil%nslay)

@@ -34,21 +34,23 @@ module weps_output_mod
       integer doy, cy
       real total
       integer :: ipool   ! index for pool number
+      integer :: jpool   ! index for moving pools
       type(plant_pointer), pointer :: thisPlant       ! pointer used to interate plant pointer chain
       type(residue_pointer), pointer :: thisResidue   ! pointer used to interate residue pointer chain
       character*30 :: dec_text ! decomposition detail age pool output file name text string
       character*30 :: subr_text ! subregion output directory text string
-      real, dimension(3) :: mst = 0.0
-      real, dimension(3) :: mf = 0.0
-      real, dimension(3) :: mbg = 0.0
-      real, dimension(3) :: mrt = 0.0
-      real, dimension(3) :: fscv = 0.0
-      real, dimension(3) :: ffcv = 0.0
-      real, dimension(3) :: ftcv = 0.0
-      real, dimension(3) :: rsai = 0.0
-      real, dimension(3) :: rlai = 0.0
-      real, dimension(3) :: dstm = 0.0
-      real, dimension(3) :: zht = 0.0
+      integer, dimension(3) :: resday
+      real, dimension(3) :: mst
+      real, dimension(3) :: mf
+      real, dimension(3) :: mbg
+      real, dimension(3) :: mrt
+      real, dimension(3) :: fscv
+      real, dimension(3) :: ffcv
+      real, dimension(3) :: ftcv
+      real, dimension(3) :: rsai
+      real, dimension(3) :: rlai
+      real, dimension(3) :: dstm
+      real, dimension(3) :: zht
 
 !     + + + END OF SPECIFICATIONS + + +
 
@@ -96,41 +98,68 @@ module weps_output_mod
           total = restot%msttot + restot%mftot   !sum of standing and flat residue mass, all pools
 
           ipool = 0
-          ! point to youngest living plant
+          do ipool = 1, 3
+            resday(ipool) = huge(resday)
+            mst(ipool) = 0.0
+            mf(ipool) = 0.0
+            mbg(ipool) = 0.0
+            mrt(ipool) = 0.0
+            fscv(ipool) = 0.0
+            ffcv(ipool) = 0.0
+            ftcv(ipool) = 0.0
+            rsai(ipool) = 0.0
+            rlai(ipool) = 0.0
+            dstm(ipool) = 0.0
+            zht(ipool) = 0.0
+          end do
+          ! point to youngest plant (may be living or weed residue)
           thisPlant => plant
           ! interate to get first three resiude pools
           do while ( associated(thisPlant) )
             thisResidue => thisPlant%residue
             ! interate over all residue
             do while (associated(thisResidue))
-              ipool = ipool + 1
+            
+              do ipool = 1, 3
+                if( thisResidue%resday .lt. resday(ipool) ) then
+                  ! Younger than residue in this pool
+                  do jpool = 3, ipool+1, -1
+                    ! move pools down one index
+                    resday(jpool) = resday(jpool-1)
+                    mst(jpool) = mst(jpool-1)
+                    mf(jpool) = mf(jpool-1)
+                    mbg(jpool) = mbg(jpool-1)
+                    mrt(jpool) = mrt(jpool-1)
+                    fscv(jpool) = fscv(jpool-1)
+                    ffcv(jpool) = ffcv(jpool-1)
+                    ftcv(jpool) = ftcv(jpool-1)
+                    rsai(jpool) = rsai(jpool-1)
+                    rlai(jpool) = rlai(jpool-1)
+                    dstm(jpool) = dstm(jpool-1)
+                    zht(jpool) = zht(jpool-1)
+                  end do
+                  ! insert younger residue in this pool
+                  resday(ipool) = thisResidue%resday
+                  mst(ipool) = thisResidue%deriv%mst
+                  mf(ipool) = thisResidue%deriv%mf
+                  mbg(ipool) = thisResidue%deriv%mbg
+                  mrt(ipool) = thisResidue%deriv%mrt
+                  fscv(ipool) = thisResidue%deriv%fscv
+                  ffcv(ipool) = thisResidue%deriv%ffcv
+                  ftcv(ipool) = thisResidue%deriv%ftcv
+                  rsai(ipool) = thisResidue%deriv%rsai
+                  rlai(ipool) = thisResidue%deriv%rlai
+                  dstm(ipool) = thisResidue%dstm
+                  zht(ipool) = thisResidue%zht
+                  exit
+                end if
+              end do
 
-              ! assign temporary residue pool values
-              mst(ipool) = thisResidue%deriv%mst
-              mf(ipool) = thisResidue%deriv%mf
-              mbg(ipool) = thisResidue%deriv%mbg
-              mrt(ipool) = thisResidue%deriv%mrt
-              fscv(ipool) = thisResidue%deriv%fscv
-              ffcv(ipool) = thisResidue%deriv%ffcv
-              ftcv(ipool) = thisResidue%deriv%ftcv
-              rsai(ipool) = thisResidue%deriv%rsai
-              rlai(ipool) = thisResidue%deriv%rlai
-              dstm(ipool) = thisResidue%dstm
-              zht(ipool) = thisResidue%zht
-
-              if( ipool .ge. 3 ) then
-                exit
-              else
-                ! set to next older residue
-                thisResidue => thisResidue%olderResidue
-              end if
+              ! set to next residue
+              thisResidue => thisResidue%olderResidue
             end do
-            if( ipool .ge. 3 ) then
-              exit
-            else
-              ! point to next older plant
-              thisPlant => thisPlant%olderPlant
-            end if
+            ! point to next older plant
+            thisPlant => thisPlant%olderPlant
           end do
 
           ! insert double blank lines to demarcate years

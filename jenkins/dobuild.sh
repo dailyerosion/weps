@@ -43,7 +43,7 @@ case $compiler in
      "g95" )
            compiler=$compiler$bit;
            ;;
-     "ifort" )
+     "ifx" )
            compiler=$compiler$bit;           
            ;;
 esac   

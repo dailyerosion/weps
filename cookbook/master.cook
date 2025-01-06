@@ -19,7 +19,7 @@ configuring	= [or [in configure [command-line-goals]]  [in unconfigure [command-
 cooking		= [not [or [cleaning] [cleaning_all] [configuring]]];
 
 /*single point to describe how to configure whenever there is a config error */
-configure_help = [self] "configure fc=compiler [mode=default|debug|autoparallel|omp|optimize|release] [cross=0|1]";
+configure_help = [self] "configure fc=compiler [mode=default|debug|omp|optimize|release] [cross=0|1]";
 
 /*OS booleans */
 is_unix		= [in [downcase [os system]] unix linux sunos];
@@ -252,7 +252,7 @@ mode	= [downcase [mode]];
 /**********************************
         TEST VARIABLES
  **********************************/
-if [not [in [mode] default debug autoparallel omp optimize release]] then{
+if [not [in [mode] default debug omp optimize release]] then{
 	function print *******************************************************************;
 	function print "Compiler mode not supported:" [mode];
 	function print "Execute:" [configure_help];
@@ -268,10 +268,6 @@ if [in [mode] default] then {
 else if [in [mode] debug] then {
 	fc_flags += [fc_debug];
 	ld_flags += [ld_debug];
-}
-else if [in [mode] autoparallel] then {
-	fc_flags += [fc_autoparallel];
-	ld_flags += [ld_autoparallel];
 }
 else if [in [mode] omp] then {
 	fc_flags += [fc_omp];

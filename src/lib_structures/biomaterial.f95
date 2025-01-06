@@ -1145,7 +1145,8 @@ contains
      type(residue_pointer), pointer :: residuePntr
 
      if ( associated(residuePntr) ) then
-       write(*,"(a,1x,i0,'/',i0,2(2x,F8.1))") 'Residue:', residuePntr%resyear, residuePntr%resday, residuePntr%cumdds, residuePntr%cumddf
+       write(*,"(a,1x,i0,'/',i0,4(2x,F10.3))") 'Residue:', residuePntr%resyear, residuePntr%resday, residuePntr%cumdds, residuePntr%cumddf, &
+                                                          residuePntr%standstem, residuePntr%flatstem
      else
        write(*,"(a)") 'No Residue'
      end if
@@ -1158,7 +1159,6 @@ contains
 
      ! local variable
      type(plant_pointer), pointer :: thisPlant
-     type(residue_pointer), pointer :: thisResidue
 
      ! print mass values
      thisPlant => plantPntr
@@ -1170,11 +1170,6 @@ contains
        write(*,*) 'PLANT NAME: ', trim( thisPlant%bname )
        call plantPrint_detail( thisPlant, nsoillay )
 
-       thisResidue => thisPlant%residue
-       do while( associated(thisResidue) )
-         call residuePrint_detail( thisResidue, nsoillay)
-         thisResidue => thisResidue%olderResidue
-       end do
        thisPlant => thisPlant%olderPlant
      end do
         
@@ -1185,7 +1180,6 @@ contains
 
      ! local variable
      type(plant_pointer), pointer :: thisPlant
-     type(residue_pointer), pointer :: thisResidue
 
      ! print mass values
      thisPlant => plantPntr
@@ -1197,11 +1191,6 @@ contains
        write(*,*) 'PLANT NAME: ', trim( thisPlant%bname )
        call plantPrint_summary( thisPlant )
 
-       thisResidue => thisPlant%residue
-       do while( associated(thisResidue) )
-         call residuePrint_summary( thisResidue)
-         thisResidue => thisResidue%olderResidue
-       end do
        thisPlant => thisPlant%olderPlant
      end do
         

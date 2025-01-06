@@ -8,14 +8,10 @@ set mode=%3
 set version=$4
 set release=$5
 
-if "%arch%"=="x86" (
-	echo Calling ia32 windows
-	rem call "C:\Program Files (x86)\Intel\Composer XE\bin\compilervars.bat" ia32
-	call "C:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\bin\compilervars.bat" ia32
-) else if "%arch%"=="x86_64" (
-	echo Calling intel64 windows
+if "%arch%"=="x86_64" (
+	echo Windows, ifx defaults to 64 bit
 	rem call "C:\Program Files (x86)\Intel\Composer XE\bin\compilervars.bat" intel64
-	call "C:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\bin\compilervars.bat" intel64
+	call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat"
 ) else (
 	echo Bad value, ARCH=%arch%
 )
