@@ -74,7 +74,12 @@ ld_debug		= "-static";
 
 /* omp flags */
 /*ld_omp			= "-fopenmp";*/
-ld_omp			= "-fopenmp -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive";
+if [is_windows] then {
+	ld_omp			= "-fopenmp -Wl,--no-whole-archive";
+}
+else {
+	ld_omp			= "-fopenmp -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive";
+}
 
 /* optimization flags */
 ld_optimize		= "-static";
@@ -94,7 +99,7 @@ function print "ld_flags are: " [ld_flags];
 /**********************************
 	    	  ARCHIVER
  **********************************/
-ar			= ar;
+ar			= gcc-ar;
 ar_version	= [collect [ar] --version | head -1];
 
 ar_flags	= "-cq ";
