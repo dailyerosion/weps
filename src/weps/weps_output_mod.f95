@@ -431,6 +431,7 @@ module weps_output_mod
            total = total/ngdpt
            suspen = suspen/ngdpt
            pmten = pmten/ngdpt
+           pm2_5 = pm2_5/ngdpt
         !else no points totals will still be 0.0
         end if
 
