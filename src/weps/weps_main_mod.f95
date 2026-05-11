@@ -524,7 +524,7 @@ module weps_main_mod
      &               ' -r',i1,' -R',i1,' -S',i1,                        &
      &               ' -s',i1,' -T', i1,' -t', i1,                      &
      &               ' -u', i1,' -U',i1,' -w',i1,' -W',i1,' -x',i1,     &
-     &               ' -X',f4.1,' -y',i1,' -Y',i1' -Z',i1)
+    &               ' -X',f4.1,' -y',i1,' -Y',i1,' -Z',i1)
 
               write(0,2600) soil_cond,                                  &
      &         calibrate_crops, run_erosion, saeinp_all,                &
