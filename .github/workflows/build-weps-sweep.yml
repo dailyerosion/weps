@@ -1,0 +1,62 @@
+name: Build WEPS and Sweep
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran build-essential bison gettext groff
+
+      - name: Build cook from source
+        run: |
+          git clone --depth 1 --branch fix/yacc-mess https://github.com/hoxnox/cook.git /tmp/cook-src
+          cd /tmp/cook-src/src
+          ./configure --prefix="$HOME/.local/cook"
+          # Parallel builds cause issues
+          make -j1
+          # Full install currently fails in install-man on etc/version.so; binaries are sufficient for CI.
+          make install-bin
+          echo "$HOME/.local/cook/bin" >> "$GITHUB_PATH"
+
+      - name: Show tool versions
+        run: |
+          command -v cook
+          cook -VERSion || cook --version || true
+          gfortran --version
+
+      - name: Configure and clean
+        run: |
+          cook -NL configure fc=gfortran64 mode=default
+          cook -NL clean
+
+      - name: Build explicit production goals
+        run: |
+          cook -NL weps sweep
+
+      - name: Verify outputs
+        run: |
+          test -x dist/gfortran64-default/weps
+          test -x dist/gfortran64-default/sweep
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: weps-sweep-linux
+          if-no-files-found: error
+          path: |
+            dist/gfortran64-default/weps
+            dist/gfortran64-default/sweep
