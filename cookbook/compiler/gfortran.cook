@@ -19,6 +19,10 @@ skip_mods		= "";
 
 /* add preprocessing for all builds, turn off negative zero */
 fc_flags		= "-cpp -fno-sign-zero";
+if [is_unix] then {
+	/* GCC on modern Linux defaults to PIE; this legacy codebase links non-PIE objects. */
+	fc_flags	+= "-fno-pie";
+}
 
 fc_compile_flag	= "-c ";
 fc_out_flag		= "-o ";
@@ -66,6 +70,9 @@ ld			= [fc]; /*gcc;*/
 ld_version		= [fc_version]; /*[collect_lines [ld] --version | head -1];*/
 
 ld_flags		=;
+if [is_unix] then {
+	ld_flags	+= "-no-pie";
+}
 
 ld_out_flag		= "-o ";
 
