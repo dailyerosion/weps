@@ -484,7 +484,9 @@
           ! print current day of simulation to screen periodically
           if( get_psim_doy(isr) .eq. 1 ) then
             simyrs = (ly - beg_init_y + 1)
-            if( (hb_freq .eq. 0) .or. (mod(get_psim_year(isr), hb_freq) .eq. 0) ) then
+            if( hb_freq .eq. 0 ) then
+               write(*,'(a,3(1x,i0,2x,a))') 'Subregion', isr, 'Year', get_psim_year(isr), 'of', simyrs, '(initialization)'
+            else if( mod(get_psim_year(isr), hb_freq) .eq. 0 ) then
                write(*,'(a,3(1x,i0,2x,a))') 'Subregion', isr, 'Year', get_psim_year(isr), 'of', simyrs, '(initialization)'
             end if
             call flush(OUTPUT_UNIT)
@@ -542,7 +544,10 @@
              ! print current day of simulation to screen periodically
              if( get_psim_doy(isr) .eq. 1 ) then
                simyrs = (ly - beg_init_y + 1)
-               if( (hb_freq .eq. 0) .or. (mod(get_psim_year(isr), hb_freq) .eq. 0) ) then
+               if( hb_freq .eq. 0 ) then
+                  write(*,'(a,5(1x,i0,2x,a))') 'Subregion ', isr, 'Year', get_psim_year(isr), 'of', maxper*calibrate_rotcycles, &
+                             '(calibrating',calib_cycle(isr),'/', calibrate_crops,')'
+               else if( mod(get_psim_year(isr), hb_freq) .eq. 0 ) then
                   write(*,'(a,5(1x,i0,2x,a))') 'Subregion ', isr, 'Year', get_psim_year(isr), 'of', maxper*calibrate_rotcycles, &
                              '(calibrating',calib_cycle(isr),'/', calibrate_crops,')'
                end if
@@ -610,7 +615,9 @@
             ! print current day of simulation to screen periodically
              if( get_psim_doy(isr) .eq. 1 ) then
                simyrs = (ly - iy + 1)
-               if( (hb_freq .eq. 0) .or. (mod(cyear(isr), hb_freq) .eq. 0) ) then
+               if( hb_freq .eq. 0 ) then
+                  write(*,'(a,2(1x,i0,2x,a),1x,i0)') 'Subregion', isr, 'Year', cyear(isr), 'of', simyrs
+               else if( mod(cyear(isr), hb_freq) .eq. 0 ) then
                   write(*,'(a,2(1x,i0,2x,a),1x,i0)') 'Subregion', isr, 'Year', cyear(isr), 'of', simyrs
                end if
                call flush(OUTPUT_UNIT)
@@ -718,7 +725,9 @@
             ! print current day of simulation to screen periodically
              if( get_simdate_doy() .eq. 1 ) then
                simyrs = (ly - iy + 1)
-               if( (hb_freq .eq. 0) .or. (mod(cyear(0), hb_freq) .eq. 0) ) then
+               if( hb_freq .eq. 0 ) then
+                  write(*,"(a,1x,i0,1x,a,1x,i0)") 'Erosion Year', cyear(0), 'of', simyrs
+               else if( mod(cyear(0), hb_freq) .eq. 0 ) then
                   write(*,"(a,1x,i0,1x,a,1x,i0)") 'Erosion Year', cyear(0), 'of', simyrs
                end if
                call flush(OUTPUT_UNIT)
