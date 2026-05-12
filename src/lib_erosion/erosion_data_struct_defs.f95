@@ -332,15 +332,23 @@ contains
      integer :: alloc_stat
      integer :: sum_stat    ! accumlated status return
 
+     sum_stat = 0
+
      ! deallocate brcdInput arrays
-     deallocate(subrsurf%brcdInput, stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
+     if( allocated(subrsurf%brcdInput) ) then
+        deallocate(subrsurf%brcdInput, stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+     end if
      ! deallocate soil layer arrays
-     deallocate(subrsurf%bsl, stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
+     if( allocated(subrsurf%bsl) ) then
+        deallocate(subrsurf%bsl, stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+     end if
      ! deallocate surface wetness arrays
-     deallocate(subrsurf%ahrwc0, stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
+     if( allocated(subrsurf%ahrwc0) ) then
+        deallocate(subrsurf%ahrwc0, stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+     end if
      if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to deallocate subrsurf memory'
      end if
