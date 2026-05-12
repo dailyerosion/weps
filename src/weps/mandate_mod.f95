@@ -60,6 +60,7 @@ MODULE mandate_mod
        integer :: daydif      ! result from difdat
 
        integer :: isr   ! subregion loop index
+      integer :: raw_sr ! raw subregion value stored in master mandate array
        integer :: lsr   ! lower subregion index
        integer :: usr   ! upper subregion index
        integer :: osr   ! the composite 0 "subregion" index
@@ -111,9 +112,32 @@ MODULE mandate_mod
           subdone(isr) = .false.
        end do
 
+       if( .not. allocated(mandatbs(osr)%mandate) ) then
+          return
+       end if
+       if( size(mandatbs(osr)%mandate) .eq. 0 ) then
+          return
+       end if
+
        do while( .not. subdone(osr))
           ! use subregion index in master array to retrieve crop name from subregion array
-          isr = mandatbs(osr)%mandate(pdx(osr))%sr + 1
+          raw_sr = mandatbs(osr)%mandate(pdx(osr))%sr
+          if( (raw_sr .ge. lsr) .and. (raw_sr .le. usr) ) then
+             ! 1-based sr convention
+             isr = raw_sr
+          else if( ((raw_sr + 1) .ge. lsr) .and. ((raw_sr + 1) .le. usr) ) then
+             ! 0-based sr convention (legacy inputs)
+             isr = raw_sr + 1
+          else
+             ! Skip invalid master entries rather than aborting.
+             if( pdx(osr) .lt. udx(osr) ) then
+                pdx(osr) = pdx(osr) + 1
+                cycle
+             else
+                subdone(osr) = .true.
+                exit
+             end if
+          end if
           if( .not. subdone(isr) ) then
              ! difference between present date and subregion date
              daydif = difdat(mandatbs(osr)%mandate(pdx(osr))%d, mandatbs(osr)%mandate(pdx(osr))%m, &
