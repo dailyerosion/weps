@@ -110,7 +110,7 @@ module stir_report_mod
     subroutine stir_report( mandate, manFile )
 
 !     + + + MODULES + + +
-      use weps_cmdline_parms, only: report_debug
+      use weps_cmdline_parms, only: report_debug, soil_cond
       use stir_soil_texture_mod, only : get_stir_soil_multiplier
       use file_io_mod, only: luostir
       use sci_report_mod, only: scisum
@@ -586,7 +586,7 @@ module stir_report_mod
       ! create and print STIR report (2nd time through complete, info complete)
       do idx = 1, stircum(isr)%phopcnt
 
-        if( .not. stircum(isr)%phop(idx)%phop_skip ) then
+        if( (soil_cond .gt. 0) .and. (.not. stircum(isr)%phop(idx)%phop_skip ) ) then
           ! print this line
           write(luostir(isr),"(i2,'/',i2,'/',i4,3(' | ',a),2(' | ',f8.2),2(' | ',i0) )") &
                         stircum(isr)%phop(idx)%phopday, stircum(isr)%phop(idx)%phopmon, &
@@ -623,8 +623,10 @@ module stir_report_mod
         print *, 'size of mandate', size(mandate)
       end if
 
-      ! close file
-      close(luostir(isr))
+      ! close file when STIR output is enabled
+      if( soil_cond .gt. 0 ) then
+        close(luostir(isr))
+      end if
 
       ! reset management file to beginnning
       manFile%oper => manFile%operFirst
