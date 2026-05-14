@@ -27,6 +27,7 @@ module sae_in_out_mod
 
   character(len=512) :: infilebase  ! base name (without .in extension) of old format input file
   character(len=512) :: sweepfile  ! name of the sweep input file
+  logical :: saeinp_forceday = .false. ! true when current day was requested by -O/-o
   type(subregion_files), dimension(:), allocatable :: subrfiles
 
   ! placed here for sharing back with hagen_plot_flag by daily_erodout

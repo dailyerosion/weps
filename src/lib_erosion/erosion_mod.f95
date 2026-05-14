@@ -23,7 +23,7 @@ module erosion_mod
                                           ntstep, erod_interval, anemht, awzzo, &
                                           wzoflg, awadir, awudmx, subday, am0efl, subrsurf
       use erosion_data_struct_defs, only: initflag
-      use sae_in_out_mod, only: mksaeinp, mksaeout, daily_erodout, sb1out, sb2out, sbemit, saeinp, sweepfile
+      use sae_in_out_mod, only: mksaeinp, mksaeout, saeinp_forceday, daily_erodout, sb1out, sb2out, sbemit, saeinp, sweepfile
       use p1unconv_mod, only: SEC_PER_DAY, degtorad
       use barriers_mod, only: sbbr
       use grid_mod, only: sbdirini, gridfile
@@ -247,6 +247,14 @@ module erosion_mod
       !  else
       !    wr = 0.7
       !  endif
+
+         ! For -O/-o requests, force stand-alone erosion input output even when
+         ! thresholds prevent erosion from occurring this day.
+           if( (mksaeinp%simday .gt. 0) .and. saeinp_forceday ) then
+               sweepfile = 'erod.sweep'
+               gridfile = '../../erod.grdx'
+               call saeinp( julday, nsubr )
+         end if
       
       ! Check wind ratio
       if( .not. in_sweep ) then
@@ -257,13 +265,12 @@ module erosion_mod
 
       ! entering erosion submodel
 
-      ! code to output standalone erosion input file on specified date
-      ! check for day of simulation for which you want a file created
-      if( mksaeinp%simday .gt. 0 ) then
-          sweepfile = 'erod.sweep'
-          gridfile = '../../erod.grdx'
-          call saeinp( julday, nsubr )    ! output daily erosion stuff
-      end if
+         ! For -e1 requests, emit stand-alone input only on actual erosion days.
+           if( (mksaeinp%simday .gt. 0) .and. (.not. saeinp_forceday) ) then
+               sweepfile = 'erod.sweep'
+               gridfile = '../../erod.grdx'
+               call saeinp( julday, nsubr )
+         end if
 
       if (btest(am0efl,2)) then
          if( luo_emit .eq. 0 ) then

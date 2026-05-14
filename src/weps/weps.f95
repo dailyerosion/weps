@@ -69,7 +69,7 @@
       use wind_mod, only: anemometer_init
       use precision_mod, only: precision_init
       use grid_mod, only: sbgrid, write_grid, gridfile
-      use sae_in_out_mod, only: mksaeinp, mksaeout
+      use sae_in_out_mod, only: mksaeinp, mksaeout, saeinp_forceday
       use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier
       use sci_soil_texture_mod, only: create_sci_soil_multiplier, destroy_sci_soil_multiplier
       use stir_report_mod, only: alloc_stir_accumulators, destroy_stir_accumulators, stir_report
@@ -744,35 +744,35 @@
             ! set plot.out indicator flags (initialization complete so cellstate unaltered)
             call erodinit( noerod )
 
-            if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
+            ! Requested-day output (-O/-o) should remain forceable even when -e1 is also set.
+            saeinp_forceday = (saeinp_daysim .eq. get_simdate_daysim()) .or. (saeinp_jday .eq. am0jd)
 
-               ! check for creation of stand alone erosion input files on this day
-               if( (saeinp_daysim .eq. get_simdate_daysim()) .or. (saeinp_jday .eq. am0jd) .or. (saeinp_all .gt. 0) ) then
-                  mksaeinp%jday = am0jd
-                  mksaeinp%simday = get_simdate_daysim()
-               else 
-                  mksaeinp%simday = 0
-               end if
-
-               ! create setting for multiple output files
-               mksaeout%jday = am0jd
-               mksaeout%simday = get_simdate_daysim()
-               if (btest(am0efl,0) .or. btest(am0efl,1)) then
-                  luo_egrd = 0   ! setting this here signals daily erodout to create a separate file for each erosion day
-               endif
-               if (btest(am0efl,2)) then
-                  luo_emit = 0   ! setting this here signals erosion to create a separate file for each erosion day
-               end if
-               if (btest(am0efl,3)) then
-                  luo_sgrd = 0   ! setting this here signals erosion to create a separate file for each erosion day
-               end if
-
-               ! write(*,*) "Start erosion"
-
-               ! min_erosion_awu = 5.0 Minimum erosive wind speed (m/s) to evaluate for erosion loss
-               ! SURF_UPD_FLG = 1      erosion surface updating (0 - disabled, 1 - enabled)
-               call erosion( 5.0, 1, am0jd, noerod, cellstate )
+            ! check for creation of stand alone erosion input files on this day
+            if( saeinp_forceday .or. (saeinp_all .gt. 0) ) then
+               mksaeinp%jday = am0jd
+               mksaeinp%simday = get_simdate_daysim()
+            else
+               mksaeinp%simday = 0
             end if
+
+            ! create setting for multiple output files
+            mksaeout%jday = am0jd
+            mksaeout%simday = get_simdate_daysim()
+            if (btest(am0efl,0) .or. btest(am0efl,1)) then
+                luo_egrd = 0   ! setting this here signals daily erodout to create a separate file for each erosion day
+            endif
+            if (btest(am0efl,2)) then
+                luo_emit = 0   ! setting this here signals erosion to create a separate file for each erosion day
+            end if
+            if (btest(am0efl,3)) then
+                luo_sgrd = 0   ! setting this here signals erosion to create a separate file for each erosion day
+            end if
+
+            ! write(*,*) "Start erosion"
+
+            ! min_erosion_awu = 5.0 Minimum erosive wind speed (m/s) to evaluate for erosion loss
+            ! SURF_UPD_FLG = 1      erosion surface updating (0 - disabled, 1 - enabled)
+            call erosion( 5.0, 1, am0jd, noerod, cellstate )
 
             do isr = 1, nsubr
                call sci_cum( isr, cellstate )   ! Keep running total for soil conditioning index (SCI)
