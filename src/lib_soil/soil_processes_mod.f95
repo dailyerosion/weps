@@ -526,6 +526,8 @@ module soil_processes_mod
       real :: cflos  ! correction factor for decease of fraction loose cover
                      ! area on crust caused by roughness
       real :: bsmls0 ! prior value of bsmlos before update by SOIL, kg/m^2
+      real :: bsmlos_arg
+      real :: sand_clay_ratio
       real :: temp   ! 
 
       ! calc. apparent precip. (eq. S-14)
@@ -559,10 +561,12 @@ module soil_processes_mod
       ! set max loose mass (eq S-20, *** sb S-19)
       if( bhzsmt .eq. 0.0 ) then
          ! no snow melt
-         if( csfcla .eq. 0.0 ) then
-            bsmlos = 0.1*exp(-0.57d0 + 0.22d0 * 999.0d0 + 7.0d0 * csfcce - csfom)
+         sand_clay_ratio = min(999.0, csfsan / max(csfcla, tiny(csfcla)))
+         bsmlos_arg = -0.57d0 + 0.22d0 * sand_clay_ratio + 7.0d0 * csfcce - csfom
+         if( bsmlos_arg .ge. log(30.0) ) then
+            bsmlos = 3.0
          else
-            bsmlos = 0.1*exp(-0.57d0 + 0.22d0 * csfsan / csfcla + 7.0d0 * csfcce - csfom)
+            bsmlos = 0.1*exp(bsmlos_arg)
          end if
          ! set upper limit on loose mass (eq. S-21, *** sb S-20)
          if( bsmlos .gt. 3.0 ) then

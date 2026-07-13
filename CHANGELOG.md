@@ -17,5 +17,7 @@
 
 ### Bug Fixes
 
+- Allow for a zero clay content soil to not break the model, it is up to the
+  user if such a soil is real or not (#21)!
 - Fixed missing comma typo preventing `-h` (Help) from working on WEPS (#3).
 - Replaced some `stop` instances with explicit `call exit(1)` handling.
