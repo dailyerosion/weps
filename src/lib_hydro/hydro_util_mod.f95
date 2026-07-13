@@ -214,7 +214,7 @@ module hydro_util_mod
           ! and gives the range of 0.1 to 0.9 which works best with
           ! percent clay when CEC is in meq/100g
           ! indicated range for relationship is enforced here
-          cec_rat = min(0.9, max(0.1, cec_clay / per_clay))
+          cec_rat = min(0.9, max(0.1, cec_clay / max(per_clay, 0.0001)))
 
           ! the NATO reference has a misprint. Correct equation was found
           ! in WEPP tech DOC, 1995 based on personal communication with
