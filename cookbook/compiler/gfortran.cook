@@ -41,10 +41,10 @@ fc_debug		+= "-fno-unsafe-math-optimizations -frounding-math -fsignaling-nans -W
 /*fc_debug		= "-Og -g -Wall -Wextra -fimplicit-none -fcheck=all -fbacktrace -ffpe-trap=zero,overflow -fdefault-real-8";*/
 
 /* OpenMP parallelization flags */
-fc_omp		="-fopenmp -O3 -flto";
+fc_omp		="-fopenmp -O3 -mno-avx512f -flto";
 
 /* optimization flags */
-fc_optimize		= "-g -O3 -ffpe-trap=invalid,zero,overflow -fno-omit-frame-pointer";
+fc_optimize		= "-g -O3 -mno-avx512f -ffpe-trap=invalid,zero,overflow -fno-omit-frame-pointer";
 /*fc_optimize		= "-O3";*/
 
 /*release flags	*/
