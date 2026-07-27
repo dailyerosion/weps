@@ -21,3 +21,5 @@
   user if such a soil is real or not (#21)!
 - Fixed missing comma typo preventing `-h` (Help) from working on WEPS (#3).
 - Replaced some `stop` instances with explicit `call exit(1)` handling.
+- Set `-mno-avx512f` on gfortran compile to prevent precision issues on CPUs
+  that support AVX512.
